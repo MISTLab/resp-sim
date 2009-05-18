@@ -1,0 +1,238 @@
+#! /usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+# encoding: utf-8
+
+import Options
+import sys,os
+sys.path.append('./tools/waf')
+from waf_utils import rec_find
+
+def build(bld):
+
+    # Compile the wrapper and build a python extension library
+    obj = bld.new_task_gen('pypp')
+
+    obj.source ='''
+    systemc_export.hpp
+    systemc_export.cpp
+    tlm_export.hpp
+    '''
+    obj.source += '\n' + os.path.abspath(os.path.join('component', 'misc', 'sycers', 'blackbox.h'))
+    obj.source += '\n' + os.path.abspath(os.path.join('component', 'misc', 'sycers', 'memory.h'))
+
+    obj.extra_headers = 'component'
+    obj.exclude_dirs = ['microblaze', 'standaloneExecutor', 'leon2/cycleaccurate', 'simplenoc', 'matlab']
+
+    obj.target = 'scwrapper';
+    obj.generate_include = True
+    obj.start_decls = 'sc_core sc_dt tlm tlm_bus tlm_core tlm_ports'
+    obj.split = 6
+    obj.custom_declaration_code = '''
+namespace sandbox { namespace {
+
+    struct sc_module_name_to_python_str
+    {
+        static PyObject* convert(sc_module_name const& s)
+    {
+        return boost::python::incref(boost::python::object(std::string(s)).ptr());
+    }
+    };
+
+    struct sc_module_name_from_python_str
+    {
+        sc_module_name_from_python_str()
+    {
+    boost::python::converter::registry::push_back(
+                &convertible,
+                &construct,
+                boost::python::type_id<sc_module_name>());
+    }
+
+    static void* convertible(PyObject* obj_ptr)
+    {
+        if (!PyString_Check(obj_ptr)) return 0;
+        return obj_ptr;
+    }
+
+    static void construct(
+    PyObject* obj_ptr,
+    boost::python::converter::rvalue_from_python_stage1_data* data)
+    {
+        const char* value = PyString_AsString(obj_ptr);
+        if (value == 0) boost::python::throw_error_already_set();
+        void* storage = (
+                        (boost::python::converter::rvalue_from_python_storage<sc_module_name>*)
+                        data)->storage.bytes;
+        new (storage) sc_module_name(value);
+        data->convertible = storage;
+    }
+    };
+
+    void init_module()
+    {
+        using namespace boost::python;
+        sc_module_name_from_python_str();
+    }
+
+}} // namespace sandbox::<anonymous>
+'''
+
+    obj.custom_registration_code = '''sandbox::init_module();'''
+
+    obj.custom_code = """
+# Exclude protected members
+mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) ).exclude()
+
+# Include important stuff
+#print "Including classes"
+mb.global_ns.classes(lambda decl: decl.name.startswith('sc_')).ignore = False
+mb.global_ns.enumerations(lambda decl: decl.name.startswith('sc_')).include()
+mb.global_ns.class_('sc_module').include()
+mb.global_ns.class_('sc_module').member_functions().include()
+mb.global_ns.class_('sc_module').member_functions().set_virtuality( declarations.VIRTUALITY_TYPES.VIRTUAL )
+mb.global_ns.class_('sc_module').member_functions('get_child_objects').set_virtuality( declarations.VIRTUALITY_TYPES.NOT_VIRTUAL )
+mb.global_ns.class_('sc_module').member_functions('sc_get_curr_simcontext').call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
+mb.global_ns.class_('sc_module').member_operators().exclude()
+
+#print 'including sim_context'
+mb.global_ns.class_('sc_simcontext').include()
+mb.global_ns.class_('sc_simcontext').member_functions().exclude()
+mb.global_ns.class_('sc_simcontext').member_function('reset').include()
+
+#print "Including bind"
+mb.global_ns.member_functions( 'bind' ).include()
+mb.global_ns.member_functions( 'is_reset' ).call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
+
+#print "Including Signals"
+signal = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_signal<'))
+signal.include()
+for i in signal:
+    i.member_functions().exclude()
+
+#print "Including Bit Vectors"
+bvectors = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_bv<'))
+bvectors.include()
+for i in bvectors:
+    i.member_operators().exclude()
+
+#print "Including clock"
+clock = mb.global_ns.class_('sc_clock')
+clock.include()
+clock.member_functions(lambda decl: decl.name.startswith('period')).include()
+clock.member_functions(lambda decl: decl.name.startswith('duty_cycle')).include()
+clock.member_functions(lambda decl: decl.name.startswith('before_end_of_elaboration')).exclude()
+clock.member_functions(lambda decl: decl.name.startswith('posedge_action')).exclude()
+clock.member_functions(lambda decl: decl.name.startswith('negedge_action')).exclude()
+clock.member_functions(lambda decl: decl.name.startswith('report_error')).exclude()
+clock.member_functions(lambda decl: decl.name.startswith('init')).exclude()
+clock.member_functions(lambda decl: decl.name.startswith('is_clock')).exclude()
+clock.member_functions(lambda decl: decl.name.startswith('signal')).call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
+
+#print "Including time"
+time = mb.global_ns.class_('sc_time')
+time.include()
+time.member_functions(lambda decl: decl.name.startswith('print')).exclude()
+mb.global_ns.variable('SC_ZERO_TIME').include()
+
+#print "Including sc_object"
+sc_obj = mb.global_ns.class_('sc_object')
+sc_obj.include()
+sc_obj.member_functions().exclude()
+sc_obj.member_functions(lambda decl: decl.name.endswith('name')).include()
+sc_obj.member_functions(lambda decl: decl.name.startswith('sc_object')).exclude()
+sc_obj.variables(lambda decl: decl.name.startswith('m_name')).exclude()
+
+#print "Including free functions"
+mb.global_ns.free_functions('sc_start').include()
+mb.global_ns.free_functions('sc_stop').include()
+mb.global_ns.free_function('my_sc_is_running').include()
+waitFuns = mb.global_ns.free_functions('wait')
+waitFuns.include()
+waitFuns.use_overload_macro = True
+simContFun = mb.global_ns.free_functions('sc_get_curr_simcontext')
+simContFun.include()
+simContFun.call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
+
+# -- Include base tlm classes: PORTS
+#
+tlm_initiator_port = mb.global_ns.classes( lambda decl :
+decl.name.startswith('tlm_initiator_port'), allow_empty=True)
+tlm_initiator_port.include()
+
+# Define call policies for every function in doubt
+for j in tlm_initiator_port:
+    lst = j.member_functions(lambda decl : decl.name.startswith( 'get_') , allow_empty = True)
+    for i in lst:
+        i.call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
+
+tlm_target_port = mb.global_ns.classes( lambda decl :
+decl.name.startswith('tlm_target_port'), allow_empty = True )
+tlm_target_port.include()
+# Define call policies for every function in doubt
+for j in tlm_target_port:
+    lst = j.member_functions(lambda decl :
+                            decl.name.startswith( 'get_target_port_list'), allow_empty=True)
+    for i in lst:
+        i.call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
+
+# -- Include base tlm classes: INTERFACES
+#
+mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_transport_if') ).include()
+
+# -- Include base tlm classes: GENERAL PAYLOAD
+#
+tlm_request = mb.global_ns.classes(lambda decl:
+decl.name.startswith('tlm_request'))
+tlm_request.ignore = False
+
+tlm_response = mb.global_ns.classes(lambda decl:
+decl.name.startswith('tlm_response'))
+tlm_response.ignore = False
+
+# -- Include base tlm classes: ENUMERATIONS
+#
+mb.global_ns.classes(lambda decl:
+decl.name.startswith('tlm_status'), allow_empty = True).include()
+mb.global_ns.enumerations(lambda decl:
+decl.name.startswith('tlm_endianness'), allow_empty = True ).include()
+mb.global_ns.enumerations(lambda decl:
+decl.name.startswith('tlm_mode'), allow_empty = True ).include()
+mb.global_ns.enumerations(lambda decl:
+decl.name.startswith('tlm_block_mode'), allow_empty = True ).include()
+
+mb.global_ns.member_functions( name='is_already_bound' ).exclude()
+mb.global_ns.member_functions( name='create_port_list' ).exclude()
+mb.global_ns.member_functions( name='is_interface_bound_twice' ).exclude()
+
+mb.global_ns.calldefs( declarations.access_type_matcher_t('protected') ).exclude()
+mb.global_ns.calldefs( declarations.access_type_matcher_t('private') ).exclude()
+try:
+    mb.namespace('archc').exclude()
+except:
+    pass
+
+mb.global_ns.class_('sc_simcontext').member_functions(lambda x: x.name.startswith('clean')).include()
+"""
+    obj.uselib = 'MYSQLCLIENT_H MYSQLPP_H SYSTEMC_H TLM_H  TLM_H BOOST_PYTHON BOOST PYEXT'
+    if '-DENABLE_FPU' in bld.env['CXXFLAGS']:
+        obj.uselib += ' MPFRCPP MPFR GMPXX GMP'
+    obj.uselib_local = 'systemc'
+    obj.includes = '../../../lib/archc/ac_includes ../../../src/mysql ./'
+    obj.templates = [
+        'tlm_bus::tlm_response<int,TLM_PASS_BY_POINTER>'
+        ,'tlm_bus::tlm_request<int,int,TLM_PASS_BY_POINTER>'
+        , 'tlm_ports::tlm_initiator_port<tlm_core::tlm_transport_if<tlm_bus::tlm_request<unsigned int, unsigned int, TLM_PASS_BY_COPY>, tlm_bus::tlm_response<unsigned int, TLM_PASS_BY_COPY> >, 0>'
+        ,'sc_core::sc_signal<char>'
+        ,'sc_core::sc_signal<unsigned char>'
+        ,'sc_core::sc_signal<int>'
+        ,'sc_core::sc_signal<unsigned int>'
+        ,'sc_core::sc_signal<long>'
+        ,'sc_core::sc_signal<unsigned long>'
+        ,'sc_core::sc_signal<bool>'
+        ,'sc_core::sc_signal<float>'
+        ,'sc_core::sc_signal<double>'
+        ,'sc_dt::sc_bv<8>'
+        ,'sc_dt::sc_bv<16>'
+        ,'sc_dt::sc_bv<32>'
+        ,'sc_dt::sc_bv<64>'
+    ]

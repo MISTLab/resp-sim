@@ -1,0 +1,76 @@
+#! /usr/bin/env python
+
+def build(bld):
+    bld.add_subdirs('procStubs')
+
+    if bld.env['STATIC_PLATFORM']:
+        obj = bld.new_task_gen('cxx', 'staticlib')
+    else:
+        obj = bld.new_task_gen('pypp', 'shlib')
+
+    if bld.env['STATIC_PLATFORM']:
+        obj.source = """
+            GDBConnectionManager.cpp
+            GDBStub.cpp
+        """
+    else:
+        obj.source = """
+            GDBStub.hpp
+            GDBConnectionManager.cpp
+            GDBStub.cpp
+        """
+    obj.target = 'GDBStub32'
+    obj.includes = '../../lib/archc/ac_includes ./procStubs ../systempy ../mysql'
+    obj.uselib = 'SYSTEMC_H TLM MYSQLPP_H MYSQLCLIENT_H BOOST MATH'
+    if bld.env['STATIC_PLATFORM']:
+        obj.uselib += ' SYSTEMC BOOST_DATE_TIME_STATIC'
+    else:
+        obj.uselib_local='systemc'
+        obj.uselib += ' PYEXT BOOST_PYTHON BOOST_DATE_TIME BOOST_SYSTEM'
+        obj.start_decls = 'resp'
+        obj.custom_code = """
+mb.class_('EOScallback').already_exposed = True
+mb.class_('GDBSimEndCallback').include()
+mb.class_('GDBSimEndCallback').member_operator('operator()').exclude()
+mb.class_('PauseCallback').already_exposed = True
+mb.class_('GDBPauseCallback').include()
+mb.class_('GDBPauseCallback').member_operator('operator()').exclude()
+mb.class_('TimeoutCallback').already_exposed = True
+mb.class_('GDBTimeoutCallback').include()
+mb.class_('GDBTimeoutCallback').member_operator('operator()').exclude()
+mb.class_('ErrorCallback').already_exposed = True
+mb.class_('GDBErrorCallback').include()
+mb.class_('GDBErrorCallback').member_operator('operator()').exclude()
+
+try:
+    procIf = mb.global_ns.classes(lambda decl : decl.name.startswith('processorInterface'))
+    for i in procIf:
+        i.include()
+        i.member_functions().exclude()
+except:
+    pass
+cls = mb.global_ns.classes(lambda decl : decl.name.startswith('GDBStub') )
+for i in cls:
+    i.include()
+    if i.name != 'GDBStubBase':
+        i.alias = 'GDBStub32'
+    i.member_functions().exclude()
+    try:
+        i.enumerations(lambda decl: decl.name.startswith('stopType')).exclude()
+    except:
+        pass
+    try:
+        i.variables(lambda decl: decl.name.startswith('connManager')).exclude()
+    except:
+        pass
+
+mb.global_ns.classes(lambda decl : decl.name.startswith('Breakpoint')).exclude()
+mb.global_ns.classes(lambda decl : decl.name.startswith('GDBRequest')).exclude()
+mb.global_ns.classes(lambda decl : decl.name.startswith('GDBResponse')).exclude()
+mb.global_ns.classes(lambda decl : decl.name.startswith('GDBConnectionManager')).exclude()
+"""
+        obj.generate_include = True
+        obj.templates = [
+                    'GDBStub<unsigned int>'
+                    , 'processorInterface<unsigned int>'
+                    ]

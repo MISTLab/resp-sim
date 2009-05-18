@@ -1,0 +1,62 @@
+#!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+
+import os, sys
+
+def build(bld):
+    # Library holding the code for exceptions
+    obj = bld.new_task_gen('cxx', 'staticlib')
+    obj.source = """
+        utils.cpp
+    """
+    obj.target = 'utils'
+    obj.name = 'utils'
+
+    if not bld.env['STATIC_PLATFORM']:
+        # Library holding the code for the python converters
+        obj = bld.new_task_gen('pypp', 'shlib')
+        obj.source = """
+            to_convert.hpp
+        """
+        obj.target = 'converters'
+        obj.uselib = 'SYSTEMC_H TLM_H BOOST PYEXT BOOST_PYTHON'
+        obj.uselib_local = 'systemc'
+        obj.include = 'scwrapper'
+        obj.start_decls = 'converters'
+        obj.custom_declaration_code= """
+#include <systemc.h>
+
+#include <map>
+#include <string>
+#include "python_converters.hpp"
+
+bool interactiveSimulation;
+
+namespace sandbox { namespace {
+
+    void vector_string_converter(){
+        resp::tuple_mapping<std::vector<std::string>, resp::variable_capacity_policy>();
+    }
+
+    void map_string_sctime_converter(){
+        resp::dict_mapping<std::map<std::string, sc_time> >();
+    }
+
+    void map_int_double_converter(){
+        resp::dict_mapping<std::map<int, double> >();
+    }
+
+    void map_uint_sctime_converter(){
+        resp::dict_mapping<std::map<unsigned int, sc_time> >();
+    }
+
+    void init_module(){
+        map_string_sctime_converter();
+        map_uint_sctime_converter();
+        map_int_double_converter();
+        vector_string_converter();
+    }
+
+}} // namespace sandbox::<anonymous>
+"""
+        obj.custom_registration_code = '''sandbox::init_module();'''

@@ -1,0 +1,9 @@
+#!/usr/bin/env python
+
+# Build
+
+def build(bld):
+    bld.add_subdirs('binutils-2.18 archc')
+
+    if not bld.env['STATIC_PLATFORM']:
+        bld.add_subdirs('systemc')

@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+
+def build(bld):
+
+    obj = bld.new_task_gen('cc', 'staticlib')
+    obj.target = 'ecacti'
+    obj.source = "area.c  io.c  leakage.c  time.c"
+    obj.env['CCFLAGS'] = ['-fPIC', '-DPIC']
+
+    if not bld.env['STATIC_PLATFORM']:
+        obj2 = bld.new_task_gen('pypp', 'shlib')
+    else:
+        obj2 = bld.new_task_gen('cxx', 'shlib')
+    obj2.target = 'ecacti_wrapper'
+    obj2.start_decls = 'resp'
+    obj2.source = 'ecacti_wrapper.cpp'
+    if not bld.env['STATIC_PLATFORM']:
+        obj2.source += ' ecacti_wrapper.h'
+    obj2.env.append_unique('LINKFLAGS', '-lm')
+    obj2.uselib_local = 'ecacti'
+    obj2.uselib = 'BOOST_PYTHON BOOST PYEXT'
+
+    obj2.custom_code = """
+mb.class_('cache_power_data').include()
+"""

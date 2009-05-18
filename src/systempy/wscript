@@ -1,0 +1,60 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+import Options
+
+def build(bld):
+    if not bld.env['STATIC_PLATFORM']:
+        bld.add_subdirs('sc_wrapper')
+
+    # Generation of the controller library
+    if bld.env['STATIC_PLATFORM']:
+        obj = bld.new_task_gen('cxx', 'staticlib')
+    else:
+        obj = bld.new_task_gen('pypp', 'shlib')
+    if bld.env['STATIC_PLATFORM']:
+        obj.source ='''
+            simulation_engine.cpp controller.cpp
+        '''
+    else:
+        obj.source ='''
+            simulation_engine.cpp controller.cpp controller.hpp
+        '''
+
+    obj.target='sc_controller';
+    obj.uselib='SYSTEMC_H TLM_H BOOST'
+    if bld.env['STATIC_PLATFORM']:
+        obj.uselib += ' SYSTEMC BOOST_THREAD_STATIC'
+    else:
+        obj.uselib_local='systemc'
+        obj.uselib += ' PYEXT BOOST_PYTHON BOOST_THREAD'
+        obj.include = "scwrapper"
+        obj.generate_include = True
+        obj.start_decls = 'resp'
+        obj.custom_code = """
+# Exclude protected members
+mb.calldefs( declarations.access_type_matcher_t( 'protected' ) ).exclude()
+
+# Exclude simulation_engine
+simulation_engine = mb.class_('simulation_engine')
+simulation_engine.exclude()
+
+callback = mb.class_('EOScallback')
+callback.include()
+mb.global_ns.free_functions('register_EOS_callback').include()
+
+controller = mb.class_('sc_controller')
+controller.include()
+controller.variable('stopped_condition').exclude()
+controller.variable('global_mutex').exclude()
+controller.variable('se').exclude()
+controller.variable('stop').exclude()
+controller.variable('ended').exclude()
+controller.variable('accumulatedTime').exclude()
+controller.variable('now').exclude()
+controller.member_function('createController').call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
+virtuality = True
+
+mb.class_('caller').exclude()
+mb.variable('controllerInstance').exclude()
+"""

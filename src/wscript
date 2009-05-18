@@ -1,0 +1,12 @@
+#!/usr/bin/env python
+
+# Build
+
+def build(bld):
+    subdirs = 'systempy softwareDebug SynchManager execLoader bfdFrontend profiler utils  power/ecacti power'
+    if bld.env['ENABLE_MYSQL']:
+        subdirs += ' mysql'
+    if bld.env['ENABLE_GUI'] and not bld.env['STATIC_PLATFORM']:
+        subdirs += ' gui'
+    bld.add_subdirs(subdirs)
+

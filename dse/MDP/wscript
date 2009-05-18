@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+
+# Build
+
+import os, sys
+
+def build(bld):
+    # Creates the MDP main executable
+    obj = bld.new_task_gen('cxx', 'program')
+    obj.source='''
+        Graph.cpp
+        MDPSolver.cpp
+        main.cpp
+        systemConfig.cpp
+        configuration.cpp
+        pluginIf.cpp
+        ObjectiveFun.cpp
+        ProbFunction.cpp
+        simulationCache.cpp
+    '''
+    obj.uselib = 'BOOST BOOST_PROGRAM_OPTIONS MATH BOOST_SYSTEM BOOST_FILESYSTEM DL MPATROL BFD'
+    obj.uselib_local = 'RespClient powerframework'
+    obj.name = 'mdp'
+    obj.target = 'mdp'
+
+    # Creates the MDP plugins; note that the different plugins
+    # can either be grouped in a single shared library file or
+    # in multiple ones
+    obj = bld.new_task_gen('cxx', 'shlib')
+    obj.source='''
+        ProcNum.cpp
+        MemLatency.cpp
+        ProcFreq.cpp
+        bus_latency.cpp
+        cacheWritePolicy.cpp
+        cacheSubstsPolicy.cpp
+        cache_size.cpp
+    '''
+    obj.uselib = 'BOOST MATH MPATROL BFD'
+    obj.uselib_local = 'RespClient powerframework'
+    obj.name = 'mdpPlugins'
+    obj.target = 'mdpPlugins'

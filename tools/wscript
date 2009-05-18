@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+
+# Build
+
+def build(bld):
+        bld.add_subdirs('memAnalyzer backtracer server')

@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+
+# Build
+
+import os, sys
+
+def build(bld):
+    obj = bld.new_task_gen('cxx', 'program')
+    obj.source='''
+        problem.cpp
+        solution.cpp
+        main.cpp
+        simulationCache.cpp
+    '''
+    obj.uselib = 'BOOST BOOST_PROGRAM_OPTIONS MOMH SIGCPP'
+    obj.uselib_local = 'RespClient'
+    obj.name = 'dse_driver'
+    obj.target = 'dse_driver'

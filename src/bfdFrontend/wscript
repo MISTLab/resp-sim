@@ -1,0 +1,69 @@
+#!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+
+import os, sys
+
+def build(bld):
+    if float(bld.env['PYTHON_VERSION']) < 2.5:
+        bld.env.append_unique('CPPFLAGS' , '-DPy_ssize_t=long' )
+
+    if bld.env['STATIC_PLATFORM']:
+        obj = bld.new_task_gen('cxx', 'staticlib')
+    else:
+        obj = bld.new_task_gen('cxx', 'shlib')
+    if not bld.env['STATIC_PLATFORM']:
+        obj.env['shlib_PREFIX'] = "lib"
+        if sys.platform == 'darwin':
+            obj.env['shlib_SUFFIX'] = obj.env['shlib_ORIG_SUFFIX']
+    obj.source = """
+        bfdFrontend.cpp
+    """
+    obj.target = 'BFDFrontend'
+    if sys.platform != 'darwin':
+        obj.env.append_unique('LINKFLAGS', '-Wl,-rpath-link -Wl,' + os.path.abspath('lib' + os.sep + 'binutils-2.18' + os.sep + 'build' + os.sep + 'lib'))
+    obj.env.append_unique('LINKFLAGS', '-Wl,-rpath -Wl,' + os.path.abspath('lib' + os.sep + 'binutils-2.18' + os.sep + 'build' + os.sep + 'lib'))
+    obj.uselib = 'BOOST'
+    if bld.env['STATIC_PLATFORM']:
+        obj.uselib += ' BOOST_REGEX_STATIC'
+    else:
+        obj.uselib += ' BOOST_REGEX'
+    obj.uselib += ' OPCODES_CUSTOM BFD_CUSTOM LIBERTY_CUSTOM'
+
+    if bld.env['STATIC_PLATFORM']:
+        return;
+
+    obj = bld.new_task_gen('pypp', 'shlib')
+    obj.source = """
+        bfdFrontend.hpp
+    """
+    obj.target = 'bfdwrapper'
+    if sys.platform != 'darwin':
+        obj.env.append_unique('LINKFLAGS', '-Wl,-rpath-link -Wl,' + os.path.abspath('lib' + os.sep + 'binutils-2.18' + os.sep + 'build' + os.sep + 'lib'))
+    obj.env.append_unique('LINKFLAGS', '-Wl,-rpath -Wl,' + os.path.abspath('lib' + os.sep + 'binutils-2.18' + os.sep + 'build' + os.sep + 'lib'))
+    obj.uselib = 'BOOST BOOST_REGEX PYEXT BOOST_PYTHON OPCODES_CUSTOM BFD_CUSTOM LIBERTY_CUSTOM'
+    obj.uselib_local = 'BFDFrontend'
+    obj.start_decls = 'BFDFrontend'
+    obj.custom_declaration_code = '''
+#include <string>
+#include <list>
+#include "python_converters.hpp"
+
+namespace sandbox { namespace {
+
+    void list_string_converter(){
+        resp::tuple_mapping<std::list<std::string>, resp::variable_capacity_policy>();
+    }
+
+    void init_module(){
+        list_string_converter();
+    }
+
+}} // namespace sandbox::<anonymous>
+'''
+    obj.custom_registration_code = '''sandbox::init_module();'''
+    obj.custom_code = """
+mb.global_ns.class_('Section').exclude()
+bfd = mb.global_ns.class_('BFDFrontend')
+bfd.include()
+bfd.member_functions('findFunction').exclude()
+"""
