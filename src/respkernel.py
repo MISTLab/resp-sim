@@ -36,7 +36,7 @@
 
 # General Init code ############################################################
 
-__version__ = '0.3.2'
+__version__ = '0.5'
 __revision__ = '$Rev: 1881 $'
 
 import sys, os, atexit
@@ -180,36 +180,14 @@ class RespKernel:
         if self.verbose:
             print "Loading sc_controller"
         import sc_controller
+
         # Import Optional components
-        try:
-            global MySQL, mysqlDB
-            if self.verbose:
-                print "Loading MySQL"
-            import MySQL
-            mysqlDB = MySQL.MySQL.initializeMySQLdb()
-        except ImportError:
-            pass
-        if self.verbose:
-            print "Loading GDBStub32"
-        import GDBStub32
         if self.verbose:
             print "Loading ExecLoader"
         import ExecLoader
         if self.verbose:
-            print "Loading archcwrap"
-        import archcwrap
-        if self.verbose:
-            print "Loading Profiler"
-        import Profiler
-        if self.verbose:
             print "Loading compManager"
         import compManager
-        if self.verbose:
-            print "Loading breakpoints"
-        import breakpoints
-        if self.verbose:
-            print "Loading injection"
-        import injection
 
         # import components storing them into a component list
         self.components = []
@@ -220,16 +198,6 @@ class RespKernel:
             sys.exit(0)
 
         # importing of the processor stubs, they must be imported after the processors themselves
-        global GDBProcStub32
-        if self.verbose:
-            print "Loading GDBProcStub32"
-        import GDBProcStub32
-        if self.verbose:
-            print "Loading ProcIf"
-        import ProcIf
-        if self.verbose:
-            print "Loading SynchManager"
-        import SynchManager
         if self.verbose:
             print "Loading bfdwrapper"
         import bfdwrapper

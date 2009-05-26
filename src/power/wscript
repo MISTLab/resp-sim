@@ -2,12 +2,14 @@
 # -*- coding: iso-8859-1 -*-
 
 def build(bld):
+    print 'fix ecacti wrapping mechanism: only shared liraries with rpath should be used'
+
 
     obj = bld.new_task_gen('cxx', 'staticlib')
     obj.target = 'powerframework'
+    obj.name = 'powerframework'
     obj.source = 'power.cpp cache.cpp ecacti/ecacti_wrapper.cpp processor.cpp memory.cpp'
-    obj.includes = '. ../utils ecacti'
+    obj.includes = '. ecacti'
     obj.export_incdirs = '.'
-    obj.env.append_unique('LINKFLAGS', '-lm')
     obj.uselib_local = 'ecacti'
-    obj.uselib = 'BOOST BOOST_FILESYSTEM'
+    obj.uselib = 'BOOST BOOST_FILESYSTEM MATH'

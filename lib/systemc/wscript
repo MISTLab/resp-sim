@@ -5,6 +5,8 @@ import sys, Options, os
 def build(bld):
     """Create a dynamic version of the systemc library"""
 
+    print 'is cshlib == makeshared?? check restart with 64 bits'
+
     obj = bld.new_task_gen('cxx','shlib','cshlib')
     obj.env['CPPPATH'] = [ x+'/../src/' for x in obj.env['CPPPATH_SYSTEMC_H'] ]
     obj.source = '''SYSTEMC sc_main.cpp sc_simcontext.cpp'''

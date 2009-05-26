@@ -1,18 +1,15 @@
-import os, types, sys, copy,  stat, Options,Logs
+# -*- coding: iso-8859-1 -*-
 
-def doxygen_create(task):
-    print(Utils.colors['BOLD'] + Utils.colors['GREEN'] + 'Creating Documentation ...' + Utils.colors['NORMAL'] + ' (too see it open file _build_/default/documentation/html/index.html)')
-    os.system('doxygen ' + os.path.join('..' , 'Doxyfile') + ' > /dev/null 2>&1')
+import os, types, sys, glob,  stat, Options,Logs
 
-def clear_database(task):
-    sys.path.append(os.path.abspath('..' , 'tools' , 'waf'))
-    import mysql
-    if task.env['ENABLE_MYSQL']:
-        try:
-            mysql.reCreateDB(task.env['MYSQL_PATH'],  task.env['MYSQL_ADDRESS'],  True)
-        except Exception,  e:
-            print(Utils.colors['BOLD'] + Utils.colors['GREEN'] + 'Error during the re-creation of the resp_sim database' + Utils.colors['NORMAL'] + ' --> ' + str(e))
-            task.env.pop('ENABLE_MYSQL')
+def find_files(paths, pattern, toRemove = []):
+    for path in paths:
+        toExamine = []
+        toRemove += glob.glob(os.path.abspath(os.path.join(path, pattern)))
+        for dirContent in os.listdir(path):
+            if os.path.isdir(os.path.join(path, dirContent)):
+                toExamine.append(os.path.join(path, dirContent))
+        find_files(toExamine, pattern, toRemove)
 
 def create_startSim(task):
     try:
@@ -72,36 +69,3 @@ def create_startSim(task):
     startFile.close()
 
     os.chmod(os.path.join(task.env['RESP_HOME'], 'startSim.sh'), stat.S_IXOTH | stat.S_IXGRP | stat.S_IXUSR | os.stat(os.path.join(task.env['RESP_HOME'], 'startSim.sh'))[stat.ST_MODE])
-
-def rec_find(curPath,  exclude,  headerExt):
-    global rec_find
-
-    """Recursively examines all the folders inside ArchC looking for include
-    files and copies them to dest"""
-    import os
-    directories = []
-    headers= []
-    directories.append(curPath)
-
-    # First of all I examine all the files inside the current directory
-    dirContent = os.listdir(curPath)
-    for element in dirContent:
-        if os.path.isfile(curPath + os.sep + element):
-            if os.path.splitext(element)[1] in headerExt:
-                headers.append(os.path.abspath(curPath + os.sep + element))
-
-    # Then I move to recirsively examine subdirectories
-    for element in dirContent:
-        next = curPath + os.sep + element
-        #Now I have to see if the current element has to be excluded
-        toExclude = False
-        for exclDirs in exclude:
-            if next.find(exclDirs) != -1:
-                toExclude = True
-                break;
-        if os.path.isdir(next) and not (next).endswith('.svn') and not toExclude:
-            d , h= rec_find(next, exclude,  headerExt)
-            directories += d
-            headers += h
-
-    return directories, headers

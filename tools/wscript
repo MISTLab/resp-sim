@@ -1,6 +1,8 @@
 #!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
 
 # Build
 
 def build(bld):
-        bld.add_subdirs('memAnalyzer backtracer server')
+        # backtracer
+        bld.add_subdirs('memTraceViewer client')

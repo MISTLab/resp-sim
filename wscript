@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 # -*- coding: iso-8859-1 -*-
-# encoding: utf-8
 
 # ReSP Build file
 
@@ -16,7 +15,7 @@ from Tools import cc
 from Tools import cxx
 import os, types, sys, copy,  stat
 
-validProcessors = ['arm', 'leon3', 'microblaze']
+#validProcessors = ['arm', 'leon3', 'microblaze']
 
 # Build methods
 def build(bld):
@@ -31,9 +30,9 @@ def build(bld):
     #TaskGen.declare_extension(['.S','.s'], cc.c_hook)
 
     # process subfolders from here
-    bld.add_subdirs('lib component tools src')
+    bld.add_subdirs('lib component tools src dse')
     bld.add_subdirs(os.path.join('dse', 'MDP'))
-    if bld.env['MOMH_FOUND']:
+    if bld.env['HAVE_MOMH']:
         bld.add_subdirs(os.path.join('dse', 'MOMH'))
 
     # Creates the startSim script
@@ -73,14 +72,45 @@ def configure(conf):
         conf.env['LINKFLAGS'] = conf.env['LINKFLAGS'].split(' ')
     if type(conf.env['STLINKFLAGS']) == type(''):
         conf.env['STLINKFLAGS'] = conf.env['STLINKFLAGS'].split(' ')
+    if type(conf.env['RPATH']) == type(''):
+        conf.env['RPATH'] = conf.env['RPATH'].split(' ')
 
     ########################################
-    # Check for special gcc flags
+    # Set and Check for special gcc flags
     ########################################
     if not '-g' in conf.env['CCFLAGS'] and not '-g3' in conf.env['CCFLAGS']:
-        conf.env.append_unique('CCFLAGS', '-O2 -DNDEBUG -g')
+        conf.env.append_unique('CCFLAGS', '-O2')
+        conf.env.append_unique('CPPFLAGS', '-DNDEBUG')
     if not '-g' in conf.env['CXXFLAGS'] and not '-g3' in conf.env['CXXFLAGS']:
-        conf.env.append_unique('CXXFLAGS', '-O2 -DNDEBUG -g')
+        conf.env.append_unique('CXXFLAGS', '-O2')
+        conf.env.append_unique('CPPFLAGS', '-DNDEBUG')
+
+    defaultFlags = ['-fstrict-aliasing']
+    if not Options.options.static_plat:
+        defaultFlags += ['-fPIC']
+        conf.env.append_unique('LINKFLAGS','-fPIC' )
+        if sys.platform != 'darwin':
+            conf.env.append_unique('LINKFLAGS','-Wl,-E')
+
+    conf.env.append_unique('CXXFLAGS', defaultFlags)
+    conf.env.append_unique('CFLAGS', defaultFlags)
+    conf.env.append_unique('CCFLAGS', defaultFlags)
+    conf.env.append_unique('CPPFLAGS', '-DPIC')
+    conf.env.append_unique('ARFLAGS', 'rc')
+
+    if sys.platform == 'darwin':
+        conf.env.append_unique('shlib_LINKFLAGS', ['-undefined suppress', '-flat_namespace'] )
+
+    if not Options.options.enable_tools:
+        conf.env.append_unique('CPPFLAGS','-DDISABLE_TOOLS')
+
+    if sys.byteorder == "little":
+        conf.env.append_unique('CPPFLAGS','-DLITTLE_ENDIAN_BO')
+        conf.check_message_custom('endianness', '', 'little')
+    else:
+        conf.env.append_unique('CPPFLAGS','-DBIG_ENDIAN_BO')
+        conf.check_message_custom('endianness', '', 'big')
+
     if conf.env['CPPFLAGS']:
         conf.check_cc(cflags=conf.env['CPPFLAGS'])
     if conf.env['CCFLAGS']:
@@ -104,22 +134,6 @@ def configure(conf):
 
     conf.env['RESP_HOME'] = os.path.abspath(os.path.dirname(sys.modules['__main__'].__file__))
 
-    defaultFlags = ['-fstrict-aliasing']
-    if not Options.options.static_plat:
-        defaultFlags += ['-fPIC']
-        conf.env.append_unique('LINKFLAGS','-fPIC' )
-        if sys.platform != 'darwin':
-            conf.env.append_unique('LINKFLAGS','-Wl,-E')
-
-    conf.env.append_unique('CXXFLAGS',defaultFlags)
-    conf.env.append_unique('CFLAGS',defaultFlags)
-    conf.env.append_unique('CCFLAGS',defaultFlags)
-    conf.env.append_unique('CPPFLAGS','-DPIC')
-    conf.env.append_unique('ARFLAGS','rc')
-
-    if sys.platform == 'darwin':
-        conf.env.append_unique('shlib_LINKFLAGS', ['-undefined suppress', '-flat_namespace'] )
-
     ########################################
     # Now I permanently save some compilation options specified at configure time
     ########################################
@@ -135,29 +149,16 @@ def configure(conf):
         conf.env['NON_STD_LIBS'].append(os.path.normpath(os.path.expandvars(os.path.expanduser(mpfr_libs))))
 
     mpfrcpp_libs = getattr(Options.options, 'mpfrcpp_libs', '')
-    if conf.env['MPFRCPP_LIBS']:
+    if mpfrcpp_libs:
         conf.env['NON_STD_LIBS'].append(os.path.normpath(os.path.expandvars(os.path.expanduser(mpfrcpp_libs))))
     boostlibs = getattr(Options.options, 'boostlibs', '')
     if boostlibs:
-        conf.env['NON_STD_LIBS'].append(os.path.normpath(os.path.expandvars(os.path.expanduser(getattr(Options.options, 'boostlibs', '')))))
+        conf.env['NON_STD_LIBS'].append(os.path.normpath(os.path.expandvars(os.path.expanduser(boostlibs))))
     if Options.options.en_processors:
         conf.env['ENABLE_PROCESSORS'] = Options.options.en_processors.split()
         for proc in conf.env['ENABLE_PROCESSORS']:
             if not proc in validProcessors:
-                Logs.error("please specify a path inside the main ReSP folder for file " + Options.options.static_plat)
-
-    if not Options.options.enable_tools:
-        conf.env.append_unique('CPPFLAGS','-DDISABLE_TOOLS')
-
-    ########################################
-    # Setting the host endianess
-    ########################################
-    if sys.byteorder == "little":
-        conf.env.append_unique('CPPFLAGS','-DLITTLE_ENDIAN_BO')
-        conf.check_message_custom('endianness', '', 'little')
-    else:
-        conf.env.append_unique('CPPFLAGS','-DBIG_ENDIAN_BO')
-        conf.check_message_custom('endianness', '', 'big')
+                conf.fatal(proc + ' is not a valid processor: valid processors are ' + str(validProcessors))
 
     ########################################
     # Check for python
@@ -172,7 +173,9 @@ def configure(conf):
     ########################################
     if conf.env['STATIC_PLATFORM'] != 1:
         conf.check_tool('py++', os.path.join( '.' , 'tools' , 'waf'))
-    conf.check_tool('mkshared ', os.path.join( '.' , 'tools' , 'waf'))
+        conf.check_tool('mkshared ', os.path.join( '.' , 'tools' , 'waf'))
+
+    print 'Modify Py++ in order to be able to expose private members'
 
     ##################################################
     # Check for standard libraries
@@ -180,9 +183,9 @@ def configure(conf):
     conf.check_cc(lib='m', uselib_store='MATH', mandatory=1)
     conf.check_cc(lib='dl', uselib_store='DL', mandatory=1)
 
-    ###########################################################
-    # Check for BFD library and header and for LIBERTY library
-    ###########################################################
+    #######################################################
+    # Determining gcc search dirs
+    #######################################################
     compilerExecutable = ''
     if len(conf.env['CXX']):
         compilerExecutable = conf.env['CXX'][0]
@@ -193,6 +196,9 @@ def configure(conf):
 
     result = os.popen(compilerExecutable + ' -print-search-dirs')
     searchDirs = []
+    localLibPath = os.path.join('/', 'usr','local','lib')
+    if os.path.exists(localLibPath):
+        searchDirs.append(localLibPath)
     gccLines = result.readlines()
     for curLine in gccLines:
         startFound = curLine.find('libraries: =')
@@ -200,9 +206,14 @@ def configure(conf):
             curLine = curLine[startFound + 12:-1]
             searchDirs_ = curLine.split(':')
             for i in searchDirs_:
-                if not os.path.abspath(i) in searchDirs:
+                if os.path.exists(i) and not os.path.abspath(i) in searchDirs:
                     searchDirs.append(os.path.abspath(i))
             break
+    conf.check_message_custom('gcc search path', '', 'ok')
+
+    ###########################################################
+    # Check for BFD library and header and for LIBERTY library
+    ###########################################################
     if Options.options.bfddir:
         searchDirs.append(os.path.abspath(os.path.expanduser(os.path.expandvars(os.path.join(Options.options.bfddir, 'lib')))))
 
@@ -253,7 +264,8 @@ def configure(conf):
 
     ##################################################
     # Is SystemC compiled? Check for SystemC library
-    # Notice that we can't rely on lib-linux, therefore I have to find the actual platform...
+    # Notice that we can't rely on lib-linux,
+    # therefore I have to find the actual platform...
     ##################################################
     syscpath = None
     if Options.options.systemcdir:
@@ -346,11 +358,11 @@ def configure(conf):
             #error TRAP_REVISION not defined in file trap.hpp
             #endif
 
-            #if TRAP_REVISION < 419
+            #if TRAP_REVISION < 420
             #error Wrong version of the TRAP runtime: too old
             #endif
             int main(int argc, char * argv[]){return 0;}
-        ''', msg='Check for TRAP version', uselib='TRAP', mandatory=1, includes=trapDirInc)
+        ''', msg='Check for TRAP version (at least revision 420)', uselib='TRAP', mandatory=1, includes=trapDirInc)
     else:
         conf.check_cxx(lib='trap', uselib_store='TRAP', mandatory=1)
         conf.check_cxx(header_name='trap.hpp', uselib='TRAP', uselib_store='TRAP', mandatory=1)
@@ -361,33 +373,61 @@ def configure(conf):
             #error TRAP_REVISION not defined in file trap.hpp
             #endif
 
-            #if TRAP_REVISION < 63
+            #if TRAP_REVISION < 420
             #error Wrong version of the TRAP runtime: too old
             #endif
             int main(int argc, char * argv[]){return 0;}
-        ''', msg='Check for TRAP version', uselib='TRAP', mandatory=1)
+        ''', msg='Check for TRAP version (at least revision 420)', uselib='TRAP', mandatory=1)
 
     ##################################################
     # Check for GMP & GMPXX libraries and headers
     # used to represent precise floating point values
     ##################################################
     foundGMPLibs = False
-    if conf.check_cc(lib='gmp', uselib_store='GMP', libpath=conf.env['GMP_LIBS']):
-        if conf.check_cc(header_name='gmp.h', uselib_store='GMP', includes=conf.env['GMP_HEADER']):
-            if conf.check_cxx(lib='gmpxx', uselib_store='GMPXX', libpath=conf.env['GMP_LIBS']):
-                if conf.check_cxx(header_name='gmpxx.h', uselib_store='GMPXX', includes=conf.env['GMP_HEADER']):
-                    foundGMPLibs = True
+    if Options.options.gmp_libs:
+        foundGMPLibs = conf.check_cc(lib='gmp', uselib_store='GMP', libpath=Options.options.gmp_libs)
+    else:
+        foundGMPLibs = conf.check_cc(lib='gmp', uselib_store='GMP')
+    if foundGMPLibs:
+        if Options.options.gmp_header:
+            foundGMPLibs = conf.check_cc(header_name='gmp.h', uselib_store='GMP', uselib='GMP',  includes=Options.options.gmp_header)
+        else:
+            foundGMPLibs = conf.check_cc(header_name='gmp.h', uselib_store='GMP', uselib='GMP')
+    if foundGMPLibs:
+        if Options.options.gmpxx_libs:
+            foundGMPLibs = conf.check_cxx(lib='gmpxx', uselib_store='GMPXX', libpath=Options.options.gmpxx_libs)
+        else:
+            foundGMPLibs = conf.check_cxx(lib='gmpxx', uselib_store='GMPXX')
+    if foundGMPLibs:
+        if Options.options.gmpxx_header:
+            foundGMPLibs = conf.check_cxx(header_name='gmpxx.h', uselib_store='GMPXX', uselib='GMPXX GMP', includes=Options.options.gmpxx_header)
+        else:
+            foundGMPLibs = conf.check_cxx(header_name='gmpxx.h', uselib_store='GMPXX', uselib='GMPXX GMP')
 
     ##################################################
     # Check for MPFR & MPFRCPP libraries and headers
     # used to represent precise floating point values
     ##################################################
-    if foundGMPLibs:
-        if conf.check_cc(lib='mpfr', uselib_store='MPFR', libpath=conf.env['MPFR_LIBS']):
-            if conf.check_cc(header_name='mpfr.h', uselib_store='MPFR', includes=conf.env['MPFR_HEADER']):
-                if conf.check_cxx(lib='mpfrcpp', uselib_store='MPFR', libpath=conf.env['MPFRCPP_LIBS']):
-                    if conf.check_cxx(header_name='mpfrcpp/mpfrcpp.hpp', uselib='MPFR', uselib_store='MPFR', includes=conf.env['MPFRCPP_HEADER']):
-                        conf.env.append_unique('CPPFLAGS','-DENABLE_FPU')
+    foundMPFR = False
+    if Options.options.mpfr_libs:
+        foundMPFR = conf.check_cc(lib='mpfr', uselib_store='MPFR', libpath=Options.options.mpfr_libs)
+    else:
+        foundMPFR = conf.check_cc(lib='mpfr', uselib_store='MPFR')
+    if foundMPFR:
+        if Options.options.mpfr_header:
+            foundMPFR = conf.check_cc(header_name='mpfr.h', uselib_store='MPFR', uselib='MPFR', includes=Options.options.mpfr_header)
+        else:
+            foundMPFR = conf.check_cc(header_name='mpfr.h', uselib_store='MPFR', uselib='MPFR')
+    if foundMPFR:
+        if Options.options.mpfrcpp_libs:
+            foundMPFR = conf.check_cxx(lib='mpfrcpp', uselib_store='MPFRCPP', libpath=Options.options.mpfrcpp_libs)
+        else:
+            foundMPFR = conf.check_cxx(lib='mpfrcpp', uselib_store='MPFRCPP')
+    if foundMPFR:
+        if Options.options.mpfrcpp_header:
+            foundMPFR = conf.check_cxx(header_name='mpfrcpp/mpfrcpp.hpp', uselib='MPFR MPFRCPP', uselib_store='MPFRCPP', includes=Options.options.mpfrcpp_header)
+        else:
+            foundMPFR = conf.check_cxx(header_name='mpfrcpp/mpfrcpp.hpp', uselib='MPFR MPFRCPP', uselib_store='MPFRCPP')
 
     ##################################################
     # Check for the SigC++ library
@@ -397,18 +437,28 @@ def configure(conf):
     ##################################################
     # Check for the MOMHLib++ library
     ##################################################
-    if conf.check_cxx(lib='momh', uselib_store='MOMH', libpath=conf.env['MOM_LIBS']):
-        if conf.check_cxx(header_name='momh/libmomh.h', uselib='MOMH SIGCPP', uselib_store='MOMH', includes=conf.env['MOM_HEADER']):
+    foundMOMH = False
+    if Options.options.momh_libs:
+        foundMOMH = conf.check_cxx(lib='momh', uselib_store='MOMH', libpath=Options.options.momh_libs)
+    else:
+        foundMOMH = conf.check_cxx(lib='momh', uselib_store='MOMH')
+    if foundMOMH:
+        if Options.options.momh_header:
+            foundMOMH = conf.check_cxx(header_name='momh/libmomh.h', uselib='MOMH SIGCPP', uselib_store='MOMH', includes=Options.options.momh_header)
+        else:
+            foundMOMH = conf.check_cxx(header_name='momh/libmomh.h', uselib='MOMH SIGCPP', uselib_store='MOMH')
             conf.env["MOMH_FOUND"]=1
-        elif conf.check_cxx(header_name='momh/libmomh.h', uselib='MOMH SIGCPP', uselib_store='MOMH', includes=['/usr/include/libmomh', '/usr/local/include/libmomh']):
-            conf.env["MOMH_FOUND"]=1
+            if not foundMOMH:
+                foundMOMH = conf.check_cxx(header_name='momh/libmomh.h', uselib='MOMH SIGCPP', uselib_store='MOMH', includes=['/usr/include/libmomh', '/usr/local/include/libmomh']):
+    if foundMOMH:
+        conf.env["HAVE_MOMH"]=1
 
     #################################################
     # Finally I set the path so that it is possible to include file utils.hpp in all the project
     #################################################
     conf.env.append_unique('CPPPATH', os.path.abspath(os.path.join('src', 'utils')))
     conf.env.append_unique('CPPPATH', os.path.abspath(os.path.join('src', 'systempy')))
-    conf.env.append_unique('LIBPATH', os.path.abspath(os.path.join('_build_','default','src', 'utils')))
+    conf.env.append_unique('LIBPATH', os.path.abspath(os.path.join('_build_', 'default', 'src', 'utils')))
     conf.env.append_unique('LIB', 'utils')
 
 def set_options(opt):
@@ -417,25 +467,27 @@ def set_options(opt):
     """
     waf_tools = os.path.join('.' , 'tools' , 'waf')
 
-    build_options = opt.add_option_group('General Build Options')
-
-    opt.tool_options('python', option_group=build_options) # options for disabling pyc or pyo compilation
+    # Default tools options
+    opt.tool_options('python')
     opt.tool_options('compiler_cc')
     opt.tool_options('compiler_cxx')
-    opt.tool_options('gcc', option_group=build_options)
-    opt.tool_options('g++', option_group=build_options)
-    #opt.tool_options('msvc', option_group=build_options)
-    opt.tool_options('boost', option_group=build_options)
+    opt.tool_options('gcc')
+    opt.tool_options('g++')
+    opt.tool_options('boost')
 
     # Specify SystemC path
     opt.add_option('--with-systemc', type='string', help='SystemC installation directory', dest='systemcdir' )
     # Specify TLM path
     opt.add_option('--with-tlm', type='string', help='TLM installation directory', dest='tlmdir')
+    # Specify TRAP path
+    opt.add_option('--with-trap', type='string', help='TRAP libraries and headers installation directory', dest='trapdir')
+    # Specify BFD and IBERTY libraries path
+    opt.add_option('--with-bfd', type='string', help='BFD installation directory', dest='bfddir' )
 
-    # Processor-related options
-    opt.sub_options('component/processor', opt.add_option_group( "Processor model options" ))
+    # Specify if tools (debugger, profiler etc.) support should be compiled inside processor models
+    opt.add_option('-T', '--disable-tools', default=True, action="store_false", help='Disables support for support tools (debuger, os-emulator, etc.) (switch)', dest='enable_tools')
 
-    #Specifies the main file for the construction of the static platform
+    # Specifies the main file for the construction of the static platform
     opt.add_option('--static-platform', type='string', help='Specifies the main file of the static platform: instead of building the reflective simulator, it builds a static simulator using the main file provided by the user', dest='static_plat')
 
     # Specifies whether to compile the extensions for DSE or not
@@ -444,44 +496,59 @@ def set_options(opt):
 
     # Specifies whether to compile the FPU and the directory containing the required libraries
     opt.add_option('--with-gmp-header', type='string', help='Specifies the location of the headers for GMP', dest='gmp_header')
+    opt.add_option('--with-gmpxx-header', type='string', help='Specifies the location of the headers for GMPXX', dest='gmpxx_header')
     opt.add_option('--with-mpfr-header', type='string', help='Specifies the location of the headers for MPFR', dest='mpfr_header')
     opt.add_option('--with-mpfrcpp-header', type='string', help='Specifies the location of the headers for MPFRCPP', dest='mpfrcpp_header')
     opt.add_option('--with-gmp-libs', type='string', help='Specifies the location of the libraries for GMP', dest='gmp_libs')
+    opt.add_option('--with-gmpxx-libs', type='string', help='Specifies the location of the libraries for GMPXX', dest='gmpxx_libs')
     opt.add_option('--with-mpfr-libs', type='string', help='Specifies the location of the library for MPFR', dest='mpfr_libs')
     opt.add_option('--with-mpfrcpp-libs', type='string', help='Specifies the location of the library for MPFRCPP', dest='mpfrcpp_libs')
 
 def shutdown():
-    import os
 
     if Options.commands['build'] == 1:
-
+        import os
         # Finally, lets print some usefull messages to the user
         if not Build.bld.env['STATIC_PLATFORM']:
-            print '\nTo start the simulator type ' + Logs.colors.BOLD + Logs.colors.GREEN + os.path.join('.' , 'startSim.sh') + Logs.colors.NORMAL + ' at the command prompt\n'
+            print('\nTo start the simulator type ' + Logs.colors.BOLD + Logs.colors.GREEN + os.path.join('.' , 'startSim.sh') + Logs.colors.NORMAL + ' at the command prompt\n')
         else:
-            print '\nStatic platform correctly created in the executable ' + Logs.colors.BOLD + Logs.colors.GREEN + os.path.join('_build_' , 'default' , os.path.splitext(os.path.basename(Build.bld.env['STATIC_MAIN']))[0]) + Logs.colors.NORMAL + '\n'
+            print('\nStatic platform correctly created in the executable ' + Logs.colors.BOLD + Logs.colors.GREEN + os.path.join('_build_' , 'default' , os.path.splitext(os.path.basename(Build.bld.env['STATIC_MAIN']))[0]) + Logs.colors.NORMAL + '\n')
 
 #Installing custom distclean function so that some files are
 def distclean():
-    import glob
+
+    # Removing SystemC dynamic library
     try:
+        import glob
         toRemove = glob.glob(os.path.abspath(os.path.join('lib' , 'systemc' , 'libsystemc*')))
-        for i  in toRemove:
+        for i in toRemove:
             try:
                 os.remove(i)
             except:
                 pass
     except:
         pass
+
+    # Removing compiled python files
     try:
-        os.system('for i in `find . -path \'.' , '_build_\' -prune -o -iname *.pyc | grep pyc`;do rm $i; done')
+        sys.path.append( os.path.join('tools','waf') )
+        from waf_utils import find_files
+
+        toRemFiles = find_files(['.'], '*.pyc')
+        for i in toRemFiles:
+            try:
+                os.remove(i)
+            except:
+                pass
     except:
         pass
 
+    # Removing simulator start script
     try:
         os.remove('startSim.sh')
     except:
         pass
 
+    # Now execute the standard cleaning up
     import Scripting
     Scripting.distclean()

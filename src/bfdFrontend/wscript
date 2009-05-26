@@ -4,6 +4,8 @@
 import os, sys
 
 def build(bld):
+    # Fix binutils by creating, if  needed a dynamic version of the static libraries
+
     if float(bld.env['PYTHON_VERSION']) < 2.5:
         bld.env.append_unique('CPPFLAGS' , '-DPy_ssize_t=long' )
 

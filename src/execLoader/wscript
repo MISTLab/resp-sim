@@ -4,6 +4,8 @@
 import os, sys
 
 def build(bld):
+    print 'change the executable loader to use the global BFD frontend; also use the new loader of trap'
+
     if bld.env['STATIC_PLATFORM']:
         obj = bld.new_task_gen('cxx', 'staticlib')
     else:

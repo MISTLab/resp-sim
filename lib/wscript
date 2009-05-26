@@ -3,7 +3,7 @@
 # Build
 
 def build(bld):
-    bld.add_subdirs('binutils-2.18 archc')
+    print 'we might need to build a dynamic version of binutils'
 
     if not bld.env['STATIC_PLATFORM']:
         bld.add_subdirs('systemc')

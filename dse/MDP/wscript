@@ -19,7 +19,7 @@ def build(bld):
         ProbFunction.cpp
         simulationCache.cpp
     '''
-    obj.uselib = 'BOOST BOOST_PROGRAM_OPTIONS MATH BOOST_SYSTEM BOOST_FILESYSTEM DL MPATROL BFD'
+    obj.uselib = 'BOOST BOOST_PROGRAM_OPTIONS MATH BOOST_SYSTEM BOOST_FILESYSTEM DL BFD'
     obj.uselib_local = 'RespClient powerframework'
     obj.name = 'mdp'
     obj.target = 'mdp'
@@ -37,7 +37,7 @@ def build(bld):
         cacheSubstsPolicy.cpp
         cache_size.cpp
     '''
-    obj.uselib = 'BOOST MATH MPATROL BFD'
+    obj.uselib = 'BOOST MATH BFD'
     obj.uselib_local = 'RespClient powerframework'
     obj.name = 'mdpPlugins'
     obj.target = 'mdpPlugins'

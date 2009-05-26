@@ -16,9 +16,8 @@ def build(bld):
     obj2.source = 'ecacti_wrapper.cpp'
     if not bld.env['STATIC_PLATFORM']:
         obj2.source += ' ecacti_wrapper.h'
-    obj2.env.append_unique('LINKFLAGS', '-lm')
     obj2.uselib_local = 'ecacti'
-    obj2.uselib = 'BOOST_PYTHON BOOST PYEXT'
+    obj2.uselib = 'BOOST_PYTHON BOOST PYEXT MATH'
 
     obj2.custom_code = """
 mb.class_('cache_power_data').include()
