@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
 
 import os, sys
 
@@ -9,4 +10,4 @@ def build(bld):
     """
     obj.target = 'RespClient'
     obj.export_incdirs = '.'
-    obj.uselib = 'BOOST BOOST_SYSTEM ASIO BOOST_REGEX BOOST_FILESYSTEM SYSTEMC SYSTEMC_H'
+    obj.uselib = 'BOOST BOOST_SYSTEM ASIO BOOST_REGEX BOOST_FILESYSTEM SYSTEMC'

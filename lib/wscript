@@ -3,7 +3,4 @@
 # Build
 
 def build(bld):
-    print 'we might need to build a dynamic version of binutils'
-
-    if not bld.env['STATIC_PLATFORM']:
-        bld.add_subdirs('systemc')
+    bld.add_subdirs('systemc')

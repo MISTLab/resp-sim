@@ -1,9 +1,11 @@
 #!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
 
 def build(bld):
 
     obj = bld.new_task_gen('cxx', 'shlib')
     obj.target = 'ecacti'
+    obj.target = 'name'
     obj.source = 'area.c io.c leakage.c time.c ecacti_wrapper.cpp'
 
     obj = bld.new_task_gen('pypp', 'shlib')

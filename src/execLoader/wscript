@@ -4,8 +4,6 @@
 import os, sys
 
 def build(bld):
-    print 'We still to use the BFD frontend in the exec loader'
-
     obj = bld.new_task_gen('cxx', 'shlib')
     obj.source = """
         execLoader.cpp

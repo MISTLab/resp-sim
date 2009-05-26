@@ -4,45 +4,22 @@
 import os, sys
 
 def build(bld):
-    # Fix binutils by creating, if  needed a dynamic version of the static libraries
-
-    if float(bld.env['PYTHON_VERSION']) < 2.5:
-        bld.env.append_unique('CPPFLAGS' , '-DPy_ssize_t=long' )
-
-    if bld.env['STATIC_PLATFORM']:
-        obj = bld.new_task_gen('cxx', 'staticlib')
-    else:
-        obj = bld.new_task_gen('cxx', 'shlib')
-    if not bld.env['STATIC_PLATFORM']:
-        obj.env['shlib_PREFIX'] = "lib"
-        if sys.platform == 'darwin':
-            obj.env['shlib_SUFFIX'] = obj.env['shlib_ORIG_SUFFIX']
+    obj = bld.new_task_gen('cxx', 'shlib')
+    obj.env['shlib_PREFIX'] = "lib"
+    if sys.platform == 'darwin':
+        obj.env['shlib_SUFFIX'] = obj.env['shlib_ORIG_SUFFIX']
     obj.source = """
         bfdFrontend.cpp
     """
     obj.target = 'BFDFrontend'
-    if sys.platform != 'darwin':
-        obj.env.append_unique('LINKFLAGS', '-Wl,-rpath-link -Wl,' + os.path.abspath('lib' + os.sep + 'binutils-2.18' + os.sep + 'build' + os.sep + 'lib'))
-    obj.env.append_unique('LINKFLAGS', '-Wl,-rpath -Wl,' + os.path.abspath('lib' + os.sep + 'binutils-2.18' + os.sep + 'build' + os.sep + 'lib'))
-    obj.uselib = 'BOOST'
-    if bld.env['STATIC_PLATFORM']:
-        obj.uselib += ' BOOST_REGEX_STATIC'
-    else:
-        obj.uselib += ' BOOST_REGEX'
-    obj.uselib += ' OPCODES_CUSTOM BFD_CUSTOM LIBERTY_CUSTOM'
-
-    if bld.env['STATIC_PLATFORM']:
-        return;
+    obj.uselib = 'BOOST BOOST_REGEX OPCODES BFD LIBERTY'
 
     obj = bld.new_task_gen('pypp', 'shlib')
     obj.source = """
         bfdFrontend.hpp
     """
     obj.target = 'bfdwrapper'
-    if sys.platform != 'darwin':
-        obj.env.append_unique('LINKFLAGS', '-Wl,-rpath-link -Wl,' + os.path.abspath('lib' + os.sep + 'binutils-2.18' + os.sep + 'build' + os.sep + 'lib'))
-    obj.env.append_unique('LINKFLAGS', '-Wl,-rpath -Wl,' + os.path.abspath('lib' + os.sep + 'binutils-2.18' + os.sep + 'build' + os.sep + 'lib'))
-    obj.uselib = 'BOOST BOOST_REGEX PYEXT BOOST_PYTHON OPCODES_CUSTOM BFD_CUSTOM LIBERTY_CUSTOM'
+    obj.uselib = 'BOOST BOOST_REGEX PYEXT BOOST_PYTHON OPCODES BFD LIBERTY'
     obj.uselib_local = 'BFDFrontend'
     obj.start_decls = 'BFDFrontend'
     obj.custom_declaration_code = '''

@@ -15,7 +15,7 @@ from Tools import cc
 from Tools import cxx
 import os, types, sys, copy,  stat
 
-#validProcessors = ['arm', 'leon3', 'microblaze']
+validProcessors = ['arm', 'leon3', 'microblaze']
 
 # Build methods
 def build(bld):
@@ -36,10 +36,9 @@ def build(bld):
         bld.add_subdirs(os.path.join('dse', 'MOMH'))
 
     # Creates the startSim script
-    if not bld.env['STATIC_PLATFORM']:
-        bld.add_group()
-        obj = bld.new_task_gen('cmd')
-        obj.fun = create_startSim
+    bld.add_group()
+    obj = bld.new_task_gen('cmd')
+    obj.fun = create_startSim
 
 ########################################
 # Provide initial configuration
@@ -86,11 +85,10 @@ def configure(conf):
         conf.env.append_unique('CPPFLAGS', '-DNDEBUG')
 
     defaultFlags = ['-fstrict-aliasing']
-    if not Options.options.static_plat:
-        defaultFlags += ['-fPIC']
-        conf.env.append_unique('LINKFLAGS','-fPIC' )
-        if sys.platform != 'darwin':
-            conf.env.append_unique('LINKFLAGS','-Wl,-E')
+    defaultFlags += ['-fPIC']
+    conf.env.append_unique('LINKFLAGS','-fPIC' )
+    if sys.platform != 'darwin':
+        conf.env.append_unique('LINKFLAGS','-Wl,-E')
 
     conf.env.append_unique('CXXFLAGS', defaultFlags)
     conf.env.append_unique('CFLAGS', defaultFlags)
@@ -126,8 +124,7 @@ def configure(conf):
     # Check for boost libraries
     ##################################################
     boostlibs = 'thread regex date_time program_options filesystem system'
-    if conf.env['STATIC_PLATFORM'] != 1:
-        boostlibs += ' python unit_test_framework'
+    boostlibs += ' python unit_test_framework'
 
     conf.check_tool('boost')
     conf.check_boost(lib=boostlibs, static='both', min_version='1.35.0', mandatory = 1, errmsg = 'Unable to find ' + boostlibs + ' boost libraries of at least version 1.35, please install them and specify their location with the --boost-includes and --boost-libs configuration options')
@@ -165,17 +162,15 @@ def configure(conf):
     ########################################
     conf.check_tool('python')
     conf.check_python_version((2,4))
-    if conf.env['STATIC_PLATFORM'] != 1:
-        conf.check_python_headers()
+    conf.check_python_headers()
+    if float(conf.env['PYTHON_VERSION']) < 2.5:
+        conf.env.append_unique('CPPFLAGS' , '-DPy_ssize_t=long' )
 
     ########################################
     # Check for special tools
     ########################################
-    if conf.env['STATIC_PLATFORM'] != 1:
-        conf.check_tool('py++', os.path.join( '.' , 'tools' , 'waf'))
-        conf.check_tool('mkshared ', os.path.join( '.' , 'tools' , 'waf'))
-
-    print 'Modify Py++ in order to be able to expose private members'
+    conf.check_tool('py++', os.path.join( '.' , 'tools' , 'waf'))
+    conf.check_tool('mkshared ', os.path.join( '.' , 'tools' , 'waf'))
 
     ##################################################
     # Check for standard libraries
@@ -314,9 +309,12 @@ def configure(conf):
     ##################################################
     tlmPath = ''
     if Options.options.tlmdir:
-        tlmPath = [os.path.abspath(os.path.expanduser(os.path.expandvars(os.path.join(Options.options.tlmdir, 'tlm'))))]
+        tlmPath = os.path.normpath(os.path.abspath(os.path.expanduser(os.path.expandvars(Options.options.tlmdir))))
     elif 'TLM' in os.environ:
-        tlmPath = [os.path.abspath(os.path.expanduser(os.path.expandvars(os.path.join(os.environ['TLM'], 'tlm'))))]
+        tlmPath = os.path.normpath(os.path.abspath(os.path.expanduser(os.path.expandvars(os.environ['TLM']))))
+    if not tlmPath.endswith('include'):
+        tlmPath = os.path.join(tlmPath, 'include')
+    tlmPath = [os.path.join(tlmPath, 'tlm')]
 
     conf.check_cxx(header_name='tlm.h', uselib='SYSTEMC SYSTEMC_STATIC', uselib_store='TLM', mandatory=1, includes=tlmPath)
     conf.check_cxx(fragment='''
@@ -488,9 +486,6 @@ def set_options(opt):
     # Specify if tools (debugger, profiler etc.) support should be compiled inside processor models
     opt.add_option('-T', '--disable-tools', default=True, action="store_false", help='Disables support for support tools (debuger, os-emulator, etc.) (switch)', dest='enable_tools')
 
-    # Specifies the main file for the construction of the static platform
-    opt.add_option('--static-platform', type='string', help='Specifies the main file of the static platform: instead of building the reflective simulator, it builds a static simulator using the main file provided by the user', dest='static_plat')
-
     # Specifies whether to compile the extensions for DSE or not
     opt.add_option('--with-momh-header', type='string', help='Specifies the location of the headers for the ', dest='momh_header')
     opt.add_option('--with-momh-libs', type='string', help='Specifies the location of the headers for the ', dest='momh_libs')
@@ -510,10 +505,7 @@ def shutdown():
     if Options.commands['build'] == 1:
         import os
         # Finally, lets print some usefull messages to the user
-        if not Build.bld.env['STATIC_PLATFORM']:
-            print('\nTo start the simulator type ' + Logs.colors.BOLD + Logs.colors.GREEN + os.path.join('.' , 'startSim.sh') + Logs.colors.NORMAL + ' at the command prompt\n')
-        else:
-            print('\nStatic platform correctly created in the executable ' + Logs.colors.BOLD + Logs.colors.GREEN + os.path.join('_build_' , 'default' , os.path.splitext(os.path.basename(Build.bld.env['STATIC_MAIN']))[0]) + Logs.colors.NORMAL + '\n')
+        print('\nTo start the simulator type ' + Logs.colors.BOLD + Logs.colors.GREEN + os.path.join('.' , 'startSim.sh') + Logs.colors.NORMAL + ' at the command prompt\n')
 
 #Installing custom distclean function so that some files are
 def distclean():

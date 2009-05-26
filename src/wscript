@@ -4,5 +4,6 @@
 # Build
 
 def build(bld):
-    bld.add_subdirs('sc_wrapper controller execLoader bfdFrontend utils power')
+    # execLoader bfdFrontend
+    bld.add_subdirs('sc_wrapper controller utils power')
 
