@@ -4,28 +4,24 @@
 import os, sys
 
 def build(bld):
-    print 'change the executable loader to use the global BFD frontend; also use the new loader of trap'
+    print 'We still to use the BFD frontend in the exec loader'
 
-    if bld.env['STATIC_PLATFORM']:
-        obj = bld.new_task_gen('cxx', 'staticlib')
-    else:
-        obj = bld.new_task_gen('pypp', 'shlib')
-    if bld.env['STATIC_PLATFORM']:
-        obj.source = """
-            execLoader.cpp
-        """
-    else:
-        obj.source = """
-            execLoader.cpp
-            execLoader.hpp
-        """
-    obj.target='ExecLoader';
-    obj.uselib='BOOST BFD_CUSTOM LIBERTY_CUSTOM'
-    if sys.platform != 'darwin':
-        obj.env.append_unique('LINKFLAGS', '-Wl,-rpath-link -Wl,' + os.path.abspath('lib' + os.sep + 'binutils-2.18' + os.sep + 'build' + os.sep + 'lib'))
-    obj.env.append_unique('LINKFLAGS', '-Wl,-rpath -Wl,' + os.path.abspath('lib' + os.sep + 'binutils-2.18' + os.sep + 'build' + os.sep + 'lib'))
-    if not bld.env['STATIC_PLATFORM']:
-        obj.uselib += ' PYEXT BOOST_PYTHON'
+    obj = bld.new_task_gen('cxx', 'shlib')
+    obj.source = """
+        execLoader.cpp
+    """
+    obj.target = 'execLoader'
+    obj.name = 'execLoader'
+    obj.uselib = 'BOOST BFD'
+
+    obj = bld.new_task_gen('pypp', 'shlib')
+    obj.source = """
+        execLoader.hpp
+    """
+    obj.target = 'execLoader_wrapper'
+    obj.name = 'execLoader_wrapper'
+    obj.uselib = 'BOOST BFD PYEXT BOOST_PYTHON'
+    obj.uselib_local = 'execLoader'
     obj.start_decls = 'resp'
     obj.custom_code = """
 execLoader = mb.class_('ExecLoader')

@@ -277,7 +277,7 @@ def configure(conf):
     sysclib = ''
     if syscpath:
         sysclib = glob.glob(os.path.join(os.path.abspath(os.path.join(syscpath[0], '..')), 'lib-*'))
-    conf.check_cxx(lib='systemc', uselib_store='SYSTEMC', mandatory=1, libpath=sysclib)
+    conf.check_cxx(lib='systemc', uselib_store='SYSTEMC_STATIC', mandatory=1, libpath=sysclib)
     ######################################################
     # Check if systemc is compiled with quick threads or not
     ######################################################
@@ -287,7 +287,8 @@ def configure(conf):
     ##################################################
     # Check for SystemC header and test the library
     ##################################################
-    conf.check_cxx(header_name='systemc.h', uselib='SYSTEMC', uselib_store='SYSTEMC', mandatory=1, includes=syscpath)
+    conf.check_cxx(header_name='systemc.h', uselib='SYSTEMC_STATIC', uselib_store='SYSTEMC', mandatory=1, includes=syscpath)
+
     conf.check_cxx(fragment="""
         #include <systemc.h>
 
@@ -306,7 +307,7 @@ def configure(conf):
                 return 0;
             };
         }
-    """, msg='Check for SystemC version (2.2.0 or greater required)', uselib='SYSTEMC', mandatory=1)
+    """, msg='Check for SystemC version (2.2.0 or greater required)', uselib='SYSTEMC SYSTEMC_STATIC', mandatory=1)
 
     ##################################################
     # Check for TLM header
@@ -317,7 +318,7 @@ def configure(conf):
     elif 'TLM' in os.environ:
         tlmPath = [os.path.abspath(os.path.expanduser(os.path.expandvars(os.path.join(os.environ['TLM'], 'tlm'))))]
 
-    conf.check_cxx(header_name='tlm.h', uselib='SYSTEMC', uselib_store='TLM', mandatory=1, includes=tlmPath)
+    conf.check_cxx(header_name='tlm.h', uselib='SYSTEMC SYSTEMC_STATIC', uselib_store='TLM', mandatory=1, includes=tlmPath)
     conf.check_cxx(fragment='''
         #include <systemc.h>
         #include <tlm.h>
@@ -339,7 +340,7 @@ def configure(conf):
         extern "C" int sc_main(int argc, char **argv){
             return 0;
         }
-    ''', msg='Check for TLM version (2.0 or greater required)', uselib='SYSTEMC TLM', mandatory=1)
+    ''', msg='Check for TLM version (2.0 or greater required)', uselib='SYSTEMC SYSTEMC_STATIC TLM', mandatory=1)
 
     ##################################################
     # Check for TRAP runtime libraries and headers

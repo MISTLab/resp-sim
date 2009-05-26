@@ -4,12 +4,13 @@
 
 import Options
 import sys,os
+
 sys.path.append('./tools/waf')
 from waf_utils import rec_find
 
 def build(bld):
 
-    # Compile the wrapper and build a python extension library
+    # Build and compile the systemc wrapper extension module
     obj = bld.new_task_gen('pypp')
 
     obj.source ='''
@@ -17,11 +18,8 @@ def build(bld):
     systemc_export.cpp
     tlm_export.hpp
     '''
-    obj.source += '\n' + os.path.abspath(os.path.join('component', 'misc', 'sycers', 'blackbox.h'))
-    obj.source += '\n' + os.path.abspath(os.path.join('component', 'misc', 'sycers', 'memory.h'))
 
     obj.extra_headers = 'component'
-    obj.exclude_dirs = ['microblaze', 'standaloneExecutor', 'leon2/cycleaccurate', 'simplenoc', 'matlab']
 
     obj.target = 'scwrapper';
     obj.generate_include = True
@@ -153,76 +151,20 @@ simContFun = mb.global_ns.free_functions('sc_get_curr_simcontext')
 simContFun.include()
 simContFun.call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
 
-# -- Include base tlm classes: PORTS
-#
-tlm_initiator_port = mb.global_ns.classes( lambda decl :
-decl.name.startswith('tlm_initiator_port'), allow_empty=True)
-tlm_initiator_port.include()
-
-# Define call policies for every function in doubt
-for j in tlm_initiator_port:
-    lst = j.member_functions(lambda decl : decl.name.startswith( 'get_') , allow_empty = True)
-    for i in lst:
-        i.call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
-
-tlm_target_port = mb.global_ns.classes( lambda decl :
-decl.name.startswith('tlm_target_port'), allow_empty = True )
-tlm_target_port.include()
-# Define call policies for every function in doubt
-for j in tlm_target_port:
-    lst = j.member_functions(lambda decl :
-                            decl.name.startswith( 'get_target_port_list'), allow_empty=True)
-    for i in lst:
-        i.call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
-
-# -- Include base tlm classes: INTERFACES
-#
-mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_transport_if') ).include()
-
-# -- Include base tlm classes: GENERAL PAYLOAD
-#
-tlm_request = mb.global_ns.classes(lambda decl:
-decl.name.startswith('tlm_request'))
-tlm_request.ignore = False
-
-tlm_response = mb.global_ns.classes(lambda decl:
-decl.name.startswith('tlm_response'))
-tlm_response.ignore = False
-
-# -- Include base tlm classes: ENUMERATIONS
-#
-mb.global_ns.classes(lambda decl:
-decl.name.startswith('tlm_status'), allow_empty = True).include()
-mb.global_ns.enumerations(lambda decl:
-decl.name.startswith('tlm_endianness'), allow_empty = True ).include()
-mb.global_ns.enumerations(lambda decl:
-decl.name.startswith('tlm_mode'), allow_empty = True ).include()
-mb.global_ns.enumerations(lambda decl:
-decl.name.startswith('tlm_block_mode'), allow_empty = True ).include()
-
 mb.global_ns.member_functions( name='is_already_bound' ).exclude()
 mb.global_ns.member_functions( name='create_port_list' ).exclude()
 mb.global_ns.member_functions( name='is_interface_bound_twice' ).exclude()
 
 mb.global_ns.calldefs( declarations.access_type_matcher_t('protected') ).exclude()
 mb.global_ns.calldefs( declarations.access_type_matcher_t('private') ).exclude()
-try:
-    mb.namespace('archc').exclude()
-except:
-    pass
 
 mb.global_ns.class_('sc_simcontext').member_functions(lambda x: x.name.startswith('clean')).include()
 """
-    obj.uselib = 'MYSQLCLIENT_H MYSQLPP_H SYSTEMC_H TLM_H  TLM_H BOOST_PYTHON BOOST PYEXT'
-    if '-DENABLE_FPU' in bld.env['CXXFLAGS']:
-        obj.uselib += ' MPFRCPP MPFR GMPXX GMP'
+    obj.uselib = 'SYSTEMC TLM BOOST_PYTHON BOOST PYEXT'
     obj.uselib_local = 'systemc'
-    obj.includes = '../../../lib/archc/ac_includes ../../../src/mysql ./'
+    obj.includes = '.'
     obj.templates = [
-        'tlm_bus::tlm_response<int,TLM_PASS_BY_POINTER>'
-        ,'tlm_bus::tlm_request<int,int,TLM_PASS_BY_POINTER>'
-        , 'tlm_ports::tlm_initiator_port<tlm_core::tlm_transport_if<tlm_bus::tlm_request<unsigned int, unsigned int, TLM_PASS_BY_COPY>, tlm_bus::tlm_response<unsigned int, TLM_PASS_BY_COPY> >, 0>'
-        ,'sc_core::sc_signal<char>'
+        'sc_core::sc_signal<char>'
         ,'sc_core::sc_signal<unsigned char>'
         ,'sc_core::sc_signal<int>'
         ,'sc_core::sc_signal<unsigned int>'
@@ -235,4 +177,30 @@ mb.global_ns.class_('sc_simcontext').member_functions(lambda x: x.name.startswit
         ,'sc_dt::sc_bv<16>'
         ,'sc_dt::sc_bv<32>'
         ,'sc_dt::sc_bv<64>'
+    ]
+
+    # Build and compile the TLM wrapper extension module
+    obj = bld.new_task_gen('pypp')
+
+    obj.source ='''
+    tlm_export.hpp
+    '''
+
+    obj.extra_headers = 'component'
+
+    obj.target = 'tlmwrapper';
+    obj.generate_include = True
+    obj.start_decls = 'tlm tlm_utils'
+    obj.split = 4
+
+    obj.custom_code = """
+# Exclude protected members
+mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) ).exclude()
+
+"""
+    obj.uselib = 'SYSTEMC TLM BOOST_PYTHON BOOST PYEXT'
+    obj.uselib_local = 'systemc'
+    obj.includes = '.'
+    obj.templates = [
+
     ]
