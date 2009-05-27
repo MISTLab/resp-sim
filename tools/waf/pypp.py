@@ -179,6 +179,8 @@ def process_headers(self):
                     #self.uselib_local += ' ' + x
 
         # Find the target node, i.e. the generated file
+        if self.split < 1:
+            raise Exception('Error, specified ' + str(self.split) + ' output files for task ' + targetbase + '; a number > 0 should be used')
         tgnodes = []
         if self.split == 1:
             tgnodes.append(self.path.find_or_declare(targetbase+'.pypp.cpp'))
@@ -186,8 +188,9 @@ def process_headers(self):
             for i in range( 1 , self.split ):
                 name = targetbase+'_classes_'+str(i)
                 tgnodes.append(self.path.find_or_declare(name+'.pypp.cpp'))
+            tgnodes.append(self.path.find_or_declare(targetbase+'.main.cpp'))
 
-        #Create a pypp task with all the input headerfiles and one output module
+        # Create a pypp task with all the input headerfiles and one output module
         pypptask = self.create_task('pypp', self.env)
 
         # Apply parameters passed by the wscript to the task
@@ -283,11 +286,7 @@ def process_headers(self):
         # This is done to avoid including the autogenerater _exp.hpp file
         pypptask.ext_headers += map(lambda a: os.path.abspath(os.path.join(self.env['RESP_HOME'],'_build_', a.srcpath(self.env))) , self.srclist)
 
-        if self.split > 1:
-            tgnodes.append(self.path.find_or_declare(targetbase+'.main.cpp'))
-
         pypptask.outputs = tgnodes
-
 
         # If an include has to be generated, create the node and the output dependencies
         if self.generate_include:

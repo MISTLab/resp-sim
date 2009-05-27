@@ -1,3 +1,4 @@
+# -*- coding: iso-8859-1 -*-
 # Copyright 2004 Giovanni Beltrame
 # Distributed under the Boost Software License, Version 1.0. (See
 # accompanying file LICENSE_1_0.txt or copy at
@@ -62,6 +63,14 @@ class resp_files_t(balanced_files.balanced_files_t):
                                  , self.extmodule.body.name +'_register_classes_%d' % (index+1)
                                  , -1 )
 
+        # If I have specified more classes than what actually exists, I have to
+        # create dummy files
+        if self.number_of_buckets > len(buckets):
+            for i in range(len(buckets) - 1, self.number_of_buckets - 1):
+                print 'creating ' + self.extmodule.body.name + '_classes_' + str(i) + '.pypp.cpp'
+                emptyFileHandle = open(self.extmodule.body.name + '_classes_' + str(i) + '.pypp.cpp', 'w')
+                emptyFileHandle.write('')
+                emptyFileHandle.close()
 
     #TODO: move write_main to __init__
     def write(self):

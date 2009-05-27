@@ -22,7 +22,7 @@ def build(bld):
 
     obj.target = 'scwrapper'
     obj.generate_include = True
-    obj.start_decls = 'sc_core sc_dt tlm tlm_bus tlm_core tlm_ports'
+    obj.start_decls = 'sc_core sc_dt'
     obj.split = 6
     obj.custom_declaration_code = '''
 namespace sandbox { namespace {
@@ -149,10 +149,6 @@ waitFuns.use_overload_macro = True
 simContFun = mb.global_ns.free_functions('sc_get_curr_simcontext')
 simContFun.include()
 simContFun.call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
-
-mb.global_ns.member_functions( name='is_already_bound' ).exclude()
-mb.global_ns.member_functions( name='create_port_list' ).exclude()
-mb.global_ns.member_functions( name='is_interface_bound_twice' ).exclude()
 
 mb.global_ns.calldefs( declarations.access_type_matcher_t('protected') ).exclude()
 mb.global_ns.calldefs( declarations.access_type_matcher_t('private') ).exclude()
