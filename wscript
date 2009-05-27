@@ -49,6 +49,9 @@ def configure(conf):
     # Check for standard tools
     ########################################
     conf.check_tool('gcc g++')
+    if int(conf.env['CC_VERSION'][0]) < 4:
+        conf.fatal('Error, gcc compiler at leat version 4.0 required')
+
     conf.check_tool('misc')
 
     ##################################################################
@@ -393,7 +396,7 @@ def configure(conf):
             #error Wrong version of the TRAP runtime: too old
             #endif
             int main(int argc, char * argv[]){return 0;}
-        ''', msg='Check for TRAP version (at least revision 420)', uselib='TRAP', mandatory=1, includes=trapDirInc)
+        ''', msg='Check for TRAP version', uselib='TRAP', mandatory=1, includes=trapDirInc, errmsg='Error, at least revision 420 required')
     else:
         conf.check_cxx(lib='trap', uselib_store='TRAP', mandatory=1)
         conf.check_cxx(header_name='trap.hpp', uselib='TRAP', uselib_store='TRAP', mandatory=1, errmsg='not found, use --with-trap option')
@@ -408,7 +411,7 @@ def configure(conf):
             #error Wrong version of the TRAP runtime: too old
             #endif
             int main(int argc, char * argv[]){return 0;}
-        ''', msg='Check for TRAP version (at least revision 420)', uselib='TRAP', mandatory=1)
+        ''', msg='Check for TRAP version', uselib='TRAP', mandatory=1, errmsg='Error, at least revision 420 required')
 
     ##################################################
     # Check for GMP & GMPXX libraries and headers

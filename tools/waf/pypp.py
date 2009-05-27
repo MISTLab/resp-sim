@@ -317,7 +317,7 @@ def detect(conf):
     # Check for gccxml
     ##################################################
     gccxmlFound = False
-    gccxml = conf.find_program('gccxml', os.environ['PATH'].split(os.pathsep))
+    gccxml = conf.find_program('gccxml', mandatory = 1)
     try:
         if gccxml:
             #Now I check the version
@@ -332,7 +332,7 @@ def detect(conf):
     except Exception,  e:
         conf.check_message('gccxml version', '', False, 'Error in determining the version --> ' + str(e))
         conf.fatal("Configure Failed, please install gccxml as described in the online documentation")
-    gccxmlpp = conf.find_program('gccxml_cc1plus', os.environ['PATH'].split(os.pathsep))
+    gccxmlpp = conf.find_program('gccxml_cc1plus', mandatory = 1)
     if gccxmlpp:
         callResult = os.popen("echo \'int temp = 0;\' | " + gccxmlpp + ' 2>&1').read()
         if 'Could not determine GCCXML_EXECUTABLE setting' in callResult:
@@ -341,6 +341,24 @@ def detect(conf):
     else:
         conf.check_message('gccxml_cc1plus', '', False, 'Not found')
 
+    ##################################################
+    # Determine gxx version, since 4.3 cannot work with
+    # gccxml, so, in this case, we need to look for another
+    # complier
+    ##################################################
+    if not conf.env['CC_VERSION']:
+        conf.fatal('Error in determining gcc version')
+
+    if int(conf.env['CC_VERSION'][1]) >= 3:
+        for i in ['.2', '.1', '.0']:
+            for j in ['.9', '.8', '.7', '.6', '.5', '.4', '.3', '.2', '.1', '.0', '']:
+                if conf.find_program('g++-4' + i + j):
+                    conf.env['CXX_OLD_VERSION'] = ['g++-4' + i + j]
+                    break
+            if conf.env['CXX_OLD_VERSION']:
+                break
+        if not conf.env['CXX_OLD_VERSION']:
+            conf.fatal('Unable to find a g++ version older than 4.3: gccxxml does not work with g++ >= 4.3. Please install an old gcc version along with the current one')
 
     ##################################################
     # Check for pygccxml
@@ -466,26 +484,22 @@ def dopypp(task):
     global_includes += task.extra_includes
 
     try:
-        if task.env['CXX']:
-            mb = module_builder.module_builder_t(
-                                    files=sources
-                                    , start_with_declarations = task.start_decls
-                                    , define_symbols = task.define_symbols
-                                    , working_directory = os.path.abspath(os.path.join(task.env['RESP_HOME'],'_build_'))
-                                    , include_paths = global_includes
-                                    , compiler = 'gcc-4.2.4' #task.env['CXX'][0]
-                                    , cache=parser.file_cache_t(os.path.abspath(os.path.join( task.env['RESP_HOME'], '_build_', task.outputs[0].bldpath(task.env)+'_cache' ))))
+        if int(task.env['CC_VERSION'][1]) >= 3:
+            compilerExec = task.env['CXX_OLD_VERSION'][0]
         else:
-            mb = module_builder.module_builder_t(
-                                    files=sources
-                                    , start_with_declarations = task.start_decls
-                                    , define_symbols = task.define_symbols
-                                    , working_directory = os.path.abspath(os.path.join(task.env['RESP_HOME'],'_build_'))
-                                    , include_paths = global_includes
-                                    , cache=parser.file_cache_t(os.path.abspath(os.path.join( task.env['RESP_HOME'], '_build_', task.outputs[0].bldpath(task.env)+'_cache' ))))
+            compilerExec = task.env['CXX'][0]
+        mb = module_builder.module_builder_t(
+                                files=sources
+                                , start_with_declarations = task.start_decls
+                                , define_symbols = task.define_symbols
+                                , working_directory = os.path.abspath(os.path.join(task.env['RESP_HOME'],'_build_'))
+                                , include_paths = global_includes
+                                , compiler = compilerExec
+                                , cache=parser.file_cache_t(os.path.abspath(os.path.join( task.env['RESP_HOME'], '_build_', task.outputs[0].bldpath(task.env)+'_cache' ))))
     except Exception, e:
         print e
-        if temp_handler:  log.addHandler(temp_handler)
+        if temp_handler:
+            log.addHandler(temp_handler)
         return 1
 
     # Restrore the recursion limit to its previous value

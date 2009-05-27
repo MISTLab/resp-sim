@@ -1,4 +1,3 @@
--- Modify pypp.py so that the highest compiler below 4.3 is used for gccxml
 -- Modify pypp.py so that it does not generate any exportable file if there is nothing to export (current situation with TLM) 
 -- Modify Py++ in order to expose also private members (with the #define private protected trick)
 -- Export TLM
