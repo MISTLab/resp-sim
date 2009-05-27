@@ -1,4 +1,4 @@
--- Modify pypp.py so that it does not generate any exportable file if there is nothing to export (current situation with TLM) 
+-- Check an automatic way of setting rpath in case a uselib_local library is used (necessary for components and their wrappers)
 -- Modify Py++ in order to expose also private members (with the #define private protected trick)
 -- Export TLM
 -- Modify the component loader to take into account the separation of the wrapper from the library itself

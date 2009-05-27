@@ -94,7 +94,6 @@ def configure(conf):
     conf.env.append_unique('CFLAGS', defaultFlags)
     conf.env.append_unique('CCFLAGS', defaultFlags)
     conf.env.append_unique('CPPFLAGS', '-DPIC')
-    conf.env.append_unique('ARFLAGS', 'rc')
 
     if sys.platform == 'darwin':
         conf.env.append_unique('shlib_LINKFLAGS', ['-undefined suppress', '-flat_namespace'] )
@@ -491,8 +490,6 @@ def configure(conf):
     # Finally I set the path so that it is possible to include file utils.hpp in all the project
     #################################################
     conf.env.append_unique('CPPPATH', os.path.abspath(os.path.join('src', 'utils')))
-    conf.env.append_unique('LIBPATH', os.path.abspath(os.path.join('_build_', 'default', 'src', 'utils')))
-    conf.env.append_unique('LIB', 'utils')
 
 def set_options(opt):
     """

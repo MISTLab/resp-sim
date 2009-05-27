@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #ifdef STATIC_PLATFORM
 void resp::killAll(std::string errorMsg){

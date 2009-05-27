@@ -4,9 +4,6 @@
 #include <list>
 
 #include <systemc.h>
-#include <tlm.h>
-
-using namespace tlm;
 
 namespace converters{
     inline unsigned __instantiate_converters(){

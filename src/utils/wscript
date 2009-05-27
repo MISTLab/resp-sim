@@ -5,7 +5,7 @@ import os, sys
 
 def build(bld):
     # Library holding the code for exceptions
-    obj = bld.new_task_gen('cxx', 'staticlib')
+    obj = bld.new_task_gen('cxx', 'cshlib')
     obj.source = """
         utils.cpp
     """

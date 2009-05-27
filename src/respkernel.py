@@ -65,21 +65,12 @@ curPath = os.path.abspath(os.path.join(os.path.dirname(sys.modules['respkernel']
 sys.path.append(os.path.abspath(os.path.join(curPath, 'src', 'manager')))
 sys.path.append(os.path.abspath(os.path.join(curPath, 'src', 'hci')))
 sys.path.append(os.path.abspath(os.path.join(curPath, 'src', 'injection')))
-sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'systempy')))
+sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'controller')))
 sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'mysql')))
 sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'power', 'ecacti')))
-sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'systempy', 'sc_wrapper')))
-sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'softwareDebug')))
-sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'execLoader')))
-sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'profiler')))
-sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'bfdFrontend')))
-sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'SynchManager')))
-sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'SynchManager', 'ProcStubs')))
+sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'sc_wrapper')))
 sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src')))
 sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'utils')))
-sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'softwareDebug', 'osStubs')))
-sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'softwareDebug', 'procStubs')))
-sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'lib', 'archc')))
 
 from power import *
 
@@ -178,13 +169,13 @@ class RespKernel:
             print "Loading scwrapper"
         import scwrapper
         if self.verbose:
+            print "Loading tlmwrapper"
+        import tlmwrapper
+        if self.verbose:
             print "Loading sc_controller"
-        import sc_controller
+        import sc_controller_wrapper
 
         # Import Optional components
-        if self.verbose:
-            print "Loading ExecLoader"
-        import ExecLoader
         if self.verbose:
             print "Loading compManager"
         import compManager
@@ -192,15 +183,10 @@ class RespKernel:
         # import components storing them into a component list
         self.components = []
         try:
-            self.load_components(os.path.abspath(curPath + os.sep + '_build_' + os.sep + 'default' + os.sep + 'component'),  self.components)
+            self.load_components(os.path.abspath(curPath + os.sep + '_build_' + os.sep + 'default' + os.sep + 'components'),  self.components)
         except Exception,  e:
             print >> sys.stderr, 'Error in loading the components in the simulator --> ',  e
             sys.exit(0)
-
-        # importing of the processor stubs, they must be imported after the processors themselves
-        if self.verbose:
-            print "Loading bfdwrapper"
-        import bfdwrapper
 
         if not self.verbose:
             warnings.resetwarnings()
@@ -208,13 +194,13 @@ class RespKernel:
         # create the component manager
         from compManager import ComponentManager
         global manager
-        self.manager = manager = ComponentManager(self.components, scwrapper, archcwrap)
+        self.manager = manager = ComponentManager(self.components, scwrapper)
         global loadedFileName
         self.fileName = loadedFileName = ''
         # end, at then end I can instantiate the signal handler and the controller
         global controller
 
-        self.controller = sc_controller.sc_controller.createController(os.getpid(), interaction)
+        self.controller = sc_controller_wrapper.sc_controller.createController(os.getpid(), interaction)
         controller = self.controller
         signal.signal(10, self.end_signal_handler)
 
@@ -284,7 +270,7 @@ class RespKernel:
         dirContent = os.listdir(folder)
         for element in dirContent:
             if os.path.isfile(os.path.join(folder, element)):
-                if element.endswith('.so'):
+                if element.endswith('.so') and not element.startswith('lib'):
                     if not curPathLoaded:
                         curPathLoaded = True
                         sys.path.append(os.path.abspath(folder))

@@ -2,8 +2,6 @@
 
 import os, types, sys, glob,  stat, Options,Logs
 
-
-
 def find_files(paths, pattern, toRemove = []):
     for path in paths:
         toExamine = []
@@ -42,17 +40,9 @@ def create_startSim(task):
     print >> startFile,  '\n\n\n'
 
     print >> startFile,  'CUR_LIB_PATH=' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'lib', 'systemc')
-    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'lib', 'archc','src','aclib')
-    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'lib', 'archc','src','aclib', 'ac_core')
-    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'lib', 'archc','src','aclib', 'ac_decoder')
-    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'lib', 'archc','src','aclib', 'ac_stats')
-    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'lib', 'archc','src','aclib', 'ac_storage')
-    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'lib', 'archc','src','aclib', 'ac_syscall')
-    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'lib', 'archc','src','aclib', 'ac_tlm')
-    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'lib', 'archc','src','aclib', 'ac_utils')
-    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'src','mysql')
-    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], 'lib', 'binutils-2.18', 'build', 'lib')
     print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'src', 'bfdFrontend')
+    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'src', 'controller')
+    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'src', 'utils')
     for extLib in task.env['NON_STD_LIBS']:
         print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + extLib
     print >> startFile,  'export LD_LIBRARY_PATH=$CUR_LIB_PATH:$LD_LIBRARY_PATH'

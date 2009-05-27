@@ -66,10 +66,8 @@ class resp_files_t(balanced_files.balanced_files_t):
         # If I have specified more classes than what actually exists, I have to
         # create dummy files
         if self.number_of_buckets > len(buckets):
-            for i in range(len(buckets) - 1, self.number_of_buckets - 1):
-                print 'creating ' + self.extmodule.body.name + '_classes_' + str(i) + '.pypp.cpp'
-                emptyFileHandle = open(self.extmodule.body.name + '_classes_' + str(i) + '.pypp.cpp', 'w')
-                emptyFileHandle.write('')
+            for i in range(len(buckets), self.number_of_buckets + 1):
+                emptyFileHandle = open(os.path.join( self.directory_path, self.extmodule.body.name + '_classes_' + str(i) + '.pypp.cpp'), 'w')
                 emptyFileHandle.close()
 
     #TODO: move write_main to __init__

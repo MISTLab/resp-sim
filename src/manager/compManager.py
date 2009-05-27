@@ -54,7 +54,7 @@ class ComponentManager:
     connection identified by that edge, and the target represents the target
     port."""
 
-    def __init__(self, components, scwrapper, archc):
+    def __init__(self, components, scwrapper):
         """Inizializer of the class; components is a list containing the
         imported component modules"""
         # maps the name of an instance of a component (represented by a name) to a connection
@@ -69,7 +69,6 @@ class ComponentManager:
         # keeps track of the imported components modules
         self.components = components
         self.scwrapper = scwrapper
-        self.archc = archc
 
     def connect(self, source, target,
                 sourceParams = None, targParams = None,
@@ -203,7 +202,7 @@ class ComponentManager:
             target = helper.getInstance(target, targParams, self.components)
             if type(target) == types.StringType:
                 raise exceptions.Exception('Error, there is no class with the name ' + target + ' to be used as target component')
-            
+
 
         # ok, now I can check if the components contain the port with the
         # specified name
@@ -216,7 +215,7 @@ class ComponentManager:
                 sourcePort = sourcePort[sourcePortId]
             else:
                 raise exceptions.Exception('The source port ID must be an integer')
-                
+
         try:
             targetPort = helper.getAttrInstance2(target, targetPortName)
         except Exception:
@@ -689,7 +688,7 @@ class ComponentManager:
             nodes = nodes + "\n"
             for out in ComponentManager.getTargets(self,c):
                 edges = edges + "\t" + str(c) + "->"+ str(out) +"\n"
-        
+
         code = "digraph simple_hierarchy {\n" + nodes + "\n" + edges + "\n}"
         f = open("__tmpGraph.dot",'w')
         f.write(code)
