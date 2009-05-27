@@ -13,7 +13,7 @@ def build(bld):
     obj.name = 'utils'
 
     # Library holding the code for the python converters
-    obj = bld.new_task_gen('pypp', 'shlib')
+    obj = bld.new_task_gen('pypp')
     obj.source = """
         to_convert.hpp
     """

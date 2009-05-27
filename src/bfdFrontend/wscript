@@ -4,7 +4,7 @@
 import os, sys
 
 def build(bld):
-    obj = bld.new_task_gen('cxx', 'shlib')
+    obj = bld.new_task_gen('cxx', 'cshlib')
     obj.env['shlib_PREFIX'] = "lib"
     if sys.platform == 'darwin':
         obj.env['shlib_SUFFIX'] = obj.env['shlib_ORIG_SUFFIX']
@@ -14,7 +14,7 @@ def build(bld):
     obj.target = 'BFDFrontend'
     obj.uselib = 'BOOST BOOST_REGEX OPCODES BFD LIBERTY'
 
-    obj = bld.new_task_gen('pypp', 'shlib')
+    obj = bld.new_task_gen('pypp')
     obj.source = """
         bfdFrontend.hpp
     """

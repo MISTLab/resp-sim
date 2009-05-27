@@ -16,7 +16,7 @@ void testMaster::sendChars(){
     unsigned char datum = (unsigned char)(rand()%255);
     tlm::tlm_generic_payload trans;
     sc_time delay;
-    trans.set_address(address);
+    trans.set_address(0);
     trans.set_write();
     trans.set_data_ptr(&datum);
     trans.set_data_length(sizeof(datum));

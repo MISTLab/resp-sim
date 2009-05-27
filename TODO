@@ -1,8 +1,9 @@
+-- Modify pypp.py so that the highest compiler below 4.3 is used for gccxml
+-- Modify pypp.py so that it does not generate any exportable file if there is nothing to export (current situation with TLM) 
 -- Modify Py++ in order to expose also private members (with the #define private protected trick)
 -- Export TLM
 -- Modify the component loader to take into account the separation of the wrapper from the library itself
 -- Create a dynamic version of the eventual binutils static libraries
 -- Check restaart in 64 bits patch: it explodes at the restart
--- Check MKSHARED tool and build dynamic versione of binutils
 -- Check and change the memory analyzed with the one of TRAP
 -- Integrate the BFD frontend in the executable loader

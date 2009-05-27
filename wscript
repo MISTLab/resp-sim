@@ -22,7 +22,7 @@ def build(bld):
     """
     All building is delegated to subdirectories.
     """
-    sys.path.append( os.path.join('tools','waf') )
+    sys.path.append( os.path.join('tools', 'waf') )
     from waf_utils import create_startSim
 
     # Now I have to correct the extensions which are accepted by the tools since they forgot
@@ -148,11 +148,6 @@ def configure(conf):
     boostlibs = getattr(Options.options, 'boostlibs', '')
     if boostlibs:
         conf.env['NON_STD_LIBS'].append(os.path.normpath(os.path.expandvars(os.path.expanduser(boostlibs))))
-    if Options.options.en_processors:
-        conf.env['ENABLE_PROCESSORS'] = Options.options.en_processors.split()
-        for proc in conf.env['ENABLE_PROCESSORS']:
-            if not proc in validProcessors:
-                conf.fatal(proc + ' is not a valid processor: valid processors are ' + str(validProcessors))
 
     ########################################
     # Check for python
@@ -166,7 +161,7 @@ def configure(conf):
     ########################################
     # Check for special tools
     ########################################
-    conf.check_tool('py++', os.path.join( '.' , 'tools' , 'waf'))
+    conf.check_tool('pypp', os.path.join( '.' , 'tools' , 'waf'))
     conf.check_tool('mkshared ', os.path.join( '.' , 'tools' , 'waf'))
 
     ##################################################
@@ -225,7 +220,7 @@ def configure(conf):
     for ibertylib in foundShared:
         tempLibs.append(os.path.basename(ibertylib)[3:os.path.basename(ibertylib).rfind('.')])
     foundShared = tempLibs
-    bfd_lib_name = ''
+    iberty_lib_name = ''
     for ibertylib in foundStatic:
         if ibertylib in foundShared:
             iberty_lib_name = ibertylib
@@ -236,7 +231,7 @@ def configure(conf):
         else:
             iberty_lib_name = foundStatic[0]
 
-    conf.check_cc(lib=iberty_lib_name, uselib_store='BFD', mandatory=1, libpath=searchDirs)
+    conf.check_cc(lib=iberty_lib_name, uselib_store='BFD', mandatory=1, libpath=searchDirs, errmsg='not found, use --with-bfd option')
 
     ###########################################################
     # Check for BFD library and header
@@ -271,7 +266,7 @@ def configure(conf):
         else:
             bfd_lib_name = foundStatic[0]
 
-    conf.check_cc(lib=bfd_lib_name, uselib_store='BFD', mandatory=1, libpath=searchDirs)
+    conf.check_cc(lib=bfd_lib_name, uselib_store='BFD', mandatory=1, libpath=searchDirs, errmsg='not found, use --with-bfd option')
     if Options.options.bfddir:
         conf.check_cc(header_name='bfd.h', uselib='BFD', uselib_store='BFD', mandatory=1, includes=[os.path.abspath(os.path.expanduser(os.path.expandvars(os.path.join(Options.options.bfddir, 'include'))))])
     else:
@@ -294,6 +289,10 @@ def configure(conf):
     # Notice that we can't rely on lib-linux,
     # therefore I have to find the actual platform...
     ##################################################
+    # First I set the clafgs needed by TLM 2.0 for including systemc dynamic process
+    # creation
+    conf.env.append_unique('CPPFLAGS','-DSC_INCLUDE_DYNAMIC_PROCESSES')
+
     syscpath = None
     if Options.options.systemcdir:
         syscpath = ([os.path.abspath(os.path.expanduser(os.path.expandvars(os.path.join(Options.options.systemcdir, 'include'))))])
@@ -304,7 +303,7 @@ def configure(conf):
     sysclib = ''
     if syscpath:
         sysclib = glob.glob(os.path.join(os.path.abspath(os.path.join(syscpath[0], '..')), 'lib-*'))
-    conf.check_cxx(lib='systemc', uselib_store='SYSTEMC_STATIC', mandatory=1, libpath=sysclib)
+    conf.check_cxx(lib='systemc', uselib_store='SYSTEMC_STATIC', mandatory=1, libpath=sysclib, errmsg='not found, use --with-systemc option')
 
     ######################################################
     # Check if systemc is compiled with quick threads or not
@@ -335,7 +334,7 @@ def configure(conf):
                 return 0;
             };
         }
-    """, msg='Check for SystemC version (2.2.0 or greater required)', uselib='SYSTEMC_H SYSTEMC_STATIC', mandatory=1)
+    """, msg='Check for SystemC version', uselib='SYSTEMC_H SYSTEMC_STATIC', mandatory=1, errmsg='Error, at least version 2.2.0 required')
 
     ##################################################
     # Check for TLM header
@@ -349,7 +348,7 @@ def configure(conf):
         tlmPath = os.path.join(tlmPath, 'include')
     tlmPath = [os.path.join(tlmPath, 'tlm')]
 
-    conf.check_cxx(header_name='tlm.h', uselib='SYSTEMC SYSTEMC_STATIC', uselib_store='TLM', mandatory=1, includes=tlmPath)
+    conf.check_cxx(header_name='tlm.h', uselib='SYSTEMC_H SYSTEMC_STATIC', uselib_store='TLM', mandatory=1, includes=tlmPath, errmsg='not found, use --with-tlm option')
     conf.check_cxx(fragment='''
         #include <systemc.h>
         #include <tlm.h>
@@ -371,7 +370,7 @@ def configure(conf):
         extern "C" int sc_main(int argc, char **argv){
             return 0;
         }
-    ''', msg='Check for TLM version (2.0 or greater required)', uselib='SYSTEMC SYSTEMC_STATIC TLM', mandatory=1)
+    ''', msg='Check for TLM version', uselib='SYSTEMC_H SYSTEMC_STATIC TLM', mandatory=1, errmsg='Error, at least version 2.0 required')
 
     ##################################################
     # Check for TRAP runtime libraries and headers
@@ -397,7 +396,7 @@ def configure(conf):
         ''', msg='Check for TRAP version (at least revision 420)', uselib='TRAP', mandatory=1, includes=trapDirInc)
     else:
         conf.check_cxx(lib='trap', uselib_store='TRAP', mandatory=1)
-        conf.check_cxx(header_name='trap.hpp', uselib='TRAP', uselib_store='TRAP', mandatory=1)
+        conf.check_cxx(header_name='trap.hpp', uselib='TRAP', uselib_store='TRAP', mandatory=1, errmsg='not found, use --with-trap option')
         conf.check_cxx(fragment='''
             #include "trap.hpp"
 
@@ -481,7 +480,7 @@ def configure(conf):
             foundMOMH = conf.check_cxx(header_name='momh/libmomh.h', uselib='MOMH SIGCPP', uselib_store='MOMH')
             conf.env["MOMH_FOUND"]=1
             if not foundMOMH:
-                foundMOMH = conf.check_cxx(header_name='momh/libmomh.h', uselib='MOMH SIGCPP', uselib_store='MOMH', includes=['/usr/include/libmomh', '/usr/local/include/libmomh']):
+                foundMOMH = conf.check_cxx(header_name='momh/libmomh.h', uselib='MOMH SIGCPP', uselib_store='MOMH', includes=['/usr/include/libmomh', '/usr/local/include/libmomh'])
     if foundMOMH:
         conf.env["HAVE_MOMH"]=1
 
@@ -489,7 +488,6 @@ def configure(conf):
     # Finally I set the path so that it is possible to include file utils.hpp in all the project
     #################################################
     conf.env.append_unique('CPPPATH', os.path.abspath(os.path.join('src', 'utils')))
-    conf.env.append_unique('CPPPATH', os.path.abspath(os.path.join('src', 'systempy')))
     conf.env.append_unique('LIBPATH', os.path.abspath(os.path.join('_build_', 'default', 'src', 'utils')))
     conf.env.append_unique('LIB', 'utils')
 

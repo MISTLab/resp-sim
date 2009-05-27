@@ -442,7 +442,8 @@ void RespClient::connect(){
 
         if ( this->respPid == 0 ) {
             //std::cerr << "Child: creating new console" << std::endl;
-            ::chdir("/");
+            if(::chdir("/") != 0)
+                THROW_EXCEPTION("Errore while changing to the root folder");
             ::setsid();
             ::umask(0);
 

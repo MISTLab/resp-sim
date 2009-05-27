@@ -35,8 +35,8 @@
 
 "Make a shared library from a static one"
 
-import Task,ccroot,Options,Logs
-import os,shutil,filecmp
+import Task, ccroot, Options, Logs
+import os, shutil, filecmp
 
 from TaskGen import after, before, taskgen, feature, extension
 
@@ -45,7 +45,6 @@ unpack_ar = 'cd ${SRC[0].bld_dir(env)} && ${AR} -x ${SRC[0].abspath()}' # && rm 
 @taskgen
 @extension(['.a'])
 @after('default_cc')
-#@feature('shlib')
 def do_unpack_ar(self, node):
         unpack_task = self.create_task('unpack_ar', self.env)
         unpack_task.set_inputs(node)
@@ -53,7 +52,8 @@ def do_unpack_ar(self, node):
 
 
 @taskgen
-@feature('shlib')
+@feature('cxx')
+@feature('cc')
 @before('apply_core')
 def parse_libs(self):
     # Copy library and update source list
@@ -94,12 +94,12 @@ def parse_libs(self):
                 filenames = map( lambda x : os.path.splitext(x)[0] , files[1:])
                 self.additional_objs = filter(lambda x: not os.path.splitext(x.name)[0] in filenames , self.additional_objs)
 
-                self.source += libname
+                self.source += ' ' + libname
         else:
-            self.source += filename
+            self.source += ' ' + filename
 
 @taskgen
-@feature('shlib')
+@feature('cshlib')
 @after('apply_link')
 def add_elements(self):
     if not hasattr(self, 'additional_objs'):

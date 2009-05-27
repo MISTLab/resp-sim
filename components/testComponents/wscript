@@ -5,21 +5,21 @@ import Options
 
 def build(bld):
     # Generation of the testMaster library
-    obj = bld.new_task_gen('cxx', 'shlib')
+    obj = bld.new_task_gen('cxx', 'cshlib')
     obj.source ='''
         testMaster.cpp
     '''
     obj.target = 'testMaster'
-    obj.uselib = 'SYSTEMC TLM'
+    obj.uselib = 'SYSTEMC_H TLM'
     obj.uselib_local = 'systemc'
 
     # Generation of the testMaster wrapper extension
-    obj = bld.new_task_gen('pypp', 'shlib')
+    obj = bld.new_task_gen('pypp')
     obj.source ='''
         testMaster.hpp
     '''
     obj.target = 'testMaster_wrapper'
-    obj.uselib = 'SYSTEMC TLM BOOST PYEXT BOOST_PYTHON'
+    obj.uselib = 'SYSTEMC_H TLM BOOST PYEXT BOOST_PYTHON'
     obj.uselib_local = 'systemc testMaster'
     obj.include = 'scwrapper tlmwrapper'
     obj.start_decls = 'testMaster'
@@ -27,21 +27,21 @@ def build(bld):
 """
 
     # Generation of the testSlave library
-    obj = bld.new_task_gen('cxx', 'shlib')
+    obj = bld.new_task_gen('cxx', 'cshlib')
     obj.source ='''
         testSlave.cpp
     '''
     obj.target = 'testSlave'
-    obj.uselib = 'SYSTEMC TLM'
+    obj.uselib = 'SYSTEMC_H TLM'
     obj.uselib_local = 'systemc'
 
     # Generation of the testSlave wrapper extension
-    obj = bld.new_task_gen('pypp', 'shlib')
+    obj = bld.new_task_gen('pypp')
     obj.source ='''
         testSlave.hpp
     '''
     obj.target = 'testSlave_wrapper'
-    obj.uselib = 'SYSTEMC TLM BOOST PYEXT BOOST_PYTHON'
+    obj.uselib = 'SYSTEMC_H TLM BOOST PYEXT BOOST_PYTHON'
     obj.uselib_local = 'systemc testSlave'
     obj.include = 'scwrapper tlmwrapper'
     obj.start_decls = 'testSlave'

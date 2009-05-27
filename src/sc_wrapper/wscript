@@ -16,12 +16,11 @@ def build(bld):
     obj.source ='''
     systemc_export.hpp
     systemc_export.cpp
-    tlm_export.hpp
     '''
 
-    obj.extra_headers = 'component'
+    obj.extra_headers = 'components'
 
-    obj.target = 'scwrapper';
+    obj.target = 'scwrapper'
     obj.generate_include = True
     obj.start_decls = 'sc_core sc_dt tlm tlm_bus tlm_core tlm_ports'
     obj.split = 6
@@ -82,7 +81,7 @@ namespace sandbox { namespace {
 mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) ).exclude()
 
 # Include important stuff
-#print "Including classes"
+print "Including classes"
 mb.global_ns.classes(lambda decl: decl.name.startswith('sc_')).ignore = False
 mb.global_ns.enumerations(lambda decl: decl.name.startswith('sc_')).include()
 mb.global_ns.class_('sc_module').include()
@@ -92,28 +91,28 @@ mb.global_ns.class_('sc_module').member_functions('get_child_objects').set_virtu
 mb.global_ns.class_('sc_module').member_functions('sc_get_curr_simcontext').call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
 mb.global_ns.class_('sc_module').member_operators().exclude()
 
-#print 'including sim_context'
+print 'including sim_context'
 mb.global_ns.class_('sc_simcontext').include()
 mb.global_ns.class_('sc_simcontext').member_functions().exclude()
 mb.global_ns.class_('sc_simcontext').member_function('reset').include()
 
-#print "Including bind"
+print "Including bind"
 mb.global_ns.member_functions( 'bind' ).include()
 mb.global_ns.member_functions( 'is_reset' ).call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
 
-#print "Including Signals"
+print "Including Signals"
 signal = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_signal<'))
 signal.include()
 for i in signal:
     i.member_functions().exclude()
 
-#print "Including Bit Vectors"
+print "Including Bit Vectors"
 bvectors = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_bv<'))
 bvectors.include()
 for i in bvectors:
     i.member_operators().exclude()
 
-#print "Including clock"
+print "Including clock"
 clock = mb.global_ns.class_('sc_clock')
 clock.include()
 clock.member_functions(lambda decl: decl.name.startswith('period')).include()
@@ -126,13 +125,13 @@ clock.member_functions(lambda decl: decl.name.startswith('init')).exclude()
 clock.member_functions(lambda decl: decl.name.startswith('is_clock')).exclude()
 clock.member_functions(lambda decl: decl.name.startswith('signal')).call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
 
-#print "Including time"
+print "Including time"
 time = mb.global_ns.class_('sc_time')
 time.include()
 time.member_functions(lambda decl: decl.name.startswith('print')).exclude()
 mb.global_ns.variable('SC_ZERO_TIME').include()
 
-#print "Including sc_object"
+print "Including sc_object"
 sc_obj = mb.global_ns.class_('sc_object')
 sc_obj.include()
 sc_obj.member_functions().exclude()
@@ -140,7 +139,7 @@ sc_obj.member_functions(lambda decl: decl.name.endswith('name')).include()
 sc_obj.member_functions(lambda decl: decl.name.startswith('sc_object')).exclude()
 sc_obj.variables(lambda decl: decl.name.startswith('m_name')).exclude()
 
-#print "Including free functions"
+print "Including free functions"
 mb.global_ns.free_functions('sc_start').include()
 mb.global_ns.free_functions('sc_stop').include()
 mb.global_ns.free_function('my_sc_is_running').include()
@@ -160,7 +159,7 @@ mb.global_ns.calldefs( declarations.access_type_matcher_t('private') ).exclude()
 
 mb.global_ns.class_('sc_simcontext').member_functions(lambda x: x.name.startswith('clean')).include()
 """
-    obj.uselib = 'SYSTEMC TLM BOOST_PYTHON BOOST PYEXT'
+    obj.uselib = 'SYSTEMC_H TLM BOOST_PYTHON BOOST PYEXT'
     obj.uselib_local = 'systemc'
     obj.includes = '.'
     obj.templates = [
@@ -186,7 +185,7 @@ mb.global_ns.class_('sc_simcontext').member_functions(lambda x: x.name.startswit
     tlm_export.hpp
     '''
 
-    obj.extra_headers = 'component'
+    obj.extra_headers = 'components'
 
     obj.target = 'tlmwrapper';
     obj.generate_include = True
@@ -198,9 +197,10 @@ mb.global_ns.class_('sc_simcontext').member_functions(lambda x: x.name.startswit
 mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) ).exclude()
 
 """
-    obj.uselib = 'SYSTEMC TLM BOOST_PYTHON BOOST PYEXT'
+    obj.uselib = 'SYSTEMC_H TLM BOOST_PYTHON BOOST PYEXT'
     obj.uselib_local = 'systemc'
     obj.includes = '.'
+    obj.include = 'scwrapper'
     obj.templates = [
 
     ]

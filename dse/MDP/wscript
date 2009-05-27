@@ -28,7 +28,7 @@ def build(bld):
     # Creates the MDP plugins; note that the different plugins
     # can either be grouped in a single shared library file or
     # in multiple ones
-    obj = bld.new_task_gen('cxx', 'shlib')
+    obj = bld.new_task_gen('cxx', 'cshlib')
     obj.source='''
         ProcNum.cpp
         MemLatency.cpp

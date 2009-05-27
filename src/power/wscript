@@ -4,7 +4,7 @@
 def build(bld):
     bld.add_subdirs('ecacti')
 
-    obj = bld.new_task_gen('cxx', 'shlib')
+    obj = bld.new_task_gen('cxx', 'cshlib')
     obj.target = 'powerframework'
     obj.name = 'powerframework'
     obj.source = 'power.cpp cache.cpp processor.cpp memory.cpp'

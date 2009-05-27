@@ -4,7 +4,7 @@
 import os, sys
 
 def build(bld):
-    obj = bld.new_task_gen('cxx', 'shlib')
+    obj = bld.new_task_gen('cxx', 'cshlib')
     obj.source = """
         execLoader.cpp
     """
@@ -12,7 +12,7 @@ def build(bld):
     obj.name = 'execLoader'
     obj.uselib = 'BOOST BFD'
 
-    obj = bld.new_task_gen('pypp', 'shlib')
+    obj = bld.new_task_gen('pypp')
     obj.source = """
         execLoader.hpp
     """

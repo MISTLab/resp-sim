@@ -6,7 +6,7 @@ import sys, Options, os
 def build(bld):
     """Create a dynamic version of the systemc library"""
 
-    obj = bld.new_task_gen('cc', 'shlib')
+    obj = bld.new_task_gen('cc', 'cshlib')
     obj.source = 'BFD empty.c'
     if sys.platform == 'darwin':
         obj.env['shlib_SUFFIX'] = obj.env['shlib_ORIG_SUFFIX']

@@ -3,12 +3,12 @@
 
 def build(bld):
 
-    obj = bld.new_task_gen('cxx', 'shlib')
+    obj = bld.new_task_gen('cxx', 'cshlib')
     obj.target = 'ecacti'
-    obj.target = 'name'
+    obj.name = 'ecacti'
     obj.source = 'area.c io.c leakage.c time.c ecacti_wrapper.cpp'
 
-    obj = bld.new_task_gen('pypp', 'shlib')
+    obj = bld.new_task_gen('pypp')
     obj.target = 'ecacti_wrapper'
     obj.start_decls = 'resp'
     obj.source = 'ecacti_wrapper.h'

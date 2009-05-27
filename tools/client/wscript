@@ -10,4 +10,4 @@ def build(bld):
     """
     obj.target = 'RespClient'
     obj.export_incdirs = '.'
-    obj.uselib = 'BOOST BOOST_SYSTEM ASIO BOOST_REGEX BOOST_FILESYSTEM SYSTEMC'
+    obj.uselib = 'BOOST BOOST_SYSTEM ASIO BOOST_REGEX BOOST_FILESYSTEM SYSTEMC_H'

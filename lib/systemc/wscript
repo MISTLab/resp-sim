@@ -6,11 +6,10 @@ import sys, Options, os
 def build(bld):
     """Create a dynamic version of the systemc library"""
 
-    obj = bld.new_task_gen('cxx','shlib','cshlib')
-    obj.env['CPPPATH'] = [ x+'/../src/' for x in obj.env['CPPPATH_SYSTEMC'] ]
-    obj.source = '''SYSTEMC_STATIC sc_main.cpp sc_simcontext.cpp'''
+    obj = bld.new_task_gen('cxx', 'cshlib')
+    obj.env['CPPPATH'] = [ x+'/../src/' for x in obj.env['CPPPATH_SYSTEMC_H'] ]
+    obj.source = 'SYSTEMC_STATIC sc_main.cpp sc_simcontext.cpp'
     if sys.platform == 'darwin':
         obj.env['shlib_SUFFIX'] = obj.env['shlib_ORIG_SUFFIX']
     obj.target = 'systemc'
-    obj.uselib = 'SYSTEMC'
     obj.name = 'systemc'

@@ -87,9 +87,9 @@ class pypp_taskgen(cxx.cxx_taskgen):
         self.virtuality = False
         self.split = 1
         self.templates = []
-        self.features.append("pypp")
-        self.features.append("cxx")
-        self.features.append("cshlib")
+        self.features.append('pypp')
+        self.features.append('cxx')
+        self.features.append('cshlib')
 
 
 def setup(env):
@@ -138,8 +138,9 @@ def extract_headers(self):
 
 @taskgen
 @feature('pypp')
-@after('apply_defines_cxx')
-@before('apply_link')
+#@after('apply_defines_cxx')
+#@before('apply_link')
+@before('apply_core')
 def process_headers(self):
     """ This function separates header files from .cpp files, and
         treats them separately.
@@ -200,7 +201,7 @@ def process_headers(self):
         pypptask.virtuality = self.virtuality
         pypptask.path_lst = self.env['INC_PATHS']
 
-        pypptask.defines  = self.scanner_defines
+        #pypptask.defines  = self.scanner_defines
         pypptask.templates  = self.templates
 
         # Now I have to parse the CPPFLAGS and CXXFLAGS environment variables and extract the synmbol definitions;
@@ -245,6 +246,10 @@ def process_headers(self):
         self.extra_headers = Utils.to_list(self.extra_headers)
         pypptask.extra_includes = inc_paths
         for i in self.extra_headers:
+            if not Build.bld.srcnode.find_dir(i):
+                if Logs.verbose:
+                    print 'Folder ' + str(i) + ' to be searched for extra_headers does not exist'
+                continue
             i, h = rec_find(os.path.abspath(os.path.join(self.env['RESP_HOME']
                             , '_build_'
                             ,  Build.bld.srcnode.find_dir(i).srcpath(self.env)))
@@ -295,7 +300,7 @@ def process_headers(self):
             task.inputs = [tgnodes[0]]
             task.outputs = [pypptask.outputs[0].change_ext(self.obj_ext)]
             task.set_run_after(pypptask)
-            task.defines  = self.scanner_defines
+            #task.defines  = self.scanner_defines
             self.compiled_tasks.append(task)
         else:
             for i in range (0, self.split):
@@ -304,7 +309,7 @@ def process_headers(self):
                 task.inputs = [tgnodes[i]]
                 task.outputs = [pypptask.outputs[i].change_ext(self.obj_ext)]
                 task.set_run_after(pypptask)
-                task.defines  = self.scanner_defines
+                #task.defines  = self.scanner_defines
                 self.compiled_tasks.append(task)
 
 def detect(conf):
@@ -468,7 +473,7 @@ def dopypp(task):
                                     , define_symbols = task.define_symbols
                                     , working_directory = os.path.abspath(os.path.join(task.env['RESP_HOME'],'_build_'))
                                     , include_paths = global_includes
-                                    , compiler = task.env['CXX']
+                                    , compiler = 'gcc-4.2.4' #task.env['CXX'][0]
                                     , cache=parser.file_cache_t(os.path.abspath(os.path.join( task.env['RESP_HOME'], '_build_', task.outputs[0].bldpath(task.env)+'_cache' ))))
         else:
             mb = module_builder.module_builder_t(

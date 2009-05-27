@@ -5,23 +5,23 @@ import Options
 
 def build(bld):
     # Generation of the controller library
-    obj = bld.new_task_gen('cxx', 'shlib')
+    obj = bld.new_task_gen('cxx', 'cshlib')
     obj.source ='''
         simulation_engine.cpp controller.cpp
     '''
 
     obj.target = 'sc_controller'
-    obj.uselib = 'SYSTEMC TLM BOOST BOOST_THREAD'
+    obj.uselib = 'SYSTEMC_H BOOST BOOST_THREAD PYEXT'
     obj.uselib_local = 'systemc'
 
     # Generation of the controller wrapper extension
-    obj = bld.new_task_gen('pypp', 'shlib')
+    obj = bld.new_task_gen('pypp')
     obj.source ='''
         controller.hpp
     '''
 
     obj.target = 'sc_controller_wrapper'
-    obj.uselib = 'SYSTEMC TLM BOOST PYEXT BOOST_PYTHON BOOST_THREAD'
+    obj.uselib = 'SYSTEMC_H BOOST PYEXT BOOST_PYTHON BOOST_THREAD'
     obj.uselib_local = 'systemc sc_controller'
     obj.include = 'scwrapper'
     obj.generate_include = True
