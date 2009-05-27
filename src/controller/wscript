@@ -20,7 +20,7 @@ def build(bld):
         controller.hpp
     '''
 
-    obj.target = 'sc_controller_wrapper';
+    obj.target = 'sc_controller_wrapper'
     obj.uselib = 'SYSTEMC TLM BOOST PYEXT BOOST_PYTHON BOOST_THREAD'
     obj.uselib_local = 'systemc sc_controller'
     obj.include = 'scwrapper'
