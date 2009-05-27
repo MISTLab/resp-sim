@@ -30,10 +30,7 @@ def build(bld):
     #TaskGen.declare_extension(['.S','.s'], cc.c_hook)
 
     # process subfolders from here
-    bld.add_subdirs('lib component tools src dse')
-    bld.add_subdirs(os.path.join('dse', 'MDP'))
-    if bld.env['HAVE_MOMH']:
-        bld.add_subdirs(os.path.join('dse', 'MOMH'))
+    bld.add_subdirs('lib tools src components dse')
 
     # Creates the startSim script
     bld.add_group()
