@@ -3,4 +3,4 @@
 # Build
 
 def build(bld):
-    bld.add_subdirs('systemc')
+    bld.add_subdirs('systemc binutils')

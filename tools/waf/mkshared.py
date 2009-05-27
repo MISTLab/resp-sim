@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# encoding: utf-8
+# -*- coding: iso-8859-1 -*-
 
 ##############################################################################
 #      ___           ___           ___           ___
@@ -58,36 +58,52 @@ def do_unpack_ar(self, node):
 def parse_libs(self):
     # Copy library and update source list
     files = self.to_list(self.source)
-    try:
-        filename = files[0]
-    except:
-        return
-    if self.env['LIB_'+filename]:
-        baselibname = self.env['LIB_' + filename][0]
-        libname =  self.env['staticlib_PATTERN'] % baselibname
-        libpath = os.path.join(self.env['LIBPATH_' + filename][0], libname)
 
-        # Copy the systemc library if not present in the source tree
-        self.library = os.path.join(self.path.abspath(),libname )
-        if (not os.path.isfile( self.library )) or (not filecmp.cmp(self.library, libpath, 0)):
-            if Logs.verbose:
-                print "copying "+ libpath + ' --> '+ self.path.abspath()
-            shutil.copyfile( libpath, self.library )
+    self.source = ''
 
-        # Check the contents
-        # UGLY!
-        f = os.popen( self.env['AR']+' t '+libpath )
-        self.additional_objs = [ self.path.find_or_declare(t.strip()) for t in f ]
-        filenames = map( lambda x : os.path.splitext(x)[0] , files[1:])
-        self.additional_objs = filter(lambda x: not os.path.splitext(x.name)[0] in filenames , self.additional_objs)
+    for filename in files:
+        if self.env['LIB_'+filename]:
 
-        self.source = ' '.join([libname] + files[1:])
+            if type(self.env['LIB_'+filename]) == type(''):
+                self.env['LIB_'+filename] = [self.env['LIB_'+filename]]
+            if type(self.env['LIBPATH_'+filename]) == type(''):
+                self.env['LIBPATH_'+filename] = [self.env['LIBPATH_'+filename]]
+
+            for baselibname in self.env['LIB_' + filename]:
+                # I make sure that the library actually exists and I determine its path
+                libname =  self.env['staticlib_PATTERN'] % baselibname
+                for path in self.env['LIBPATH_' + filename]:
+                    libpath = os.path.join(path, libname)
+                    if os.path.exists(libpath):
+                        break
+
+                if not os.path.exists(libpath):
+                    continue
+
+                # Copy the library if not present in the source tree
+                self.library = os.path.join(self.path.abspath(), libname)
+                if (not os.path.isfile( self.library )) or (not filecmp.cmp(self.library, libpath, 0)):
+                    if Logs.verbose:
+                        print('copying ' + libpath + ' --> '+ self.path.abspath())
+                    shutil.copyfile( libpath, self.library )
+
+                # Check the contents
+                # UGLY!
+                f = os.popen( self.env['AR'] + ' t ' + libpath )
+                self.additional_objs = [ self.path.find_or_declare(t.strip()) for t in f ]
+                filenames = map( lambda x : os.path.splitext(x)[0] , files[1:])
+                self.additional_objs = filter(lambda x: not os.path.splitext(x.name)[0] in filenames , self.additional_objs)
+
+                self.source += libname
+        else:
+            self.source += filename
 
 @taskgen
 @feature('shlib')
 @after('apply_link')
 def add_elements(self):
-    if not hasattr(self, 'additional_objs'): return
+    if not hasattr(self, 'additional_objs'):
+        return
     for obj in self.additional_objs:
         self.link_task.inputs.append(obj)
 
@@ -96,4 +112,3 @@ def setup(env):
 
 def detect(conf):
     conf.check_tool('cxx')
-    return 1

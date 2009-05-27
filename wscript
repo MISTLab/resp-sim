@@ -207,7 +207,42 @@ def configure(conf):
     conf.check_message_custom('gcc search path', '', 'ok')
 
     ###########################################################
-    # Check for BFD library and header and for LIBERTY library
+    # Check for IBERTY library
+    ###########################################################
+    if Options.options.bfddir:
+        searchDirs.append(os.path.abspath(os.path.expanduser(os.path.expandvars(os.path.join(Options.options.bfddir, 'lib')))))
+
+    import glob
+    foundStatic = []
+    foundShared = []
+    for directory in searchDirs:
+        foundShared += glob.glob(os.path.join(directory, conf.env['shlib_PATTERN'].split('%s')[0] + 'iberty*' + conf.env['shlib_PATTERN'].split('%s')[1]))
+        foundStatic += glob.glob(os.path.join(directory, conf.env['staticlib_PATTERN'].split('%s')[0] + 'iberty*' + conf.env['staticlib_PATTERN'].split('%s')[1]))
+    if not foundStatic and not foundShared:
+        conf.fatal('IBERTY library not found, install binutils development package for your distribution')
+    tempLibs = []
+    for ibertylib in foundStatic:
+        tempLibs.append(os.path.basename(ibertylib)[3:os.path.basename(ibertylib).rfind('.')])
+    foundStatic = tempLibs
+    tempLibs = []
+    for ibertylib in foundShared:
+        tempLibs.append(os.path.basename(ibertylib)[3:os.path.basename(ibertylib).rfind('.')])
+    foundShared = tempLibs
+    bfd_lib_name = ''
+    for ibertylib in foundStatic:
+        if ibertylib in foundShared:
+            iberty_lib_name = ibertylib
+            break
+    if not iberty_lib_name:
+        if foundShared:
+            iberty_lib_name = foundShared[0]
+        else:
+            iberty_lib_name = foundStatic[0]
+
+    conf.check_cc(lib=iberty_lib_name, uselib_store='BFD', mandatory=1, libpath=searchDirs)
+
+    ###########################################################
+    # Check for BFD library and header
     ###########################################################
     if Options.options.bfddir:
         searchDirs.append(os.path.abspath(os.path.expanduser(os.path.expandvars(os.path.join(Options.options.bfddir, 'lib')))))
@@ -232,7 +267,7 @@ def configure(conf):
     for bfdlib in foundStatic:
         if bfdlib in foundShared:
             bfd_lib_name = bfdlib
-        break
+            break
     if not bfd_lib_name:
         if foundShared:
             bfd_lib_name = foundShared[0]
@@ -241,9 +276,9 @@ def configure(conf):
 
     conf.check_cc(lib=bfd_lib_name, uselib_store='BFD', mandatory=1, libpath=searchDirs)
     if Options.options.bfddir:
-        conf.check_cc(header_name='bfd.h', uselib_store='BFD', mandatory=1, includes=[os.path.abspath(os.path.expanduser(os.path.expandvars(os.path.join(Options.options.bfddir, 'include'))))])
+        conf.check_cc(header_name='bfd.h', uselib='BFD', uselib_store='BFD', mandatory=1, includes=[os.path.abspath(os.path.expanduser(os.path.expandvars(os.path.join(Options.options.bfddir, 'include'))))])
     else:
-        conf.check_cc(header_name='bfd.h', uselib_store='BFD', mandatory=1)
+        conf.check_cc(header_name='bfd.h', uselib='BFD', uselib_store='BFD', mandatory=1)
 
     ##################################################
     # Check for pthread library/flag
@@ -273,6 +308,7 @@ def configure(conf):
     if syscpath:
         sysclib = glob.glob(os.path.join(os.path.abspath(os.path.join(syscpath[0], '..')), 'lib-*'))
     conf.check_cxx(lib='systemc', uselib_store='SYSTEMC_STATIC', mandatory=1, libpath=sysclib)
+
     ######################################################
     # Check if systemc is compiled with quick threads or not
     ######################################################
@@ -282,7 +318,7 @@ def configure(conf):
     ##################################################
     # Check for SystemC header and test the library
     ##################################################
-    conf.check_cxx(header_name='systemc.h', uselib='SYSTEMC_STATIC', uselib_store='SYSTEMC', mandatory=1, includes=syscpath)
+    conf.check_cxx(header_name='systemc.h', uselib='SYSTEMC_STATIC', uselib_store='SYSTEMC_H', mandatory=1, includes=syscpath)
 
     conf.check_cxx(fragment="""
         #include <systemc.h>
@@ -302,7 +338,7 @@ def configure(conf):
                 return 0;
             };
         }
-    """, msg='Check for SystemC version (2.2.0 or greater required)', uselib='SYSTEMC SYSTEMC_STATIC', mandatory=1)
+    """, msg='Check for SystemC version (2.2.0 or greater required)', uselib='SYSTEMC_H SYSTEMC_STATIC', mandatory=1)
 
     ##################################################
     # Check for TLM header
