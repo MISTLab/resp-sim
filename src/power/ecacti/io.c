@@ -143,7 +143,8 @@ void processParamFile(char *fname) {
 			line[0] = '\n';
 
 			/* read a line from the file and chop */
-			fgets(line, 1024, fp);
+			if(fgets(line, 1024, fp) == NULL)
+                break;
 
 			if (line[0] == '\0' || line[0] == '\n' || line[0] == '#')
 			continue;

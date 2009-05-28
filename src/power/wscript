@@ -9,7 +9,6 @@ def build(bld):
     obj.name = 'powerframework'
     obj.source = 'power.cpp cache.cpp processor.cpp memory.cpp'
     obj.includes = '. ecacti'
-    obj.rpaths = 'ecacti'
     obj.export_incdirs = '.'
     obj.uselib_local = 'ecacti'
     obj.uselib = 'BOOST BOOST_FILESYSTEM MATH'

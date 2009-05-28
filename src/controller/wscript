@@ -26,7 +26,6 @@ def build(bld):
     obj.include = 'scwrapper'
     obj.generate_include = True
     obj.start_decls = 'resp'
-    obj.rpaths = '_build_/default/src/controller'
     obj.custom_code = """
 # Exclude protected members
 mb.calldefs( declarations.access_type_matcher_t( 'protected' ) ).exclude()

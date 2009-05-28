@@ -528,7 +528,7 @@ void init_tech_params(double technology) {
 	}
 
 	else {
-		printf("\nERROR: Technology parameters not known for %3.4f feature size \n    (Parameters available for 0.18u, 0.13, 0.10, and 0.07u technologies)\nExiting...\n\n");
+		printf("\nERROR: Technology parameters not known for %f feature size \n    (Parameters available for 0.18u, 0.13, 0.10, and 0.07u technologies)\nExiting...\n\n", tech);
 		exit(0);
 	}
 }

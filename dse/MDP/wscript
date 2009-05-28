@@ -21,7 +21,6 @@ def build(bld):
     '''
     obj.uselib = 'BOOST BOOST_PROGRAM_OPTIONS MATH BOOST_SYSTEM BOOST_FILESYSTEM DL BFD'
     obj.uselib_local = 'RespClient powerframework'
-    obj.rpaths = os.path.normpath(os.path.join('..', '..', 'src', 'power'))
     obj.name = 'mdp'
     obj.target = 'mdp'
 
@@ -40,6 +39,5 @@ def build(bld):
     '''
     obj.uselib = 'BOOST MATH BFD'
     obj.uselib_local = 'RespClient powerframework'
-    obj.rpaths = os.path.normpath(os.path.join('..', '..', 'src', 'power'))
     obj.name = 'mdpPlugins'
     obj.target = 'mdpPlugins'

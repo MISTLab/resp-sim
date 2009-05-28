@@ -11,4 +11,3 @@ def build(bld):
     obj.name         = 'memTraceViewer'
     obj.target       = 'memTraceViewer'
     obj.uselib_local       = 'utils'
-    obj.rpaths       = '_build_/default/src/utils'

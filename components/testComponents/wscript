@@ -22,7 +22,6 @@ def build(bld):
     obj.uselib = 'SYSTEMC_H TLM BOOST PYEXT BOOST_PYTHON'
     obj.uselib_local = 'systemc testMaster'
     obj.include = 'scwrapper tlmwrapper'
-    obj.rpaths = '_build_/default/components/testComponents'
     obj.start_decls = 'testMaster'
     obj.custom_code = """
 """
@@ -45,7 +44,6 @@ def build(bld):
     obj.uselib = 'SYSTEMC_H TLM BOOST PYEXT BOOST_PYTHON'
     obj.uselib_local = 'systemc testSlave'
     obj.include = 'scwrapper tlmwrapper'
-    obj.rpaths = '_build_/default/components/testComponents'
     obj.start_decls = 'testSlave'
     obj.custom_code = """
 """
