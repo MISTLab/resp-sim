@@ -75,7 +75,7 @@ def configure(conf):
     ########################################
     conf.check_tool('gcc g++')
     if int(conf.env['CC_VERSION'][0]) < 4:
-        conf.fatal('Error, gcc compiler at leat version 4.0 required')
+        conf.fatal('Error, gcc compiler at least version 4.0 required')
 
     conf.check_tool('misc')
 
@@ -109,8 +109,7 @@ def configure(conf):
         conf.env.append_unique('CXXFLAGS', '-O2')
         conf.env.append_unique('CPPFLAGS', '-DNDEBUG')
 
-    defaultFlags = ['-fstrict-aliasing']
-    defaultFlags += ['-fPIC']
+    defaultFlags = ['-fstrict-aliasing','-fPIC']
     conf.env.append_unique('LINKFLAGS','-fPIC' )
     if sys.platform != 'darwin':
         conf.env.append_unique('LINKFLAGS','-Wl,-E')
@@ -133,16 +132,16 @@ def configure(conf):
         conf.env.append_unique('CPPFLAGS','-DBIG_ENDIAN_BO')
         conf.check_message_custom('endianness', '', 'big')
 
-    if conf.env['CPPFLAGS']:
-        conf.check_cc(cflags=conf.env['CPPFLAGS'])
-    if conf.env['CCFLAGS']:
-        conf.check_cc(cflags=conf.env['CCFLAGS'])
-    if conf.env['CXXFLAGS']:
-        conf.check_cxx(cxxflags=conf.env['CXXFLAGS'])
-    if conf.env['LINKFLAGS']:
-        conf.check_cxx(linkflags=conf.env['LINKFLAGS'])
-    if conf.env['STLINKFLAGS']:
-        conf.check_cxx(linkflags=conf.env['STLINKFLAGS'], mandatory=1)
+    for flag in conf.env['CPPFLAGS']:
+        conf.check_cc(cflags=flag, mandatory=1)
+    for flag in conf.env['CCFLAGS']:
+        conf.check_cc(cflags=flag, mandatory=1)
+    for flag in conf.env['CXXFLAGS']:
+        conf.check_cxx(cxxflags=flag, mandatory=1)
+    for flag in conf.env['LINKFLAGS']:
+        conf.check_cxx(linkflags=flag, mandatory=1)
+    for flag in conf.env['STLINKFLAGS']:
+        conf.check_cxx(linkflags=flag, mandatory=1)
 
     ##################################################
     # Check for boost libraries

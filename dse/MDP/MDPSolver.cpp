@@ -144,7 +144,7 @@ void MDPSolver::createExplorationGraph(SystemConfig * initialSol, plugin_int_mul
         curDepth++;
         //std::cerr << "entered in the main loop" << std::endl;
 
-        std::cerr << "Level " << curDepth << " nodes " << counter << endl; // << " Memory: " << std::dec << mallinfo().arena/1024
+        std::cerr << "Level " << curDepth << " nodes " << counter << std::endl; // << " Memory: " << std::dec << mallinfo().arena/1024
 
 
         //For each leaft vertex I apply all possible actions of each plugin and compute the corresponding transition functions
@@ -853,7 +853,7 @@ void MDPSolver::simulatePoint(SystemConfig &curSol){
             }
 
             if(config.verbose){
-                std::cout << curSol << endl;
+                std::cout << curSol << std::endl;
             }
 
             curSol.alpha = current_alpha;

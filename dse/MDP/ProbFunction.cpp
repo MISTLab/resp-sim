@@ -881,7 +881,7 @@ void Probability::checkGraphCoherency(ProbGraph &graph){
                 std::ofstream graphOut("ErrorProbGraph.dot");
                 boost::write_graphviz(graphOut, graph, ProbNodeWriter(graph), ProbEdgeWriter(graph));
                 graphOut.close();
-                cout << curMetricIter->second << " " << curMetricNext->first << " " << (double) curMetricIter->second - (double) curMetricNext->first << endl;
+                std::cout << curMetricIter->second << " " << curMetricNext->first << " " << (double) curMetricIter->second - (double) curMetricNext->first << std::endl;
                 THROW_EXCEPTION("The probability graph has wrong metric values for metric " << metricValIter->first);
             }
         }

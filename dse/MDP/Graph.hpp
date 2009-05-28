@@ -33,10 +33,6 @@
 
 #include "pluginIf.hpp"
 
-#ifdef MEMORY_DEBUG
-#include <mpatrol.h>
-#endif
-
 // Use boost::pool_allocator
 //typedef std::map<std::pair<std::string, int>, ProbGraph *, std::less<std::pair<std::string, int> >, boost::pool_allocator< std::pair<std::pair<std::string, int> const, ProbGraph *> > > density_map;
 // Redifine to use different allocators

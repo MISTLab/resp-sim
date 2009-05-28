@@ -2,7 +2,6 @@
 # -*- coding: iso-8859-1 -*-
 
 def build(bld):
-    pass
-    #bld.add_subdirs('MDP')
-    #if bld.env['HAVE_MOMH']:
-    #    bld.add_subdirs('dse', 'MOMH')
+    bld.add_subdirs('MDP')
+    if bld.env['HAVE_MOMH']:
+        bld.add_subdirs('MOMH')

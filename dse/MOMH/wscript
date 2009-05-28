@@ -14,6 +14,6 @@ def build(bld):
         simulationCache.cpp
     '''
     obj.uselib = 'BOOST BOOST_SYSTEM BOOST_FILESYSTEM BOOST_PROGRAM_OPTIONS MOMH SIGCPP'
-    obj.uselib_local = 'RespClient'
+    obj.uselib_local = 'utils RespClient'
     obj.name = 'dse_driver'
     obj.target = 'dse_driver'

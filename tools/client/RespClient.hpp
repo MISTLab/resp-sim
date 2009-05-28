@@ -1,7 +1,6 @@
 #ifndef RESPCLIENT_HPP
 #define RESPCLIENT_HPP
 
-#include <systemc.h>
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
 #include <string>
@@ -136,8 +135,8 @@ class RespClient{
         bool load_architecture(const std::string & archFile);
 
         ///starts the simulation for the specified ammount of time
-        ///returns the response
-        bool run_simulation(sc_time &time);
+        ///in nanoseconds, returns the response
+        bool run_simulation(double &time);
 
         ///undefinitely starts the simulation
         ///returns the response

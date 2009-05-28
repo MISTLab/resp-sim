@@ -2,7 +2,6 @@
 #include "RespClient.hpp"
 #include "utils.hpp"
 
-#include <systemc.h>
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
 #include <string>
@@ -224,9 +223,9 @@ bool RespClient::load_architecture(const std::string & archFile){
 }
 
 ///starts the simulation for the specified ammount of time
-///returns the response
-bool RespClient::run_simulation(sc_time &time){
-    std::string message = this->encodeMessage("RUN-S" + boost::lexical_cast<std::string>(time.to_double()/1000) + ')');
+///in nanoseconds
+bool RespClient::run_simulation(double &time){
+    std::string message = this->encodeMessage("RUN-S" + boost::lexical_cast<std::string>(time) + ')');
     this->send(message);
     this->lastResponse = this->decodeMessage(this->receive());
     return this->lastResponse == "OK";

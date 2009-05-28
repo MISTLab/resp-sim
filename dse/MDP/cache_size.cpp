@@ -157,12 +157,12 @@ std::pair<float, float> CacheSizeIf::changeValue(plugin_int_map &parameters, int
             worstEnergy = bestEnergy;
             bestEnergy = temp;
         }
-        
+
 //         cout << "Old         size: " << oldSize << " New: " << newSize <<  endl;
 //         cout << "Total Energy: " << curMetricCentroid <<  endl;
 //         cout << "Old energy: " << oldEnergy << " New: " << model.get_energy() <<  endl;
 //         cout << "New ratio: " << newEnergyRatio << endl;
-     
+
         if(oldSize > newSize){
             if( worstEnergy > oldEnergy ) {
                 retVal.first = curMetricCentroid;
@@ -173,7 +173,7 @@ std::pair<float, float> CacheSizeIf::changeValue(plugin_int_map &parameters, int
             }
 
             //if( newEnergyRatio < 1.0 ) retVal.first = retVal.first*newEnergyRatio;
-            
+
         }
         else{
             // Increase the size:
@@ -197,9 +197,9 @@ std::pair<float, float> CacheSizeIf::changeValue(plugin_int_map &parameters, int
         THROW_EXCEPTION( this->pluginName+" has negative value ("+boost::lexical_cast<std::string>(retVal.first)+","+boost::lexical_cast<std::string>(retVal.second)+")");
 
     if( retVal.second < retVal.first ) {
-        cout << "Old size: " << oldSize << " New: " << newSize <<  endl;
-        cout << "Old energy: " << oldEnergy << " New: " << model.get_energy() <<  endl;
-        cout << "New ratio: " << newEnergyRatio << endl;
+        std::cout << "Old size: " << oldSize << " New: " << newSize <<  std::endl;
+        std::cout << "Old energy: " << oldEnergy << " New: " << model.get_energy() <<  std::endl;
+        std::cout << "New ratio: " << newEnergyRatio << std::endl;
         THROW_EXCEPTION( this->pluginName+" has inverse values ("+boost::lexical_cast<std::string>(retVal.first)+","+boost::lexical_cast<std::string>(retVal.second)+")");
     }
     return retVal;

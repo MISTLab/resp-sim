@@ -20,7 +20,7 @@ def build(bld):
         simulationCache.cpp
     '''
     obj.uselib = 'BOOST BOOST_PROGRAM_OPTIONS MATH BOOST_SYSTEM BOOST_FILESYSTEM DL BFD'
-    obj.uselib_local = 'RespClient powerframework'
+    obj.uselib_local = 'utils RespClient powerframework'
     obj.name = 'mdp'
     obj.target = 'mdp'
 
@@ -38,6 +38,6 @@ def build(bld):
         cache_size.cpp
     '''
     obj.uselib = 'BOOST MATH BFD'
-    obj.uselib_local = 'RespClient powerframework'
+    obj.uselib_local = 'utils RespClient powerframework'
     obj.name = 'mdpPlugins'
     obj.target = 'mdpPlugins'

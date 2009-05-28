@@ -30,10 +30,6 @@
 #include "pluginIf.hpp"
 #include "utils.hpp"
 
-#ifdef MEMORY_DEBUG
-#include <mpatrol.h>
-#endif
-
 NodeWriter::NodeWriter(Graph &graph) : graph(graph){
     this->nodeInfo = boost::get(node_info_t(), this->graph);
 }

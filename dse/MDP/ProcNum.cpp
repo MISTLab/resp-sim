@@ -142,7 +142,7 @@ std::pair<float, float> ProcNumIf::changeValue(plugin_int_map &parameters, int n
             // Decrease the number of processors:
             // Lower Bound, E is reducd by N processors
             // Upper Bound, E is not reduced
-            
+
             retVal.first = curMetricCentroid*((float) 1/ratio)*0.9;
             retVal.second = curMetricCentroid*1.1;
         }
@@ -163,10 +163,10 @@ std::pair<float, float> ProcNumIf::changeValue(plugin_int_map &parameters, int n
         THROW_EXCEPTION( this->pluginName+" has negative value ("+boost::lexical_cast<std::string>(retVal.first)+","+boost::lexical_cast<std::string>(retVal.second)+")");
 
     if( retVal.second < retVal.first ) {
-        cout << " ExecTime = " <<  centroidMap.find("execTime")->second << endl;
-        cout << " Bus Accesses = " << numBusAccesses << " Latency = " << bus_latency << endl;
-        cout << " Mem Accesses = " << numMemAccesses << " Latency = " << bus_latency << endl;
-        cout << " OldProc = " << oldNum << " NewProc = " << newNum << endl;
+        std::cout << " ExecTime = " <<  centroidMap.find("execTime")->second << std::endl;
+        std::cout << " Bus Accesses = " << numBusAccesses << " Latency = " << bus_latency << std::endl;
+        std::cout << " Mem Accesses = " << numMemAccesses << " Latency = " << bus_latency << std::endl;
+        std::cout << " OldProc = " << oldNum << " NewProc = " << newNum << std::endl;
         THROW_EXCEPTION( this->pluginName+" has inverse values ("+boost::lexical_cast<std::string>(retVal.first)+","+boost::lexical_cast<std::string>(retVal.second)+")");
     }
 
