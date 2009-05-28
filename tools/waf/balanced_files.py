@@ -51,7 +51,11 @@ class resp_files_t(balanced_files.balanced_files_t):
         class_creators = filter( lambda cc: not cc.declaration.already_exposed
                                  , class_creators )
 
-        buckets = split_sequence(class_creators, len(class_creators)/self.number_of_buckets )
+        if len(class_creators) > self.number_of_buckets:
+            numBuckets = len(class_creators)/self.number_of_buckets
+        else:
+            numBuckets = 1
+        buckets = split_sequence(class_creators, numBuckets)
         if len(buckets) > self.number_of_buckets:
             buckets[len(buckets)-2] += buckets[len(buckets)-1]
             buckets = buckets[:len(buckets)-1]

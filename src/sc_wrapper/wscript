@@ -192,6 +192,8 @@ mb.global_ns.class_('sc_simcontext').member_functions(lambda x: x.name.startswit
 # Exclude protected members
 mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) ).exclude()
 
+mb.global_ns.classes(lambda decl: decl.name.startswith('simple_target_socket')).include()
+mb.global_ns.classes(lambda decl: decl.name.startswith('simple_initiator_socket')).include()
 """
     obj.uselib = 'SYSTEMC_H TLM BOOST_PYTHON BOOST PYEXT'
     obj.uselib_local = 'systemc'

@@ -160,7 +160,7 @@ class RespKernel:
             import warnings
             warnings.simplefilter('ignore', RuntimeWarning)
 
-        global scwrapper, sc_controller, GDBStub32, ExecLoader, archcwrap, Profiler, compManager, breakpoints, injection, SynchManager, ProcIf, bfdwrapper, converters
+        global tlmwrapper, scwrapper, sc_controller, compManager, converters
 
         if self.verbose:
             print "Loading converters"
