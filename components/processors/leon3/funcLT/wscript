@@ -17,7 +17,7 @@ def build(bld):
         externalPins.cpp
     """
     obj.uselib = 'BOOST BOOST_FILESYSTEM BOOST_THREAD SYSTEMC_H TLM TRAP'
-    obj.uselib_local = 'systemc'
+    obj.uselib_local = 'systemc binutils'
     obj.includes = '.'
     obj.name = 'leon3_funcLT'
     obj.target = 'leon3_funcLT'

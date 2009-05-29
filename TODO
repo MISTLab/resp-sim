@@ -1,8 +1,6 @@
--- Check an automatic way of setting rpath in case a uselib_local library is used (necessary for components and their wrappers)
+-- Code to export SystemC and TLM (and also their start_decls) should be centralized and executed for each pypp task
+-- TRAP library should not be used, we should just need the headers
 -- Modify Py++ in order to expose also private members (with the #define private protected trick)
--- Export TLM
--- Modify the component loader to take into account the separation of the wrapper from the library itself
--- Create a dynamic version of the eventual binutils static libraries
 -- Check restaart in 64 bits patch: it explodes at the restart
--- Check and change the memory analyzed with the one of TRAP
+-- Check and change the memory analyzer with the one of TRAP
 -- Integrate the BFD frontend in the executable loader
