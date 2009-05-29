@@ -9,6 +9,7 @@
 
 class testSlave: public sc_module{
     public:
+    sc_signal<int> i;
     tlm_utils::simple_target_socket< testSlave, 8 > targetSocket;
 
     testSlave(sc_module_name name);

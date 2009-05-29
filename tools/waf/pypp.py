@@ -161,22 +161,23 @@ def process_headers(self):
         # Includes are objects: to keep dependencies working, objects have
         # to be *posted* before they can be used
         include_lst = self.to_list(self.include)
-        if len(include_lst) > 0:
-            include_lst.reverse()
-            for x in include_lst:
-                # Does the include object exist?
-                # TODO this can be cached
-                obj = self.name_to_obj(x)
-                if( not  obj ):
-                    print targetbase + ' --> Warning: Object '+ x +' not found'
-                    continue
-                else:
-                    # If it does, post it if not posted in the past
-                    if not getattr(obj , 'posted' , None):
-                        obj.post()
-                    # I also have to add the object to the list of libraries used by this compilation process
-                    #print(self.uselib_local)
-                    #self.uselib_local += ' ' + x
+        #if len(include_lst) > 0:
+            #include_lst.reverse()
+            #for x in include_lst:
+                ## Does the include object exist?
+                ## TODO this can be cached
+                #obj = self.name_to_obj(x)
+                #if( not  obj ):
+                    #print targetbase + ' --> Warning: Object '+ x +' not found'
+                    #continue
+                #else:
+		    #pass
+                    ## If it does, post it if not posted in the past
+                    #if not getattr(obj , 'posted' , None):
+                        #obj.post()
+                    ## I also have to add the object to the list of libraries used by this compilation process
+                    ##print(self.uselib_local)
+                    ##self.uselib_local += ' ' + x
 
         # Find the target node, i.e. the generated file
         if self.split < 1:
@@ -232,11 +233,20 @@ def process_headers(self):
                 incl.append( obj.path.find_or_declare(x+'.generated.py') )
                 if self.extra_headers and (obj.extra_headers or obj.templates):
                     incl_headers.append( obj.path.find_or_declare(x+'_exp.hpp') )
-                for dep in obj.tasks:
-                    for depOut in dep.outputs:
-                        if depOut.name.find('.pypp.txt') > 0:
-                            pypptask.set_run_after(dep)
-                            break
+                    continue
+                #for dep in obj.tasks:
+                    #for depOut in dep.outputs:
+                        #if depOut.name.find('.py') > 0:
+                            #pypptask.set_run_after(dep)
+                            #break
+
+        # Adding dependencies to all already-processed pypp files
+        all_tasks = self.bld.task_manager.groups[self.bld.task_manager.current_group].tasks
+        dependencies = filter(lambda tsk: isinstance(tsk, Task.TaskBase.classes['pypp']) and (pypptask != tsk) , all_tasks)
+        if dependencies:
+            pypptask.set_run_after(dependencies[-1])
+        for x in dependencies:
+            incl.append( x.outputs[0] )
 
         pypptask.include = incl
 
@@ -431,7 +441,6 @@ included_decls = ''
 import threading
 logger_lock = threading.Lock()
 
-
 def dopypp(task):
 
     global included_decls
@@ -501,7 +510,7 @@ def dopypp(task):
             log.addHandler(temp_handler)
         return 1
 
-    # Restrore the recursion limit to its previous value
+    # Restore the recursion limit to its previous value
     sys.setrecursionlimit(sys.getrecursionlimit()/2)
 
     # Set a standard name for every declaration
@@ -514,8 +523,13 @@ def dopypp(task):
 
     # Register module dependency
     task.include.reverse()
+    module_list = []
     for inc in task.include:
-        mb.register_module_dependency( os.path.dirname(inc.bldpath(task.env)) )
+        new_module = os.path.dirname(inc.bldpath(task.env))
+        if new_module not in module_list:
+            print "Adding "+os.path.dirname(inc.bldpath(task.env))+" to module dependencies"
+            mb.register_module_dependency(new_module)
+            module_list.append(new_module)
 
     # Disable virtuality unless specifically asked to do otherwise: this should avoid overrides
     # and increase simulation speed

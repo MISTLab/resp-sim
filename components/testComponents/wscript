@@ -24,6 +24,36 @@ def build(bld):
     obj.include = 'scwrapper tlmwrapper'
     obj.start_decls = 'testMaster'
     obj.custom_code = """
+# Include Transport Interfaces
+#cls = mb.global_ns.classes(lambda decl: decl.name.find('transport_if') > 0, allow_empty=True)
+#for i in cls:
+    #i.include()
+    #i.alias = 'TLM_'+i.alias
+
+# Include simple sockets
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_target_socket') or decl.name.startswith('tlm_target_socket') , allow_empty=True)
+for i in cls:
+    i.include()
+    i.member_functions(allow_empty=True).exclude()
+    i.alias = 'TLM_'+i.alias
+
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_initiator_socket') or decl.name.startswith('tlm_initiator_socket'), allow_empty=True)
+for i in cls:
+    i.include()
+    i.member_functions(allow_empty=True).exclude()
+    for k in i.member_functions(allow_empty=True):
+        if k.name == 'bind':  k.include()
+
+    i.alias = 'TLM_'+i.alias
+
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('simple_') > 0, allow_empty=True)
+for i in cls:
+    i.include()
+    i.alias = 'TLM_'+i.alias
+
+# Exclude protected members
+cls = mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) , allow_empty=True )
+if cls: cls.exclude()
 """
 
     # Generation of the testSlave library
@@ -44,6 +74,36 @@ def build(bld):
     obj.uselib = 'SYSTEMC_H TLM BOOST PYEXT BOOST_PYTHON'
     obj.uselib_local = 'systemc testSlave'
     obj.include = 'scwrapper tlmwrapper'
-    obj.start_decls = 'testSlave'
+    obj.start_decls = 'tlm tlm_utils testSlave'
     obj.custom_code = """
+# Include Transport Interfaces
+#cls = mb.global_ns.classes(lambda decl: decl.name.find('transport_if') > 0, allow_empty=True)
+#for i in cls:
+    #i.include()
+    #i.alias = 'TLM_'+i.alias
+
+# Include simple sockets
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_target_socket') or decl.name.startswith('tlm_target_socket') , allow_empty=True)
+for i in cls:
+    i.include()
+    i.member_functions(allow_empty=True).exclude()
+    i.alias = 'TLM_'+i.alias
+
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_initiator_socket') or decl.name.startswith('tlm_initiator_socket'), allow_empty=True)
+for i in cls:
+    i.include()
+    i.member_functions(allow_empty=True).exclude()
+    for k in i.member_functions(allow_empty=True):
+        if k.name == 'bind':  k.include()
+
+    i.alias = 'TLM_'+i.alias
+
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('simple_') > 0, allow_empty=True)
+for i in cls:
+    i.include()
+    i.alias = 'TLM_'+i.alias
+
+# Exclude protected members
+cls = mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) , allow_empty=True )
+if cls: cls.exclude()
 """

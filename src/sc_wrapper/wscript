@@ -21,7 +21,7 @@ def build(bld):
     obj.extra_headers = 'components'
 
     obj.target = 'scwrapper'
-    obj.generate_include = True
+    #obj.generate_include = True
     obj.start_decls = 'sc_core sc_dt'
     obj.split = 6
     obj.custom_declaration_code = '''
@@ -181,24 +181,44 @@ mb.global_ns.class_('sc_simcontext').member_functions(lambda x: x.name.startswit
     tlm_export.hpp
     '''
 
-    obj.extra_headers = 'components'
-
     obj.target = 'tlmwrapper';
-    obj.generate_include = True
+    #obj.generate_include = True
     obj.start_decls = 'tlm tlm_utils'
     obj.split = 4
 
     obj.custom_code = """
-# Exclude protected members
-mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) ).exclude()
+# Include Transport Interfaces
+#cls = mb.global_ns.classes(lambda decl: decl.name.find('transport_if') > 0, allow_empty=True)
+#for i in cls:
+    #i.include()
+    #i.alias = 'TLM_'+i.alias
 
-mb.global_ns.classes(lambda decl: decl.name.startswith('simple_target_socket')).include()
-mb.global_ns.classes(lambda decl: decl.name.startswith('simple_initiator_socket')).include()
+# Include simple sockets
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_target_socket') or decl.name.startswith('tlm_target_socket') , allow_empty=True)
+for i in cls:
+    i.include()
+    i.member_functions(allow_empty=True).exclude()
+    i.alias = 'TLM_'+i.alias
+
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_initiator_socket') or decl.name.startswith('tlm_initiator_socket'), allow_empty=True)
+for i in cls:
+    i.include()
+    i.member_functions(allow_empty=True).exclude()
+    for k in i.member_functions(allow_empty=True):
+        if k.name == 'bind':  k.include()
+
+    i.alias = 'TLM_'+i.alias
+
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('simple_') > 0, allow_empty=True)
+for i in cls:
+    i.include()
+    i.alias = 'TLM_'+i.alias
+
+# Exclude protected members
+cls = mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) , allow_empty=True )
+if cls: cls.exclude()
 """
     obj.uselib = 'SYSTEMC_H TLM BOOST_PYTHON BOOST PYEXT'
     obj.uselib_local = 'systemc'
     obj.includes = '.'
     obj.include = 'scwrapper'
-    obj.templates = [
-
-    ]

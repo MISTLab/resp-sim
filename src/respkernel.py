@@ -39,6 +39,9 @@
 __version__ = '0.5'
 __revision__ = '$Rev: 1881 $'
 
+TLM_PREFIX = "TLM_"
+SC_PREFIX = "SYSC_"
+
 import sys, os, atexit
 
 # Import DL and set correct link flags for RTTI use
@@ -278,9 +281,21 @@ class RespKernel:
                     if self.verbose:
                         print "Loading " + toLoadName
                     temp = __import__(toLoadName)
+                    for j in filter(lambda x: x.startswith(TLM_PREFIX), dir(temp)):
+                        item = getattr(temp, j)
+                        item.__name__ = j[len(TLM_PREFIX):]
+                        item.__module__ = 'tlmwrapper'
+                        setattr(  tlmwrapper, j[4:], getattr(temp,j)  )
+                    for j in filter(lambda x: x.startswith(SC_PREFIX), dir(temp)):
+                        item = getattr(temp, j)
+                        item.__name__ = j[len(SC_PREFIX):]
+                        item.__module__ = 'scwrapper'
+                        setattr(  scwrapper, j[4:], getattr(temp,j)  )
+                        
                     componentList.append(temp)
                     globals()[toLoadName] = temp
         [self.load_components(os.path.join(folder, element),  componentList) for element in dirContent if os.path.isdir(os.path.join(folder, element))]
+
 
     def load_architecture(self, fileName):
         """Loads the architecture specified in fileName; it can either be an XML file
