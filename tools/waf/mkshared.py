@@ -123,12 +123,14 @@ def parse_libs(self):
                     self.lib_obj = {}
                 self.lib_obj[libname] = newObj
                 filenames = map( lambda x : os.path.splitext(x)[0] , files)
-                newObj = filter(lambda x: not os.path.splitext(x.name)[0] in filenames , self.additional_objs)
+                newObj = filter(lambda x: not os.path.splitext(x.name)[0] in filenames , newObj)
+                newObj = filter(lambda x: not x in self.additional_objs , newObj)
                 self.additional_objs += newObj
 
                 self.source += ' ' + libname
         else:
             self.source += ' ' + filename
+    print self.additional_objs
 
 @taskgen
 @feature('cshlib')
