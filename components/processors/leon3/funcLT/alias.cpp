@@ -47,186 +47,186 @@
 #include <ostream>
 #include <set>
 
-using namespace leon3_funcat_trap;
-void leon3_funcat_trap::Alias::immediateWrite( const unsigned int & value ) throw(){
+using namespace leon3_funclt_trap;
+void leon3_funclt_trap::Alias::immediateWrite( const unsigned int & value ) throw(){
     this->reg->immediateWrite(value);
 }
 
-unsigned int leon3_funcat_trap::Alias::readNewValue() throw(){
+unsigned int leon3_funclt_trap::Alias::readNewValue() throw(){
     return this->reg->readNewValue();
 }
 
-unsigned int leon3_funcat_trap::Alias::operator ~() throw(){
+unsigned int leon3_funclt_trap::Alias::operator ~() throw(){
     return ~(*this->reg + this->offset);
 }
 
-unsigned int leon3_funcat_trap::Alias::operator +( const Alias & other ) const throw(){
+unsigned int leon3_funclt_trap::Alias::operator +( const Alias & other ) const throw(){
     return ((*this->reg + this->offset) + *other.reg);
 }
 
-unsigned int leon3_funcat_trap::Alias::operator -( const Alias & other ) const throw(){
+unsigned int leon3_funclt_trap::Alias::operator -( const Alias & other ) const throw(){
     return ((*this->reg + this->offset) - *other.reg);
 }
 
-unsigned int leon3_funcat_trap::Alias::operator *( const Alias & other ) const throw(){
+unsigned int leon3_funclt_trap::Alias::operator *( const Alias & other ) const throw(){
     return ((*this->reg + this->offset) * *other.reg);
 }
 
-unsigned int leon3_funcat_trap::Alias::operator /( const Alias & other ) const throw(){
+unsigned int leon3_funclt_trap::Alias::operator /( const Alias & other ) const throw(){
     return ((*this->reg + this->offset) / *other.reg);
 }
 
-unsigned int leon3_funcat_trap::Alias::operator |( const Alias & other ) const throw(){
+unsigned int leon3_funclt_trap::Alias::operator |( const Alias & other ) const throw(){
     return ((*this->reg + this->offset) | *other.reg);
 }
 
-unsigned int leon3_funcat_trap::Alias::operator &( const Alias & other ) const throw(){
+unsigned int leon3_funclt_trap::Alias::operator &( const Alias & other ) const throw(){
     return ((*this->reg + this->offset) & *other.reg);
 }
 
-unsigned int leon3_funcat_trap::Alias::operator ^( const Alias & other ) const throw(){
+unsigned int leon3_funclt_trap::Alias::operator ^( const Alias & other ) const throw(){
     return ((*this->reg + this->offset) ^ *other.reg);
 }
 
-unsigned int leon3_funcat_trap::Alias::operator <<( const Alias & other ) const throw(){
+unsigned int leon3_funclt_trap::Alias::operator <<( const Alias & other ) const throw(){
     return ((*this->reg + this->offset) << *other.reg);
 }
 
-unsigned int leon3_funcat_trap::Alias::operator >>( const Alias & other ) const throw(){
+unsigned int leon3_funclt_trap::Alias::operator >>( const Alias & other ) const throw(){
     return ((*this->reg + this->offset) >> *other.reg);
 }
 
-Alias & leon3_funcat_trap::Alias::operator =( const Alias & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator =( const Alias & other ) throw(){
     *this->reg = *other.reg;
     return *this;
 }
 
-Alias & leon3_funcat_trap::Alias::operator +=( const Alias & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator +=( const Alias & other ) throw(){
     *this->reg += *other.reg;
     return *this;
 }
 
-Alias & leon3_funcat_trap::Alias::operator -=( const Alias & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator -=( const Alias & other ) throw(){
     *this->reg -= *other.reg;
     return *this;
 }
 
-Alias & leon3_funcat_trap::Alias::operator *=( const Alias & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator *=( const Alias & other ) throw(){
     *this->reg *= *other.reg;
     return *this;
 }
 
-Alias & leon3_funcat_trap::Alias::operator /=( const Alias & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator /=( const Alias & other ) throw(){
     *this->reg /= *other.reg;
     return *this;
 }
 
-Alias & leon3_funcat_trap::Alias::operator |=( const Alias & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator |=( const Alias & other ) throw(){
     *this->reg |= *other.reg;
     return *this;
 }
 
-Alias & leon3_funcat_trap::Alias::operator &=( const Alias & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator &=( const Alias & other ) throw(){
     *this->reg &= *other.reg;
     return *this;
 }
 
-Alias & leon3_funcat_trap::Alias::operator ^=( const Alias & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator ^=( const Alias & other ) throw(){
     *this->reg ^= *other.reg;
     return *this;
 }
 
-Alias & leon3_funcat_trap::Alias::operator <<=( const Alias & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator <<=( const Alias & other ) throw(){
     *this->reg <<= *other.reg;
     return *this;
 }
 
-Alias & leon3_funcat_trap::Alias::operator >>=( const Alias & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator >>=( const Alias & other ) throw(){
     *this->reg >>= *other.reg;
     return *this;
 }
 
-bool leon3_funcat_trap::Alias::operator <( const Register & other ) const throw(){
+bool leon3_funclt_trap::Alias::operator <( const Register & other ) const throw(){
     return ((*this->reg + this->offset) < other);
 }
 
-bool leon3_funcat_trap::Alias::operator >( const Register & other ) const throw(){
+bool leon3_funclt_trap::Alias::operator >( const Register & other ) const throw(){
     return ((*this->reg + this->offset) > other);
 }
 
-bool leon3_funcat_trap::Alias::operator <=( const Register & other ) const throw(){
+bool leon3_funclt_trap::Alias::operator <=( const Register & other ) const throw(){
     return ((*this->reg + this->offset) <= other);
 }
 
-bool leon3_funcat_trap::Alias::operator >=( const Register & other ) const throw(){
+bool leon3_funclt_trap::Alias::operator >=( const Register & other ) const throw(){
     return ((*this->reg + this->offset) >= other);
 }
 
-bool leon3_funcat_trap::Alias::operator ==( const Register & other ) const throw(){
+bool leon3_funclt_trap::Alias::operator ==( const Register & other ) const throw(){
     return ((*this->reg + this->offset) == other);
 }
 
-bool leon3_funcat_trap::Alias::operator !=( const Register & other ) const throw(){
+bool leon3_funclt_trap::Alias::operator !=( const Register & other ) const throw(){
     return ((*this->reg + this->offset) != other);
 }
 
-Alias & leon3_funcat_trap::Alias::operator =( const Register & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator =( const Register & other ) throw(){
     *this->reg = other;
     return *this;
 }
 
-Alias & leon3_funcat_trap::Alias::operator +=( const Register & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator +=( const Register & other ) throw(){
     *this->reg += other;
     return *this;
 }
 
-Alias & leon3_funcat_trap::Alias::operator -=( const Register & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator -=( const Register & other ) throw(){
     *this->reg -= other;
     return *this;
 }
 
-Alias & leon3_funcat_trap::Alias::operator *=( const Register & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator *=( const Register & other ) throw(){
     *this->reg *= other;
     return *this;
 }
 
-Alias & leon3_funcat_trap::Alias::operator /=( const Register & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator /=( const Register & other ) throw(){
     *this->reg /= other;
     return *this;
 }
 
-Alias & leon3_funcat_trap::Alias::operator |=( const Register & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator |=( const Register & other ) throw(){
     *this->reg |= other;
     return *this;
 }
 
-Alias & leon3_funcat_trap::Alias::operator &=( const Register & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator &=( const Register & other ) throw(){
     *this->reg &= other;
     return *this;
 }
 
-Alias & leon3_funcat_trap::Alias::operator ^=( const Register & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator ^=( const Register & other ) throw(){
     *this->reg ^= other;
     return *this;
 }
 
-Alias & leon3_funcat_trap::Alias::operator <<=( const Register & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator <<=( const Register & other ) throw(){
     *this->reg <<= other;
     return *this;
 }
 
-Alias & leon3_funcat_trap::Alias::operator >>=( const Register & other ) throw(){
+Alias & leon3_funclt_trap::Alias::operator >>=( const Register & other ) throw(){
     *this->reg >>= other;
     return *this;
 }
 
-std::ostream & leon3_funcat_trap::Alias::operator <<( std::ostream & stream ) const \
+std::ostream & leon3_funclt_trap::Alias::operator <<( std::ostream & stream ) const \
     throw(){
     stream << *this->reg + this->offset;
     return stream;
 }
 
-void leon3_funcat_trap::Alias::directSetAlias( Alias & newAlias ) throw(){
+void leon3_funclt_trap::Alias::directSetAlias( Alias & newAlias ) throw(){
     this->reg = newAlias.reg;
     this->offset = newAlias.offset;
     if(this->referringAliases != NULL){
@@ -236,7 +236,7 @@ void leon3_funcat_trap::Alias::directSetAlias( Alias & newAlias ) throw(){
     newAlias.referredAliases.insert(this);
 }
 
-void leon3_funcat_trap::Alias::directSetAlias( Register & newAlias ) throw(){
+void leon3_funclt_trap::Alias::directSetAlias( Register & newAlias ) throw(){
     this->reg = &newAlias;
     if(this->referringAliases != NULL){
         this->referringAliases->referredAliases.erase(this);
@@ -244,22 +244,22 @@ void leon3_funcat_trap::Alias::directSetAlias( Register & newAlias ) throw(){
     this->referringAliases = NULL;
 }
 
-leon3_funcat_trap::Alias::Alias( Register * reg, unsigned int offset ) : reg(reg), \
+leon3_funclt_trap::Alias::Alias( Register * reg, unsigned int offset ) : reg(reg), \
     offset(offset), defaultOffset(0){
     this->referringAliases = NULL;
 }
 
-leon3_funcat_trap::Alias::Alias() : offset(0), defaultOffset(0){
+leon3_funclt_trap::Alias::Alias() : offset(0), defaultOffset(0){
     this->referringAliases = NULL;
 }
 
-leon3_funcat_trap::Alias::Alias( Alias * initAlias, unsigned int offset ) : reg(initAlias->reg), \
+leon3_funclt_trap::Alias::Alias( Alias * initAlias, unsigned int offset ) : reg(initAlias->reg), \
     offset(initAlias->offset + offset), defaultOffset(offset){
     initAlias->referredAliases.insert(this);
     this->referringAliases = initAlias;
 }
 
-leon3_funcat_trap::Alias::~Alias(){
+leon3_funclt_trap::Alias::~Alias(){
     std::set<Alias *>::iterator referredIter, referredEnd;
     for(referredIter = this->referredAliases.begin(), referredEnd = this->referredAliases.end(); \
         referredIter != referredEnd; referredIter++){

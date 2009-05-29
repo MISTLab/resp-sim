@@ -1,6 +1,6 @@
 /***************************************************************************\
  *
- *
+ *   
  *            ___        ___           ___           ___
  *           /  /\      /  /\         /  /\         /  /\
  *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -12,28 +12,28 @@
  *           \  \:\   \  \:\        \  \:\        \  \:\
  *            \  \ \   \  \:\        \  \:\        \  \:\
  *             \__\/    \__\/         \__\/         \__\/
+ *   
  *
  *
- *
- *
+ *   
  *   This file is part of TRAP.
- *
+ *   
  *   TRAP is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU Lesser General Public License as published by
  *   the Free Software Foundation; either version 2 of the License, or
  *   (at your option) any later version.
- *
+ *   
  *   This program is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Lesser General Public License for more details.
- *
+ *   
  *   You should have received a copy of the GNU Lesser General Public License
  *   along with this program; if not, write to the
  *   Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *   or see <http://www.gnu.org/licenses/>.
- *
+ *   
  *
  *
  *   (c) Luca Fossati, fossati@elet.polimi.it
@@ -97,7 +97,7 @@
 #define IRQ_LEV_1 37
 #define IMPL_DEP_EXC 38
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class Instruction{
 
@@ -154,7 +154,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class IncrementPC_op : public virtual Instruction{
 
@@ -177,7 +177,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class WB_plain_op : public virtual Instruction{
 
@@ -198,7 +198,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ICC_writeLogic_op : public virtual Instruction{
 
@@ -222,7 +222,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class WB_icc_op : public virtual Instruction{
 
@@ -244,7 +244,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ICC_writeTSub_op : public virtual Instruction{
 
@@ -270,7 +270,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ICC_writeDiv_op : public virtual Instruction{
 
@@ -295,7 +295,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ICC_writeAdd_op : public virtual Instruction{
 
@@ -322,7 +322,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ICC_writeSub_op : public virtual Instruction{
 
@@ -349,7 +349,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class WB_yicc_op : public virtual Instruction{
 
@@ -372,7 +372,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class WB_yasr_op : public virtual Instruction{
 
@@ -395,7 +395,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class WB_y_op : public virtual Instruction{
 
@@ -417,7 +417,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ICC_writeTAdd_op : public virtual Instruction{
 
@@ -443,7 +443,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ICC_writeTVSub_op : public virtual Instruction{
 
@@ -471,7 +471,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class WB_icctv_op : public virtual Instruction{
 
@@ -496,7 +496,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ICC_writeTVAdd_op : public virtual Instruction{
 
@@ -524,7 +524,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class InvalidInstr : public Instruction{
 
@@ -544,7 +544,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class READasr : public IncrementPC_op{
         private:
@@ -571,7 +571,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class WRITEY_reg : public IncrementPC_op{
         private:
@@ -599,7 +599,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class XNOR_reg : public WB_plain_op, public IncrementPC_op{
         private:
@@ -631,7 +631,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ANDNcc_reg : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -663,7 +663,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LDSB_imm : public IncrementPC_op{
         private:
@@ -693,7 +693,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class WRITEpsr_imm : public IncrementPC_op{
         private:
@@ -723,7 +723,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class READy : public IncrementPC_op{
         private:
@@ -749,7 +749,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class XNORcc_reg : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -781,7 +781,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class READpsr : public IncrementPC_op{
         private:
@@ -809,7 +809,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ANDN_imm : public WB_plain_op, public IncrementPC_op{
         private:
@@ -839,7 +839,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ANDcc_reg : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -871,7 +871,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class TSUBcc_imm : public ICC_writeTSub_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -903,7 +903,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LDSBA_reg : public IncrementPC_op{
         private:
@@ -936,7 +936,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LDUH_imm : public IncrementPC_op{
         private:
@@ -967,7 +967,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class STA_reg : public IncrementPC_op{
         private:
@@ -1001,7 +1001,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ORN_reg : public WB_plain_op, public IncrementPC_op{
         private:
@@ -1033,7 +1033,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LDSHA_reg : public IncrementPC_op{
         private:
@@ -1067,7 +1067,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class STBA_reg : public IncrementPC_op{
         private:
@@ -1100,7 +1100,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ST_imm : public IncrementPC_op{
         private:
@@ -1131,7 +1131,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class READtbr : public IncrementPC_op{
         private:
@@ -1159,7 +1159,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class UDIVcc_imm : public ICC_writeDiv_op, public IncrementPC_op, public WB_icc_op{
         private:
@@ -1192,7 +1192,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SWAPA_reg : public IncrementPC_op{
         private:
@@ -1227,7 +1227,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ADDXcc_imm : public ICC_writeAdd_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -1258,7 +1258,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class STB_imm : public IncrementPC_op{
         private:
@@ -1288,7 +1288,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SUBXcc_imm : public ICC_writeSub_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -1319,7 +1319,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class STH_reg : public IncrementPC_op{
         private:
@@ -1352,7 +1352,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SRL_imm : public WB_plain_op, public IncrementPC_op{
         private:
@@ -1382,7 +1382,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class WRITEasr_imm : public IncrementPC_op{
         private:
@@ -1410,7 +1410,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class UMULcc_reg : public ICC_writeLogic_op, public WB_yicc_op, public IncrementPC_op{
         private:
@@ -1442,7 +1442,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LDSTUB_reg : public IncrementPC_op{
         private:
@@ -1474,7 +1474,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class XOR_imm : public WB_plain_op, public IncrementPC_op{
         private:
@@ -1504,7 +1504,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SMAC_reg : public WB_yasr_op, public IncrementPC_op{
         private:
@@ -1536,7 +1536,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class WRITEasr_reg : public IncrementPC_op{
         private:
@@ -1565,7 +1565,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LD_reg : public IncrementPC_op{
         private:
@@ -1598,7 +1598,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ST_reg : public IncrementPC_op{
         private:
@@ -1631,7 +1631,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SUBcc_reg : public ICC_writeSub_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -1663,7 +1663,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LDD_reg : public IncrementPC_op{
         private:
@@ -1696,7 +1696,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ADDcc_imm : public ICC_writeAdd_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -1727,7 +1727,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LDUH_reg : public IncrementPC_op{
         private:
@@ -1760,7 +1760,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SRL_reg : public WB_plain_op, public IncrementPC_op{
         private:
@@ -1792,7 +1792,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SAVE_imm : public IncrementPC_op{
         private:
@@ -1824,7 +1824,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class MULScc_reg : public ICC_writeAdd_op, public WB_yicc_op, public IncrementPC_op{
         private:
@@ -1856,7 +1856,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class OR_imm : public WB_plain_op, public IncrementPC_op{
         private:
@@ -1886,7 +1886,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class STD_imm : public IncrementPC_op{
         private:
@@ -1917,7 +1917,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SUBXcc_reg : public ICC_writeSub_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -1949,7 +1949,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ADDX_imm : public WB_plain_op, public IncrementPC_op{
         private:
@@ -1980,7 +1980,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SWAP_imm : public IncrementPC_op{
         private:
@@ -2012,7 +2012,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class UMUL_reg : public WB_y_op, public IncrementPC_op{
         private:
@@ -2044,7 +2044,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class WRITEY_imm : public IncrementPC_op{
         private:
@@ -2071,7 +2071,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class AND_reg : public WB_plain_op, public IncrementPC_op{
         private:
@@ -2103,7 +2103,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class FLUSH_imm : public IncrementPC_op{
         private:
@@ -2129,7 +2129,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SRA_reg : public WB_plain_op, public IncrementPC_op{
         private:
@@ -2161,7 +2161,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class STH_imm : public IncrementPC_op{
         private:
@@ -2192,7 +2192,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class WRITEwim_imm : public IncrementPC_op{
         private:
@@ -2221,7 +2221,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LDD_imm : public IncrementPC_op{
         private:
@@ -2252,7 +2252,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SLL_imm : public WB_plain_op, public IncrementPC_op{
         private:
@@ -2282,7 +2282,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LDUHA_reg : public IncrementPC_op{
         private:
@@ -2316,7 +2316,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class TADDcc_reg : public ICC_writeTAdd_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -2349,7 +2349,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class TADDcc_imm : public ICC_writeTAdd_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -2381,7 +2381,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SDIV_imm : public IncrementPC_op, public WB_plain_op{
         private:
@@ -2414,7 +2414,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class TSUBccTV_imm : public ICC_writeTVSub_op, public WB_icctv_op, public IncrementPC_op{
         private:
@@ -2446,7 +2446,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class FLUSH_reg : public IncrementPC_op{
         private:
@@ -2473,7 +2473,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ORNcc_reg : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -2505,7 +2505,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class RETT_imm : public IncrementPC_op{
         private:
@@ -2539,7 +2539,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SDIVcc_reg : public ICC_writeDiv_op, public IncrementPC_op, public WB_icc_op{
         private:
@@ -2573,7 +2573,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ADD_reg : public WB_plain_op, public IncrementPC_op{
         private:
@@ -2605,7 +2605,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class TRAP_imm : public Instruction{
         private:
@@ -2635,7 +2635,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class WRITEtbr_imm : public IncrementPC_op{
         private:
@@ -2664,7 +2664,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LDUB_reg : public IncrementPC_op{
         private:
@@ -2696,7 +2696,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class RESTORE_reg : public IncrementPC_op{
         private:
@@ -2729,7 +2729,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ADDXcc_reg : public ICC_writeAdd_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -2761,7 +2761,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class STB_reg : public IncrementPC_op{
         private:
@@ -2793,7 +2793,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class AND_imm : public WB_plain_op, public IncrementPC_op{
         private:
@@ -2823,7 +2823,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SMUL_imm : public WB_y_op, public IncrementPC_op{
         private:
@@ -2854,7 +2854,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ADD_imm : public WB_plain_op, public IncrementPC_op{
         private:
@@ -2885,7 +2885,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class UMUL_imm : public WB_y_op, public IncrementPC_op{
         private:
@@ -2916,7 +2916,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class READwim : public IncrementPC_op{
         private:
@@ -2944,7 +2944,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LDSTUB_imm : public IncrementPC_op{
         private:
@@ -2974,7 +2974,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SMAC_imm : public WB_yasr_op, public IncrementPC_op{
         private:
@@ -3005,7 +3005,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LDSB_reg : public IncrementPC_op{
         private:
@@ -3037,7 +3037,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ANDN_reg : public WB_plain_op, public IncrementPC_op{
         private:
@@ -3069,7 +3069,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class TSUBccTV_reg : public ICC_writeTVSub_op, public WB_icctv_op, public IncrementPC_op{
         private:
@@ -3102,7 +3102,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SETHI : public WB_plain_op, public IncrementPC_op{
         private:
@@ -3129,7 +3129,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SRA_imm : public WB_plain_op, public IncrementPC_op{
         private:
@@ -3159,7 +3159,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LDSH_reg : public IncrementPC_op{
         private:
@@ -3192,7 +3192,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class UDIVcc_reg : public ICC_writeDiv_op, public IncrementPC_op, public WB_icc_op{
         private:
@@ -3226,7 +3226,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ORN_imm : public WB_plain_op, public IncrementPC_op{
         private:
@@ -3256,7 +3256,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class STD_reg : public IncrementPC_op{
         private:
@@ -3289,7 +3289,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ANDNcc_imm : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -3319,7 +3319,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class TADDccTV_imm : public ICC_writeTVAdd_op, public WB_icctv_op, public IncrementPC_op{
         private:
@@ -3351,7 +3351,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class WRITEtbr_reg : public IncrementPC_op{
         private:
@@ -3381,7 +3381,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SUBX_reg : public WB_plain_op, public IncrementPC_op{
         private:
@@ -3413,7 +3413,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class XNOR_imm : public WB_plain_op, public IncrementPC_op{
         private:
@@ -3443,7 +3443,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class UDIV_imm : public IncrementPC_op, public WB_plain_op{
         private:
@@ -3476,7 +3476,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LDSH_imm : public IncrementPC_op{
         private:
@@ -3507,7 +3507,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class UNIMP : public IncrementPC_op{
         private:
@@ -3531,7 +3531,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LDSTUBA_reg : public IncrementPC_op{
         private:
@@ -3564,7 +3564,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class UMULcc_imm : public ICC_writeLogic_op, public WB_yicc_op, public IncrementPC_op{
         private:
@@ -3595,7 +3595,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ORcc_reg : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -3627,7 +3627,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class MULScc_imm : public ICC_writeAdd_op, public WB_yicc_op, public IncrementPC_op{
         private:
@@ -3658,7 +3658,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class XORcc_reg : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -3690,7 +3690,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SUB_reg : public WB_plain_op, public IncrementPC_op{
         private:
@@ -3722,7 +3722,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class WRITEwim_reg : public IncrementPC_op{
         private:
@@ -3752,7 +3752,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class UMAC_imm : public WB_yasr_op, public IncrementPC_op{
         private:
@@ -3783,7 +3783,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class TSUBcc_reg : public ICC_writeTSub_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -3816,7 +3816,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class BRANCH : public Instruction{
         private:
@@ -3840,7 +3840,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SMULcc_reg : public ICC_writeLogic_op, public WB_yicc_op, public IncrementPC_op{
         private:
@@ -3872,7 +3872,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SUB_imm : public WB_plain_op, public IncrementPC_op{
         private:
@@ -3903,7 +3903,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ADDcc_reg : public ICC_writeAdd_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -3935,7 +3935,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class XOR_reg : public WB_plain_op, public IncrementPC_op{
         private:
@@ -3967,7 +3967,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SUBcc_imm : public ICC_writeSub_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -3998,7 +3998,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class TADDccTV_reg : public ICC_writeTVAdd_op, public WB_icctv_op, public IncrementPC_op{
         private:
@@ -4031,7 +4031,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SDIV_reg : public IncrementPC_op, public WB_plain_op{
         private:
@@ -4065,7 +4065,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SMULcc_imm : public ICC_writeLogic_op, public WB_yicc_op, public IncrementPC_op{
         private:
@@ -4096,7 +4096,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SWAP_reg : public IncrementPC_op{
         private:
@@ -4130,7 +4130,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SUBX_imm : public WB_plain_op, public IncrementPC_op{
         private:
@@ -4161,7 +4161,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class STDA_reg : public IncrementPC_op{
         private:
@@ -4195,7 +4195,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class UMAC_reg : public WB_yasr_op, public IncrementPC_op{
         private:
@@ -4227,7 +4227,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class JUMP_imm : public Instruction{
         private:
@@ -4257,7 +4257,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SMUL_reg : public WB_y_op, public IncrementPC_op{
         private:
@@ -4289,7 +4289,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class XORcc_imm : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -4319,7 +4319,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ORNcc_imm : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -4349,7 +4349,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LDUBA_reg : public IncrementPC_op{
         private:
@@ -4382,7 +4382,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class JUMP_reg : public Instruction{
         private:
@@ -4413,7 +4413,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ADDX_reg : public WB_plain_op, public IncrementPC_op{
         private:
@@ -4445,7 +4445,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class UDIV_reg : public IncrementPC_op, public WB_plain_op{
         private:
@@ -4479,7 +4479,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class XNORcc_imm : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -4509,7 +4509,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class STBAR : public Instruction{
 
@@ -4529,7 +4529,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LDA_reg : public IncrementPC_op{
         private:
@@ -4563,7 +4563,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class STHA_reg : public IncrementPC_op{
         private:
@@ -4597,7 +4597,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LDDA_reg : public IncrementPC_op{
         private:
@@ -4631,7 +4631,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SLL_reg : public WB_plain_op, public IncrementPC_op{
         private:
@@ -4663,7 +4663,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class RESTORE_imm : public IncrementPC_op{
         private:
@@ -4695,7 +4695,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LD_imm : public IncrementPC_op{
         private:
@@ -4726,7 +4726,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class TRAP_reg : public Instruction{
         private:
@@ -4757,7 +4757,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class LDUB_imm : public IncrementPC_op{
         private:
@@ -4787,7 +4787,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class RETT_reg : public IncrementPC_op{
         private:
@@ -4822,7 +4822,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SDIVcc_imm : public ICC_writeDiv_op, public IncrementPC_op, public WB_icc_op{
         private:
@@ -4855,7 +4855,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class SAVE_reg : public IncrementPC_op{
         private:
@@ -4888,7 +4888,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class OR_reg : public WB_plain_op, public IncrementPC_op{
         private:
@@ -4920,7 +4920,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ORcc_imm : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
         private:
@@ -4950,7 +4950,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class CALL : public Instruction{
         private:
@@ -4975,7 +4975,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class WRITEpsr_reg : public IncrementPC_op{
         private:
@@ -5006,7 +5006,7 @@ namespace leon3_funcat_trap{
 
 };
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class ANDcc_imm : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
         private:

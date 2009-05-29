@@ -1,6 +1,6 @@
 /***************************************************************************\
  *
- *
+ *   
  *            ___        ___           ___           ___
  *           /  /\      /  /\         /  /\         /  /\
  *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -12,28 +12,28 @@
  *           \  \:\   \  \:\        \  \:\        \  \:\
  *            \  \ \   \  \:\        \  \:\        \  \:\
  *             \__\/    \__\/         \__\/         \__\/
+ *   
  *
  *
- *
- *
+ *   
  *   This file is part of TRAP.
- *
+ *   
  *   TRAP is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU Lesser General Public License as published by
  *   the Free Software Foundation; either version 2 of the License, or
  *   (at your option) any later version.
- *
+ *   
  *   This program is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Lesser General Public License for more details.
- *
+ *   
  *   You should have received a copy of the GNU Lesser General Public License
  *   along with this program; if not, write to the
  *   Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *   or see <http://www.gnu.org/licenses/>.
- *
+ *   
  *
  *
  *   (c) Luca Fossati, fossati@elet.polimi.it
@@ -53,8 +53,8 @@
 #include <sstream>
 #include <systemc.h>
 
-using namespace leon3_funcat_trap;
-bool leon3_funcat_trap::Instruction::IncrementRegWindow(){
+using namespace leon3_funclt_trap;
+bool leon3_funclt_trap::Instruction::IncrementRegWindow(){
     {
         unsigned int newCwp;
 
@@ -71,7 +71,7 @@ bool leon3_funcat_trap::Instruction::IncrementRegWindow(){
     }
 }
 
-bool leon3_funcat_trap::Instruction::DecrementRegWindow(){
+bool leon3_funclt_trap::Instruction::DecrementRegWindow(){
     {
         unsigned int newCwp;
 
@@ -88,7 +88,7 @@ bool leon3_funcat_trap::Instruction::DecrementRegWindow(){
     }
 }
 
-int leon3_funcat_trap::Instruction::SignExtend( unsigned int bitSeq, unsigned int \
+int leon3_funclt_trap::Instruction::SignExtend( unsigned int bitSeq, unsigned int \
     bitSeq_length ) const throw(){
 
     if((bitSeq & (1 << (bitSeq_length - 1))) != 0)
@@ -96,7 +96,7 @@ int leon3_funcat_trap::Instruction::SignExtend( unsigned int bitSeq, unsigned in
     return bitSeq;
 }
 
-void leon3_funcat_trap::Instruction::RaiseException( unsigned int exceptionId, unsigned \
+void leon3_funclt_trap::Instruction::RaiseException( unsigned int exceptionId, unsigned \
     int customTrapOffset ){
 
     if(PSR[key_ET] == 0){
@@ -262,7 +262,7 @@ void leon3_funcat_trap::Instruction::RaiseException( unsigned int exceptionId, u
     }
 }
 
-leon3_funcat_trap::Instruction::Instruction( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::Instruction::Instruction( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -273,13 +273,13 @@ leon3_funcat_trap::Instruction::Instruction( Reg32_0_delay_3 & PSR, Reg32_1_dela
     this->totalInstrCycles = 0;
 }
 
-leon3_funcat_trap::Instruction::~Instruction(){
+leon3_funclt_trap::Instruction::~Instruction(){
 
 }
-leon3_funcat_trap::IncrementPC_op::~IncrementPC_op(){
+leon3_funclt_trap::IncrementPC_op::~IncrementPC_op(){
 
 }
-leon3_funcat_trap::IncrementPC_op::IncrementPC_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::IncrementPC_op::IncrementPC_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -289,10 +289,10 @@ leon3_funcat_trap::IncrementPC_op::IncrementPC_op( Reg32_0_delay_3 & PSR, Reg32_
 
 }
 
-leon3_funcat_trap::WB_plain_op::~WB_plain_op(){
+leon3_funclt_trap::WB_plain_op::~WB_plain_op(){
 
 }
-leon3_funcat_trap::WB_plain_op::WB_plain_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::WB_plain_op::WB_plain_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -302,10 +302,10 @@ leon3_funcat_trap::WB_plain_op::WB_plain_op( Reg32_0_delay_3 & PSR, Reg32_1_dela
 
 }
 
-leon3_funcat_trap::ICC_writeLogic_op::~ICC_writeLogic_op(){
+leon3_funclt_trap::ICC_writeLogic_op::~ICC_writeLogic_op(){
 
 }
-leon3_funcat_trap::ICC_writeLogic_op::ICC_writeLogic_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::ICC_writeLogic_op::ICC_writeLogic_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -315,10 +315,10 @@ leon3_funcat_trap::ICC_writeLogic_op::ICC_writeLogic_op( Reg32_0_delay_3 & PSR, 
 
 }
 
-leon3_funcat_trap::WB_icc_op::~WB_icc_op(){
+leon3_funclt_trap::WB_icc_op::~WB_icc_op(){
 
 }
-leon3_funcat_trap::WB_icc_op::WB_icc_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
+leon3_funclt_trap::WB_icc_op::WB_icc_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
     WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -328,10 +328,10 @@ leon3_funcat_trap::WB_icc_op::WB_icc_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 
 }
 
-leon3_funcat_trap::ICC_writeTSub_op::~ICC_writeTSub_op(){
+leon3_funclt_trap::ICC_writeTSub_op::~ICC_writeTSub_op(){
 
 }
-leon3_funcat_trap::ICC_writeTSub_op::ICC_writeTSub_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::ICC_writeTSub_op::ICC_writeTSub_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -341,10 +341,10 @@ leon3_funcat_trap::ICC_writeTSub_op::ICC_writeTSub_op( Reg32_0_delay_3 & PSR, Re
 
 }
 
-leon3_funcat_trap::ICC_writeDiv_op::~ICC_writeDiv_op(){
+leon3_funclt_trap::ICC_writeDiv_op::~ICC_writeDiv_op(){
 
 }
-leon3_funcat_trap::ICC_writeDiv_op::ICC_writeDiv_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::ICC_writeDiv_op::ICC_writeDiv_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -354,10 +354,10 @@ leon3_funcat_trap::ICC_writeDiv_op::ICC_writeDiv_op( Reg32_0_delay_3 & PSR, Reg3
 
 }
 
-leon3_funcat_trap::ICC_writeAdd_op::~ICC_writeAdd_op(){
+leon3_funclt_trap::ICC_writeAdd_op::~ICC_writeAdd_op(){
 
 }
-leon3_funcat_trap::ICC_writeAdd_op::ICC_writeAdd_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::ICC_writeAdd_op::ICC_writeAdd_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -367,10 +367,10 @@ leon3_funcat_trap::ICC_writeAdd_op::ICC_writeAdd_op( Reg32_0_delay_3 & PSR, Reg3
 
 }
 
-leon3_funcat_trap::ICC_writeSub_op::~ICC_writeSub_op(){
+leon3_funclt_trap::ICC_writeSub_op::~ICC_writeSub_op(){
 
 }
-leon3_funcat_trap::ICC_writeSub_op::ICC_writeSub_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::ICC_writeSub_op::ICC_writeSub_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -380,10 +380,10 @@ leon3_funcat_trap::ICC_writeSub_op::ICC_writeSub_op( Reg32_0_delay_3 & PSR, Reg3
 
 }
 
-leon3_funcat_trap::WB_yicc_op::~WB_yicc_op(){
+leon3_funclt_trap::WB_yicc_op::~WB_yicc_op(){
 
 }
-leon3_funcat_trap::WB_yicc_op::WB_yicc_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::WB_yicc_op::WB_yicc_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -393,10 +393,10 @@ leon3_funcat_trap::WB_yicc_op::WB_yicc_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::WB_yasr_op::~WB_yasr_op(){
+leon3_funclt_trap::WB_yasr_op::~WB_yasr_op(){
 
 }
-leon3_funcat_trap::WB_yasr_op::WB_yasr_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::WB_yasr_op::WB_yasr_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -406,10 +406,10 @@ leon3_funcat_trap::WB_yasr_op::WB_yasr_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::WB_y_op::~WB_y_op(){
+leon3_funclt_trap::WB_y_op::~WB_y_op(){
 
 }
-leon3_funcat_trap::WB_y_op::WB_y_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::WB_y_op::WB_y_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -419,10 +419,10 @@ leon3_funcat_trap::WB_y_op::WB_y_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::ICC_writeTAdd_op::~ICC_writeTAdd_op(){
+leon3_funclt_trap::ICC_writeTAdd_op::~ICC_writeTAdd_op(){
 
 }
-leon3_funcat_trap::ICC_writeTAdd_op::ICC_writeTAdd_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::ICC_writeTAdd_op::ICC_writeTAdd_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -432,10 +432,10 @@ leon3_funcat_trap::ICC_writeTAdd_op::ICC_writeTAdd_op( Reg32_0_delay_3 & PSR, Re
 
 }
 
-leon3_funcat_trap::ICC_writeTVSub_op::~ICC_writeTVSub_op(){
+leon3_funclt_trap::ICC_writeTVSub_op::~ICC_writeTVSub_op(){
 
 }
-leon3_funcat_trap::ICC_writeTVSub_op::ICC_writeTVSub_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::ICC_writeTVSub_op::ICC_writeTVSub_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -445,10 +445,10 @@ leon3_funcat_trap::ICC_writeTVSub_op::ICC_writeTVSub_op( Reg32_0_delay_3 & PSR, 
 
 }
 
-leon3_funcat_trap::WB_icctv_op::~WB_icctv_op(){
+leon3_funclt_trap::WB_icctv_op::~WB_icctv_op(){
 
 }
-leon3_funcat_trap::WB_icctv_op::WB_icctv_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::WB_icctv_op::WB_icctv_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -458,10 +458,10 @@ leon3_funcat_trap::WB_icctv_op::WB_icctv_op( Reg32_0_delay_3 & PSR, Reg32_1_dela
 
 }
 
-leon3_funcat_trap::ICC_writeTVAdd_op::~ICC_writeTVAdd_op(){
+leon3_funclt_trap::ICC_writeTVAdd_op::~ICC_writeTVAdd_op(){
 
 }
-leon3_funcat_trap::ICC_writeTVAdd_op::ICC_writeTVAdd_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::ICC_writeTVAdd_op::ICC_writeTVAdd_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -471,30 +471,30 @@ leon3_funcat_trap::ICC_writeTVAdd_op::ICC_writeTVAdd_op( Reg32_0_delay_3 & PSR, 
 
 }
 
-unsigned int leon3_funcat_trap::InvalidInstr::behavior(){
+unsigned int leon3_funclt_trap::InvalidInstr::behavior(){
     THROW_EXCEPTION("Unknown Instruction at PC: " << this->PC-4);
     return 0;
 }
 
-Instruction * leon3_funcat_trap::InvalidInstr::replicate() const throw(){
+Instruction * leon3_funclt_trap::InvalidInstr::replicate() const throw(){
     return new InvalidInstr(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-void leon3_funcat_trap::InvalidInstr::setParams( const unsigned int & bitString ) \
+void leon3_funclt_trap::InvalidInstr::setParams( const unsigned int & bitString ) \
     throw(){
 
 }
 
-std::string leon3_funcat_trap::InvalidInstr::getInstructionName(){
+std::string leon3_funclt_trap::InvalidInstr::getInstructionName(){
     return "InvalidInstruction";
 }
 
-std::string leon3_funcat_trap::InvalidInstr::getMnemonic(){
+std::string leon3_funclt_trap::InvalidInstr::getMnemonic(){
     return "invalid";
 }
 
-leon3_funcat_trap::InvalidInstr::InvalidInstr( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::InvalidInstr::InvalidInstr( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -504,10 +504,10 @@ leon3_funcat_trap::InvalidInstr::InvalidInstr( Reg32_0_delay_3 & PSR, Reg32_1_de
 
 }
 
-leon3_funcat_trap::InvalidInstr::~InvalidInstr(){
+leon3_funclt_trap::InvalidInstr::~InvalidInstr(){
 
 }
-unsigned int leon3_funcat_trap::READasr::behavior(){
+unsigned int leon3_funclt_trap::READasr::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -517,22 +517,22 @@ unsigned int leon3_funcat_trap::READasr::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::READasr::replicate() const throw(){
+Instruction * leon3_funclt_trap::READasr::replicate() const throw(){
     return new READasr(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::READasr::getInstructionName(){
+std::string leon3_funclt_trap::READasr::getInstructionName(){
     return "READasr";
 }
 
-void leon3_funcat_trap::READasr::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::READasr::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->asr = (bitString & 0x7c000) >> 14;
 }
 
-std::string leon3_funcat_trap::READasr::getMnemonic(){
+std::string leon3_funclt_trap::READasr::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "rd asr ";
     oss << this->asr;
@@ -541,7 +541,7 @@ std::string leon3_funcat_trap::READasr::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::READasr::READasr( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::READasr::READasr( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -552,10 +552,10 @@ leon3_funcat_trap::READasr::READasr( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::READasr::~READasr(){
+leon3_funclt_trap::READasr::~READasr(){
 
 }
-unsigned int leon3_funcat_trap::WRITEY_reg::behavior(){
+unsigned int leon3_funclt_trap::WRITEY_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -567,23 +567,23 @@ unsigned int leon3_funcat_trap::WRITEY_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::WRITEY_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::WRITEY_reg::replicate() const throw(){
     return new WRITEY_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::WRITEY_reg::getInstructionName(){
+std::string leon3_funclt_trap::WRITEY_reg::getInstructionName(){
     return "WRITEY_reg";
 }
 
-void leon3_funcat_trap::WRITEY_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::WRITEY_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::WRITEY_reg::getMnemonic(){
+std::string leon3_funclt_trap::WRITEY_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -593,7 +593,7 @@ std::string leon3_funcat_trap::WRITEY_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::WRITEY_reg::WRITEY_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::WRITEY_reg::WRITEY_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -604,10 +604,10 @@ leon3_funcat_trap::WRITEY_reg::WRITEY_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::WRITEY_reg::~WRITEY_reg(){
+leon3_funclt_trap::WRITEY_reg::~WRITEY_reg(){
 
 }
-unsigned int leon3_funcat_trap::XNOR_reg::behavior(){
+unsigned int leon3_funclt_trap::XNOR_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -619,16 +619,16 @@ unsigned int leon3_funcat_trap::XNOR_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::XNOR_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::XNOR_reg::replicate() const throw(){
     return new XNOR_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::XNOR_reg::getInstructionName(){
+std::string leon3_funclt_trap::XNOR_reg::getInstructionName(){
     return "XNOR_reg";
 }
 
-void leon3_funcat_trap::XNOR_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::XNOR_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -637,7 +637,7 @@ void leon3_funcat_trap::XNOR_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::XNOR_reg::getMnemonic(){
+std::string leon3_funclt_trap::XNOR_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "xnor r";
     oss << this->rs1_bit;
@@ -648,7 +648,7 @@ std::string leon3_funcat_trap::XNOR_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::XNOR_reg::XNOR_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::XNOR_reg::XNOR_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -661,10 +661,10 @@ leon3_funcat_trap::XNOR_reg::XNOR_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::XNOR_reg::~XNOR_reg(){
+leon3_funclt_trap::XNOR_reg::~XNOR_reg(){
 
 }
-unsigned int leon3_funcat_trap::ANDNcc_reg::behavior(){
+unsigned int leon3_funclt_trap::ANDNcc_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -677,16 +677,16 @@ unsigned int leon3_funcat_trap::ANDNcc_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ANDNcc_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::ANDNcc_reg::replicate() const throw(){
     return new ANDNcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ANDNcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::ANDNcc_reg::getInstructionName(){
     return "ANDNcc_reg";
 }
 
-void leon3_funcat_trap::ANDNcc_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ANDNcc_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -695,7 +695,7 @@ void leon3_funcat_trap::ANDNcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::ANDNcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::ANDNcc_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "andncc r";
     oss << this->rs1_bit;
@@ -706,7 +706,7 @@ std::string leon3_funcat_trap::ANDNcc_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ANDNcc_reg::ANDNcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::ANDNcc_reg::ANDNcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -721,10 +721,10 @@ leon3_funcat_trap::ANDNcc_reg::ANDNcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::ANDNcc_reg::~ANDNcc_reg(){
+leon3_funclt_trap::ANDNcc_reg::~ANDNcc_reg(){
 
 }
-unsigned int leon3_funcat_trap::LDSB_imm::behavior(){
+unsigned int leon3_funclt_trap::LDSB_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -736,16 +736,16 @@ unsigned int leon3_funcat_trap::LDSB_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LDSB_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::LDSB_imm::replicate() const throw(){
     return new LDSB_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LDSB_imm::getInstructionName(){
+std::string leon3_funclt_trap::LDSB_imm::getInstructionName(){
     return "LDSB_imm";
 }
 
-void leon3_funcat_trap::LDSB_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LDSB_imm::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rd_bit = (bitString & 0x3e000000) >> 25;
@@ -753,7 +753,7 @@ void leon3_funcat_trap::LDSB_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::LDSB_imm::getMnemonic(){
+std::string leon3_funclt_trap::LDSB_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldsb r";
     oss << this->rs1_bit;
@@ -764,7 +764,7 @@ std::string leon3_funcat_trap::LDSB_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LDSB_imm::LDSB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::LDSB_imm::LDSB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -775,10 +775,10 @@ leon3_funcat_trap::LDSB_imm::LDSB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::LDSB_imm::~LDSB_imm(){
+leon3_funclt_trap::LDSB_imm::~LDSB_imm(){
 
 }
-unsigned int leon3_funcat_trap::WRITEpsr_imm::behavior(){
+unsigned int leon3_funclt_trap::WRITEpsr_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -803,16 +803,16 @@ unsigned int leon3_funcat_trap::WRITEpsr_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::WRITEpsr_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::WRITEpsr_imm::replicate() const throw(){
     return new WRITEpsr_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::WRITEpsr_imm::getInstructionName(){
+std::string leon3_funclt_trap::WRITEpsr_imm::getInstructionName(){
     return "WRITEpsr_imm";
 }
 
-void leon3_funcat_trap::WRITEpsr_imm::setParams( const unsigned int & bitString ) \
+void leon3_funclt_trap::WRITEpsr_imm::setParams( const unsigned int & bitString ) \
     throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
@@ -820,7 +820,7 @@ void leon3_funcat_trap::WRITEpsr_imm::setParams( const unsigned int & bitString 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::WRITEpsr_imm::getMnemonic(){
+std::string leon3_funclt_trap::WRITEpsr_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -830,7 +830,7 @@ std::string leon3_funcat_trap::WRITEpsr_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::WRITEpsr_imm::WRITEpsr_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::WRITEpsr_imm::WRITEpsr_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -841,10 +841,10 @@ leon3_funcat_trap::WRITEpsr_imm::WRITEpsr_imm( Reg32_0_delay_3 & PSR, Reg32_1_de
 
 }
 
-leon3_funcat_trap::WRITEpsr_imm::~WRITEpsr_imm(){
+leon3_funclt_trap::WRITEpsr_imm::~WRITEpsr_imm(){
 
 }
-unsigned int leon3_funcat_trap::READy::behavior(){
+unsigned int leon3_funclt_trap::READy::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -854,21 +854,21 @@ unsigned int leon3_funcat_trap::READy::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::READy::replicate() const throw(){
+Instruction * leon3_funclt_trap::READy::replicate() const throw(){
     return new READy(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::READy::getInstructionName(){
+std::string leon3_funclt_trap::READy::getInstructionName(){
     return "READy";
 }
 
-void leon3_funcat_trap::READy::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::READy::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
 }
 
-std::string leon3_funcat_trap::READy::getMnemonic(){
+std::string leon3_funclt_trap::READy::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "rd ";
     oss << "y";
@@ -877,7 +877,7 @@ std::string leon3_funcat_trap::READy::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::READy::READy( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 \
+leon3_funclt_trap::READy::READy( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 \
     & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & \
     Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -888,10 +888,10 @@ leon3_funcat_trap::READy::READy( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, R
 
 }
 
-leon3_funcat_trap::READy::~READy(){
+leon3_funclt_trap::READy::~READy(){
 
 }
-unsigned int leon3_funcat_trap::XNORcc_reg::behavior(){
+unsigned int leon3_funclt_trap::XNORcc_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -904,16 +904,16 @@ unsigned int leon3_funcat_trap::XNORcc_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::XNORcc_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::XNORcc_reg::replicate() const throw(){
     return new XNORcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::XNORcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::XNORcc_reg::getInstructionName(){
     return "XNORcc_reg";
 }
 
-void leon3_funcat_trap::XNORcc_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::XNORcc_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -922,7 +922,7 @@ void leon3_funcat_trap::XNORcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::XNORcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::XNORcc_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "xnorcc r";
     oss << this->rs1_bit;
@@ -933,7 +933,7 @@ std::string leon3_funcat_trap::XNORcc_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::XNORcc_reg::XNORcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::XNORcc_reg::XNORcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -948,10 +948,10 @@ leon3_funcat_trap::XNORcc_reg::XNORcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::XNORcc_reg::~XNORcc_reg(){
+leon3_funclt_trap::XNORcc_reg::~XNORcc_reg(){
 
 }
-unsigned int leon3_funcat_trap::READpsr::behavior(){
+unsigned int leon3_funclt_trap::READpsr::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -966,22 +966,22 @@ unsigned int leon3_funcat_trap::READpsr::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::READpsr::replicate() const throw(){
+Instruction * leon3_funclt_trap::READpsr::replicate() const throw(){
     return new READpsr(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::READpsr::getInstructionName(){
+std::string leon3_funclt_trap::READpsr::getInstructionName(){
     return "READpsr";
 }
 
-void leon3_funcat_trap::READpsr::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::READpsr::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->asr = (bitString & 0x7c000) >> 14;
 }
 
-std::string leon3_funcat_trap::READpsr::getMnemonic(){
+std::string leon3_funclt_trap::READpsr::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "rd ";
     oss << "psr r";
@@ -989,7 +989,7 @@ std::string leon3_funcat_trap::READpsr::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::READpsr::READpsr( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::READpsr::READpsr( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -1000,10 +1000,10 @@ leon3_funcat_trap::READpsr::READpsr( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::READpsr::~READpsr(){
+leon3_funclt_trap::READpsr::~READpsr(){
 
 }
-unsigned int leon3_funcat_trap::ANDN_imm::behavior(){
+unsigned int leon3_funclt_trap::ANDN_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -1014,16 +1014,16 @@ unsigned int leon3_funcat_trap::ANDN_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ANDN_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::ANDN_imm::replicate() const throw(){
     return new ANDN_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ANDN_imm::getInstructionName(){
+std::string leon3_funclt_trap::ANDN_imm::getInstructionName(){
     return "ANDN_imm";
 }
 
-void leon3_funcat_trap::ANDN_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ANDN_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -1031,7 +1031,7 @@ void leon3_funcat_trap::ANDN_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::ANDN_imm::getMnemonic(){
+std::string leon3_funclt_trap::ANDN_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "andn r";
     oss << this->rs1_bit;
@@ -1042,7 +1042,7 @@ std::string leon3_funcat_trap::ANDN_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ANDN_imm::ANDN_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::ANDN_imm::ANDN_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -1055,10 +1055,10 @@ leon3_funcat_trap::ANDN_imm::ANDN_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::ANDN_imm::~ANDN_imm(){
+leon3_funclt_trap::ANDN_imm::~ANDN_imm(){
 
 }
-unsigned int leon3_funcat_trap::ANDcc_reg::behavior(){
+unsigned int leon3_funclt_trap::ANDcc_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -1071,16 +1071,16 @@ unsigned int leon3_funcat_trap::ANDcc_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ANDcc_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::ANDcc_reg::replicate() const throw(){
     return new ANDcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ANDcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::ANDcc_reg::getInstructionName(){
     return "ANDcc_reg";
 }
 
-void leon3_funcat_trap::ANDcc_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ANDcc_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -1089,7 +1089,7 @@ void leon3_funcat_trap::ANDcc_reg::setParams( const unsigned int & bitString ) t
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::ANDcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::ANDcc_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "andcc r";
     oss << this->rs1_bit;
@@ -1100,7 +1100,7 @@ std::string leon3_funcat_trap::ANDcc_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ANDcc_reg::ANDcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
+leon3_funclt_trap::ANDcc_reg::ANDcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
     WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -1115,10 +1115,10 @@ leon3_funcat_trap::ANDcc_reg::ANDcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 
 }
 
-leon3_funcat_trap::ANDcc_reg::~ANDcc_reg(){
+leon3_funclt_trap::ANDcc_reg::~ANDcc_reg(){
 
 }
-unsigned int leon3_funcat_trap::TSUBcc_imm::behavior(){
+unsigned int leon3_funclt_trap::TSUBcc_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -1136,16 +1136,16 @@ unsigned int leon3_funcat_trap::TSUBcc_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::TSUBcc_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::TSUBcc_imm::replicate() const throw(){
     return new TSUBcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::TSUBcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::TSUBcc_imm::getInstructionName(){
     return "TSUBcc_imm";
 }
 
-void leon3_funcat_trap::TSUBcc_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::TSUBcc_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -1153,7 +1153,7 @@ void leon3_funcat_trap::TSUBcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::TSUBcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::TSUBcc_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "tsubcc r";
     oss << this->rs1_bit;
@@ -1164,7 +1164,7 @@ std::string leon3_funcat_trap::TSUBcc_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::TSUBcc_imm::TSUBcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::TSUBcc_imm::TSUBcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -1179,10 +1179,10 @@ leon3_funcat_trap::TSUBcc_imm::TSUBcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::TSUBcc_imm::~TSUBcc_imm(){
+leon3_funclt_trap::TSUBcc_imm::~TSUBcc_imm(){
 
 }
-unsigned int leon3_funcat_trap::LDSBA_reg::behavior(){
+unsigned int leon3_funclt_trap::LDSBA_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -1208,16 +1208,16 @@ unsigned int leon3_funcat_trap::LDSBA_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LDSBA_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::LDSBA_reg::replicate() const throw(){
     return new LDSBA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LDSBA_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDSBA_reg::getInstructionName(){
     return "LDSBA_reg";
 }
 
-void leon3_funcat_trap::LDSBA_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LDSBA_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -1227,7 +1227,7 @@ void leon3_funcat_trap::LDSBA_reg::setParams( const unsigned int & bitString ) t
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::LDSBA_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDSBA_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldba r";
     oss << this->rs1_bit;
@@ -1240,7 +1240,7 @@ std::string leon3_funcat_trap::LDSBA_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LDSBA_reg::LDSBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
+leon3_funclt_trap::LDSBA_reg::LDSBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
     WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -1251,10 +1251,10 @@ leon3_funcat_trap::LDSBA_reg::LDSBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 
 }
 
-leon3_funcat_trap::LDSBA_reg::~LDSBA_reg(){
+leon3_funclt_trap::LDSBA_reg::~LDSBA_reg(){
 
 }
-unsigned int leon3_funcat_trap::LDUH_imm::behavior(){
+unsigned int leon3_funclt_trap::LDUH_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -1275,16 +1275,16 @@ unsigned int leon3_funcat_trap::LDUH_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LDUH_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::LDUH_imm::replicate() const throw(){
     return new LDUH_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LDUH_imm::getInstructionName(){
+std::string leon3_funclt_trap::LDUH_imm::getInstructionName(){
     return "LDUH_imm";
 }
 
-void leon3_funcat_trap::LDUH_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LDUH_imm::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rd_bit = (bitString & 0x3e000000) >> 25;
@@ -1292,7 +1292,7 @@ void leon3_funcat_trap::LDUH_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::LDUH_imm::getMnemonic(){
+std::string leon3_funclt_trap::LDUH_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "lduh r";
     oss << this->rs1_bit;
@@ -1303,7 +1303,7 @@ std::string leon3_funcat_trap::LDUH_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LDUH_imm::LDUH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::LDUH_imm::LDUH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -1314,10 +1314,10 @@ leon3_funcat_trap::LDUH_imm::LDUH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::LDUH_imm::~LDUH_imm(){
+leon3_funclt_trap::LDUH_imm::~LDUH_imm(){
 
 }
-unsigned int leon3_funcat_trap::STA_reg::behavior(){
+unsigned int leon3_funclt_trap::STA_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -1346,16 +1346,16 @@ unsigned int leon3_funcat_trap::STA_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::STA_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::STA_reg::replicate() const throw(){
     return new STA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::STA_reg::getInstructionName(){
+std::string leon3_funclt_trap::STA_reg::getInstructionName(){
     return "STA_reg";
 }
 
-void leon3_funcat_trap::STA_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::STA_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -1365,7 +1365,7 @@ void leon3_funcat_trap::STA_reg::setParams( const unsigned int & bitString ) thr
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::STA_reg::getMnemonic(){
+std::string leon3_funclt_trap::STA_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "sta r";
     oss << this->rd_bit;
@@ -1378,7 +1378,7 @@ std::string leon3_funcat_trap::STA_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::STA_reg::STA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::STA_reg::STA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -1389,10 +1389,10 @@ leon3_funcat_trap::STA_reg::STA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::STA_reg::~STA_reg(){
+leon3_funclt_trap::STA_reg::~STA_reg(){
 
 }
-unsigned int leon3_funcat_trap::ORN_reg::behavior(){
+unsigned int leon3_funclt_trap::ORN_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -1404,16 +1404,16 @@ unsigned int leon3_funcat_trap::ORN_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ORN_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::ORN_reg::replicate() const throw(){
     return new ORN_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ORN_reg::getInstructionName(){
+std::string leon3_funclt_trap::ORN_reg::getInstructionName(){
     return "ORN_reg";
 }
 
-void leon3_funcat_trap::ORN_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ORN_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -1422,7 +1422,7 @@ void leon3_funcat_trap::ORN_reg::setParams( const unsigned int & bitString ) thr
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::ORN_reg::getMnemonic(){
+std::string leon3_funclt_trap::ORN_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "orn r";
     oss << this->rs1_bit;
@@ -1433,7 +1433,7 @@ std::string leon3_funcat_trap::ORN_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ORN_reg::ORN_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::ORN_reg::ORN_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -1446,10 +1446,10 @@ leon3_funcat_trap::ORN_reg::ORN_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::ORN_reg::~ORN_reg(){
+leon3_funclt_trap::ORN_reg::~ORN_reg(){
 
 }
-unsigned int leon3_funcat_trap::LDSHA_reg::behavior(){
+unsigned int leon3_funclt_trap::LDSHA_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -1479,16 +1479,16 @@ unsigned int leon3_funcat_trap::LDSHA_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LDSHA_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::LDSHA_reg::replicate() const throw(){
     return new LDSHA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LDSHA_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDSHA_reg::getInstructionName(){
     return "LDSHA_reg";
 }
 
-void leon3_funcat_trap::LDSHA_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LDSHA_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -1498,7 +1498,7 @@ void leon3_funcat_trap::LDSHA_reg::setParams( const unsigned int & bitString ) t
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::LDSHA_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDSHA_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldsha r";
     oss << this->rs1_bit;
@@ -1511,7 +1511,7 @@ std::string leon3_funcat_trap::LDSHA_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LDSHA_reg::LDSHA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
+leon3_funclt_trap::LDSHA_reg::LDSHA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
     WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -1522,10 +1522,10 @@ leon3_funcat_trap::LDSHA_reg::LDSHA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 
 }
 
-leon3_funcat_trap::LDSHA_reg::~LDSHA_reg(){
+leon3_funclt_trap::LDSHA_reg::~LDSHA_reg(){
 
 }
-unsigned int leon3_funcat_trap::STBA_reg::behavior(){
+unsigned int leon3_funclt_trap::STBA_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -1550,16 +1550,16 @@ unsigned int leon3_funcat_trap::STBA_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::STBA_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::STBA_reg::replicate() const throw(){
     return new STBA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::STBA_reg::getInstructionName(){
+std::string leon3_funclt_trap::STBA_reg::getInstructionName(){
     return "STBA_reg";
 }
 
-void leon3_funcat_trap::STBA_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::STBA_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -1569,7 +1569,7 @@ void leon3_funcat_trap::STBA_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::STBA_reg::getMnemonic(){
+std::string leon3_funclt_trap::STBA_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "stba r";
     oss << this->rd_bit;
@@ -1582,7 +1582,7 @@ std::string leon3_funcat_trap::STBA_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::STBA_reg::STBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::STBA_reg::STBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -1593,10 +1593,10 @@ leon3_funcat_trap::STBA_reg::STBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::STBA_reg::~STBA_reg(){
+leon3_funclt_trap::STBA_reg::~STBA_reg(){
 
 }
-unsigned int leon3_funcat_trap::ST_imm::behavior(){
+unsigned int leon3_funclt_trap::ST_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -1621,16 +1621,16 @@ unsigned int leon3_funcat_trap::ST_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ST_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::ST_imm::replicate() const throw(){
     return new ST_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ST_imm::getInstructionName(){
+std::string leon3_funclt_trap::ST_imm::getInstructionName(){
     return "ST_imm";
 }
 
-void leon3_funcat_trap::ST_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ST_imm::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rd_bit = (bitString & 0x3e000000) >> 25;
@@ -1638,7 +1638,7 @@ void leon3_funcat_trap::ST_imm::setParams( const unsigned int & bitString ) thro
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::ST_imm::getMnemonic(){
+std::string leon3_funclt_trap::ST_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "st r";
     oss << this->rd_bit;
@@ -1649,7 +1649,7 @@ std::string leon3_funcat_trap::ST_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ST_imm::ST_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::ST_imm::ST_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -1660,10 +1660,10 @@ leon3_funcat_trap::ST_imm::ST_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM,
 
 }
 
-leon3_funcat_trap::ST_imm::~ST_imm(){
+leon3_funclt_trap::ST_imm::~ST_imm(){
 
 }
-unsigned int leon3_funcat_trap::READtbr::behavior(){
+unsigned int leon3_funclt_trap::READtbr::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -1678,22 +1678,22 @@ unsigned int leon3_funcat_trap::READtbr::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::READtbr::replicate() const throw(){
+Instruction * leon3_funclt_trap::READtbr::replicate() const throw(){
     return new READtbr(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::READtbr::getInstructionName(){
+std::string leon3_funclt_trap::READtbr::getInstructionName(){
     return "READtbr";
 }
 
-void leon3_funcat_trap::READtbr::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::READtbr::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->asr = (bitString & 0x7c000) >> 14;
 }
 
-std::string leon3_funcat_trap::READtbr::getMnemonic(){
+std::string leon3_funclt_trap::READtbr::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "rd ";
     oss << "tbr r";
@@ -1701,7 +1701,7 @@ std::string leon3_funcat_trap::READtbr::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::READtbr::READtbr( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::READtbr::READtbr( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -1712,10 +1712,10 @@ leon3_funcat_trap::READtbr::READtbr( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::READtbr::~READtbr(){
+leon3_funclt_trap::READtbr::~READtbr(){
 
 }
-unsigned int leon3_funcat_trap::UDIVcc_imm::behavior(){
+unsigned int leon3_funclt_trap::UDIVcc_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -1743,16 +1743,16 @@ unsigned int leon3_funcat_trap::UDIVcc_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::UDIVcc_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::UDIVcc_imm::replicate() const throw(){
     return new UDIVcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::UDIVcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::UDIVcc_imm::getInstructionName(){
     return "UDIVcc_imm";
 }
 
-void leon3_funcat_trap::UDIVcc_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::UDIVcc_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -1760,7 +1760,7 @@ void leon3_funcat_trap::UDIVcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::UDIVcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::UDIVcc_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "udivcc";
     oss << " r";
@@ -1771,7 +1771,7 @@ std::string leon3_funcat_trap::UDIVcc_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::UDIVcc_imm::UDIVcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::UDIVcc_imm::UDIVcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -1786,10 +1786,10 @@ leon3_funcat_trap::UDIVcc_imm::UDIVcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::UDIVcc_imm::~UDIVcc_imm(){
+leon3_funclt_trap::UDIVcc_imm::~UDIVcc_imm(){
 
 }
-unsigned int leon3_funcat_trap::SWAPA_reg::behavior(){
+unsigned int leon3_funclt_trap::SWAPA_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -1821,16 +1821,16 @@ unsigned int leon3_funcat_trap::SWAPA_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SWAPA_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::SWAPA_reg::replicate() const throw(){
     return new SWAPA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SWAPA_reg::getInstructionName(){
+std::string leon3_funclt_trap::SWAPA_reg::getInstructionName(){
     return "SWAPA_reg";
 }
 
-void leon3_funcat_trap::SWAPA_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SWAPA_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -1840,7 +1840,7 @@ void leon3_funcat_trap::SWAPA_reg::setParams( const unsigned int & bitString ) t
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::SWAPA_reg::getMnemonic(){
+std::string leon3_funclt_trap::SWAPA_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "swapa r";
     oss << this->rs1_bit;
@@ -1853,7 +1853,7 @@ std::string leon3_funcat_trap::SWAPA_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SWAPA_reg::SWAPA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
+leon3_funclt_trap::SWAPA_reg::SWAPA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
     WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -1864,10 +1864,10 @@ leon3_funcat_trap::SWAPA_reg::SWAPA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 
 }
 
-leon3_funcat_trap::SWAPA_reg::~SWAPA_reg(){
+leon3_funclt_trap::SWAPA_reg::~SWAPA_reg(){
 
 }
-unsigned int leon3_funcat_trap::ADDXcc_imm::behavior(){
+unsigned int leon3_funclt_trap::ADDXcc_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -1880,16 +1880,16 @@ unsigned int leon3_funcat_trap::ADDXcc_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ADDXcc_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::ADDXcc_imm::replicate() const throw(){
     return new ADDXcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ADDXcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::ADDXcc_imm::getInstructionName(){
     return "ADDXcc_imm";
 }
 
-void leon3_funcat_trap::ADDXcc_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ADDXcc_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -1897,7 +1897,7 @@ void leon3_funcat_trap::ADDXcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::ADDXcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::ADDXcc_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "addxcc r";
     oss << this->rs1_bit;
@@ -1908,7 +1908,7 @@ std::string leon3_funcat_trap::ADDXcc_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ADDXcc_imm::ADDXcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::ADDXcc_imm::ADDXcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -1923,10 +1923,10 @@ leon3_funcat_trap::ADDXcc_imm::ADDXcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::ADDXcc_imm::~ADDXcc_imm(){
+leon3_funclt_trap::ADDXcc_imm::~ADDXcc_imm(){
 
 }
-unsigned int leon3_funcat_trap::STB_imm::behavior(){
+unsigned int leon3_funclt_trap::STB_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -1937,16 +1937,16 @@ unsigned int leon3_funcat_trap::STB_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::STB_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::STB_imm::replicate() const throw(){
     return new STB_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::STB_imm::getInstructionName(){
+std::string leon3_funclt_trap::STB_imm::getInstructionName(){
     return "STB_imm";
 }
 
-void leon3_funcat_trap::STB_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::STB_imm::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rd_bit = (bitString & 0x3e000000) >> 25;
@@ -1954,7 +1954,7 @@ void leon3_funcat_trap::STB_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::STB_imm::getMnemonic(){
+std::string leon3_funclt_trap::STB_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "stb r";
     oss << this->rd_bit;
@@ -1965,7 +1965,7 @@ std::string leon3_funcat_trap::STB_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::STB_imm::STB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::STB_imm::STB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -1976,10 +1976,10 @@ leon3_funcat_trap::STB_imm::STB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::STB_imm::~STB_imm(){
+leon3_funclt_trap::STB_imm::~STB_imm(){
 
 }
-unsigned int leon3_funcat_trap::SUBXcc_imm::behavior(){
+unsigned int leon3_funclt_trap::SUBXcc_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -1992,16 +1992,16 @@ unsigned int leon3_funcat_trap::SUBXcc_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SUBXcc_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::SUBXcc_imm::replicate() const throw(){
     return new SUBXcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SUBXcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::SUBXcc_imm::getInstructionName(){
     return "SUBXcc_imm";
 }
 
-void leon3_funcat_trap::SUBXcc_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SUBXcc_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -2009,7 +2009,7 @@ void leon3_funcat_trap::SUBXcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::SUBXcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::SUBXcc_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "subxcc r";
     oss << this->rs1_bit;
@@ -2020,7 +2020,7 @@ std::string leon3_funcat_trap::SUBXcc_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SUBXcc_imm::SUBXcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::SUBXcc_imm::SUBXcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -2035,10 +2035,10 @@ leon3_funcat_trap::SUBXcc_imm::SUBXcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::SUBXcc_imm::~SUBXcc_imm(){
+leon3_funclt_trap::SUBXcc_imm::~SUBXcc_imm(){
 
 }
-unsigned int leon3_funcat_trap::STH_reg::behavior(){
+unsigned int leon3_funclt_trap::STH_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -2063,16 +2063,16 @@ unsigned int leon3_funcat_trap::STH_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::STH_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::STH_reg::replicate() const throw(){
     return new STH_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::STH_reg::getInstructionName(){
+std::string leon3_funclt_trap::STH_reg::getInstructionName(){
     return "STH_reg";
 }
 
-void leon3_funcat_trap::STH_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::STH_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -2082,7 +2082,7 @@ void leon3_funcat_trap::STH_reg::setParams( const unsigned int & bitString ) thr
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::STH_reg::getMnemonic(){
+std::string leon3_funclt_trap::STH_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "sth r";
     oss << this->rd_bit;
@@ -2093,7 +2093,7 @@ std::string leon3_funcat_trap::STH_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::STH_reg::STH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::STH_reg::STH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -2104,10 +2104,10 @@ leon3_funcat_trap::STH_reg::STH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::STH_reg::~STH_reg(){
+leon3_funclt_trap::STH_reg::~STH_reg(){
 
 }
-unsigned int leon3_funcat_trap::SRL_imm::behavior(){
+unsigned int leon3_funclt_trap::SRL_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -2118,16 +2118,16 @@ unsigned int leon3_funcat_trap::SRL_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SRL_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::SRL_imm::replicate() const throw(){
     return new SRL_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SRL_imm::getInstructionName(){
+std::string leon3_funclt_trap::SRL_imm::getInstructionName(){
     return "SRL_imm";
 }
 
-void leon3_funcat_trap::SRL_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SRL_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -2135,7 +2135,7 @@ void leon3_funcat_trap::SRL_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::SRL_imm::getMnemonic(){
+std::string leon3_funclt_trap::SRL_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "srl r";
     oss << this->rs1_bit;
@@ -2146,7 +2146,7 @@ std::string leon3_funcat_trap::SRL_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SRL_imm::SRL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SRL_imm::SRL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -2159,10 +2159,10 @@ leon3_funcat_trap::SRL_imm::SRL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::SRL_imm::~SRL_imm(){
+leon3_funclt_trap::SRL_imm::~SRL_imm(){
 
 }
-unsigned int leon3_funcat_trap::WRITEasr_imm::behavior(){
+unsigned int leon3_funclt_trap::WRITEasr_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -2176,16 +2176,16 @@ unsigned int leon3_funcat_trap::WRITEasr_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::WRITEasr_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::WRITEasr_imm::replicate() const throw(){
     return new WRITEasr_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::WRITEasr_imm::getInstructionName(){
+std::string leon3_funclt_trap::WRITEasr_imm::getInstructionName(){
     return "WRITEasr_imm";
 }
 
-void leon3_funcat_trap::WRITEasr_imm::setParams( const unsigned int & bitString ) \
+void leon3_funclt_trap::WRITEasr_imm::setParams( const unsigned int & bitString ) \
     throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
@@ -2193,7 +2193,7 @@ void leon3_funcat_trap::WRITEasr_imm::setParams( const unsigned int & bitString 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::WRITEasr_imm::getMnemonic(){
+std::string leon3_funclt_trap::WRITEasr_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -2204,7 +2204,7 @@ std::string leon3_funcat_trap::WRITEasr_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::WRITEasr_imm::WRITEasr_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::WRITEasr_imm::WRITEasr_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -2215,10 +2215,10 @@ leon3_funcat_trap::WRITEasr_imm::WRITEasr_imm( Reg32_0_delay_3 & PSR, Reg32_1_de
 
 }
 
-leon3_funcat_trap::WRITEasr_imm::~WRITEasr_imm(){
+leon3_funclt_trap::WRITEasr_imm::~WRITEasr_imm(){
 
 }
-unsigned int leon3_funcat_trap::UMULcc_reg::behavior(){
+unsigned int leon3_funclt_trap::UMULcc_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -2234,16 +2234,16 @@ unsigned int leon3_funcat_trap::UMULcc_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::UMULcc_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::UMULcc_reg::replicate() const throw(){
     return new UMULcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::UMULcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::UMULcc_reg::getInstructionName(){
     return "UMULcc_reg";
 }
 
-void leon3_funcat_trap::UMULcc_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::UMULcc_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -2252,7 +2252,7 @@ void leon3_funcat_trap::UMULcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::UMULcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::UMULcc_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "umulcc r";
     oss << this->rs1_bit;
@@ -2263,7 +2263,7 @@ std::string leon3_funcat_trap::UMULcc_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::UMULcc_reg::UMULcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::UMULcc_reg::UMULcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -2278,10 +2278,10 @@ leon3_funcat_trap::UMULcc_reg::UMULcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::UMULcc_reg::~UMULcc_reg(){
+leon3_funclt_trap::UMULcc_reg::~UMULcc_reg(){
 
 }
-unsigned int leon3_funcat_trap::LDSTUB_reg::behavior(){
+unsigned int leon3_funclt_trap::LDSTUB_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -2294,16 +2294,16 @@ unsigned int leon3_funcat_trap::LDSTUB_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LDSTUB_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::LDSTUB_reg::replicate() const throw(){
     return new LDSTUB_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LDSTUB_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDSTUB_reg::getInstructionName(){
     return "LDSTUB_reg";
 }
 
-void leon3_funcat_trap::LDSTUB_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LDSTUB_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -2313,7 +2313,7 @@ void leon3_funcat_trap::LDSTUB_reg::setParams( const unsigned int & bitString ) 
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::LDSTUB_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDSTUB_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldastub r";
     oss << this->rs1_bit;
@@ -2324,7 +2324,7 @@ std::string leon3_funcat_trap::LDSTUB_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LDSTUB_reg::LDSTUB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::LDSTUB_reg::LDSTUB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -2335,10 +2335,10 @@ leon3_funcat_trap::LDSTUB_reg::LDSTUB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::LDSTUB_reg::~LDSTUB_reg(){
+leon3_funclt_trap::LDSTUB_reg::~LDSTUB_reg(){
 
 }
-unsigned int leon3_funcat_trap::XOR_imm::behavior(){
+unsigned int leon3_funclt_trap::XOR_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -2349,16 +2349,16 @@ unsigned int leon3_funcat_trap::XOR_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::XOR_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::XOR_imm::replicate() const throw(){
     return new XOR_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::XOR_imm::getInstructionName(){
+std::string leon3_funclt_trap::XOR_imm::getInstructionName(){
     return "XOR_imm";
 }
 
-void leon3_funcat_trap::XOR_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::XOR_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -2366,7 +2366,7 @@ void leon3_funcat_trap::XOR_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::XOR_imm::getMnemonic(){
+std::string leon3_funclt_trap::XOR_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "xor r";
     oss << this->rs1_bit;
@@ -2377,7 +2377,7 @@ std::string leon3_funcat_trap::XOR_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::XOR_imm::XOR_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::XOR_imm::XOR_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -2390,10 +2390,10 @@ leon3_funcat_trap::XOR_imm::XOR_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::XOR_imm::~XOR_imm(){
+leon3_funclt_trap::XOR_imm::~XOR_imm(){
 
 }
-unsigned int leon3_funcat_trap::SMAC_reg::behavior(){
+unsigned int leon3_funclt_trap::SMAC_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -2411,16 +2411,16 @@ unsigned int leon3_funcat_trap::SMAC_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SMAC_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::SMAC_reg::replicate() const throw(){
     return new SMAC_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SMAC_reg::getInstructionName(){
+std::string leon3_funclt_trap::SMAC_reg::getInstructionName(){
     return "SMAC_reg";
 }
 
-void leon3_funcat_trap::SMAC_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SMAC_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -2429,7 +2429,7 @@ void leon3_funcat_trap::SMAC_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::SMAC_reg::getMnemonic(){
+std::string leon3_funclt_trap::SMAC_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "smac r";
     oss << this->rs1_bit;
@@ -2440,7 +2440,7 @@ std::string leon3_funcat_trap::SMAC_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SMAC_reg::SMAC_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SMAC_reg::SMAC_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -2453,10 +2453,10 @@ leon3_funcat_trap::SMAC_reg::SMAC_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::SMAC_reg::~SMAC_reg(){
+leon3_funclt_trap::SMAC_reg::~SMAC_reg(){
 
 }
-unsigned int leon3_funcat_trap::WRITEasr_reg::behavior(){
+unsigned int leon3_funclt_trap::WRITEasr_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -2470,16 +2470,16 @@ unsigned int leon3_funcat_trap::WRITEasr_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::WRITEasr_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::WRITEasr_reg::replicate() const throw(){
     return new WRITEasr_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::WRITEasr_reg::getInstructionName(){
+std::string leon3_funclt_trap::WRITEasr_reg::getInstructionName(){
     return "WRITEasr_reg";
 }
 
-void leon3_funcat_trap::WRITEasr_reg::setParams( const unsigned int & bitString ) \
+void leon3_funclt_trap::WRITEasr_reg::setParams( const unsigned int & bitString ) \
     throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
@@ -2488,7 +2488,7 @@ void leon3_funcat_trap::WRITEasr_reg::setParams( const unsigned int & bitString 
     this->rd = (bitString & 0x3e000000) >> 25;
 }
 
-std::string leon3_funcat_trap::WRITEasr_reg::getMnemonic(){
+std::string leon3_funclt_trap::WRITEasr_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -2499,7 +2499,7 @@ std::string leon3_funcat_trap::WRITEasr_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::WRITEasr_reg::WRITEasr_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::WRITEasr_reg::WRITEasr_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -2510,10 +2510,10 @@ leon3_funcat_trap::WRITEasr_reg::WRITEasr_reg( Reg32_0_delay_3 & PSR, Reg32_1_de
 
 }
 
-leon3_funcat_trap::WRITEasr_reg::~WRITEasr_reg(){
+leon3_funclt_trap::WRITEasr_reg::~WRITEasr_reg(){
 
 }
-unsigned int leon3_funcat_trap::LD_reg::behavior(){
+unsigned int leon3_funclt_trap::LD_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -2534,16 +2534,16 @@ unsigned int leon3_funcat_trap::LD_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LD_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::LD_reg::replicate() const throw(){
     return new LD_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LD_reg::getInstructionName(){
+std::string leon3_funclt_trap::LD_reg::getInstructionName(){
     return "LD_reg";
 }
 
-void leon3_funcat_trap::LD_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LD_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -2553,7 +2553,7 @@ void leon3_funcat_trap::LD_reg::setParams( const unsigned int & bitString ) thro
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::LD_reg::getMnemonic(){
+std::string leon3_funclt_trap::LD_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "ld r";
     oss << this->rs1_bit;
@@ -2564,7 +2564,7 @@ std::string leon3_funcat_trap::LD_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LD_reg::LD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::LD_reg::LD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -2575,10 +2575,10 @@ leon3_funcat_trap::LD_reg::LD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM,
 
 }
 
-leon3_funcat_trap::LD_reg::~LD_reg(){
+leon3_funclt_trap::LD_reg::~LD_reg(){
 
 }
-unsigned int leon3_funcat_trap::ST_reg::behavior(){
+unsigned int leon3_funclt_trap::ST_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -2603,16 +2603,16 @@ unsigned int leon3_funcat_trap::ST_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ST_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::ST_reg::replicate() const throw(){
     return new ST_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ST_reg::getInstructionName(){
+std::string leon3_funclt_trap::ST_reg::getInstructionName(){
     return "ST_reg";
 }
 
-void leon3_funcat_trap::ST_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ST_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -2622,7 +2622,7 @@ void leon3_funcat_trap::ST_reg::setParams( const unsigned int & bitString ) thro
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::ST_reg::getMnemonic(){
+std::string leon3_funclt_trap::ST_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "st r";
     oss << this->rd_bit;
@@ -2633,7 +2633,7 @@ std::string leon3_funcat_trap::ST_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ST_reg::ST_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::ST_reg::ST_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -2644,10 +2644,10 @@ leon3_funcat_trap::ST_reg::ST_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM,
 
 }
 
-leon3_funcat_trap::ST_reg::~ST_reg(){
+leon3_funclt_trap::ST_reg::~ST_reg(){
 
 }
-unsigned int leon3_funcat_trap::SUBcc_reg::behavior(){
+unsigned int leon3_funclt_trap::SUBcc_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -2660,16 +2660,16 @@ unsigned int leon3_funcat_trap::SUBcc_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SUBcc_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::SUBcc_reg::replicate() const throw(){
     return new SUBcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SUBcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::SUBcc_reg::getInstructionName(){
     return "SUBcc_reg";
 }
 
-void leon3_funcat_trap::SUBcc_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SUBcc_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -2678,7 +2678,7 @@ void leon3_funcat_trap::SUBcc_reg::setParams( const unsigned int & bitString ) t
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::SUBcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::SUBcc_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "subcc r";
     oss << this->rs1_bit;
@@ -2689,7 +2689,7 @@ std::string leon3_funcat_trap::SUBcc_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SUBcc_reg::SUBcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
+leon3_funclt_trap::SUBcc_reg::SUBcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
     WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -2704,10 +2704,10 @@ leon3_funcat_trap::SUBcc_reg::SUBcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 
 }
 
-leon3_funcat_trap::SUBcc_reg::~SUBcc_reg(){
+leon3_funclt_trap::SUBcc_reg::~SUBcc_reg(){
 
 }
-unsigned int leon3_funcat_trap::LDD_reg::behavior(){
+unsigned int leon3_funclt_trap::LDD_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -2748,16 +2748,16 @@ unsigned int leon3_funcat_trap::LDD_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LDD_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::LDD_reg::replicate() const throw(){
     return new LDD_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LDD_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDD_reg::getInstructionName(){
     return "LDD_reg";
 }
 
-void leon3_funcat_trap::LDD_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LDD_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -2767,7 +2767,7 @@ void leon3_funcat_trap::LDD_reg::setParams( const unsigned int & bitString ) thr
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::LDD_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDD_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldd r";
     oss << this->rs1_bit;
@@ -2778,7 +2778,7 @@ std::string leon3_funcat_trap::LDD_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LDD_reg::LDD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::LDD_reg::LDD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -2789,10 +2789,10 @@ leon3_funcat_trap::LDD_reg::LDD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::LDD_reg::~LDD_reg(){
+leon3_funclt_trap::LDD_reg::~LDD_reg(){
 
 }
-unsigned int leon3_funcat_trap::ADDcc_imm::behavior(){
+unsigned int leon3_funclt_trap::ADDcc_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -2805,16 +2805,16 @@ unsigned int leon3_funcat_trap::ADDcc_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ADDcc_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::ADDcc_imm::replicate() const throw(){
     return new ADDcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ADDcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::ADDcc_imm::getInstructionName(){
     return "ADDcc_imm";
 }
 
-void leon3_funcat_trap::ADDcc_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ADDcc_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -2822,7 +2822,7 @@ void leon3_funcat_trap::ADDcc_imm::setParams( const unsigned int & bitString ) t
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::ADDcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::ADDcc_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "addcc r";
     oss << this->rs1_bit;
@@ -2833,7 +2833,7 @@ std::string leon3_funcat_trap::ADDcc_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ADDcc_imm::ADDcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
+leon3_funclt_trap::ADDcc_imm::ADDcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
     WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -2848,10 +2848,10 @@ leon3_funcat_trap::ADDcc_imm::ADDcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 
 }
 
-leon3_funcat_trap::ADDcc_imm::~ADDcc_imm(){
+leon3_funclt_trap::ADDcc_imm::~ADDcc_imm(){
 
 }
-unsigned int leon3_funcat_trap::LDUH_reg::behavior(){
+unsigned int leon3_funclt_trap::LDUH_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -2872,16 +2872,16 @@ unsigned int leon3_funcat_trap::LDUH_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LDUH_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::LDUH_reg::replicate() const throw(){
     return new LDUH_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LDUH_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDUH_reg::getInstructionName(){
     return "LDUH_reg";
 }
 
-void leon3_funcat_trap::LDUH_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LDUH_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -2891,7 +2891,7 @@ void leon3_funcat_trap::LDUH_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::LDUH_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDUH_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "lduh r";
     oss << this->rs1_bit;
@@ -2902,7 +2902,7 @@ std::string leon3_funcat_trap::LDUH_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LDUH_reg::LDUH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::LDUH_reg::LDUH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -2913,10 +2913,10 @@ leon3_funcat_trap::LDUH_reg::LDUH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::LDUH_reg::~LDUH_reg(){
+leon3_funclt_trap::LDUH_reg::~LDUH_reg(){
 
 }
-unsigned int leon3_funcat_trap::SRL_reg::behavior(){
+unsigned int leon3_funclt_trap::SRL_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -2928,16 +2928,16 @@ unsigned int leon3_funcat_trap::SRL_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SRL_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::SRL_reg::replicate() const throw(){
     return new SRL_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SRL_reg::getInstructionName(){
+std::string leon3_funclt_trap::SRL_reg::getInstructionName(){
     return "SRL_reg";
 }
 
-void leon3_funcat_trap::SRL_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SRL_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -2946,7 +2946,7 @@ void leon3_funcat_trap::SRL_reg::setParams( const unsigned int & bitString ) thr
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::SRL_reg::getMnemonic(){
+std::string leon3_funclt_trap::SRL_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "srl r";
     oss << this->rs1_bit;
@@ -2957,7 +2957,7 @@ std::string leon3_funcat_trap::SRL_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SRL_reg::SRL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SRL_reg::SRL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -2970,10 +2970,10 @@ leon3_funcat_trap::SRL_reg::SRL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::SRL_reg::~SRL_reg(){
+leon3_funclt_trap::SRL_reg::~SRL_reg(){
 
 }
-unsigned int leon3_funcat_trap::SAVE_imm::behavior(){
+unsigned int leon3_funclt_trap::SAVE_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -2993,16 +2993,16 @@ unsigned int leon3_funcat_trap::SAVE_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SAVE_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::SAVE_imm::replicate() const throw(){
     return new SAVE_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SAVE_imm::getInstructionName(){
+std::string leon3_funclt_trap::SAVE_imm::getInstructionName(){
     return "SAVE_imm";
 }
 
-void leon3_funcat_trap::SAVE_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SAVE_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -3010,7 +3010,7 @@ void leon3_funcat_trap::SAVE_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::SAVE_imm::getMnemonic(){
+std::string leon3_funclt_trap::SAVE_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "save";
     oss << " r";
@@ -3022,7 +3022,7 @@ std::string leon3_funcat_trap::SAVE_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SAVE_imm::SAVE_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SAVE_imm::SAVE_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -3033,10 +3033,10 @@ leon3_funcat_trap::SAVE_imm::SAVE_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::SAVE_imm::~SAVE_imm(){
+leon3_funclt_trap::SAVE_imm::~SAVE_imm(){
 
 }
-unsigned int leon3_funcat_trap::MULScc_reg::behavior(){
+unsigned int leon3_funclt_trap::MULScc_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -3058,16 +3058,16 @@ unsigned int leon3_funcat_trap::MULScc_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::MULScc_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::MULScc_reg::replicate() const throw(){
     return new MULScc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::MULScc_reg::getInstructionName(){
+std::string leon3_funclt_trap::MULScc_reg::getInstructionName(){
     return "MULScc_reg";
 }
 
-void leon3_funcat_trap::MULScc_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::MULScc_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -3076,7 +3076,7 @@ void leon3_funcat_trap::MULScc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::MULScc_reg::getMnemonic(){
+std::string leon3_funclt_trap::MULScc_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "mulscc r";
     oss << this->rs1_bit;
@@ -3087,7 +3087,7 @@ std::string leon3_funcat_trap::MULScc_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::MULScc_reg::MULScc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::MULScc_reg::MULScc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -3102,10 +3102,10 @@ leon3_funcat_trap::MULScc_reg::MULScc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::MULScc_reg::~MULScc_reg(){
+leon3_funclt_trap::MULScc_reg::~MULScc_reg(){
 
 }
-unsigned int leon3_funcat_trap::OR_imm::behavior(){
+unsigned int leon3_funclt_trap::OR_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -3116,16 +3116,16 @@ unsigned int leon3_funcat_trap::OR_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::OR_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::OR_imm::replicate() const throw(){
     return new OR_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::OR_imm::getInstructionName(){
+std::string leon3_funclt_trap::OR_imm::getInstructionName(){
     return "OR_imm";
 }
 
-void leon3_funcat_trap::OR_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::OR_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -3133,7 +3133,7 @@ void leon3_funcat_trap::OR_imm::setParams( const unsigned int & bitString ) thro
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::OR_imm::getMnemonic(){
+std::string leon3_funclt_trap::OR_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "or r";
     oss << this->rs1_bit;
@@ -3144,7 +3144,7 @@ std::string leon3_funcat_trap::OR_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::OR_imm::OR_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::OR_imm::OR_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -3157,10 +3157,10 @@ leon3_funcat_trap::OR_imm::OR_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM,
 
 }
 
-leon3_funcat_trap::OR_imm::~OR_imm(){
+leon3_funclt_trap::OR_imm::~OR_imm(){
 
 }
-unsigned int leon3_funcat_trap::STD_imm::behavior(){
+unsigned int leon3_funclt_trap::STD_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -3190,16 +3190,16 @@ unsigned int leon3_funcat_trap::STD_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::STD_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::STD_imm::replicate() const throw(){
     return new STD_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::STD_imm::getInstructionName(){
+std::string leon3_funclt_trap::STD_imm::getInstructionName(){
     return "STD_imm";
 }
 
-void leon3_funcat_trap::STD_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::STD_imm::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rd_bit = (bitString & 0x3e000000) >> 25;
@@ -3207,7 +3207,7 @@ void leon3_funcat_trap::STD_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::STD_imm::getMnemonic(){
+std::string leon3_funclt_trap::STD_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "std r";
     oss << this->rd_bit;
@@ -3218,7 +3218,7 @@ std::string leon3_funcat_trap::STD_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::STD_imm::STD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::STD_imm::STD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -3229,10 +3229,10 @@ leon3_funcat_trap::STD_imm::STD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::STD_imm::~STD_imm(){
+leon3_funclt_trap::STD_imm::~STD_imm(){
 
 }
-unsigned int leon3_funcat_trap::SUBXcc_reg::behavior(){
+unsigned int leon3_funclt_trap::SUBXcc_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -3245,16 +3245,16 @@ unsigned int leon3_funcat_trap::SUBXcc_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SUBXcc_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::SUBXcc_reg::replicate() const throw(){
     return new SUBXcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SUBXcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::SUBXcc_reg::getInstructionName(){
     return "SUBXcc_reg";
 }
 
-void leon3_funcat_trap::SUBXcc_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SUBXcc_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -3263,7 +3263,7 @@ void leon3_funcat_trap::SUBXcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::SUBXcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::SUBXcc_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "subxcc r";
     oss << this->rs1_bit;
@@ -3274,7 +3274,7 @@ std::string leon3_funcat_trap::SUBXcc_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SUBXcc_reg::SUBXcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::SUBXcc_reg::SUBXcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -3289,10 +3289,10 @@ leon3_funcat_trap::SUBXcc_reg::SUBXcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::SUBXcc_reg::~SUBXcc_reg(){
+leon3_funclt_trap::SUBXcc_reg::~SUBXcc_reg(){
 
 }
-unsigned int leon3_funcat_trap::ADDX_imm::behavior(){
+unsigned int leon3_funclt_trap::ADDX_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -3304,16 +3304,16 @@ unsigned int leon3_funcat_trap::ADDX_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ADDX_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::ADDX_imm::replicate() const throw(){
     return new ADDX_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ADDX_imm::getInstructionName(){
+std::string leon3_funclt_trap::ADDX_imm::getInstructionName(){
     return "ADDX_imm";
 }
 
-void leon3_funcat_trap::ADDX_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ADDX_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -3321,7 +3321,7 @@ void leon3_funcat_trap::ADDX_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::ADDX_imm::getMnemonic(){
+std::string leon3_funclt_trap::ADDX_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "addx r";
     oss << this->rs1_bit;
@@ -3332,7 +3332,7 @@ std::string leon3_funcat_trap::ADDX_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ADDX_imm::ADDX_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::ADDX_imm::ADDX_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -3345,10 +3345,10 @@ leon3_funcat_trap::ADDX_imm::ADDX_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::ADDX_imm::~ADDX_imm(){
+leon3_funclt_trap::ADDX_imm::~ADDX_imm(){
 
 }
-unsigned int leon3_funcat_trap::SWAP_imm::behavior(){
+unsigned int leon3_funclt_trap::SWAP_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -3376,16 +3376,16 @@ unsigned int leon3_funcat_trap::SWAP_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SWAP_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::SWAP_imm::replicate() const throw(){
     return new SWAP_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SWAP_imm::getInstructionName(){
+std::string leon3_funclt_trap::SWAP_imm::getInstructionName(){
     return "SWAP_imm";
 }
 
-void leon3_funcat_trap::SWAP_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SWAP_imm::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rd_bit = (bitString & 0x3e000000) >> 25;
@@ -3393,7 +3393,7 @@ void leon3_funcat_trap::SWAP_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::SWAP_imm::getMnemonic(){
+std::string leon3_funclt_trap::SWAP_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "swap r";
     oss << this->rs1_bit;
@@ -3404,7 +3404,7 @@ std::string leon3_funcat_trap::SWAP_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SWAP_imm::SWAP_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SWAP_imm::SWAP_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -3415,10 +3415,10 @@ leon3_funcat_trap::SWAP_imm::SWAP_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::SWAP_imm::~SWAP_imm(){
+leon3_funclt_trap::SWAP_imm::~SWAP_imm(){
 
 }
-unsigned int leon3_funcat_trap::UMUL_reg::behavior(){
+unsigned int leon3_funclt_trap::UMUL_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -3433,16 +3433,16 @@ unsigned int leon3_funcat_trap::UMUL_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::UMUL_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::UMUL_reg::replicate() const throw(){
     return new UMUL_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::UMUL_reg::getInstructionName(){
+std::string leon3_funclt_trap::UMUL_reg::getInstructionName(){
     return "UMUL_reg";
 }
 
-void leon3_funcat_trap::UMUL_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::UMUL_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -3451,7 +3451,7 @@ void leon3_funcat_trap::UMUL_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::UMUL_reg::getMnemonic(){
+std::string leon3_funclt_trap::UMUL_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "umul r";
     oss << this->rs1_bit;
@@ -3462,7 +3462,7 @@ std::string leon3_funcat_trap::UMUL_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::UMUL_reg::UMUL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::UMUL_reg::UMUL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -3475,10 +3475,10 @@ leon3_funcat_trap::UMUL_reg::UMUL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::UMUL_reg::~UMUL_reg(){
+leon3_funclt_trap::UMUL_reg::~UMUL_reg(){
 
 }
-unsigned int leon3_funcat_trap::WRITEY_imm::behavior(){
+unsigned int leon3_funclt_trap::WRITEY_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -3490,22 +3490,22 @@ unsigned int leon3_funcat_trap::WRITEY_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::WRITEY_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::WRITEY_imm::replicate() const throw(){
     return new WRITEY_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::WRITEY_imm::getInstructionName(){
+std::string leon3_funclt_trap::WRITEY_imm::getInstructionName(){
     return "WRITEY_imm";
 }
 
-void leon3_funcat_trap::WRITEY_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::WRITEY_imm::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::WRITEY_imm::getMnemonic(){
+std::string leon3_funclt_trap::WRITEY_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -3515,7 +3515,7 @@ std::string leon3_funcat_trap::WRITEY_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::WRITEY_imm::WRITEY_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::WRITEY_imm::WRITEY_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -3526,10 +3526,10 @@ leon3_funcat_trap::WRITEY_imm::WRITEY_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::WRITEY_imm::~WRITEY_imm(){
+leon3_funclt_trap::WRITEY_imm::~WRITEY_imm(){
 
 }
-unsigned int leon3_funcat_trap::AND_reg::behavior(){
+unsigned int leon3_funclt_trap::AND_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -3541,16 +3541,16 @@ unsigned int leon3_funcat_trap::AND_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::AND_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::AND_reg::replicate() const throw(){
     return new AND_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::AND_reg::getInstructionName(){
+std::string leon3_funclt_trap::AND_reg::getInstructionName(){
     return "AND_reg";
 }
 
-void leon3_funcat_trap::AND_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::AND_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -3559,7 +3559,7 @@ void leon3_funcat_trap::AND_reg::setParams( const unsigned int & bitString ) thr
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::AND_reg::getMnemonic(){
+std::string leon3_funclt_trap::AND_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "and r";
     oss << this->rs1_bit;
@@ -3570,7 +3570,7 @@ std::string leon3_funcat_trap::AND_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::AND_reg::AND_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::AND_reg::AND_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -3583,26 +3583,26 @@ leon3_funcat_trap::AND_reg::AND_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::AND_reg::~AND_reg(){
+leon3_funclt_trap::AND_reg::~AND_reg(){
 
 }
-unsigned int leon3_funcat_trap::FLUSH_imm::behavior(){
+unsigned int leon3_funclt_trap::FLUSH_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::FLUSH_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::FLUSH_imm::replicate() const throw(){
     return new FLUSH_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::FLUSH_imm::getInstructionName(){
+std::string leon3_funclt_trap::FLUSH_imm::getInstructionName(){
     return "FLUSH_imm";
 }
 
-void leon3_funcat_trap::FLUSH_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::FLUSH_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -3610,7 +3610,7 @@ void leon3_funcat_trap::FLUSH_imm::setParams( const unsigned int & bitString ) t
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::FLUSH_imm::getMnemonic(){
+std::string leon3_funclt_trap::FLUSH_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "flush r";
     oss << this->rs1_bit;
@@ -3619,7 +3619,7 @@ std::string leon3_funcat_trap::FLUSH_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::FLUSH_imm::FLUSH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
+leon3_funclt_trap::FLUSH_imm::FLUSH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
     WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -3630,10 +3630,10 @@ leon3_funcat_trap::FLUSH_imm::FLUSH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 
 }
 
-leon3_funcat_trap::FLUSH_imm::~FLUSH_imm(){
+leon3_funclt_trap::FLUSH_imm::~FLUSH_imm(){
 
 }
-unsigned int leon3_funcat_trap::SRA_reg::behavior(){
+unsigned int leon3_funclt_trap::SRA_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -3645,16 +3645,16 @@ unsigned int leon3_funcat_trap::SRA_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SRA_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::SRA_reg::replicate() const throw(){
     return new SRA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SRA_reg::getInstructionName(){
+std::string leon3_funclt_trap::SRA_reg::getInstructionName(){
     return "SRA_reg";
 }
 
-void leon3_funcat_trap::SRA_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SRA_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -3663,7 +3663,7 @@ void leon3_funcat_trap::SRA_reg::setParams( const unsigned int & bitString ) thr
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::SRA_reg::getMnemonic(){
+std::string leon3_funclt_trap::SRA_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "sra r";
     oss << this->rs1_bit;
@@ -3674,7 +3674,7 @@ std::string leon3_funcat_trap::SRA_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SRA_reg::SRA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SRA_reg::SRA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -3687,10 +3687,10 @@ leon3_funcat_trap::SRA_reg::SRA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::SRA_reg::~SRA_reg(){
+leon3_funclt_trap::SRA_reg::~SRA_reg(){
 
 }
-unsigned int leon3_funcat_trap::STH_imm::behavior(){
+unsigned int leon3_funclt_trap::STH_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -3715,16 +3715,16 @@ unsigned int leon3_funcat_trap::STH_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::STH_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::STH_imm::replicate() const throw(){
     return new STH_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::STH_imm::getInstructionName(){
+std::string leon3_funclt_trap::STH_imm::getInstructionName(){
     return "STH_imm";
 }
 
-void leon3_funcat_trap::STH_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::STH_imm::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rd_bit = (bitString & 0x3e000000) >> 25;
@@ -3732,7 +3732,7 @@ void leon3_funcat_trap::STH_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::STH_imm::getMnemonic(){
+std::string leon3_funclt_trap::STH_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "sth r";
     oss << this->rd_bit;
@@ -3743,7 +3743,7 @@ std::string leon3_funcat_trap::STH_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::STH_imm::STH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::STH_imm::STH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -3754,10 +3754,10 @@ leon3_funcat_trap::STH_imm::STH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::STH_imm::~STH_imm(){
+leon3_funclt_trap::STH_imm::~STH_imm(){
 
 }
-unsigned int leon3_funcat_trap::WRITEwim_imm::behavior(){
+unsigned int leon3_funclt_trap::WRITEwim_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -3774,16 +3774,16 @@ unsigned int leon3_funcat_trap::WRITEwim_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::WRITEwim_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::WRITEwim_imm::replicate() const throw(){
     return new WRITEwim_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::WRITEwim_imm::getInstructionName(){
+std::string leon3_funclt_trap::WRITEwim_imm::getInstructionName(){
     return "WRITEwim_imm";
 }
 
-void leon3_funcat_trap::WRITEwim_imm::setParams( const unsigned int & bitString ) \
+void leon3_funclt_trap::WRITEwim_imm::setParams( const unsigned int & bitString ) \
     throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
@@ -3791,7 +3791,7 @@ void leon3_funcat_trap::WRITEwim_imm::setParams( const unsigned int & bitString 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::WRITEwim_imm::getMnemonic(){
+std::string leon3_funclt_trap::WRITEwim_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -3801,7 +3801,7 @@ std::string leon3_funcat_trap::WRITEwim_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::WRITEwim_imm::WRITEwim_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::WRITEwim_imm::WRITEwim_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -3812,10 +3812,10 @@ leon3_funcat_trap::WRITEwim_imm::WRITEwim_imm( Reg32_0_delay_3 & PSR, Reg32_1_de
 
 }
 
-leon3_funcat_trap::WRITEwim_imm::~WRITEwim_imm(){
+leon3_funclt_trap::WRITEwim_imm::~WRITEwim_imm(){
 
 }
-unsigned int leon3_funcat_trap::LDD_imm::behavior(){
+unsigned int leon3_funclt_trap::LDD_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -3856,16 +3856,16 @@ unsigned int leon3_funcat_trap::LDD_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LDD_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::LDD_imm::replicate() const throw(){
     return new LDD_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LDD_imm::getInstructionName(){
+std::string leon3_funclt_trap::LDD_imm::getInstructionName(){
     return "LDD_imm";
 }
 
-void leon3_funcat_trap::LDD_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LDD_imm::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rd_bit = (bitString & 0x3e000000) >> 25;
@@ -3873,7 +3873,7 @@ void leon3_funcat_trap::LDD_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::LDD_imm::getMnemonic(){
+std::string leon3_funclt_trap::LDD_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldd r";
     oss << this->rs1_bit;
@@ -3884,7 +3884,7 @@ std::string leon3_funcat_trap::LDD_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LDD_imm::LDD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::LDD_imm::LDD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -3895,10 +3895,10 @@ leon3_funcat_trap::LDD_imm::LDD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::LDD_imm::~LDD_imm(){
+leon3_funclt_trap::LDD_imm::~LDD_imm(){
 
 }
-unsigned int leon3_funcat_trap::SLL_imm::behavior(){
+unsigned int leon3_funclt_trap::SLL_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -3909,16 +3909,16 @@ unsigned int leon3_funcat_trap::SLL_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SLL_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::SLL_imm::replicate() const throw(){
     return new SLL_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SLL_imm::getInstructionName(){
+std::string leon3_funclt_trap::SLL_imm::getInstructionName(){
     return "SLL_imm";
 }
 
-void leon3_funcat_trap::SLL_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SLL_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -3926,7 +3926,7 @@ void leon3_funcat_trap::SLL_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::SLL_imm::getMnemonic(){
+std::string leon3_funclt_trap::SLL_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "sll r";
     oss << this->rs1_bit;
@@ -3937,7 +3937,7 @@ std::string leon3_funcat_trap::SLL_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SLL_imm::SLL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SLL_imm::SLL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -3950,10 +3950,10 @@ leon3_funcat_trap::SLL_imm::SLL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::SLL_imm::~SLL_imm(){
+leon3_funclt_trap::SLL_imm::~SLL_imm(){
 
 }
-unsigned int leon3_funcat_trap::LDUHA_reg::behavior(){
+unsigned int leon3_funclt_trap::LDUHA_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -3983,16 +3983,16 @@ unsigned int leon3_funcat_trap::LDUHA_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LDUHA_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::LDUHA_reg::replicate() const throw(){
     return new LDUHA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LDUHA_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDUHA_reg::getInstructionName(){
     return "LDUHA_reg";
 }
 
-void leon3_funcat_trap::LDUHA_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LDUHA_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -4002,7 +4002,7 @@ void leon3_funcat_trap::LDUHA_reg::setParams( const unsigned int & bitString ) t
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::LDUHA_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDUHA_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "lduha r";
     oss << this->rs1_bit;
@@ -4015,7 +4015,7 @@ std::string leon3_funcat_trap::LDUHA_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LDUHA_reg::LDUHA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
+leon3_funclt_trap::LDUHA_reg::LDUHA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
     WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -4026,10 +4026,10 @@ leon3_funcat_trap::LDUHA_reg::LDUHA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 
 }
 
-leon3_funcat_trap::LDUHA_reg::~LDUHA_reg(){
+leon3_funclt_trap::LDUHA_reg::~LDUHA_reg(){
 
 }
-unsigned int leon3_funcat_trap::TADDcc_reg::behavior(){
+unsigned int leon3_funclt_trap::TADDcc_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -4047,16 +4047,16 @@ unsigned int leon3_funcat_trap::TADDcc_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::TADDcc_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::TADDcc_reg::replicate() const throw(){
     return new TADDcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::TADDcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::TADDcc_reg::getInstructionName(){
     return "TADDcc_reg";
 }
 
-void leon3_funcat_trap::TADDcc_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::TADDcc_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -4065,7 +4065,7 @@ void leon3_funcat_trap::TADDcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::TADDcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::TADDcc_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "taddcc r";
     oss << this->rs1_bit;
@@ -4076,7 +4076,7 @@ std::string leon3_funcat_trap::TADDcc_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::TADDcc_reg::TADDcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::TADDcc_reg::TADDcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -4091,10 +4091,10 @@ leon3_funcat_trap::TADDcc_reg::TADDcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::TADDcc_reg::~TADDcc_reg(){
+leon3_funclt_trap::TADDcc_reg::~TADDcc_reg(){
 
 }
-unsigned int leon3_funcat_trap::TADDcc_imm::behavior(){
+unsigned int leon3_funclt_trap::TADDcc_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -4112,16 +4112,16 @@ unsigned int leon3_funcat_trap::TADDcc_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::TADDcc_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::TADDcc_imm::replicate() const throw(){
     return new TADDcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::TADDcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::TADDcc_imm::getInstructionName(){
     return "TADDcc_imm";
 }
 
-void leon3_funcat_trap::TADDcc_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::TADDcc_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -4129,7 +4129,7 @@ void leon3_funcat_trap::TADDcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::TADDcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::TADDcc_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "taddcc r";
     oss << this->rs1_bit;
@@ -4140,7 +4140,7 @@ std::string leon3_funcat_trap::TADDcc_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::TADDcc_imm::TADDcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::TADDcc_imm::TADDcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -4155,10 +4155,10 @@ leon3_funcat_trap::TADDcc_imm::TADDcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::TADDcc_imm::~TADDcc_imm(){
+leon3_funclt_trap::TADDcc_imm::~TADDcc_imm(){
 
 }
-unsigned int leon3_funcat_trap::SDIV_imm::behavior(){
+unsigned int leon3_funclt_trap::SDIV_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -4191,16 +4191,16 @@ unsigned int leon3_funcat_trap::SDIV_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SDIV_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::SDIV_imm::replicate() const throw(){
     return new SDIV_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SDIV_imm::getInstructionName(){
+std::string leon3_funclt_trap::SDIV_imm::getInstructionName(){
     return "SDIV_imm";
 }
 
-void leon3_funcat_trap::SDIV_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SDIV_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -4208,7 +4208,7 @@ void leon3_funcat_trap::SDIV_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::SDIV_imm::getMnemonic(){
+std::string leon3_funclt_trap::SDIV_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "sdiv";
     oss << " r";
@@ -4219,7 +4219,7 @@ std::string leon3_funcat_trap::SDIV_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SDIV_imm::SDIV_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SDIV_imm::SDIV_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -4232,10 +4232,10 @@ leon3_funcat_trap::SDIV_imm::SDIV_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::SDIV_imm::~SDIV_imm(){
+leon3_funclt_trap::SDIV_imm::~SDIV_imm(){
 
 }
-unsigned int leon3_funcat_trap::TSUBccTV_imm::behavior(){
+unsigned int leon3_funclt_trap::TSUBccTV_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -4257,16 +4257,16 @@ unsigned int leon3_funcat_trap::TSUBccTV_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::TSUBccTV_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::TSUBccTV_imm::replicate() const throw(){
     return new TSUBccTV_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::TSUBccTV_imm::getInstructionName(){
+std::string leon3_funclt_trap::TSUBccTV_imm::getInstructionName(){
     return "TSUBccTV_imm";
 }
 
-void leon3_funcat_trap::TSUBccTV_imm::setParams( const unsigned int & bitString ) \
+void leon3_funclt_trap::TSUBccTV_imm::setParams( const unsigned int & bitString ) \
     throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
@@ -4275,7 +4275,7 @@ void leon3_funcat_trap::TSUBccTV_imm::setParams( const unsigned int & bitString 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::TSUBccTV_imm::getMnemonic(){
+std::string leon3_funclt_trap::TSUBccTV_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "tsubcctv r";
     oss << this->rs1_bit;
@@ -4286,7 +4286,7 @@ std::string leon3_funcat_trap::TSUBccTV_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::TSUBccTV_imm::TSUBccTV_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::TSUBccTV_imm::TSUBccTV_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -4301,26 +4301,26 @@ leon3_funcat_trap::TSUBccTV_imm::TSUBccTV_imm( Reg32_0_delay_3 & PSR, Reg32_1_de
 
 }
 
-leon3_funcat_trap::TSUBccTV_imm::~TSUBccTV_imm(){
+leon3_funclt_trap::TSUBccTV_imm::~TSUBccTV_imm(){
 
 }
-unsigned int leon3_funcat_trap::FLUSH_reg::behavior(){
+unsigned int leon3_funclt_trap::FLUSH_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::FLUSH_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::FLUSH_reg::replicate() const throw(){
     return new FLUSH_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::FLUSH_reg::getInstructionName(){
+std::string leon3_funclt_trap::FLUSH_reg::getInstructionName(){
     return "FLUSH_reg";
 }
 
-void leon3_funcat_trap::FLUSH_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::FLUSH_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -4329,7 +4329,7 @@ void leon3_funcat_trap::FLUSH_reg::setParams( const unsigned int & bitString ) t
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::FLUSH_reg::getMnemonic(){
+std::string leon3_funclt_trap::FLUSH_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "flush r";
     oss << this->rs1_bit;
@@ -4338,7 +4338,7 @@ std::string leon3_funcat_trap::FLUSH_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::FLUSH_reg::FLUSH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
+leon3_funclt_trap::FLUSH_reg::FLUSH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
     WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -4349,10 +4349,10 @@ leon3_funcat_trap::FLUSH_reg::FLUSH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 
 }
 
-leon3_funcat_trap::FLUSH_reg::~FLUSH_reg(){
+leon3_funclt_trap::FLUSH_reg::~FLUSH_reg(){
 
 }
-unsigned int leon3_funcat_trap::ORNcc_reg::behavior(){
+unsigned int leon3_funclt_trap::ORNcc_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -4365,16 +4365,16 @@ unsigned int leon3_funcat_trap::ORNcc_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ORNcc_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::ORNcc_reg::replicate() const throw(){
     return new ORNcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ORNcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::ORNcc_reg::getInstructionName(){
     return "ORNcc_reg";
 }
 
-void leon3_funcat_trap::ORNcc_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ORNcc_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -4383,7 +4383,7 @@ void leon3_funcat_trap::ORNcc_reg::setParams( const unsigned int & bitString ) t
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::ORNcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::ORNcc_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "orncc r";
     oss << this->rs1_bit;
@@ -4394,7 +4394,7 @@ std::string leon3_funcat_trap::ORNcc_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ORNcc_reg::ORNcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
+leon3_funclt_trap::ORNcc_reg::ORNcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
     WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -4409,10 +4409,10 @@ leon3_funcat_trap::ORNcc_reg::ORNcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 
 }
 
-leon3_funcat_trap::ORNcc_reg::~ORNcc_reg(){
+leon3_funclt_trap::ORNcc_reg::~ORNcc_reg(){
 
 }
-unsigned int leon3_funcat_trap::RETT_imm::behavior(){
+unsigned int leon3_funclt_trap::RETT_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -4449,16 +4449,16 @@ unsigned int leon3_funcat_trap::RETT_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::RETT_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::RETT_imm::replicate() const throw(){
     return new RETT_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::RETT_imm::getInstructionName(){
+std::string leon3_funclt_trap::RETT_imm::getInstructionName(){
     return "RETT_imm";
 }
 
-void leon3_funcat_trap::RETT_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::RETT_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -4466,7 +4466,7 @@ void leon3_funcat_trap::RETT_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::RETT_imm::getMnemonic(){
+std::string leon3_funclt_trap::RETT_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "rett r";
     oss << this->rs1_bit;
@@ -4475,7 +4475,7 @@ std::string leon3_funcat_trap::RETT_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::RETT_imm::RETT_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::RETT_imm::RETT_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -4486,10 +4486,10 @@ leon3_funcat_trap::RETT_imm::RETT_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::RETT_imm::~RETT_imm(){
+leon3_funclt_trap::RETT_imm::~RETT_imm(){
 
 }
-unsigned int leon3_funcat_trap::SDIVcc_reg::behavior(){
+unsigned int leon3_funclt_trap::SDIVcc_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -4523,16 +4523,16 @@ unsigned int leon3_funcat_trap::SDIVcc_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SDIVcc_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::SDIVcc_reg::replicate() const throw(){
     return new SDIVcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SDIVcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::SDIVcc_reg::getInstructionName(){
     return "SDIVcc_reg";
 }
 
-void leon3_funcat_trap::SDIVcc_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SDIVcc_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -4541,7 +4541,7 @@ void leon3_funcat_trap::SDIVcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::SDIVcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::SDIVcc_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "sdivcc";
     oss << " r";
@@ -4552,7 +4552,7 @@ std::string leon3_funcat_trap::SDIVcc_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SDIVcc_reg::SDIVcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::SDIVcc_reg::SDIVcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -4567,10 +4567,10 @@ leon3_funcat_trap::SDIVcc_reg::SDIVcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::SDIVcc_reg::~SDIVcc_reg(){
+leon3_funclt_trap::SDIVcc_reg::~SDIVcc_reg(){
 
 }
-unsigned int leon3_funcat_trap::ADD_reg::behavior(){
+unsigned int leon3_funclt_trap::ADD_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -4582,16 +4582,16 @@ unsigned int leon3_funcat_trap::ADD_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ADD_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::ADD_reg::replicate() const throw(){
     return new ADD_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ADD_reg::getInstructionName(){
+std::string leon3_funclt_trap::ADD_reg::getInstructionName(){
     return "ADD_reg";
 }
 
-void leon3_funcat_trap::ADD_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ADD_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -4600,7 +4600,7 @@ void leon3_funcat_trap::ADD_reg::setParams( const unsigned int & bitString ) thr
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::ADD_reg::getMnemonic(){
+std::string leon3_funclt_trap::ADD_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "add r";
     oss << this->rs1_bit;
@@ -4611,7 +4611,7 @@ std::string leon3_funcat_trap::ADD_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ADD_reg::ADD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::ADD_reg::ADD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -4624,10 +4624,10 @@ leon3_funcat_trap::ADD_reg::ADD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::ADD_reg::~ADD_reg(){
+leon3_funclt_trap::ADD_reg::~ADD_reg(){
 
 }
-unsigned int leon3_funcat_trap::TRAP_imm::behavior(){
+unsigned int leon3_funclt_trap::TRAP_imm::behavior(){
     this->totalInstrCycles = 0;
 
     // All the other non-special situations
@@ -4659,16 +4659,16 @@ unsigned int leon3_funcat_trap::TRAP_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::TRAP_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::TRAP_imm::replicate() const throw(){
     return new TRAP_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::TRAP_imm::getInstructionName(){
+std::string leon3_funclt_trap::TRAP_imm::getInstructionName(){
     return "TRAP_imm";
 }
 
-void leon3_funcat_trap::TRAP_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::TRAP_imm::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->reserved1 = (bitString & 0x20000000) >> 29;
@@ -4677,7 +4677,7 @@ void leon3_funcat_trap::TRAP_imm::setParams( const unsigned int & bitString ) th
     this->imm7 = (bitString & 0x7f);
 }
 
-std::string leon3_funcat_trap::TRAP_imm::getMnemonic(){
+std::string leon3_funclt_trap::TRAP_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "t";
     switch(this->cond){
@@ -4736,7 +4736,7 @@ std::string leon3_funcat_trap::TRAP_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::TRAP_imm::TRAP_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::TRAP_imm::TRAP_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -4746,10 +4746,10 @@ leon3_funcat_trap::TRAP_imm::TRAP_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::TRAP_imm::~TRAP_imm(){
+leon3_funclt_trap::TRAP_imm::~TRAP_imm(){
 
 }
-unsigned int leon3_funcat_trap::WRITEtbr_imm::behavior(){
+unsigned int leon3_funclt_trap::WRITEtbr_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -4766,16 +4766,16 @@ unsigned int leon3_funcat_trap::WRITEtbr_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::WRITEtbr_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::WRITEtbr_imm::replicate() const throw(){
     return new WRITEtbr_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::WRITEtbr_imm::getInstructionName(){
+std::string leon3_funclt_trap::WRITEtbr_imm::getInstructionName(){
     return "WRITEtbr_imm";
 }
 
-void leon3_funcat_trap::WRITEtbr_imm::setParams( const unsigned int & bitString ) \
+void leon3_funclt_trap::WRITEtbr_imm::setParams( const unsigned int & bitString ) \
     throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
@@ -4783,7 +4783,7 @@ void leon3_funcat_trap::WRITEtbr_imm::setParams( const unsigned int & bitString 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::WRITEtbr_imm::getMnemonic(){
+std::string leon3_funclt_trap::WRITEtbr_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -4793,7 +4793,7 @@ std::string leon3_funcat_trap::WRITEtbr_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::WRITEtbr_imm::WRITEtbr_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::WRITEtbr_imm::WRITEtbr_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -4804,10 +4804,10 @@ leon3_funcat_trap::WRITEtbr_imm::WRITEtbr_imm( Reg32_0_delay_3 & PSR, Reg32_1_de
 
 }
 
-leon3_funcat_trap::WRITEtbr_imm::~WRITEtbr_imm(){
+leon3_funclt_trap::WRITEtbr_imm::~WRITEtbr_imm(){
 
 }
-unsigned int leon3_funcat_trap::LDUB_reg::behavior(){
+unsigned int leon3_funclt_trap::LDUB_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -4819,16 +4819,16 @@ unsigned int leon3_funcat_trap::LDUB_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LDUB_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::LDUB_reg::replicate() const throw(){
     return new LDUB_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LDUB_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDUB_reg::getInstructionName(){
     return "LDUB_reg";
 }
 
-void leon3_funcat_trap::LDUB_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LDUB_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -4838,7 +4838,7 @@ void leon3_funcat_trap::LDUB_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::LDUB_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDUB_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldub r";
     oss << this->rs1_bit;
@@ -4849,7 +4849,7 @@ std::string leon3_funcat_trap::LDUB_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LDUB_reg::LDUB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::LDUB_reg::LDUB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -4860,10 +4860,10 @@ leon3_funcat_trap::LDUB_reg::LDUB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::LDUB_reg::~LDUB_reg(){
+leon3_funclt_trap::LDUB_reg::~LDUB_reg(){
 
 }
-unsigned int leon3_funcat_trap::RESTORE_reg::behavior(){
+unsigned int leon3_funclt_trap::RESTORE_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -4883,16 +4883,16 @@ unsigned int leon3_funcat_trap::RESTORE_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::RESTORE_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::RESTORE_reg::replicate() const throw(){
     return new RESTORE_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::RESTORE_reg::getInstructionName(){
+std::string leon3_funclt_trap::RESTORE_reg::getInstructionName(){
     return "RESTORE_reg";
 }
 
-void leon3_funcat_trap::RESTORE_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::RESTORE_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -4901,7 +4901,7 @@ void leon3_funcat_trap::RESTORE_reg::setParams( const unsigned int & bitString )
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::RESTORE_reg::getMnemonic(){
+std::string leon3_funclt_trap::RESTORE_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "restore";
     oss << " r";
@@ -4913,7 +4913,7 @@ std::string leon3_funcat_trap::RESTORE_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::RESTORE_reg::RESTORE_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::RESTORE_reg::RESTORE_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -4924,10 +4924,10 @@ leon3_funcat_trap::RESTORE_reg::RESTORE_reg( Reg32_0_delay_3 & PSR, Reg32_1_dela
 
 }
 
-leon3_funcat_trap::RESTORE_reg::~RESTORE_reg(){
+leon3_funclt_trap::RESTORE_reg::~RESTORE_reg(){
 
 }
-unsigned int leon3_funcat_trap::ADDXcc_reg::behavior(){
+unsigned int leon3_funclt_trap::ADDXcc_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -4940,16 +4940,16 @@ unsigned int leon3_funcat_trap::ADDXcc_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ADDXcc_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::ADDXcc_reg::replicate() const throw(){
     return new ADDXcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ADDXcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::ADDXcc_reg::getInstructionName(){
     return "ADDXcc_reg";
 }
 
-void leon3_funcat_trap::ADDXcc_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ADDXcc_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -4958,7 +4958,7 @@ void leon3_funcat_trap::ADDXcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::ADDXcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::ADDXcc_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "addxcc r";
     oss << this->rs1_bit;
@@ -4969,7 +4969,7 @@ std::string leon3_funcat_trap::ADDXcc_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ADDXcc_reg::ADDXcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::ADDXcc_reg::ADDXcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -4984,10 +4984,10 @@ leon3_funcat_trap::ADDXcc_reg::ADDXcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::ADDXcc_reg::~ADDXcc_reg(){
+leon3_funclt_trap::ADDXcc_reg::~ADDXcc_reg(){
 
 }
-unsigned int leon3_funcat_trap::STB_reg::behavior(){
+unsigned int leon3_funclt_trap::STB_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -4998,16 +4998,16 @@ unsigned int leon3_funcat_trap::STB_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::STB_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::STB_reg::replicate() const throw(){
     return new STB_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::STB_reg::getInstructionName(){
+std::string leon3_funclt_trap::STB_reg::getInstructionName(){
     return "STB_reg";
 }
 
-void leon3_funcat_trap::STB_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::STB_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -5017,7 +5017,7 @@ void leon3_funcat_trap::STB_reg::setParams( const unsigned int & bitString ) thr
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::STB_reg::getMnemonic(){
+std::string leon3_funclt_trap::STB_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "stb r";
     oss << this->rd_bit;
@@ -5028,7 +5028,7 @@ std::string leon3_funcat_trap::STB_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::STB_reg::STB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::STB_reg::STB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -5039,10 +5039,10 @@ leon3_funcat_trap::STB_reg::STB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::STB_reg::~STB_reg(){
+leon3_funclt_trap::STB_reg::~STB_reg(){
 
 }
-unsigned int leon3_funcat_trap::AND_imm::behavior(){
+unsigned int leon3_funclt_trap::AND_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -5053,16 +5053,16 @@ unsigned int leon3_funcat_trap::AND_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::AND_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::AND_imm::replicate() const throw(){
     return new AND_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::AND_imm::getInstructionName(){
+std::string leon3_funclt_trap::AND_imm::getInstructionName(){
     return "AND_imm";
 }
 
-void leon3_funcat_trap::AND_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::AND_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -5070,7 +5070,7 @@ void leon3_funcat_trap::AND_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::AND_imm::getMnemonic(){
+std::string leon3_funclt_trap::AND_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "and r";
     oss << this->rs1_bit;
@@ -5081,7 +5081,7 @@ std::string leon3_funcat_trap::AND_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::AND_imm::AND_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::AND_imm::AND_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -5094,10 +5094,10 @@ leon3_funcat_trap::AND_imm::AND_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::AND_imm::~AND_imm(){
+leon3_funclt_trap::AND_imm::~AND_imm(){
 
 }
-unsigned int leon3_funcat_trap::SMUL_imm::behavior(){
+unsigned int leon3_funclt_trap::SMUL_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -5111,16 +5111,16 @@ unsigned int leon3_funcat_trap::SMUL_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SMUL_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::SMUL_imm::replicate() const throw(){
     return new SMUL_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SMUL_imm::getInstructionName(){
+std::string leon3_funclt_trap::SMUL_imm::getInstructionName(){
     return "SMUL_imm";
 }
 
-void leon3_funcat_trap::SMUL_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SMUL_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -5128,7 +5128,7 @@ void leon3_funcat_trap::SMUL_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::SMUL_imm::getMnemonic(){
+std::string leon3_funclt_trap::SMUL_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "smul r";
     oss << this->rs1_bit;
@@ -5139,7 +5139,7 @@ std::string leon3_funcat_trap::SMUL_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SMUL_imm::SMUL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SMUL_imm::SMUL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -5152,10 +5152,10 @@ leon3_funcat_trap::SMUL_imm::SMUL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::SMUL_imm::~SMUL_imm(){
+leon3_funclt_trap::SMUL_imm::~SMUL_imm(){
 
 }
-unsigned int leon3_funcat_trap::ADD_imm::behavior(){
+unsigned int leon3_funclt_trap::ADD_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -5167,16 +5167,16 @@ unsigned int leon3_funcat_trap::ADD_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ADD_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::ADD_imm::replicate() const throw(){
     return new ADD_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ADD_imm::getInstructionName(){
+std::string leon3_funclt_trap::ADD_imm::getInstructionName(){
     return "ADD_imm";
 }
 
-void leon3_funcat_trap::ADD_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ADD_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -5184,7 +5184,7 @@ void leon3_funcat_trap::ADD_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::ADD_imm::getMnemonic(){
+std::string leon3_funclt_trap::ADD_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "add r";
     oss << this->rs1_bit;
@@ -5195,7 +5195,7 @@ std::string leon3_funcat_trap::ADD_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ADD_imm::ADD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::ADD_imm::ADD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -5208,10 +5208,10 @@ leon3_funcat_trap::ADD_imm::ADD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::ADD_imm::~ADD_imm(){
+leon3_funclt_trap::ADD_imm::~ADD_imm(){
 
 }
-unsigned int leon3_funcat_trap::UMUL_imm::behavior(){
+unsigned int leon3_funclt_trap::UMUL_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -5226,16 +5226,16 @@ unsigned int leon3_funcat_trap::UMUL_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::UMUL_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::UMUL_imm::replicate() const throw(){
     return new UMUL_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::UMUL_imm::getInstructionName(){
+std::string leon3_funclt_trap::UMUL_imm::getInstructionName(){
     return "UMUL_imm";
 }
 
-void leon3_funcat_trap::UMUL_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::UMUL_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -5243,7 +5243,7 @@ void leon3_funcat_trap::UMUL_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::UMUL_imm::getMnemonic(){
+std::string leon3_funclt_trap::UMUL_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "umul r";
     oss << this->rs1_bit;
@@ -5254,7 +5254,7 @@ std::string leon3_funcat_trap::UMUL_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::UMUL_imm::UMUL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::UMUL_imm::UMUL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -5267,10 +5267,10 @@ leon3_funcat_trap::UMUL_imm::UMUL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::UMUL_imm::~UMUL_imm(){
+leon3_funclt_trap::UMUL_imm::~UMUL_imm(){
 
 }
-unsigned int leon3_funcat_trap::READwim::behavior(){
+unsigned int leon3_funclt_trap::READwim::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -5285,22 +5285,22 @@ unsigned int leon3_funcat_trap::READwim::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::READwim::replicate() const throw(){
+Instruction * leon3_funclt_trap::READwim::replicate() const throw(){
     return new READwim(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::READwim::getInstructionName(){
+std::string leon3_funclt_trap::READwim::getInstructionName(){
     return "READwim";
 }
 
-void leon3_funcat_trap::READwim::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::READwim::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->asr = (bitString & 0x7c000) >> 14;
 }
 
-std::string leon3_funcat_trap::READwim::getMnemonic(){
+std::string leon3_funclt_trap::READwim::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "rd ";
     oss << "wim r";
@@ -5308,7 +5308,7 @@ std::string leon3_funcat_trap::READwim::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::READwim::READwim( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::READwim::READwim( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -5319,10 +5319,10 @@ leon3_funcat_trap::READwim::READwim( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::READwim::~READwim(){
+leon3_funclt_trap::READwim::~READwim(){
 
 }
-unsigned int leon3_funcat_trap::LDSTUB_imm::behavior(){
+unsigned int leon3_funclt_trap::LDSTUB_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -5335,16 +5335,16 @@ unsigned int leon3_funcat_trap::LDSTUB_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LDSTUB_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::LDSTUB_imm::replicate() const throw(){
     return new LDSTUB_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LDSTUB_imm::getInstructionName(){
+std::string leon3_funclt_trap::LDSTUB_imm::getInstructionName(){
     return "LDSTUB_imm";
 }
 
-void leon3_funcat_trap::LDSTUB_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LDSTUB_imm::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rd_bit = (bitString & 0x3e000000) >> 25;
@@ -5352,7 +5352,7 @@ void leon3_funcat_trap::LDSTUB_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::LDSTUB_imm::getMnemonic(){
+std::string leon3_funclt_trap::LDSTUB_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldastub r";
     oss << this->rs1_bit;
@@ -5363,7 +5363,7 @@ std::string leon3_funcat_trap::LDSTUB_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LDSTUB_imm::LDSTUB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::LDSTUB_imm::LDSTUB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -5374,10 +5374,10 @@ leon3_funcat_trap::LDSTUB_imm::LDSTUB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::LDSTUB_imm::~LDSTUB_imm(){
+leon3_funclt_trap::LDSTUB_imm::~LDSTUB_imm(){
 
 }
-unsigned int leon3_funcat_trap::SMAC_imm::behavior(){
+unsigned int leon3_funclt_trap::SMAC_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -5395,16 +5395,16 @@ unsigned int leon3_funcat_trap::SMAC_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SMAC_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::SMAC_imm::replicate() const throw(){
     return new SMAC_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SMAC_imm::getInstructionName(){
+std::string leon3_funclt_trap::SMAC_imm::getInstructionName(){
     return "SMAC_imm";
 }
 
-void leon3_funcat_trap::SMAC_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SMAC_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -5412,7 +5412,7 @@ void leon3_funcat_trap::SMAC_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::SMAC_imm::getMnemonic(){
+std::string leon3_funclt_trap::SMAC_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "smac r";
     oss << this->rs1_bit;
@@ -5423,7 +5423,7 @@ std::string leon3_funcat_trap::SMAC_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SMAC_imm::SMAC_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SMAC_imm::SMAC_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -5436,10 +5436,10 @@ leon3_funcat_trap::SMAC_imm::SMAC_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::SMAC_imm::~SMAC_imm(){
+leon3_funclt_trap::SMAC_imm::~SMAC_imm(){
 
 }
-unsigned int leon3_funcat_trap::LDSB_reg::behavior(){
+unsigned int leon3_funclt_trap::LDSB_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -5451,16 +5451,16 @@ unsigned int leon3_funcat_trap::LDSB_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LDSB_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::LDSB_reg::replicate() const throw(){
     return new LDSB_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LDSB_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDSB_reg::getInstructionName(){
     return "LDSB_reg";
 }
 
-void leon3_funcat_trap::LDSB_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LDSB_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -5470,7 +5470,7 @@ void leon3_funcat_trap::LDSB_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::LDSB_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDSB_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldsb r";
     oss << this->rs1_bit;
@@ -5481,7 +5481,7 @@ std::string leon3_funcat_trap::LDSB_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LDSB_reg::LDSB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::LDSB_reg::LDSB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -5492,10 +5492,10 @@ leon3_funcat_trap::LDSB_reg::LDSB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::LDSB_reg::~LDSB_reg(){
+leon3_funclt_trap::LDSB_reg::~LDSB_reg(){
 
 }
-unsigned int leon3_funcat_trap::ANDN_reg::behavior(){
+unsigned int leon3_funclt_trap::ANDN_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -5507,16 +5507,16 @@ unsigned int leon3_funcat_trap::ANDN_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ANDN_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::ANDN_reg::replicate() const throw(){
     return new ANDN_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ANDN_reg::getInstructionName(){
+std::string leon3_funclt_trap::ANDN_reg::getInstructionName(){
     return "ANDN_reg";
 }
 
-void leon3_funcat_trap::ANDN_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ANDN_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -5525,7 +5525,7 @@ void leon3_funcat_trap::ANDN_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::ANDN_reg::getMnemonic(){
+std::string leon3_funclt_trap::ANDN_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "andn r";
     oss << this->rs1_bit;
@@ -5536,7 +5536,7 @@ std::string leon3_funcat_trap::ANDN_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ANDN_reg::ANDN_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::ANDN_reg::ANDN_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -5549,10 +5549,10 @@ leon3_funcat_trap::ANDN_reg::ANDN_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::ANDN_reg::~ANDN_reg(){
+leon3_funclt_trap::ANDN_reg::~ANDN_reg(){
 
 }
-unsigned int leon3_funcat_trap::TSUBccTV_reg::behavior(){
+unsigned int leon3_funclt_trap::TSUBccTV_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -5574,16 +5574,16 @@ unsigned int leon3_funcat_trap::TSUBccTV_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::TSUBccTV_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::TSUBccTV_reg::replicate() const throw(){
     return new TSUBccTV_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::TSUBccTV_reg::getInstructionName(){
+std::string leon3_funclt_trap::TSUBccTV_reg::getInstructionName(){
     return "TSUBccTV_reg";
 }
 
-void leon3_funcat_trap::TSUBccTV_reg::setParams( const unsigned int & bitString ) \
+void leon3_funclt_trap::TSUBccTV_reg::setParams( const unsigned int & bitString ) \
     throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
@@ -5593,7 +5593,7 @@ void leon3_funcat_trap::TSUBccTV_reg::setParams( const unsigned int & bitString 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::TSUBccTV_reg::getMnemonic(){
+std::string leon3_funclt_trap::TSUBccTV_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "tsubcctv r";
     oss << this->rs1_bit;
@@ -5604,7 +5604,7 @@ std::string leon3_funcat_trap::TSUBccTV_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::TSUBccTV_reg::TSUBccTV_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::TSUBccTV_reg::TSUBccTV_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -5619,10 +5619,10 @@ leon3_funcat_trap::TSUBccTV_reg::TSUBccTV_reg( Reg32_0_delay_3 & PSR, Reg32_1_de
 
 }
 
-leon3_funcat_trap::TSUBccTV_reg::~TSUBccTV_reg(){
+leon3_funclt_trap::TSUBccTV_reg::~TSUBccTV_reg(){
 
 }
-unsigned int leon3_funcat_trap::SETHI::behavior(){
+unsigned int leon3_funclt_trap::SETHI::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -5631,22 +5631,22 @@ unsigned int leon3_funcat_trap::SETHI::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SETHI::replicate() const throw(){
+Instruction * leon3_funclt_trap::SETHI::replicate() const throw(){
     return new SETHI(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SETHI::getInstructionName(){
+std::string leon3_funclt_trap::SETHI::getInstructionName(){
     return "SETHI";
 }
 
-void leon3_funcat_trap::SETHI::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SETHI::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->imm22 = (bitString & 0x3fffff);
 }
 
-std::string leon3_funcat_trap::SETHI::getMnemonic(){
+std::string leon3_funclt_trap::SETHI::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "sethi ";
     oss << this->imm22;
@@ -5655,7 +5655,7 @@ std::string leon3_funcat_trap::SETHI::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SETHI::SETHI( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 \
+leon3_funclt_trap::SETHI::SETHI( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 \
     & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & \
     Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -5668,10 +5668,10 @@ leon3_funcat_trap::SETHI::SETHI( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, R
 
 }
 
-leon3_funcat_trap::SETHI::~SETHI(){
+leon3_funclt_trap::SETHI::~SETHI(){
 
 }
-unsigned int leon3_funcat_trap::SRA_imm::behavior(){
+unsigned int leon3_funclt_trap::SRA_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -5682,16 +5682,16 @@ unsigned int leon3_funcat_trap::SRA_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SRA_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::SRA_imm::replicate() const throw(){
     return new SRA_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SRA_imm::getInstructionName(){
+std::string leon3_funclt_trap::SRA_imm::getInstructionName(){
     return "SRA_imm";
 }
 
-void leon3_funcat_trap::SRA_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SRA_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -5699,7 +5699,7 @@ void leon3_funcat_trap::SRA_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::SRA_imm::getMnemonic(){
+std::string leon3_funclt_trap::SRA_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "sra r";
     oss << this->rs1_bit;
@@ -5710,7 +5710,7 @@ std::string leon3_funcat_trap::SRA_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SRA_imm::SRA_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SRA_imm::SRA_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -5723,10 +5723,10 @@ leon3_funcat_trap::SRA_imm::SRA_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::SRA_imm::~SRA_imm(){
+leon3_funclt_trap::SRA_imm::~SRA_imm(){
 
 }
-unsigned int leon3_funcat_trap::LDSH_reg::behavior(){
+unsigned int leon3_funclt_trap::LDSH_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -5752,16 +5752,16 @@ unsigned int leon3_funcat_trap::LDSH_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LDSH_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::LDSH_reg::replicate() const throw(){
     return new LDSH_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LDSH_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDSH_reg::getInstructionName(){
     return "LDSH_reg";
 }
 
-void leon3_funcat_trap::LDSH_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LDSH_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -5771,7 +5771,7 @@ void leon3_funcat_trap::LDSH_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::LDSH_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDSH_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldsh r";
     oss << this->rs1_bit;
@@ -5782,7 +5782,7 @@ std::string leon3_funcat_trap::LDSH_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LDSH_reg::LDSH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::LDSH_reg::LDSH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -5793,10 +5793,10 @@ leon3_funcat_trap::LDSH_reg::LDSH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::LDSH_reg::~LDSH_reg(){
+leon3_funclt_trap::LDSH_reg::~LDSH_reg(){
 
 }
-unsigned int leon3_funcat_trap::UDIVcc_reg::behavior(){
+unsigned int leon3_funclt_trap::UDIVcc_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -5824,16 +5824,16 @@ unsigned int leon3_funcat_trap::UDIVcc_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::UDIVcc_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::UDIVcc_reg::replicate() const throw(){
     return new UDIVcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::UDIVcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::UDIVcc_reg::getInstructionName(){
     return "UDIVcc_reg";
 }
 
-void leon3_funcat_trap::UDIVcc_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::UDIVcc_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -5842,7 +5842,7 @@ void leon3_funcat_trap::UDIVcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::UDIVcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::UDIVcc_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "udivcc";
     oss << " r";
@@ -5853,7 +5853,7 @@ std::string leon3_funcat_trap::UDIVcc_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::UDIVcc_reg::UDIVcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::UDIVcc_reg::UDIVcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -5868,10 +5868,10 @@ leon3_funcat_trap::UDIVcc_reg::UDIVcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::UDIVcc_reg::~UDIVcc_reg(){
+leon3_funclt_trap::UDIVcc_reg::~UDIVcc_reg(){
 
 }
-unsigned int leon3_funcat_trap::ORN_imm::behavior(){
+unsigned int leon3_funclt_trap::ORN_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -5882,16 +5882,16 @@ unsigned int leon3_funcat_trap::ORN_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ORN_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::ORN_imm::replicate() const throw(){
     return new ORN_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ORN_imm::getInstructionName(){
+std::string leon3_funclt_trap::ORN_imm::getInstructionName(){
     return "ORN_imm";
 }
 
-void leon3_funcat_trap::ORN_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ORN_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -5899,7 +5899,7 @@ void leon3_funcat_trap::ORN_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::ORN_imm::getMnemonic(){
+std::string leon3_funclt_trap::ORN_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "orn r";
     oss << this->rs1_bit;
@@ -5910,7 +5910,7 @@ std::string leon3_funcat_trap::ORN_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ORN_imm::ORN_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::ORN_imm::ORN_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -5923,10 +5923,10 @@ leon3_funcat_trap::ORN_imm::ORN_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::ORN_imm::~ORN_imm(){
+leon3_funclt_trap::ORN_imm::~ORN_imm(){
 
 }
-unsigned int leon3_funcat_trap::STD_reg::behavior(){
+unsigned int leon3_funclt_trap::STD_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -5956,16 +5956,16 @@ unsigned int leon3_funcat_trap::STD_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::STD_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::STD_reg::replicate() const throw(){
     return new STD_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::STD_reg::getInstructionName(){
+std::string leon3_funclt_trap::STD_reg::getInstructionName(){
     return "STD_reg";
 }
 
-void leon3_funcat_trap::STD_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::STD_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -5975,7 +5975,7 @@ void leon3_funcat_trap::STD_reg::setParams( const unsigned int & bitString ) thr
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::STD_reg::getMnemonic(){
+std::string leon3_funclt_trap::STD_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "std r";
     oss << this->rd_bit;
@@ -5986,7 +5986,7 @@ std::string leon3_funcat_trap::STD_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::STD_reg::STD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::STD_reg::STD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -5997,10 +5997,10 @@ leon3_funcat_trap::STD_reg::STD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::STD_reg::~STD_reg(){
+leon3_funclt_trap::STD_reg::~STD_reg(){
 
 }
-unsigned int leon3_funcat_trap::ANDNcc_imm::behavior(){
+unsigned int leon3_funclt_trap::ANDNcc_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -6012,16 +6012,16 @@ unsigned int leon3_funcat_trap::ANDNcc_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ANDNcc_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::ANDNcc_imm::replicate() const throw(){
     return new ANDNcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ANDNcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::ANDNcc_imm::getInstructionName(){
     return "ANDNcc_imm";
 }
 
-void leon3_funcat_trap::ANDNcc_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ANDNcc_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -6029,7 +6029,7 @@ void leon3_funcat_trap::ANDNcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::ANDNcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::ANDNcc_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "andncc r";
     oss << this->rs1_bit;
@@ -6040,7 +6040,7 @@ std::string leon3_funcat_trap::ANDNcc_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ANDNcc_imm::ANDNcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::ANDNcc_imm::ANDNcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -6055,10 +6055,10 @@ leon3_funcat_trap::ANDNcc_imm::ANDNcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::ANDNcc_imm::~ANDNcc_imm(){
+leon3_funclt_trap::ANDNcc_imm::~ANDNcc_imm(){
 
 }
-unsigned int leon3_funcat_trap::TADDccTV_imm::behavior(){
+unsigned int leon3_funclt_trap::TADDccTV_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -6080,16 +6080,16 @@ unsigned int leon3_funcat_trap::TADDccTV_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::TADDccTV_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::TADDccTV_imm::replicate() const throw(){
     return new TADDccTV_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::TADDccTV_imm::getInstructionName(){
+std::string leon3_funclt_trap::TADDccTV_imm::getInstructionName(){
     return "TADDccTV_imm";
 }
 
-void leon3_funcat_trap::TADDccTV_imm::setParams( const unsigned int & bitString ) \
+void leon3_funclt_trap::TADDccTV_imm::setParams( const unsigned int & bitString ) \
     throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
@@ -6098,7 +6098,7 @@ void leon3_funcat_trap::TADDccTV_imm::setParams( const unsigned int & bitString 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::TADDccTV_imm::getMnemonic(){
+std::string leon3_funclt_trap::TADDccTV_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "taddcctv r";
     oss << this->rs1_bit;
@@ -6109,7 +6109,7 @@ std::string leon3_funcat_trap::TADDccTV_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::TADDccTV_imm::TADDccTV_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::TADDccTV_imm::TADDccTV_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -6124,10 +6124,10 @@ leon3_funcat_trap::TADDccTV_imm::TADDccTV_imm( Reg32_0_delay_3 & PSR, Reg32_1_de
 
 }
 
-leon3_funcat_trap::TADDccTV_imm::~TADDccTV_imm(){
+leon3_funclt_trap::TADDccTV_imm::~TADDccTV_imm(){
 
 }
-unsigned int leon3_funcat_trap::WRITEtbr_reg::behavior(){
+unsigned int leon3_funclt_trap::WRITEtbr_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -6144,16 +6144,16 @@ unsigned int leon3_funcat_trap::WRITEtbr_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::WRITEtbr_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::WRITEtbr_reg::replicate() const throw(){
     return new WRITEtbr_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::WRITEtbr_reg::getInstructionName(){
+std::string leon3_funclt_trap::WRITEtbr_reg::getInstructionName(){
     return "WRITEtbr_reg";
 }
 
-void leon3_funcat_trap::WRITEtbr_reg::setParams( const unsigned int & bitString ) \
+void leon3_funclt_trap::WRITEtbr_reg::setParams( const unsigned int & bitString ) \
     throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
@@ -6162,7 +6162,7 @@ void leon3_funcat_trap::WRITEtbr_reg::setParams( const unsigned int & bitString 
     this->rd = (bitString & 0x3e000000) >> 25;
 }
 
-std::string leon3_funcat_trap::WRITEtbr_reg::getMnemonic(){
+std::string leon3_funclt_trap::WRITEtbr_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -6172,7 +6172,7 @@ std::string leon3_funcat_trap::WRITEtbr_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::WRITEtbr_reg::WRITEtbr_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::WRITEtbr_reg::WRITEtbr_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -6183,10 +6183,10 @@ leon3_funcat_trap::WRITEtbr_reg::WRITEtbr_reg( Reg32_0_delay_3 & PSR, Reg32_1_de
 
 }
 
-leon3_funcat_trap::WRITEtbr_reg::~WRITEtbr_reg(){
+leon3_funclt_trap::WRITEtbr_reg::~WRITEtbr_reg(){
 
 }
-unsigned int leon3_funcat_trap::SUBX_reg::behavior(){
+unsigned int leon3_funclt_trap::SUBX_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -6198,16 +6198,16 @@ unsigned int leon3_funcat_trap::SUBX_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SUBX_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::SUBX_reg::replicate() const throw(){
     return new SUBX_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SUBX_reg::getInstructionName(){
+std::string leon3_funclt_trap::SUBX_reg::getInstructionName(){
     return "SUBX_reg";
 }
 
-void leon3_funcat_trap::SUBX_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SUBX_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -6216,7 +6216,7 @@ void leon3_funcat_trap::SUBX_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::SUBX_reg::getMnemonic(){
+std::string leon3_funclt_trap::SUBX_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "subx r";
     oss << this->rs1_bit;
@@ -6227,7 +6227,7 @@ std::string leon3_funcat_trap::SUBX_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SUBX_reg::SUBX_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SUBX_reg::SUBX_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -6240,10 +6240,10 @@ leon3_funcat_trap::SUBX_reg::SUBX_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::SUBX_reg::~SUBX_reg(){
+leon3_funclt_trap::SUBX_reg::~SUBX_reg(){
 
 }
-unsigned int leon3_funcat_trap::XNOR_imm::behavior(){
+unsigned int leon3_funclt_trap::XNOR_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -6254,16 +6254,16 @@ unsigned int leon3_funcat_trap::XNOR_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::XNOR_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::XNOR_imm::replicate() const throw(){
     return new XNOR_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::XNOR_imm::getInstructionName(){
+std::string leon3_funclt_trap::XNOR_imm::getInstructionName(){
     return "XNOR_imm";
 }
 
-void leon3_funcat_trap::XNOR_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::XNOR_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -6271,7 +6271,7 @@ void leon3_funcat_trap::XNOR_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::XNOR_imm::getMnemonic(){
+std::string leon3_funclt_trap::XNOR_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "xnor r";
     oss << this->rs1_bit;
@@ -6282,7 +6282,7 @@ std::string leon3_funcat_trap::XNOR_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::XNOR_imm::XNOR_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::XNOR_imm::XNOR_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -6295,10 +6295,10 @@ leon3_funcat_trap::XNOR_imm::XNOR_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::XNOR_imm::~XNOR_imm(){
+leon3_funclt_trap::XNOR_imm::~XNOR_imm(){
 
 }
-unsigned int leon3_funcat_trap::UDIV_imm::behavior(){
+unsigned int leon3_funclt_trap::UDIV_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -6325,16 +6325,16 @@ unsigned int leon3_funcat_trap::UDIV_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::UDIV_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::UDIV_imm::replicate() const throw(){
     return new UDIV_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::UDIV_imm::getInstructionName(){
+std::string leon3_funclt_trap::UDIV_imm::getInstructionName(){
     return "UDIV_imm";
 }
 
-void leon3_funcat_trap::UDIV_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::UDIV_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -6342,7 +6342,7 @@ void leon3_funcat_trap::UDIV_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::UDIV_imm::getMnemonic(){
+std::string leon3_funclt_trap::UDIV_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "udiv";
     oss << " r";
@@ -6354,7 +6354,7 @@ std::string leon3_funcat_trap::UDIV_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::UDIV_imm::UDIV_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::UDIV_imm::UDIV_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -6367,10 +6367,10 @@ leon3_funcat_trap::UDIV_imm::UDIV_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::UDIV_imm::~UDIV_imm(){
+leon3_funclt_trap::UDIV_imm::~UDIV_imm(){
 
 }
-unsigned int leon3_funcat_trap::LDSH_imm::behavior(){
+unsigned int leon3_funclt_trap::LDSH_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -6396,16 +6396,16 @@ unsigned int leon3_funcat_trap::LDSH_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LDSH_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::LDSH_imm::replicate() const throw(){
     return new LDSH_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LDSH_imm::getInstructionName(){
+std::string leon3_funclt_trap::LDSH_imm::getInstructionName(){
     return "LDSH_imm";
 }
 
-void leon3_funcat_trap::LDSH_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LDSH_imm::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rd_bit = (bitString & 0x3e000000) >> 25;
@@ -6413,7 +6413,7 @@ void leon3_funcat_trap::LDSH_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::LDSH_imm::getMnemonic(){
+std::string leon3_funclt_trap::LDSH_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldsh r";
     oss << this->rs1_bit;
@@ -6424,7 +6424,7 @@ std::string leon3_funcat_trap::LDSH_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LDSH_imm::LDSH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::LDSH_imm::LDSH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -6435,10 +6435,10 @@ leon3_funcat_trap::LDSH_imm::LDSH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::LDSH_imm::~LDSH_imm(){
+leon3_funclt_trap::LDSH_imm::~LDSH_imm(){
 
 }
-unsigned int leon3_funcat_trap::UNIMP::behavior(){
+unsigned int leon3_funclt_trap::UNIMP::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -6446,29 +6446,29 @@ unsigned int leon3_funcat_trap::UNIMP::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::UNIMP::replicate() const throw(){
+Instruction * leon3_funclt_trap::UNIMP::replicate() const throw(){
     return new UNIMP(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::UNIMP::getInstructionName(){
+std::string leon3_funclt_trap::UNIMP::getInstructionName(){
     return "UNIMP";
 }
 
-void leon3_funcat_trap::UNIMP::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::UNIMP::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->imm22 = (bitString & 0x3fffff);
 }
 
-std::string leon3_funcat_trap::UNIMP::getMnemonic(){
+std::string leon3_funclt_trap::UNIMP::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "unimp ";
     oss << this->imm22;
     return oss.str();
 }
 
-leon3_funcat_trap::UNIMP::UNIMP( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 \
+leon3_funclt_trap::UNIMP::UNIMP( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 \
     & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & \
     Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -6479,10 +6479,10 @@ leon3_funcat_trap::UNIMP::UNIMP( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, R
 
 }
 
-leon3_funcat_trap::UNIMP::~UNIMP(){
+leon3_funclt_trap::UNIMP::~UNIMP(){
 
 }
-unsigned int leon3_funcat_trap::LDSTUBA_reg::behavior(){
+unsigned int leon3_funclt_trap::LDSTUBA_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -6509,16 +6509,16 @@ unsigned int leon3_funcat_trap::LDSTUBA_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LDSTUBA_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::LDSTUBA_reg::replicate() const throw(){
     return new LDSTUBA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LDSTUBA_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDSTUBA_reg::getInstructionName(){
     return "LDSTUBA_reg";
 }
 
-void leon3_funcat_trap::LDSTUBA_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LDSTUBA_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -6528,7 +6528,7 @@ void leon3_funcat_trap::LDSTUBA_reg::setParams( const unsigned int & bitString )
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::LDSTUBA_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDSTUBA_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldastub r";
     oss << this->rs1_bit;
@@ -6541,7 +6541,7 @@ std::string leon3_funcat_trap::LDSTUBA_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LDSTUBA_reg::LDSTUBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::LDSTUBA_reg::LDSTUBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -6552,10 +6552,10 @@ leon3_funcat_trap::LDSTUBA_reg::LDSTUBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_dela
 
 }
 
-leon3_funcat_trap::LDSTUBA_reg::~LDSTUBA_reg(){
+leon3_funclt_trap::LDSTUBA_reg::~LDSTUBA_reg(){
 
 }
-unsigned int leon3_funcat_trap::UMULcc_imm::behavior(){
+unsigned int leon3_funclt_trap::UMULcc_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -6571,16 +6571,16 @@ unsigned int leon3_funcat_trap::UMULcc_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::UMULcc_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::UMULcc_imm::replicate() const throw(){
     return new UMULcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::UMULcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::UMULcc_imm::getInstructionName(){
     return "UMULcc_imm";
 }
 
-void leon3_funcat_trap::UMULcc_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::UMULcc_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -6588,7 +6588,7 @@ void leon3_funcat_trap::UMULcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::UMULcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::UMULcc_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "umulcc r";
     oss << this->rs1_bit;
@@ -6599,7 +6599,7 @@ std::string leon3_funcat_trap::UMULcc_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::UMULcc_imm::UMULcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::UMULcc_imm::UMULcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -6614,10 +6614,10 @@ leon3_funcat_trap::UMULcc_imm::UMULcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::UMULcc_imm::~UMULcc_imm(){
+leon3_funclt_trap::UMULcc_imm::~UMULcc_imm(){
 
 }
-unsigned int leon3_funcat_trap::ORcc_reg::behavior(){
+unsigned int leon3_funclt_trap::ORcc_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -6630,16 +6630,16 @@ unsigned int leon3_funcat_trap::ORcc_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ORcc_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::ORcc_reg::replicate() const throw(){
     return new ORcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ORcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::ORcc_reg::getInstructionName(){
     return "ORcc_reg";
 }
 
-void leon3_funcat_trap::ORcc_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ORcc_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -6648,7 +6648,7 @@ void leon3_funcat_trap::ORcc_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::ORcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::ORcc_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "orcc r";
     oss << this->rs1_bit;
@@ -6659,7 +6659,7 @@ std::string leon3_funcat_trap::ORcc_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ORcc_reg::ORcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::ORcc_reg::ORcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -6674,10 +6674,10 @@ leon3_funcat_trap::ORcc_reg::ORcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::ORcc_reg::~ORcc_reg(){
+leon3_funclt_trap::ORcc_reg::~ORcc_reg(){
 
 }
-unsigned int leon3_funcat_trap::MULScc_imm::behavior(){
+unsigned int leon3_funclt_trap::MULScc_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -6699,16 +6699,16 @@ unsigned int leon3_funcat_trap::MULScc_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::MULScc_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::MULScc_imm::replicate() const throw(){
     return new MULScc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::MULScc_imm::getInstructionName(){
+std::string leon3_funclt_trap::MULScc_imm::getInstructionName(){
     return "MULScc_imm";
 }
 
-void leon3_funcat_trap::MULScc_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::MULScc_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -6716,7 +6716,7 @@ void leon3_funcat_trap::MULScc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::MULScc_imm::getMnemonic(){
+std::string leon3_funclt_trap::MULScc_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "mulscc r";
     oss << this->rs1_bit;
@@ -6727,7 +6727,7 @@ std::string leon3_funcat_trap::MULScc_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::MULScc_imm::MULScc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::MULScc_imm::MULScc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -6742,10 +6742,10 @@ leon3_funcat_trap::MULScc_imm::MULScc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::MULScc_imm::~MULScc_imm(){
+leon3_funclt_trap::MULScc_imm::~MULScc_imm(){
 
 }
-unsigned int leon3_funcat_trap::XORcc_reg::behavior(){
+unsigned int leon3_funclt_trap::XORcc_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -6758,16 +6758,16 @@ unsigned int leon3_funcat_trap::XORcc_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::XORcc_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::XORcc_reg::replicate() const throw(){
     return new XORcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::XORcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::XORcc_reg::getInstructionName(){
     return "XORcc_reg";
 }
 
-void leon3_funcat_trap::XORcc_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::XORcc_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -6776,7 +6776,7 @@ void leon3_funcat_trap::XORcc_reg::setParams( const unsigned int & bitString ) t
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::XORcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::XORcc_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "xorcc r";
     oss << this->rs1_bit;
@@ -6787,7 +6787,7 @@ std::string leon3_funcat_trap::XORcc_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::XORcc_reg::XORcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
+leon3_funclt_trap::XORcc_reg::XORcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
     WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -6802,10 +6802,10 @@ leon3_funcat_trap::XORcc_reg::XORcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 
 }
 
-leon3_funcat_trap::XORcc_reg::~XORcc_reg(){
+leon3_funclt_trap::XORcc_reg::~XORcc_reg(){
 
 }
-unsigned int leon3_funcat_trap::SUB_reg::behavior(){
+unsigned int leon3_funclt_trap::SUB_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -6817,16 +6817,16 @@ unsigned int leon3_funcat_trap::SUB_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SUB_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::SUB_reg::replicate() const throw(){
     return new SUB_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SUB_reg::getInstructionName(){
+std::string leon3_funclt_trap::SUB_reg::getInstructionName(){
     return "SUB_reg";
 }
 
-void leon3_funcat_trap::SUB_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SUB_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -6835,7 +6835,7 @@ void leon3_funcat_trap::SUB_reg::setParams( const unsigned int & bitString ) thr
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::SUB_reg::getMnemonic(){
+std::string leon3_funclt_trap::SUB_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "sub r";
     oss << this->rs1_bit;
@@ -6846,7 +6846,7 @@ std::string leon3_funcat_trap::SUB_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SUB_reg::SUB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SUB_reg::SUB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -6859,10 +6859,10 @@ leon3_funcat_trap::SUB_reg::SUB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::SUB_reg::~SUB_reg(){
+leon3_funclt_trap::SUB_reg::~SUB_reg(){
 
 }
-unsigned int leon3_funcat_trap::WRITEwim_reg::behavior(){
+unsigned int leon3_funclt_trap::WRITEwim_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -6879,16 +6879,16 @@ unsigned int leon3_funcat_trap::WRITEwim_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::WRITEwim_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::WRITEwim_reg::replicate() const throw(){
     return new WRITEwim_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::WRITEwim_reg::getInstructionName(){
+std::string leon3_funclt_trap::WRITEwim_reg::getInstructionName(){
     return "WRITEwim_reg";
 }
 
-void leon3_funcat_trap::WRITEwim_reg::setParams( const unsigned int & bitString ) \
+void leon3_funclt_trap::WRITEwim_reg::setParams( const unsigned int & bitString ) \
     throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
@@ -6897,7 +6897,7 @@ void leon3_funcat_trap::WRITEwim_reg::setParams( const unsigned int & bitString 
     this->rd = (bitString & 0x3e000000) >> 25;
 }
 
-std::string leon3_funcat_trap::WRITEwim_reg::getMnemonic(){
+std::string leon3_funclt_trap::WRITEwim_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -6907,7 +6907,7 @@ std::string leon3_funcat_trap::WRITEwim_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::WRITEwim_reg::WRITEwim_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::WRITEwim_reg::WRITEwim_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -6918,10 +6918,10 @@ leon3_funcat_trap::WRITEwim_reg::WRITEwim_reg( Reg32_0_delay_3 & PSR, Reg32_1_de
 
 }
 
-leon3_funcat_trap::WRITEwim_reg::~WRITEwim_reg(){
+leon3_funclt_trap::WRITEwim_reg::~WRITEwim_reg(){
 
 }
-unsigned int leon3_funcat_trap::UMAC_imm::behavior(){
+unsigned int leon3_funclt_trap::UMAC_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -6939,16 +6939,16 @@ unsigned int leon3_funcat_trap::UMAC_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::UMAC_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::UMAC_imm::replicate() const throw(){
     return new UMAC_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::UMAC_imm::getInstructionName(){
+std::string leon3_funclt_trap::UMAC_imm::getInstructionName(){
     return "UMAC_imm";
 }
 
-void leon3_funcat_trap::UMAC_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::UMAC_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -6956,7 +6956,7 @@ void leon3_funcat_trap::UMAC_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::UMAC_imm::getMnemonic(){
+std::string leon3_funclt_trap::UMAC_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "umac r";
     oss << this->rs1_bit;
@@ -6967,7 +6967,7 @@ std::string leon3_funcat_trap::UMAC_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::UMAC_imm::UMAC_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::UMAC_imm::UMAC_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -6980,10 +6980,10 @@ leon3_funcat_trap::UMAC_imm::UMAC_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::UMAC_imm::~UMAC_imm(){
+leon3_funclt_trap::UMAC_imm::~UMAC_imm(){
 
 }
-unsigned int leon3_funcat_trap::TSUBcc_reg::behavior(){
+unsigned int leon3_funclt_trap::TSUBcc_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -7001,16 +7001,16 @@ unsigned int leon3_funcat_trap::TSUBcc_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::TSUBcc_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::TSUBcc_reg::replicate() const throw(){
     return new TSUBcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::TSUBcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::TSUBcc_reg::getInstructionName(){
     return "TSUBcc_reg";
 }
 
-void leon3_funcat_trap::TSUBcc_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::TSUBcc_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -7019,7 +7019,7 @@ void leon3_funcat_trap::TSUBcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::TSUBcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::TSUBcc_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "tsubcc r";
     oss << this->rs1_bit;
@@ -7030,7 +7030,7 @@ std::string leon3_funcat_trap::TSUBcc_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::TSUBcc_reg::TSUBcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::TSUBcc_reg::TSUBcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -7045,10 +7045,10 @@ leon3_funcat_trap::TSUBcc_reg::TSUBcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::TSUBcc_reg::~TSUBcc_reg(){
+leon3_funclt_trap::TSUBcc_reg::~TSUBcc_reg(){
 
 }
-unsigned int leon3_funcat_trap::BRANCH::behavior(){
+unsigned int leon3_funclt_trap::BRANCH::behavior(){
     this->totalInstrCycles = 0;
 
     switch(cond){
@@ -7140,22 +7140,22 @@ unsigned int leon3_funcat_trap::BRANCH::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::BRANCH::replicate() const throw(){
+Instruction * leon3_funclt_trap::BRANCH::replicate() const throw(){
     return new BRANCH(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::BRANCH::getInstructionName(){
+std::string leon3_funclt_trap::BRANCH::getInstructionName(){
     return "BRANCH";
 }
 
-void leon3_funcat_trap::BRANCH::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::BRANCH::setParams( const unsigned int & bitString ) throw(){
     this->a = (bitString & 0x20000000) >> 29;
     this->cond = (bitString & 0x1e000000) >> 25;
     this->disp22 = (bitString & 0x3fffff);
 }
 
-std::string leon3_funcat_trap::BRANCH::getMnemonic(){
+std::string leon3_funclt_trap::BRANCH::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "b";
     switch(this->cond){
@@ -7219,7 +7219,7 @@ std::string leon3_funcat_trap::BRANCH::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::BRANCH::BRANCH( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::BRANCH::BRANCH( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -7229,10 +7229,10 @@ leon3_funcat_trap::BRANCH::BRANCH( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM,
 
 }
 
-leon3_funcat_trap::BRANCH::~BRANCH(){
+leon3_funclt_trap::BRANCH::~BRANCH(){
 
 }
-unsigned int leon3_funcat_trap::SMULcc_reg::behavior(){
+unsigned int leon3_funclt_trap::SMULcc_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -7247,16 +7247,16 @@ unsigned int leon3_funcat_trap::SMULcc_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SMULcc_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::SMULcc_reg::replicate() const throw(){
     return new SMULcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SMULcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::SMULcc_reg::getInstructionName(){
     return "SMULcc_reg";
 }
 
-void leon3_funcat_trap::SMULcc_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SMULcc_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -7265,7 +7265,7 @@ void leon3_funcat_trap::SMULcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::SMULcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::SMULcc_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "smulcc r";
     oss << this->rs1_bit;
@@ -7276,7 +7276,7 @@ std::string leon3_funcat_trap::SMULcc_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SMULcc_reg::SMULcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::SMULcc_reg::SMULcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -7291,10 +7291,10 @@ leon3_funcat_trap::SMULcc_reg::SMULcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::SMULcc_reg::~SMULcc_reg(){
+leon3_funclt_trap::SMULcc_reg::~SMULcc_reg(){
 
 }
-unsigned int leon3_funcat_trap::SUB_imm::behavior(){
+unsigned int leon3_funclt_trap::SUB_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -7306,16 +7306,16 @@ unsigned int leon3_funcat_trap::SUB_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SUB_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::SUB_imm::replicate() const throw(){
     return new SUB_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SUB_imm::getInstructionName(){
+std::string leon3_funclt_trap::SUB_imm::getInstructionName(){
     return "SUB_imm";
 }
 
-void leon3_funcat_trap::SUB_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SUB_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -7323,7 +7323,7 @@ void leon3_funcat_trap::SUB_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::SUB_imm::getMnemonic(){
+std::string leon3_funclt_trap::SUB_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "sub r";
     oss << this->rs1_bit;
@@ -7334,7 +7334,7 @@ std::string leon3_funcat_trap::SUB_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SUB_imm::SUB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SUB_imm::SUB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -7347,10 +7347,10 @@ leon3_funcat_trap::SUB_imm::SUB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::SUB_imm::~SUB_imm(){
+leon3_funclt_trap::SUB_imm::~SUB_imm(){
 
 }
-unsigned int leon3_funcat_trap::ADDcc_reg::behavior(){
+unsigned int leon3_funclt_trap::ADDcc_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -7363,16 +7363,16 @@ unsigned int leon3_funcat_trap::ADDcc_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ADDcc_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::ADDcc_reg::replicate() const throw(){
     return new ADDcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ADDcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::ADDcc_reg::getInstructionName(){
     return "ADDcc_reg";
 }
 
-void leon3_funcat_trap::ADDcc_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ADDcc_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -7381,7 +7381,7 @@ void leon3_funcat_trap::ADDcc_reg::setParams( const unsigned int & bitString ) t
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::ADDcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::ADDcc_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "addcc r";
     oss << this->rs1_bit;
@@ -7392,7 +7392,7 @@ std::string leon3_funcat_trap::ADDcc_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ADDcc_reg::ADDcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
+leon3_funclt_trap::ADDcc_reg::ADDcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
     WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -7407,10 +7407,10 @@ leon3_funcat_trap::ADDcc_reg::ADDcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 
 }
 
-leon3_funcat_trap::ADDcc_reg::~ADDcc_reg(){
+leon3_funclt_trap::ADDcc_reg::~ADDcc_reg(){
 
 }
-unsigned int leon3_funcat_trap::XOR_reg::behavior(){
+unsigned int leon3_funclt_trap::XOR_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -7422,16 +7422,16 @@ unsigned int leon3_funcat_trap::XOR_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::XOR_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::XOR_reg::replicate() const throw(){
     return new XOR_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::XOR_reg::getInstructionName(){
+std::string leon3_funclt_trap::XOR_reg::getInstructionName(){
     return "XOR_reg";
 }
 
-void leon3_funcat_trap::XOR_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::XOR_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -7440,7 +7440,7 @@ void leon3_funcat_trap::XOR_reg::setParams( const unsigned int & bitString ) thr
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::XOR_reg::getMnemonic(){
+std::string leon3_funclt_trap::XOR_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "xor r";
     oss << this->rs1_bit;
@@ -7451,7 +7451,7 @@ std::string leon3_funcat_trap::XOR_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::XOR_reg::XOR_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::XOR_reg::XOR_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -7464,10 +7464,10 @@ leon3_funcat_trap::XOR_reg::XOR_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::XOR_reg::~XOR_reg(){
+leon3_funclt_trap::XOR_reg::~XOR_reg(){
 
 }
-unsigned int leon3_funcat_trap::SUBcc_imm::behavior(){
+unsigned int leon3_funclt_trap::SUBcc_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -7480,16 +7480,16 @@ unsigned int leon3_funcat_trap::SUBcc_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SUBcc_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::SUBcc_imm::replicate() const throw(){
     return new SUBcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SUBcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::SUBcc_imm::getInstructionName(){
     return "SUBcc_imm";
 }
 
-void leon3_funcat_trap::SUBcc_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SUBcc_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -7497,7 +7497,7 @@ void leon3_funcat_trap::SUBcc_imm::setParams( const unsigned int & bitString ) t
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::SUBcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::SUBcc_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "subcc r";
     oss << this->rs1_bit;
@@ -7508,7 +7508,7 @@ std::string leon3_funcat_trap::SUBcc_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SUBcc_imm::SUBcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
+leon3_funclt_trap::SUBcc_imm::SUBcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
     WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -7523,10 +7523,10 @@ leon3_funcat_trap::SUBcc_imm::SUBcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 
 }
 
-leon3_funcat_trap::SUBcc_imm::~SUBcc_imm(){
+leon3_funclt_trap::SUBcc_imm::~SUBcc_imm(){
 
 }
-unsigned int leon3_funcat_trap::TADDccTV_reg::behavior(){
+unsigned int leon3_funclt_trap::TADDccTV_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -7548,16 +7548,16 @@ unsigned int leon3_funcat_trap::TADDccTV_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::TADDccTV_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::TADDccTV_reg::replicate() const throw(){
     return new TADDccTV_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::TADDccTV_reg::getInstructionName(){
+std::string leon3_funclt_trap::TADDccTV_reg::getInstructionName(){
     return "TADDccTV_reg";
 }
 
-void leon3_funcat_trap::TADDccTV_reg::setParams( const unsigned int & bitString ) \
+void leon3_funclt_trap::TADDccTV_reg::setParams( const unsigned int & bitString ) \
     throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
@@ -7567,7 +7567,7 @@ void leon3_funcat_trap::TADDccTV_reg::setParams( const unsigned int & bitString 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::TADDccTV_reg::getMnemonic(){
+std::string leon3_funclt_trap::TADDccTV_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "taddcctv r";
     oss << this->rs1_bit;
@@ -7578,7 +7578,7 @@ std::string leon3_funcat_trap::TADDccTV_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::TADDccTV_reg::TADDccTV_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::TADDccTV_reg::TADDccTV_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -7593,10 +7593,10 @@ leon3_funcat_trap::TADDccTV_reg::TADDccTV_reg( Reg32_0_delay_3 & PSR, Reg32_1_de
 
 }
 
-leon3_funcat_trap::TADDccTV_reg::~TADDccTV_reg(){
+leon3_funclt_trap::TADDccTV_reg::~TADDccTV_reg(){
 
 }
-unsigned int leon3_funcat_trap::SDIV_reg::behavior(){
+unsigned int leon3_funclt_trap::SDIV_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -7629,16 +7629,16 @@ unsigned int leon3_funcat_trap::SDIV_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SDIV_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::SDIV_reg::replicate() const throw(){
     return new SDIV_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SDIV_reg::getInstructionName(){
+std::string leon3_funclt_trap::SDIV_reg::getInstructionName(){
     return "SDIV_reg";
 }
 
-void leon3_funcat_trap::SDIV_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SDIV_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -7647,7 +7647,7 @@ void leon3_funcat_trap::SDIV_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::SDIV_reg::getMnemonic(){
+std::string leon3_funclt_trap::SDIV_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "sdiv";
     oss << " r";
@@ -7658,7 +7658,7 @@ std::string leon3_funcat_trap::SDIV_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SDIV_reg::SDIV_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SDIV_reg::SDIV_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -7671,10 +7671,10 @@ leon3_funcat_trap::SDIV_reg::SDIV_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::SDIV_reg::~SDIV_reg(){
+leon3_funclt_trap::SDIV_reg::~SDIV_reg(){
 
 }
-unsigned int leon3_funcat_trap::SMULcc_imm::behavior(){
+unsigned int leon3_funclt_trap::SMULcc_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -7689,16 +7689,16 @@ unsigned int leon3_funcat_trap::SMULcc_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SMULcc_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::SMULcc_imm::replicate() const throw(){
     return new SMULcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SMULcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::SMULcc_imm::getInstructionName(){
     return "SMULcc_imm";
 }
 
-void leon3_funcat_trap::SMULcc_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SMULcc_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -7706,7 +7706,7 @@ void leon3_funcat_trap::SMULcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::SMULcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::SMULcc_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "smulcc r";
     oss << this->rs1_bit;
@@ -7717,7 +7717,7 @@ std::string leon3_funcat_trap::SMULcc_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SMULcc_imm::SMULcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::SMULcc_imm::SMULcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -7732,10 +7732,10 @@ leon3_funcat_trap::SMULcc_imm::SMULcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::SMULcc_imm::~SMULcc_imm(){
+leon3_funclt_trap::SMULcc_imm::~SMULcc_imm(){
 
 }
-unsigned int leon3_funcat_trap::SWAP_reg::behavior(){
+unsigned int leon3_funclt_trap::SWAP_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -7763,16 +7763,16 @@ unsigned int leon3_funcat_trap::SWAP_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SWAP_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::SWAP_reg::replicate() const throw(){
     return new SWAP_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SWAP_reg::getInstructionName(){
+std::string leon3_funclt_trap::SWAP_reg::getInstructionName(){
     return "SWAP_reg";
 }
 
-void leon3_funcat_trap::SWAP_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SWAP_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -7782,7 +7782,7 @@ void leon3_funcat_trap::SWAP_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::SWAP_reg::getMnemonic(){
+std::string leon3_funclt_trap::SWAP_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "swap r";
     oss << this->rs1_bit;
@@ -7793,7 +7793,7 @@ std::string leon3_funcat_trap::SWAP_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SWAP_reg::SWAP_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SWAP_reg::SWAP_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -7804,10 +7804,10 @@ leon3_funcat_trap::SWAP_reg::SWAP_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::SWAP_reg::~SWAP_reg(){
+leon3_funclt_trap::SWAP_reg::~SWAP_reg(){
 
 }
-unsigned int leon3_funcat_trap::SUBX_imm::behavior(){
+unsigned int leon3_funclt_trap::SUBX_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -7819,16 +7819,16 @@ unsigned int leon3_funcat_trap::SUBX_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SUBX_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::SUBX_imm::replicate() const throw(){
     return new SUBX_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SUBX_imm::getInstructionName(){
+std::string leon3_funclt_trap::SUBX_imm::getInstructionName(){
     return "SUBX_imm";
 }
 
-void leon3_funcat_trap::SUBX_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SUBX_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -7836,7 +7836,7 @@ void leon3_funcat_trap::SUBX_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::SUBX_imm::getMnemonic(){
+std::string leon3_funclt_trap::SUBX_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "subx r";
     oss << this->rs1_bit;
@@ -7847,7 +7847,7 @@ std::string leon3_funcat_trap::SUBX_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SUBX_imm::SUBX_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SUBX_imm::SUBX_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -7860,10 +7860,10 @@ leon3_funcat_trap::SUBX_imm::SUBX_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::SUBX_imm::~SUBX_imm(){
+leon3_funclt_trap::SUBX_imm::~SUBX_imm(){
 
 }
-unsigned int leon3_funcat_trap::STDA_reg::behavior(){
+unsigned int leon3_funclt_trap::STDA_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -7897,16 +7897,16 @@ unsigned int leon3_funcat_trap::STDA_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::STDA_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::STDA_reg::replicate() const throw(){
     return new STDA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::STDA_reg::getInstructionName(){
+std::string leon3_funclt_trap::STDA_reg::getInstructionName(){
     return "STDA_reg";
 }
 
-void leon3_funcat_trap::STDA_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::STDA_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -7916,7 +7916,7 @@ void leon3_funcat_trap::STDA_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::STDA_reg::getMnemonic(){
+std::string leon3_funclt_trap::STDA_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "stda r";
     oss << this->rd_bit;
@@ -7929,7 +7929,7 @@ std::string leon3_funcat_trap::STDA_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::STDA_reg::STDA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::STDA_reg::STDA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -7940,10 +7940,10 @@ leon3_funcat_trap::STDA_reg::STDA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::STDA_reg::~STDA_reg(){
+leon3_funclt_trap::STDA_reg::~STDA_reg(){
 
 }
-unsigned int leon3_funcat_trap::UMAC_reg::behavior(){
+unsigned int leon3_funclt_trap::UMAC_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -7961,16 +7961,16 @@ unsigned int leon3_funcat_trap::UMAC_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::UMAC_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::UMAC_reg::replicate() const throw(){
     return new UMAC_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::UMAC_reg::getInstructionName(){
+std::string leon3_funclt_trap::UMAC_reg::getInstructionName(){
     return "UMAC_reg";
 }
 
-void leon3_funcat_trap::UMAC_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::UMAC_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -7979,7 +7979,7 @@ void leon3_funcat_trap::UMAC_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::UMAC_reg::getMnemonic(){
+std::string leon3_funclt_trap::UMAC_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "umac r";
     oss << this->rs1_bit;
@@ -7990,7 +7990,7 @@ std::string leon3_funcat_trap::UMAC_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::UMAC_reg::UMAC_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::UMAC_reg::UMAC_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -8003,10 +8003,10 @@ leon3_funcat_trap::UMAC_reg::UMAC_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::UMAC_reg::~UMAC_reg(){
+leon3_funclt_trap::UMAC_reg::~UMAC_reg(){
 
 }
-unsigned int leon3_funcat_trap::JUMP_imm::behavior(){
+unsigned int leon3_funclt_trap::JUMP_imm::behavior(){
     this->totalInstrCycles = 0;
 
     unsigned int jumpAddr = rs1 + SignExtend(simm13, 13);
@@ -8035,16 +8035,16 @@ unsigned int leon3_funcat_trap::JUMP_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::JUMP_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::JUMP_imm::replicate() const throw(){
     return new JUMP_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::JUMP_imm::getInstructionName(){
+std::string leon3_funclt_trap::JUMP_imm::getInstructionName(){
     return "JUMP_imm";
 }
 
-void leon3_funcat_trap::JUMP_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::JUMP_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -8052,7 +8052,7 @@ void leon3_funcat_trap::JUMP_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::JUMP_imm::getMnemonic(){
+std::string leon3_funclt_trap::JUMP_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "jmpl";
     oss << " r";
@@ -8064,7 +8064,7 @@ std::string leon3_funcat_trap::JUMP_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::JUMP_imm::JUMP_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::JUMP_imm::JUMP_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -8074,10 +8074,10 @@ leon3_funcat_trap::JUMP_imm::JUMP_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::JUMP_imm::~JUMP_imm(){
+leon3_funclt_trap::JUMP_imm::~JUMP_imm(){
 
 }
-unsigned int leon3_funcat_trap::SMUL_reg::behavior(){
+unsigned int leon3_funclt_trap::SMUL_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -8091,16 +8091,16 @@ unsigned int leon3_funcat_trap::SMUL_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SMUL_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::SMUL_reg::replicate() const throw(){
     return new SMUL_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SMUL_reg::getInstructionName(){
+std::string leon3_funclt_trap::SMUL_reg::getInstructionName(){
     return "SMUL_reg";
 }
 
-void leon3_funcat_trap::SMUL_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SMUL_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -8109,7 +8109,7 @@ void leon3_funcat_trap::SMUL_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::SMUL_reg::getMnemonic(){
+std::string leon3_funclt_trap::SMUL_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "smul r";
     oss << this->rs1_bit;
@@ -8120,7 +8120,7 @@ std::string leon3_funcat_trap::SMUL_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SMUL_reg::SMUL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SMUL_reg::SMUL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -8133,10 +8133,10 @@ leon3_funcat_trap::SMUL_reg::SMUL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::SMUL_reg::~SMUL_reg(){
+leon3_funclt_trap::SMUL_reg::~SMUL_reg(){
 
 }
-unsigned int leon3_funcat_trap::XORcc_imm::behavior(){
+unsigned int leon3_funclt_trap::XORcc_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -8148,16 +8148,16 @@ unsigned int leon3_funcat_trap::XORcc_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::XORcc_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::XORcc_imm::replicate() const throw(){
     return new XORcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::XORcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::XORcc_imm::getInstructionName(){
     return "XORcc_imm";
 }
 
-void leon3_funcat_trap::XORcc_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::XORcc_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -8165,7 +8165,7 @@ void leon3_funcat_trap::XORcc_imm::setParams( const unsigned int & bitString ) t
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::XORcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::XORcc_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "xorcc r";
     oss << this->rs1_bit;
@@ -8176,7 +8176,7 @@ std::string leon3_funcat_trap::XORcc_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::XORcc_imm::XORcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
+leon3_funclt_trap::XORcc_imm::XORcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
     WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -8191,10 +8191,10 @@ leon3_funcat_trap::XORcc_imm::XORcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 
 }
 
-leon3_funcat_trap::XORcc_imm::~XORcc_imm(){
+leon3_funclt_trap::XORcc_imm::~XORcc_imm(){
 
 }
-unsigned int leon3_funcat_trap::ORNcc_imm::behavior(){
+unsigned int leon3_funclt_trap::ORNcc_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -8206,16 +8206,16 @@ unsigned int leon3_funcat_trap::ORNcc_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ORNcc_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::ORNcc_imm::replicate() const throw(){
     return new ORNcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ORNcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::ORNcc_imm::getInstructionName(){
     return "ORNcc_imm";
 }
 
-void leon3_funcat_trap::ORNcc_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ORNcc_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -8223,7 +8223,7 @@ void leon3_funcat_trap::ORNcc_imm::setParams( const unsigned int & bitString ) t
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::ORNcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::ORNcc_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "orncc r";
     oss << this->rs1_bit;
@@ -8234,7 +8234,7 @@ std::string leon3_funcat_trap::ORNcc_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ORNcc_imm::ORNcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
+leon3_funclt_trap::ORNcc_imm::ORNcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
     WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -8249,10 +8249,10 @@ leon3_funcat_trap::ORNcc_imm::ORNcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 
 }
 
-leon3_funcat_trap::ORNcc_imm::~ORNcc_imm(){
+leon3_funclt_trap::ORNcc_imm::~ORNcc_imm(){
 
 }
-unsigned int leon3_funcat_trap::LDUBA_reg::behavior(){
+unsigned int leon3_funclt_trap::LDUBA_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -8278,16 +8278,16 @@ unsigned int leon3_funcat_trap::LDUBA_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LDUBA_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::LDUBA_reg::replicate() const throw(){
     return new LDUBA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LDUBA_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDUBA_reg::getInstructionName(){
     return "LDUBA_reg";
 }
 
-void leon3_funcat_trap::LDUBA_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LDUBA_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -8297,7 +8297,7 @@ void leon3_funcat_trap::LDUBA_reg::setParams( const unsigned int & bitString ) t
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::LDUBA_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDUBA_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "lduba r";
     oss << this->rs1_bit;
@@ -8310,7 +8310,7 @@ std::string leon3_funcat_trap::LDUBA_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LDUBA_reg::LDUBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
+leon3_funclt_trap::LDUBA_reg::LDUBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
     WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -8321,10 +8321,10 @@ leon3_funcat_trap::LDUBA_reg::LDUBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 
 }
 
-leon3_funcat_trap::LDUBA_reg::~LDUBA_reg(){
+leon3_funclt_trap::LDUBA_reg::~LDUBA_reg(){
 
 }
-unsigned int leon3_funcat_trap::JUMP_reg::behavior(){
+unsigned int leon3_funclt_trap::JUMP_reg::behavior(){
     this->totalInstrCycles = 0;
 
     unsigned int jumpAddr = rs1 + rs2;
@@ -8353,16 +8353,16 @@ unsigned int leon3_funcat_trap::JUMP_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::JUMP_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::JUMP_reg::replicate() const throw(){
     return new JUMP_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::JUMP_reg::getInstructionName(){
+std::string leon3_funclt_trap::JUMP_reg::getInstructionName(){
     return "JUMP_reg";
 }
 
-void leon3_funcat_trap::JUMP_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::JUMP_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -8371,7 +8371,7 @@ void leon3_funcat_trap::JUMP_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::JUMP_reg::getMnemonic(){
+std::string leon3_funclt_trap::JUMP_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "jmpl";
     oss << " r";
@@ -8383,7 +8383,7 @@ std::string leon3_funcat_trap::JUMP_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::JUMP_reg::JUMP_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::JUMP_reg::JUMP_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -8393,10 +8393,10 @@ leon3_funcat_trap::JUMP_reg::JUMP_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::JUMP_reg::~JUMP_reg(){
+leon3_funclt_trap::JUMP_reg::~JUMP_reg(){
 
 }
-unsigned int leon3_funcat_trap::ADDX_reg::behavior(){
+unsigned int leon3_funclt_trap::ADDX_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -8408,16 +8408,16 @@ unsigned int leon3_funcat_trap::ADDX_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ADDX_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::ADDX_reg::replicate() const throw(){
     return new ADDX_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ADDX_reg::getInstructionName(){
+std::string leon3_funclt_trap::ADDX_reg::getInstructionName(){
     return "ADDX_reg";
 }
 
-void leon3_funcat_trap::ADDX_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ADDX_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -8426,7 +8426,7 @@ void leon3_funcat_trap::ADDX_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::ADDX_reg::getMnemonic(){
+std::string leon3_funclt_trap::ADDX_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "addx r";
     oss << this->rs1_bit;
@@ -8437,7 +8437,7 @@ std::string leon3_funcat_trap::ADDX_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ADDX_reg::ADDX_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::ADDX_reg::ADDX_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -8450,10 +8450,10 @@ leon3_funcat_trap::ADDX_reg::ADDX_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::ADDX_reg::~ADDX_reg(){
+leon3_funclt_trap::ADDX_reg::~ADDX_reg(){
 
 }
-unsigned int leon3_funcat_trap::UDIV_reg::behavior(){
+unsigned int leon3_funclt_trap::UDIV_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -8480,16 +8480,16 @@ unsigned int leon3_funcat_trap::UDIV_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::UDIV_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::UDIV_reg::replicate() const throw(){
     return new UDIV_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::UDIV_reg::getInstructionName(){
+std::string leon3_funclt_trap::UDIV_reg::getInstructionName(){
     return "UDIV_reg";
 }
 
-void leon3_funcat_trap::UDIV_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::UDIV_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -8498,7 +8498,7 @@ void leon3_funcat_trap::UDIV_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::UDIV_reg::getMnemonic(){
+std::string leon3_funclt_trap::UDIV_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "udiv";
     oss << " r";
@@ -8510,7 +8510,7 @@ std::string leon3_funcat_trap::UDIV_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::UDIV_reg::UDIV_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::UDIV_reg::UDIV_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -8523,10 +8523,10 @@ leon3_funcat_trap::UDIV_reg::UDIV_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::UDIV_reg::~UDIV_reg(){
+leon3_funclt_trap::UDIV_reg::~UDIV_reg(){
 
 }
-unsigned int leon3_funcat_trap::XNORcc_imm::behavior(){
+unsigned int leon3_funclt_trap::XNORcc_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -8538,16 +8538,16 @@ unsigned int leon3_funcat_trap::XNORcc_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::XNORcc_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::XNORcc_imm::replicate() const throw(){
     return new XNORcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::XNORcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::XNORcc_imm::getInstructionName(){
     return "XNORcc_imm";
 }
 
-void leon3_funcat_trap::XNORcc_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::XNORcc_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -8555,7 +8555,7 @@ void leon3_funcat_trap::XNORcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::XNORcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::XNORcc_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "xnorcc r";
     oss << this->rs1_bit;
@@ -8566,7 +8566,7 @@ std::string leon3_funcat_trap::XNORcc_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::XNORcc_imm::XNORcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::XNORcc_imm::XNORcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -8581,29 +8581,29 @@ leon3_funcat_trap::XNORcc_imm::XNORcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::XNORcc_imm::~XNORcc_imm(){
+leon3_funclt_trap::XNORcc_imm::~XNORcc_imm(){
 
 }
-unsigned int leon3_funcat_trap::STBAR::behavior(){
+unsigned int leon3_funclt_trap::STBAR::behavior(){
     this->totalInstrCycles = 0;
 
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::STBAR::replicate() const throw(){
+Instruction * leon3_funclt_trap::STBAR::replicate() const throw(){
     return new STBAR(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::STBAR::getInstructionName(){
+std::string leon3_funclt_trap::STBAR::getInstructionName(){
     return "STBAR";
 }
 
-void leon3_funcat_trap::STBAR::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::STBAR::setParams( const unsigned int & bitString ) throw(){
 
 }
 
-std::string leon3_funcat_trap::STBAR::getMnemonic(){
+std::string leon3_funclt_trap::STBAR::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "s";
     oss << "t";
@@ -8613,7 +8613,7 @@ std::string leon3_funcat_trap::STBAR::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::STBAR::STBAR( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 \
+leon3_funclt_trap::STBAR::STBAR( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 \
     & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & \
     Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -8623,10 +8623,10 @@ leon3_funcat_trap::STBAR::STBAR( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, R
 
 }
 
-leon3_funcat_trap::STBAR::~STBAR(){
+leon3_funclt_trap::STBAR::~STBAR(){
 
 }
-unsigned int leon3_funcat_trap::LDA_reg::behavior(){
+unsigned int leon3_funclt_trap::LDA_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -8656,16 +8656,16 @@ unsigned int leon3_funcat_trap::LDA_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LDA_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::LDA_reg::replicate() const throw(){
     return new LDA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LDA_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDA_reg::getInstructionName(){
     return "LDA_reg";
 }
 
-void leon3_funcat_trap::LDA_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LDA_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -8675,7 +8675,7 @@ void leon3_funcat_trap::LDA_reg::setParams( const unsigned int & bitString ) thr
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::LDA_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDA_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "lda r";
     oss << this->rs1_bit;
@@ -8688,7 +8688,7 @@ std::string leon3_funcat_trap::LDA_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LDA_reg::LDA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::LDA_reg::LDA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -8699,10 +8699,10 @@ leon3_funcat_trap::LDA_reg::LDA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::LDA_reg::~LDA_reg(){
+leon3_funclt_trap::LDA_reg::~LDA_reg(){
 
 }
-unsigned int leon3_funcat_trap::STHA_reg::behavior(){
+unsigned int leon3_funclt_trap::STHA_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -8731,16 +8731,16 @@ unsigned int leon3_funcat_trap::STHA_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::STHA_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::STHA_reg::replicate() const throw(){
     return new STHA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::STHA_reg::getInstructionName(){
+std::string leon3_funclt_trap::STHA_reg::getInstructionName(){
     return "STHA_reg";
 }
 
-void leon3_funcat_trap::STHA_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::STHA_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -8750,7 +8750,7 @@ void leon3_funcat_trap::STHA_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::STHA_reg::getMnemonic(){
+std::string leon3_funclt_trap::STHA_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "stha r";
     oss << this->rd_bit;
@@ -8763,7 +8763,7 @@ std::string leon3_funcat_trap::STHA_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::STHA_reg::STHA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::STHA_reg::STHA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -8774,10 +8774,10 @@ leon3_funcat_trap::STHA_reg::STHA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::STHA_reg::~STHA_reg(){
+leon3_funclt_trap::STHA_reg::~STHA_reg(){
 
 }
-unsigned int leon3_funcat_trap::LDDA_reg::behavior(){
+unsigned int leon3_funclt_trap::LDDA_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -8827,16 +8827,16 @@ unsigned int leon3_funcat_trap::LDDA_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LDDA_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::LDDA_reg::replicate() const throw(){
     return new LDDA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LDDA_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDDA_reg::getInstructionName(){
     return "LDDA_reg";
 }
 
-void leon3_funcat_trap::LDDA_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LDDA_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -8846,7 +8846,7 @@ void leon3_funcat_trap::LDDA_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::LDDA_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDDA_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldda r";
     oss << this->rs1_bit;
@@ -8859,7 +8859,7 @@ std::string leon3_funcat_trap::LDDA_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LDDA_reg::LDDA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::LDDA_reg::LDDA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -8870,10 +8870,10 @@ leon3_funcat_trap::LDDA_reg::LDDA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::LDDA_reg::~LDDA_reg(){
+leon3_funclt_trap::LDDA_reg::~LDDA_reg(){
 
 }
-unsigned int leon3_funcat_trap::SLL_reg::behavior(){
+unsigned int leon3_funclt_trap::SLL_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -8885,16 +8885,16 @@ unsigned int leon3_funcat_trap::SLL_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SLL_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::SLL_reg::replicate() const throw(){
     return new SLL_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SLL_reg::getInstructionName(){
+std::string leon3_funclt_trap::SLL_reg::getInstructionName(){
     return "SLL_reg";
 }
 
-void leon3_funcat_trap::SLL_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SLL_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -8903,7 +8903,7 @@ void leon3_funcat_trap::SLL_reg::setParams( const unsigned int & bitString ) thr
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::SLL_reg::getMnemonic(){
+std::string leon3_funclt_trap::SLL_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "sll r";
     oss << this->rs1_bit;
@@ -8914,7 +8914,7 @@ std::string leon3_funcat_trap::SLL_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SLL_reg::SLL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SLL_reg::SLL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -8927,10 +8927,10 @@ leon3_funcat_trap::SLL_reg::SLL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 
 }
 
-leon3_funcat_trap::SLL_reg::~SLL_reg(){
+leon3_funclt_trap::SLL_reg::~SLL_reg(){
 
 }
-unsigned int leon3_funcat_trap::RESTORE_imm::behavior(){
+unsigned int leon3_funclt_trap::RESTORE_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -8950,16 +8950,16 @@ unsigned int leon3_funcat_trap::RESTORE_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::RESTORE_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::RESTORE_imm::replicate() const throw(){
     return new RESTORE_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::RESTORE_imm::getInstructionName(){
+std::string leon3_funclt_trap::RESTORE_imm::getInstructionName(){
     return "RESTORE_imm";
 }
 
-void leon3_funcat_trap::RESTORE_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::RESTORE_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -8967,7 +8967,7 @@ void leon3_funcat_trap::RESTORE_imm::setParams( const unsigned int & bitString )
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::RESTORE_imm::getMnemonic(){
+std::string leon3_funclt_trap::RESTORE_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "restore";
     oss << " r";
@@ -8979,7 +8979,7 @@ std::string leon3_funcat_trap::RESTORE_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::RESTORE_imm::RESTORE_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::RESTORE_imm::RESTORE_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -8990,10 +8990,10 @@ leon3_funcat_trap::RESTORE_imm::RESTORE_imm( Reg32_0_delay_3 & PSR, Reg32_1_dela
 
 }
 
-leon3_funcat_trap::RESTORE_imm::~RESTORE_imm(){
+leon3_funclt_trap::RESTORE_imm::~RESTORE_imm(){
 
 }
-unsigned int leon3_funcat_trap::LD_imm::behavior(){
+unsigned int leon3_funclt_trap::LD_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -9014,16 +9014,16 @@ unsigned int leon3_funcat_trap::LD_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LD_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::LD_imm::replicate() const throw(){
     return new LD_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LD_imm::getInstructionName(){
+std::string leon3_funclt_trap::LD_imm::getInstructionName(){
     return "LD_imm";
 }
 
-void leon3_funcat_trap::LD_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LD_imm::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rd_bit = (bitString & 0x3e000000) >> 25;
@@ -9031,7 +9031,7 @@ void leon3_funcat_trap::LD_imm::setParams( const unsigned int & bitString ) thro
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::LD_imm::getMnemonic(){
+std::string leon3_funclt_trap::LD_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "ld r";
     oss << this->rs1_bit;
@@ -9042,7 +9042,7 @@ std::string leon3_funcat_trap::LD_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LD_imm::LD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::LD_imm::LD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -9053,10 +9053,10 @@ leon3_funcat_trap::LD_imm::LD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM,
 
 }
 
-leon3_funcat_trap::LD_imm::~LD_imm(){
+leon3_funclt_trap::LD_imm::~LD_imm(){
 
 }
-unsigned int leon3_funcat_trap::TRAP_reg::behavior(){
+unsigned int leon3_funclt_trap::TRAP_reg::behavior(){
     this->totalInstrCycles = 0;
 
     // All the other non-special situations
@@ -9088,16 +9088,16 @@ unsigned int leon3_funcat_trap::TRAP_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::TRAP_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::TRAP_reg::replicate() const throw(){
     return new TRAP_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::TRAP_reg::getInstructionName(){
+std::string leon3_funclt_trap::TRAP_reg::getInstructionName(){
     return "TRAP_reg";
 }
 
-void leon3_funcat_trap::TRAP_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::TRAP_reg::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rs2_bit = (bitString & 0x1f);
@@ -9107,7 +9107,7 @@ void leon3_funcat_trap::TRAP_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funcat_trap::TRAP_reg::getMnemonic(){
+std::string leon3_funclt_trap::TRAP_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "t";
     switch(this->cond){
@@ -9166,7 +9166,7 @@ std::string leon3_funcat_trap::TRAP_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::TRAP_reg::TRAP_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::TRAP_reg::TRAP_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -9176,10 +9176,10 @@ leon3_funcat_trap::TRAP_reg::TRAP_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::TRAP_reg::~TRAP_reg(){
+leon3_funclt_trap::TRAP_reg::~TRAP_reg(){
 
 }
-unsigned int leon3_funcat_trap::LDUB_imm::behavior(){
+unsigned int leon3_funclt_trap::LDUB_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -9191,16 +9191,16 @@ unsigned int leon3_funcat_trap::LDUB_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::LDUB_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::LDUB_imm::replicate() const throw(){
     return new LDUB_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::LDUB_imm::getInstructionName(){
+std::string leon3_funclt_trap::LDUB_imm::getInstructionName(){
     return "LDUB_imm";
 }
 
-void leon3_funcat_trap::LDUB_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::LDUB_imm::setParams( const unsigned int & bitString ) throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
     this->rd_bit = (bitString & 0x3e000000) >> 25;
@@ -9208,7 +9208,7 @@ void leon3_funcat_trap::LDUB_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::LDUB_imm::getMnemonic(){
+std::string leon3_funclt_trap::LDUB_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldub r";
     oss << this->rs1_bit;
@@ -9219,7 +9219,7 @@ std::string leon3_funcat_trap::LDUB_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::LDUB_imm::LDUB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::LDUB_imm::LDUB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -9230,10 +9230,10 @@ leon3_funcat_trap::LDUB_imm::LDUB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::LDUB_imm::~LDUB_imm(){
+leon3_funclt_trap::LDUB_imm::~LDUB_imm(){
 
 }
-unsigned int leon3_funcat_trap::RETT_reg::behavior(){
+unsigned int leon3_funclt_trap::RETT_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -9270,16 +9270,16 @@ unsigned int leon3_funcat_trap::RETT_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::RETT_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::RETT_reg::replicate() const throw(){
     return new RETT_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::RETT_reg::getInstructionName(){
+std::string leon3_funclt_trap::RETT_reg::getInstructionName(){
     return "RETT_reg";
 }
 
-void leon3_funcat_trap::RETT_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::RETT_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -9288,7 +9288,7 @@ void leon3_funcat_trap::RETT_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::RETT_reg::getMnemonic(){
+std::string leon3_funclt_trap::RETT_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "rett r";
     oss << this->rs1_bit;
@@ -9297,7 +9297,7 @@ std::string leon3_funcat_trap::RETT_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::RETT_reg::RETT_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::RETT_reg::RETT_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -9308,10 +9308,10 @@ leon3_funcat_trap::RETT_reg::RETT_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::RETT_reg::~RETT_reg(){
+leon3_funclt_trap::RETT_reg::~RETT_reg(){
 
 }
-unsigned int leon3_funcat_trap::SDIVcc_imm::behavior(){
+unsigned int leon3_funclt_trap::SDIVcc_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -9345,16 +9345,16 @@ unsigned int leon3_funcat_trap::SDIVcc_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SDIVcc_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::SDIVcc_imm::replicate() const throw(){
     return new SDIVcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SDIVcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::SDIVcc_imm::getInstructionName(){
     return "SDIVcc_imm";
 }
 
-void leon3_funcat_trap::SDIVcc_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SDIVcc_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -9362,7 +9362,7 @@ void leon3_funcat_trap::SDIVcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::SDIVcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::SDIVcc_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "sdivcc";
     oss << " r";
@@ -9373,7 +9373,7 @@ std::string leon3_funcat_trap::SDIVcc_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SDIVcc_imm::SDIVcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::SDIVcc_imm::SDIVcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -9388,10 +9388,10 @@ leon3_funcat_trap::SDIVcc_imm::SDIVcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_
 
 }
 
-leon3_funcat_trap::SDIVcc_imm::~SDIVcc_imm(){
+leon3_funclt_trap::SDIVcc_imm::~SDIVcc_imm(){
 
 }
-unsigned int leon3_funcat_trap::SAVE_reg::behavior(){
+unsigned int leon3_funclt_trap::SAVE_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -9411,16 +9411,16 @@ unsigned int leon3_funcat_trap::SAVE_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::SAVE_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::SAVE_reg::replicate() const throw(){
     return new SAVE_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::SAVE_reg::getInstructionName(){
+std::string leon3_funclt_trap::SAVE_reg::getInstructionName(){
     return "SAVE_reg";
 }
 
-void leon3_funcat_trap::SAVE_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::SAVE_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -9429,7 +9429,7 @@ void leon3_funcat_trap::SAVE_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::SAVE_reg::getMnemonic(){
+std::string leon3_funclt_trap::SAVE_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "save";
     oss << " r";
@@ -9441,7 +9441,7 @@ std::string leon3_funcat_trap::SAVE_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::SAVE_reg::SAVE_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::SAVE_reg::SAVE_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -9452,10 +9452,10 @@ leon3_funcat_trap::SAVE_reg::SAVE_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::SAVE_reg::~SAVE_reg(){
+leon3_funclt_trap::SAVE_reg::~SAVE_reg(){
 
 }
-unsigned int leon3_funcat_trap::OR_reg::behavior(){
+unsigned int leon3_funclt_trap::OR_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -9467,16 +9467,16 @@ unsigned int leon3_funcat_trap::OR_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::OR_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::OR_reg::replicate() const throw(){
     return new OR_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::OR_reg::getInstructionName(){
+std::string leon3_funclt_trap::OR_reg::getInstructionName(){
     return "OR_reg";
 }
 
-void leon3_funcat_trap::OR_reg::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::OR_reg::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -9485,7 +9485,7 @@ void leon3_funcat_trap::OR_reg::setParams( const unsigned int & bitString ) thro
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funcat_trap::OR_reg::getMnemonic(){
+std::string leon3_funclt_trap::OR_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "or r";
     oss << this->rs1_bit;
@@ -9496,7 +9496,7 @@ std::string leon3_funcat_trap::OR_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::OR_reg::OR_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::OR_reg::OR_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -9509,10 +9509,10 @@ leon3_funcat_trap::OR_reg::OR_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM,
 
 }
 
-leon3_funcat_trap::OR_reg::~OR_reg(){
+leon3_funclt_trap::OR_reg::~OR_reg(){
 
 }
-unsigned int leon3_funcat_trap::ORcc_imm::behavior(){
+unsigned int leon3_funclt_trap::ORcc_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -9524,16 +9524,16 @@ unsigned int leon3_funcat_trap::ORcc_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ORcc_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::ORcc_imm::replicate() const throw(){
     return new ORcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ORcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::ORcc_imm::getInstructionName(){
     return "ORcc_imm";
 }
 
-void leon3_funcat_trap::ORcc_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ORcc_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -9541,7 +9541,7 @@ void leon3_funcat_trap::ORcc_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::ORcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::ORcc_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "orcc r";
     oss << this->rs1_bit;
@@ -9552,7 +9552,7 @@ std::string leon3_funcat_trap::ORcc_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ORcc_imm::ORcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
+leon3_funclt_trap::ORcc_imm::ORcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
     Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
     & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -9567,10 +9567,10 @@ leon3_funcat_trap::ORcc_imm::ORcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & 
 
 }
 
-leon3_funcat_trap::ORcc_imm::~ORcc_imm(){
+leon3_funclt_trap::ORcc_imm::~ORcc_imm(){
 
 }
-unsigned int leon3_funcat_trap::CALL::behavior(){
+unsigned int leon3_funclt_trap::CALL::behavior(){
     this->totalInstrCycles = 0;
 
     unsigned int curPC = PC;
@@ -9588,27 +9588,27 @@ unsigned int leon3_funcat_trap::CALL::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::CALL::replicate() const throw(){
+Instruction * leon3_funclt_trap::CALL::replicate() const throw(){
     return new CALL(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::CALL::getInstructionName(){
+std::string leon3_funclt_trap::CALL::getInstructionName(){
     return "CALL";
 }
 
-void leon3_funcat_trap::CALL::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::CALL::setParams( const unsigned int & bitString ) throw(){
     this->disp30 = (bitString & 0x3fffffff);
 }
 
-std::string leon3_funcat_trap::CALL::getMnemonic(){
+std::string leon3_funclt_trap::CALL::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "call ";
     oss << this->disp30;
     return oss.str();
 }
 
-leon3_funcat_trap::CALL::CALL( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 \
+leon3_funclt_trap::CALL::CALL( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 \
     & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & \
     Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
     * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
@@ -9618,10 +9618,10 @@ leon3_funcat_trap::CALL::CALL( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg
 
 }
 
-leon3_funcat_trap::CALL::~CALL(){
+leon3_funclt_trap::CALL::~CALL(){
 
 }
-unsigned int leon3_funcat_trap::WRITEpsr_reg::behavior(){
+unsigned int leon3_funclt_trap::WRITEpsr_reg::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -9646,16 +9646,16 @@ unsigned int leon3_funcat_trap::WRITEpsr_reg::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::WRITEpsr_reg::replicate() const throw(){
+Instruction * leon3_funclt_trap::WRITEpsr_reg::replicate() const throw(){
     return new WRITEpsr_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::WRITEpsr_reg::getInstructionName(){
+std::string leon3_funclt_trap::WRITEpsr_reg::getInstructionName(){
     return "WRITEpsr_reg";
 }
 
-void leon3_funcat_trap::WRITEpsr_reg::setParams( const unsigned int & bitString ) \
+void leon3_funclt_trap::WRITEpsr_reg::setParams( const unsigned int & bitString ) \
     throw(){
     this->rs1_bit = (bitString & 0x7c000) >> 14;
     this->rs1.directSetAlias(this->REGS[this->rs1_bit]);
@@ -9664,7 +9664,7 @@ void leon3_funcat_trap::WRITEpsr_reg::setParams( const unsigned int & bitString 
     this->rd = (bitString & 0x3e000000) >> 25;
 }
 
-std::string leon3_funcat_trap::WRITEpsr_reg::getMnemonic(){
+std::string leon3_funclt_trap::WRITEpsr_reg::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -9674,7 +9674,7 @@ std::string leon3_funcat_trap::WRITEpsr_reg::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::WRITEpsr_reg::WRITEpsr_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
+leon3_funclt_trap::WRITEpsr_reg::WRITEpsr_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
     & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -9685,10 +9685,10 @@ leon3_funcat_trap::WRITEpsr_reg::WRITEpsr_reg( Reg32_0_delay_3 & PSR, Reg32_1_de
 
 }
 
-leon3_funcat_trap::WRITEpsr_reg::~WRITEpsr_reg(){
+leon3_funclt_trap::WRITEpsr_reg::~WRITEpsr_reg(){
 
 }
-unsigned int leon3_funcat_trap::ANDcc_imm::behavior(){
+unsigned int leon3_funclt_trap::ANDcc_imm::behavior(){
     this->totalInstrCycles = 0;
     this->IncrementPC();
 
@@ -9700,16 +9700,16 @@ unsigned int leon3_funcat_trap::ANDcc_imm::behavior(){
     return this->totalInstrCycles;
 }
 
-Instruction * leon3_funcat_trap::ANDcc_imm::replicate() const throw(){
+Instruction * leon3_funclt_trap::ANDcc_imm::replicate() const throw(){
     return new ANDcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funcat_trap::ANDcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::ANDcc_imm::getInstructionName(){
     return "ANDcc_imm";
 }
 
-void leon3_funcat_trap::ANDcc_imm::setParams( const unsigned int & bitString ) throw(){
+void leon3_funclt_trap::ANDcc_imm::setParams( const unsigned int & bitString ) throw(){
     this->rd_bit = (bitString & 0x3e000000) >> 25;
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
     this->rs1_bit = (bitString & 0x7c000) >> 14;
@@ -9717,7 +9717,7 @@ void leon3_funcat_trap::ANDcc_imm::setParams( const unsigned int & bitString ) t
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funcat_trap::ANDcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::ANDcc_imm::getMnemonic(){
     std::ostringstream oss (std::ostringstream::out);
     oss << "andcc r";
     oss << this->rs1_bit;
@@ -9728,7 +9728,7 @@ std::string leon3_funcat_trap::ANDcc_imm::getMnemonic(){
     return oss.str();
 }
 
-leon3_funcat_trap::ANDcc_imm::ANDcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
+leon3_funclt_trap::ANDcc_imm::ANDcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
     WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
     Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
     Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
@@ -9743,7 +9743,7 @@ leon3_funcat_trap::ANDcc_imm::ANDcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 
 }
 
-leon3_funcat_trap::ANDcc_imm::~ANDcc_imm(){
+leon3_funclt_trap::ANDcc_imm::~ANDcc_imm(){
 
 }
 

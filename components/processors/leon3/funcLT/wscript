@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 # -*- coding: iso-8859-1 -*-
 
 import os
@@ -20,7 +19,27 @@ def build(bld):
     obj.uselib = 'BOOST BOOST_FILESYSTEM BOOST_THREAD SYSTEMC_H TLM TRAP'
     obj.uselib_local = 'systemc'
     obj.includes = '.'
-    obj.export_incdirs = '.'
     obj.name = 'leon3_funcLT'
     obj.target = 'leon3_funcLT'
 
+    obj = bld.new_task_gen('pypp')
+    obj.source="""
+        instructions.hpp
+        registers.hpp
+        alias.hpp
+        processor.hpp
+        interface.hpp
+        decoder.hpp
+        memory.hpp
+        externalPorts.hpp
+        externalPins.hpp
+    """
+    obj.uselib = 'BOOST BOOST_FILESYSTEM BOOST_THREAD SYSTEMC_H TLM TRAP PYEXT BOOST_PYTHON'
+    obj.uselib_local = 'systemc leon3_funcLT'
+    obj.includes = '.'
+    obj.name = 'leon3_funcLT_wrapper'
+    obj.target = 'leon3_funcLT_wrapper'
+    obj.include = 'scwrapper tlmwrapper'
+    obj.start_decls = 'leon3_funclt_trap trap'
+    obj.custom_code = """
+"""

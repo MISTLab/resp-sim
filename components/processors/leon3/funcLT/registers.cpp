@@ -1,6 +1,6 @@
 /***************************************************************************\
  *
- *
+ *   
  *            ___        ___           ___           ___
  *           /  /\      /  /\         /  /\         /  /\
  *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -12,28 +12,28 @@
  *           \  \:\   \  \:\        \  \:\        \  \:\
  *            \  \ \   \  \:\        \  \:\        \  \:\
  *             \__\/    \__\/         \__\/         \__\/
+ *   
  *
  *
- *
- *
+ *   
  *   This file is part of TRAP.
- *
+ *   
  *   TRAP is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU Lesser General Public License as published by
  *   the Free Software Foundation; either version 2 of the License, or
  *   (at your option) any later version.
- *
+ *   
  *   This program is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Lesser General Public License for more details.
- *
+ *   
  *   You should have received a copy of the GNU Lesser General Public License
  *   along with this program; if not, write to the
  *   Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *   or see <http://www.gnu.org/licenses/>.
- *
+ *   
  *
  *
  *   (c) Luca Fossati, fossati@elet.polimi.it
@@ -47,27 +47,27 @@
 #include <ostream>
 #include <trap_utils.hpp>
 
-using namespace leon3_funcat_trap;
-InnerField & leon3_funcat_trap::InnerField::operator =( const InnerField & other \
+using namespace leon3_funclt_trap;
+InnerField & leon3_funclt_trap::InnerField::operator =( const InnerField & other \
     ) throw(){
     *this = (unsigned int)other;
     return *this;
 }
 
-leon3_funcat_trap::InnerField::~InnerField(){
+leon3_funclt_trap::InnerField::~InnerField(){
 
 }
-void leon3_funcat_trap::Register::clockCycle() throw(){
+void leon3_funclt_trap::Register::clockCycle() throw(){
 
 }
 
-leon3_funcat_trap::Register::Register( const sc_module_name & name, unsigned int \
+leon3_funclt_trap::Register::Register( const sc_module_name & name, unsigned int \
     bitWidth ) : sc_module(name){
     this->bitWidth = bitWidth;
     end_module();
 }
 
-InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_PS::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_PS::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffffffbfL);
@@ -75,16 +75,16 @@ InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_PS::operator =( cons
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_PS::InnerField_PS( unsigned int & \
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_PS::InnerField_PS( unsigned int & \
     value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_PS::~InnerField_PS(){
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_PS::~InnerField_PS(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_VER::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_VER::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xf0ffffffL);
@@ -92,16 +92,16 @@ InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_VER::operator =( con
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_VER::InnerField_VER( unsigned int \
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_VER::InnerField_VER( unsigned int \
     & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_VER::~InnerField_VER(){
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_VER::~InnerField_VER(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_ICC_z::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_ICC_z::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffbfffffL);
@@ -109,16 +109,16 @@ InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_ICC_z::operator =( c
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_ICC_z::InnerField_ICC_z( unsigned \
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_ICC_z::InnerField_ICC_z( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_ICC_z::~InnerField_ICC_z(){
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_ICC_z::~InnerField_ICC_z(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_ICC_v::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_ICC_v::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffdfffffL);
@@ -126,16 +126,16 @@ InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_ICC_v::operator =( c
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_ICC_v::InnerField_ICC_v( unsigned \
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_ICC_v::InnerField_ICC_v( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_ICC_v::~InnerField_ICC_v(){
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_ICC_v::~InnerField_ICC_v(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_EF::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_EF::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffffefffL);
@@ -143,16 +143,16 @@ InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_EF::operator =( cons
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_EF::InnerField_EF( unsigned int & \
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_EF::InnerField_EF( unsigned int & \
     value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_EF::~InnerField_EF(){
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_EF::~InnerField_EF(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_EC::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_EC::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffffdfffL);
@@ -160,16 +160,16 @@ InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_EC::operator =( cons
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_EC::InnerField_EC( unsigned int & \
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_EC::InnerField_EC( unsigned int & \
     value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_EC::~InnerField_EC(){
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_EC::~InnerField_EC(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_ICC_n::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_ICC_n::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xff7fffffL);
@@ -177,16 +177,16 @@ InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_ICC_n::operator =( c
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_ICC_n::InnerField_ICC_n( unsigned \
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_ICC_n::InnerField_ICC_n( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_ICC_n::~InnerField_ICC_n(){
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_ICC_n::~InnerField_ICC_n(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_S::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_S::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffffff7fL);
@@ -194,16 +194,16 @@ InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_S::operator =( const
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_S::InnerField_S( unsigned int & value, \
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_S::InnerField_S( unsigned int & value, \
     unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_S::~InnerField_S(){
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_S::~InnerField_S(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_CWP::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_CWP::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffffffe0L);
@@ -211,16 +211,16 @@ InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_CWP::operator =( con
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_CWP::InnerField_CWP( unsigned int \
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_CWP::InnerField_CWP( unsigned int \
     & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_CWP::~InnerField_CWP(){
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_CWP::~InnerField_CWP(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_ET::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_ET::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffffffdfL);
@@ -228,16 +228,16 @@ InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_ET::operator =( cons
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_ET::InnerField_ET( unsigned int & \
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_ET::InnerField_ET( unsigned int & \
     value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_ET::~InnerField_ET(){
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_ET::~InnerField_ET(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_PIL::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_PIL::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xfffff0ffL);
@@ -245,16 +245,16 @@ InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_PIL::operator =( con
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_PIL::InnerField_PIL( unsigned int \
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_PIL::InnerField_PIL( unsigned int \
     & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_PIL::~InnerField_PIL(){
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_PIL::~InnerField_PIL(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_ICC_c::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_ICC_c::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffefffffL);
@@ -262,16 +262,16 @@ InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_ICC_c::operator =( c
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_ICC_c::InnerField_ICC_c( unsigned \
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_ICC_c::InnerField_ICC_c( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_ICC_c::~InnerField_ICC_c(){
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_ICC_c::~InnerField_ICC_c(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_IMPL::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_IMPL::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xfffffff);
@@ -279,28 +279,28 @@ InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_IMPL::operator =( co
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_IMPL::InnerField_IMPL( unsigned int \
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_IMPL::InnerField_IMPL( unsigned int \
     & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_IMPL::~InnerField_IMPL(){
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_IMPL::~InnerField_IMPL(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0_delay_3::InnerField_Empty::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_Empty::operator =( const \
     unsigned int & other ) throw(){
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_Empty::InnerField_Empty(){
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_Empty::InnerField_Empty(){
 
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::InnerField_Empty::~InnerField_Empty(){
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_Empty::~InnerField_Empty(){
 
 }
-void leon3_funcat_trap::Reg32_0_delay_3::immediateWrite( const unsigned int & value \
+void leon3_funclt_trap::Reg32_0_delay_3::immediateWrite( const unsigned int & value \
     ) throw(){
     this->value = value;
     this->updateSlot[0] = false;
@@ -308,7 +308,7 @@ void leon3_funcat_trap::Reg32_0_delay_3::immediateWrite( const unsigned int & va
     this->updateSlot[2] = false;
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::readNewValue() throw(){
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::readNewValue() throw(){
     if(this->updateSlot[2]){
         return this->values[2];
     }
@@ -321,377 +321,377 @@ unsigned int leon3_funcat_trap::Reg32_0_delay_3::readNewValue() throw(){
     return this->value;
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::operator ~() throw(){
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::operator ~() throw(){
     return ~(this->value);
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator =( const unsigned \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator =( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] = other;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator +=( const unsigned \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator +=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] += other;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator -=( const unsigned \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator -=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] -= other;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator *=( const unsigned \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator *=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] *= other;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator /=( const unsigned \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator /=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] /= other;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator |=( const unsigned \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator |=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] |= other;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator &=( const unsigned \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator &=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] &= other;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator ^=( const unsigned \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator ^=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] ^= other;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator <<=( const unsigned \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator <<=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] <<= other;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator >>=( const unsigned \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator >>=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] >>= other;
     return *this;
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::operator +( const Reg32_0_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::operator +( const Reg32_0_delay_3 \
     & other ) const throw(){
     return (this->value + other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::operator -( const Reg32_0_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::operator -( const Reg32_0_delay_3 \
     & other ) const throw(){
     return (this->value - other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::operator *( const Reg32_0_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::operator *( const Reg32_0_delay_3 \
     & other ) const throw(){
     return (this->value * other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::operator /( const Reg32_0_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::operator /( const Reg32_0_delay_3 \
     & other ) const throw(){
     return (this->value / other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::operator |( const Reg32_0_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::operator |( const Reg32_0_delay_3 \
     & other ) const throw(){
     return (this->value | other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::operator &( const Reg32_0_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::operator &( const Reg32_0_delay_3 \
     & other ) const throw(){
     return (this->value & other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::operator ^( const Reg32_0_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::operator ^( const Reg32_0_delay_3 \
     & other ) const throw(){
     return (this->value ^ other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::operator <<( const Reg32_0_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::operator <<( const Reg32_0_delay_3 \
     & other ) const throw(){
     return (this->value << other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::operator >>( const Reg32_0_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::operator >>( const Reg32_0_delay_3 \
     & other ) const throw(){
     return (this->value >> other.value);
 }
 
-bool leon3_funcat_trap::Reg32_0_delay_3::operator <( const Reg32_0_delay_3 & other \
+bool leon3_funclt_trap::Reg32_0_delay_3::operator <( const Reg32_0_delay_3 & other \
     ) const throw(){
     return (this->value < other.value);
 }
 
-bool leon3_funcat_trap::Reg32_0_delay_3::operator >( const Reg32_0_delay_3 & other \
+bool leon3_funclt_trap::Reg32_0_delay_3::operator >( const Reg32_0_delay_3 & other \
     ) const throw(){
     return (this->value > other.value);
 }
 
-bool leon3_funcat_trap::Reg32_0_delay_3::operator <=( const Reg32_0_delay_3 & other \
+bool leon3_funclt_trap::Reg32_0_delay_3::operator <=( const Reg32_0_delay_3 & other \
     ) const throw(){
     return (this->value <= other.value);
 }
 
-bool leon3_funcat_trap::Reg32_0_delay_3::operator >=( const Reg32_0_delay_3 & other \
+bool leon3_funclt_trap::Reg32_0_delay_3::operator >=( const Reg32_0_delay_3 & other \
     ) const throw(){
     return (this->value >= other.value);
 }
 
-bool leon3_funcat_trap::Reg32_0_delay_3::operator ==( const Reg32_0_delay_3 & other \
+bool leon3_funclt_trap::Reg32_0_delay_3::operator ==( const Reg32_0_delay_3 & other \
     ) const throw(){
     return (this->value == other.value);
 }
 
-bool leon3_funcat_trap::Reg32_0_delay_3::operator !=( const Reg32_0_delay_3 & other \
+bool leon3_funclt_trap::Reg32_0_delay_3::operator !=( const Reg32_0_delay_3 & other \
     ) const throw(){
     return (this->value != other.value);
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator =( const Reg32_0_delay_3 \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator =( const Reg32_0_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] = other.value;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator +=( const Reg32_0_delay_3 \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator +=( const Reg32_0_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] += other.value;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator -=( const Reg32_0_delay_3 \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator -=( const Reg32_0_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] -= other.value;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator *=( const Reg32_0_delay_3 \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator *=( const Reg32_0_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] *= other.value;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator /=( const Reg32_0_delay_3 \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator /=( const Reg32_0_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] /= other.value;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator |=( const Reg32_0_delay_3 \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator |=( const Reg32_0_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] |= other.value;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator &=( const Reg32_0_delay_3 \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator &=( const Reg32_0_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] &= other.value;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator ^=( const Reg32_0_delay_3 \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator ^=( const Reg32_0_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] ^= other.value;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator <<=( const Reg32_0_delay_3 \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator <<=( const Reg32_0_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] <<= other.value;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator >>=( const Reg32_0_delay_3 \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator >>=( const Reg32_0_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] >>= other.value;
     return *this;
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::operator +( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::operator +( const Register & other \
     ) const throw(){
     return (this->value + other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::operator -( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::operator -( const Register & other \
     ) const throw(){
     return (this->value - other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::operator *( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::operator *( const Register & other \
     ) const throw(){
     return (this->value * other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::operator /( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::operator /( const Register & other \
     ) const throw(){
     return (this->value / other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::operator |( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::operator |( const Register & other \
     ) const throw(){
     return (this->value | other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::operator &( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::operator &( const Register & other \
     ) const throw(){
     return (this->value & other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::operator ^( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::operator ^( const Register & other \
     ) const throw(){
     return (this->value ^ other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::operator <<( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::operator <<( const Register & other \
     ) const throw(){
     return (this->value << other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0_delay_3::operator >>( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_0_delay_3::operator >>( const Register & other \
     ) const throw(){
     return (this->value >> other);
 }
 
-bool leon3_funcat_trap::Reg32_0_delay_3::operator <( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_0_delay_3::operator <( const Register & other ) const \
     throw(){
     return (this->value < other);
 }
 
-bool leon3_funcat_trap::Reg32_0_delay_3::operator >( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_0_delay_3::operator >( const Register & other ) const \
     throw(){
     return (this->value > other);
 }
 
-bool leon3_funcat_trap::Reg32_0_delay_3::operator <=( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_0_delay_3::operator <=( const Register & other ) const \
     throw(){
     return (this->value <= other);
 }
 
-bool leon3_funcat_trap::Reg32_0_delay_3::operator >=( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_0_delay_3::operator >=( const Register & other ) const \
     throw(){
     return (this->value >= other);
 }
 
-bool leon3_funcat_trap::Reg32_0_delay_3::operator ==( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_0_delay_3::operator ==( const Register & other ) const \
     throw(){
     return (this->value == other);
 }
 
-bool leon3_funcat_trap::Reg32_0_delay_3::operator !=( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_0_delay_3::operator !=( const Register & other ) const \
     throw(){
     return (this->value != other);
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator =( const Register \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator =( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] = other;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator +=( const Register \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator +=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] += other;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator -=( const Register \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator -=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] -= other;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator *=( const Register \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator *=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] *= other;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator /=( const Register \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator /=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] /= other;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator |=( const Register \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator |=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] |= other;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator &=( const Register \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator &=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] &= other;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator ^=( const Register \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator ^=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] ^= other;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator <<=( const Register \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator <<=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] <<= other;
     return *this;
 }
 
-Reg32_0_delay_3 & leon3_funcat_trap::Reg32_0_delay_3::operator >>=( const Register \
+Reg32_0_delay_3 & leon3_funclt_trap::Reg32_0_delay_3::operator >>=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] >>= other;
     return *this;
 }
 
-std::ostream & leon3_funcat_trap::Reg32_0_delay_3::operator <<( std::ostream & stream \
+std::ostream & leon3_funclt_trap::Reg32_0_delay_3::operator <<( std::ostream & stream \
     ) const throw(){
     stream << std::hex << std::showbase << this->value << std::dec;
     return stream;
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::Reg32_0_delay_3( sc_module_name name ) : Register(name, \
+leon3_funclt_trap::Reg32_0_delay_3::Reg32_0_delay_3( sc_module_name name ) : Register(name, \
     32), field_PS(this->value, this->values[2], this->updateSlot[2]), field_VER(this->value, \
     this->values[2], this->updateSlot[2]), field_ICC_z(this->value, this->values[2], \
     this->updateSlot[2]), field_ICC_v(this->value, this->values[2], this->updateSlot[2]), \
@@ -708,7 +708,7 @@ leon3_funcat_trap::Reg32_0_delay_3::Reg32_0_delay_3( sc_module_name name ) : Reg
     this->updateSlot[2] = false;
 }
 
-leon3_funcat_trap::Reg32_0_delay_3::Reg32_0_delay_3() : Register(sc_gen_unique_name("Reg32_0_delay_3"), \
+leon3_funclt_trap::Reg32_0_delay_3::Reg32_0_delay_3() : Register(sc_gen_unique_name("Reg32_0_delay_3"), \
     32), field_PS(this->value, this->values[2], this->updateSlot[2]), field_VER(this->value, \
     this->values[2], this->updateSlot[2]), field_ICC_z(this->value, this->values[2], \
     this->updateSlot[2]), field_ICC_v(this->value, this->values[2], this->updateSlot[2]), \
@@ -725,7 +725,7 @@ leon3_funcat_trap::Reg32_0_delay_3::Reg32_0_delay_3() : Register(sc_gen_unique_n
     this->updateSlot[2] = false;
 }
 
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_28::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_28::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xefffffffL);
@@ -733,16 +733,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_28::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_28::InnerField_WIM_28( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_28::InnerField_WIM_28( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_28::~InnerField_WIM_28(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_28::~InnerField_WIM_28(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_29::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_29::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xdfffffffL);
@@ -750,16 +750,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_29::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_29::InnerField_WIM_29( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_29::InnerField_WIM_29( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_29::~InnerField_WIM_29(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_29::~InnerField_WIM_29(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_24::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_24::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xfeffffffL);
@@ -767,16 +767,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_24::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_24::InnerField_WIM_24( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_24::InnerField_WIM_24( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_24::~InnerField_WIM_24(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_24::~InnerField_WIM_24(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_25::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_25::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xfdffffffL);
@@ -784,16 +784,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_25::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_25::InnerField_WIM_25( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_25::InnerField_WIM_25( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_25::~InnerField_WIM_25(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_25::~InnerField_WIM_25(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_26::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_26::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xfbffffffL);
@@ -801,16 +801,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_26::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_26::InnerField_WIM_26( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_26::InnerField_WIM_26( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_26::~InnerField_WIM_26(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_26::~InnerField_WIM_26(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_27::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_27::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xf7ffffffL);
@@ -818,16 +818,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_27::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_27::InnerField_WIM_27( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_27::InnerField_WIM_27( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_27::~InnerField_WIM_27(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_27::~InnerField_WIM_27(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_20::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_20::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffefffffL);
@@ -835,16 +835,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_20::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_20::InnerField_WIM_20( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_20::InnerField_WIM_20( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_20::~InnerField_WIM_20(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_20::~InnerField_WIM_20(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_21::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_21::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffdfffffL);
@@ -852,16 +852,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_21::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_21::InnerField_WIM_21( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_21::InnerField_WIM_21( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_21::~InnerField_WIM_21(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_21::~InnerField_WIM_21(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_22::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_22::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffbfffffL);
@@ -869,16 +869,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_22::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_22::InnerField_WIM_22( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_22::InnerField_WIM_22( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_22::~InnerField_WIM_22(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_22::~InnerField_WIM_22(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_23::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_23::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xff7fffffL);
@@ -886,16 +886,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_23::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_23::InnerField_WIM_23( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_23::InnerField_WIM_23( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_23::~InnerField_WIM_23(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_23::~InnerField_WIM_23(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_9::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_9::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xfffffdffL);
@@ -903,16 +903,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_9::operator =( c
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_9::InnerField_WIM_9( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_9::InnerField_WIM_9( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_9::~InnerField_WIM_9(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_9::~InnerField_WIM_9(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_8::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_8::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xfffffeffL);
@@ -920,16 +920,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_8::operator =( c
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_8::InnerField_WIM_8( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_8::InnerField_WIM_8( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_8::~InnerField_WIM_8(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_8::~InnerField_WIM_8(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_1::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_1::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xfffffffdL);
@@ -937,16 +937,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_1::operator =( c
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_1::InnerField_WIM_1( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_1::InnerField_WIM_1( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_1::~InnerField_WIM_1(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_1::~InnerField_WIM_1(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_0::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_0::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xfffffffeL);
@@ -954,16 +954,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_0::operator =( c
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_0::InnerField_WIM_0( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_0::InnerField_WIM_0( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_0::~InnerField_WIM_0(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_0::~InnerField_WIM_0(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_3::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_3::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xfffffff7L);
@@ -971,16 +971,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_3::operator =( c
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_3::InnerField_WIM_3( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_3::InnerField_WIM_3( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_3::~InnerField_WIM_3(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_3::~InnerField_WIM_3(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_2::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_2::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xfffffffbL);
@@ -988,16 +988,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_2::operator =( c
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_2::InnerField_WIM_2( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_2::InnerField_WIM_2( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_2::~InnerField_WIM_2(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_2::~InnerField_WIM_2(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_5::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_5::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffffffdfL);
@@ -1005,16 +1005,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_5::operator =( c
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_5::InnerField_WIM_5( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_5::InnerField_WIM_5( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_5::~InnerField_WIM_5(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_5::~InnerField_WIM_5(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_4::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_4::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffffffefL);
@@ -1022,16 +1022,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_4::operator =( c
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_4::InnerField_WIM_4( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_4::InnerField_WIM_4( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_4::~InnerField_WIM_4(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_4::~InnerField_WIM_4(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_7::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_7::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffffff7fL);
@@ -1039,16 +1039,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_7::operator =( c
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_7::InnerField_WIM_7( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_7::InnerField_WIM_7( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_7::~InnerField_WIM_7(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_7::~InnerField_WIM_7(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_6::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_6::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffffffbfL);
@@ -1056,16 +1056,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_6::operator =( c
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_6::InnerField_WIM_6( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_6::InnerField_WIM_6( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_6::~InnerField_WIM_6(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_6::~InnerField_WIM_6(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_11::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_11::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xfffff7ffL);
@@ -1073,16 +1073,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_11::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_11::InnerField_WIM_11( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_11::InnerField_WIM_11( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_11::~InnerField_WIM_11(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_11::~InnerField_WIM_11(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_10::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_10::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xfffffbffL);
@@ -1090,16 +1090,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_10::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_10::InnerField_WIM_10( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_10::InnerField_WIM_10( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_10::~InnerField_WIM_10(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_10::~InnerField_WIM_10(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_13::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_13::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffffdfffL);
@@ -1107,16 +1107,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_13::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_13::InnerField_WIM_13( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_13::InnerField_WIM_13( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_13::~InnerField_WIM_13(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_13::~InnerField_WIM_13(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_12::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_12::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffffefffL);
@@ -1124,16 +1124,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_12::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_12::InnerField_WIM_12( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_12::InnerField_WIM_12( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_12::~InnerField_WIM_12(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_12::~InnerField_WIM_12(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_15::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_15::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffff7fffL);
@@ -1141,16 +1141,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_15::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_15::InnerField_WIM_15( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_15::InnerField_WIM_15( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_15::~InnerField_WIM_15(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_15::~InnerField_WIM_15(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_14::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_14::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xffffbfffL);
@@ -1158,16 +1158,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_14::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_14::InnerField_WIM_14( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_14::InnerField_WIM_14( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_14::~InnerField_WIM_14(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_14::~InnerField_WIM_14(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_17::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_17::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xfffdffffL);
@@ -1175,16 +1175,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_17::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_17::InnerField_WIM_17( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_17::InnerField_WIM_17( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_17::~InnerField_WIM_17(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_17::~InnerField_WIM_17(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_16::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_16::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xfffeffffL);
@@ -1192,16 +1192,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_16::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_16::InnerField_WIM_16( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_16::InnerField_WIM_16( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_16::~InnerField_WIM_16(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_16::~InnerField_WIM_16(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_19::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_19::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xfff7ffffL);
@@ -1209,16 +1209,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_19::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_19::InnerField_WIM_19( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_19::InnerField_WIM_19( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_19::~InnerField_WIM_19(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_19::~InnerField_WIM_19(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_18::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_18::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xfffbffffL);
@@ -1226,16 +1226,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_18::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_18::InnerField_WIM_18( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_18::InnerField_WIM_18( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_18::~InnerField_WIM_18(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_18::~InnerField_WIM_18(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_31::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_31::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0x7fffffff);
@@ -1243,16 +1243,16 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_31::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_31::InnerField_WIM_31( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_31::InnerField_WIM_31( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_31::~InnerField_WIM_31(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_31::~InnerField_WIM_31(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_30::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_30::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
     this->valueLast = (this->value & 0xbfffffffL);
@@ -1260,28 +1260,28 @@ InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_30::operator =( 
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_30::InnerField_WIM_30( unsigned \
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_30::InnerField_WIM_30( unsigned \
     int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_WIM_30::~InnerField_WIM_30(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_WIM_30::~InnerField_WIM_30(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_1_delay_3::InnerField_Empty::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_1_delay_3::InnerField_Empty::operator =( const \
     unsigned int & other ) throw(){
     return *this;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_Empty::InnerField_Empty(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_Empty::InnerField_Empty(){
 
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::InnerField_Empty::~InnerField_Empty(){
+leon3_funclt_trap::Reg32_1_delay_3::InnerField_Empty::~InnerField_Empty(){
 
 }
-void leon3_funcat_trap::Reg32_1_delay_3::immediateWrite( const unsigned int & value \
+void leon3_funclt_trap::Reg32_1_delay_3::immediateWrite( const unsigned int & value \
     ) throw(){
     this->value = value;
     this->updateSlot[0] = false;
@@ -1289,7 +1289,7 @@ void leon3_funcat_trap::Reg32_1_delay_3::immediateWrite( const unsigned int & va
     this->updateSlot[2] = false;
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::readNewValue() throw(){
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::readNewValue() throw(){
     if(this->updateSlot[2]){
         return this->values[2];
     }
@@ -1302,377 +1302,377 @@ unsigned int leon3_funcat_trap::Reg32_1_delay_3::readNewValue() throw(){
     return this->value;
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::operator ~() throw(){
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::operator ~() throw(){
     return ~(this->value);
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator =( const unsigned \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator =( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] = other;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator +=( const unsigned \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator +=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] += other;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator -=( const unsigned \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator -=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] -= other;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator *=( const unsigned \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator *=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] *= other;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator /=( const unsigned \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator /=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] /= other;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator |=( const unsigned \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator |=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] |= other;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator &=( const unsigned \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator &=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] &= other;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator ^=( const unsigned \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator ^=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] ^= other;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator <<=( const unsigned \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator <<=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] <<= other;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator >>=( const unsigned \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator >>=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] >>= other;
     return *this;
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::operator +( const Reg32_1_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::operator +( const Reg32_1_delay_3 \
     & other ) const throw(){
     return (this->value + other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::operator -( const Reg32_1_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::operator -( const Reg32_1_delay_3 \
     & other ) const throw(){
     return (this->value - other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::operator *( const Reg32_1_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::operator *( const Reg32_1_delay_3 \
     & other ) const throw(){
     return (this->value * other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::operator /( const Reg32_1_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::operator /( const Reg32_1_delay_3 \
     & other ) const throw(){
     return (this->value / other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::operator |( const Reg32_1_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::operator |( const Reg32_1_delay_3 \
     & other ) const throw(){
     return (this->value | other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::operator &( const Reg32_1_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::operator &( const Reg32_1_delay_3 \
     & other ) const throw(){
     return (this->value & other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::operator ^( const Reg32_1_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::operator ^( const Reg32_1_delay_3 \
     & other ) const throw(){
     return (this->value ^ other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::operator <<( const Reg32_1_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::operator <<( const Reg32_1_delay_3 \
     & other ) const throw(){
     return (this->value << other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::operator >>( const Reg32_1_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::operator >>( const Reg32_1_delay_3 \
     & other ) const throw(){
     return (this->value >> other.value);
 }
 
-bool leon3_funcat_trap::Reg32_1_delay_3::operator <( const Reg32_1_delay_3 & other \
+bool leon3_funclt_trap::Reg32_1_delay_3::operator <( const Reg32_1_delay_3 & other \
     ) const throw(){
     return (this->value < other.value);
 }
 
-bool leon3_funcat_trap::Reg32_1_delay_3::operator >( const Reg32_1_delay_3 & other \
+bool leon3_funclt_trap::Reg32_1_delay_3::operator >( const Reg32_1_delay_3 & other \
     ) const throw(){
     return (this->value > other.value);
 }
 
-bool leon3_funcat_trap::Reg32_1_delay_3::operator <=( const Reg32_1_delay_3 & other \
+bool leon3_funclt_trap::Reg32_1_delay_3::operator <=( const Reg32_1_delay_3 & other \
     ) const throw(){
     return (this->value <= other.value);
 }
 
-bool leon3_funcat_trap::Reg32_1_delay_3::operator >=( const Reg32_1_delay_3 & other \
+bool leon3_funclt_trap::Reg32_1_delay_3::operator >=( const Reg32_1_delay_3 & other \
     ) const throw(){
     return (this->value >= other.value);
 }
 
-bool leon3_funcat_trap::Reg32_1_delay_3::operator ==( const Reg32_1_delay_3 & other \
+bool leon3_funclt_trap::Reg32_1_delay_3::operator ==( const Reg32_1_delay_3 & other \
     ) const throw(){
     return (this->value == other.value);
 }
 
-bool leon3_funcat_trap::Reg32_1_delay_3::operator !=( const Reg32_1_delay_3 & other \
+bool leon3_funclt_trap::Reg32_1_delay_3::operator !=( const Reg32_1_delay_3 & other \
     ) const throw(){
     return (this->value != other.value);
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator =( const Reg32_1_delay_3 \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator =( const Reg32_1_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] = other.value;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator +=( const Reg32_1_delay_3 \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator +=( const Reg32_1_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] += other.value;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator -=( const Reg32_1_delay_3 \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator -=( const Reg32_1_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] -= other.value;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator *=( const Reg32_1_delay_3 \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator *=( const Reg32_1_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] *= other.value;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator /=( const Reg32_1_delay_3 \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator /=( const Reg32_1_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] /= other.value;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator |=( const Reg32_1_delay_3 \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator |=( const Reg32_1_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] |= other.value;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator &=( const Reg32_1_delay_3 \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator &=( const Reg32_1_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] &= other.value;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator ^=( const Reg32_1_delay_3 \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator ^=( const Reg32_1_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] ^= other.value;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator <<=( const Reg32_1_delay_3 \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator <<=( const Reg32_1_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] <<= other.value;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator >>=( const Reg32_1_delay_3 \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator >>=( const Reg32_1_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] >>= other.value;
     return *this;
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::operator +( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::operator +( const Register & other \
     ) const throw(){
     return (this->value + other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::operator -( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::operator -( const Register & other \
     ) const throw(){
     return (this->value - other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::operator *( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::operator *( const Register & other \
     ) const throw(){
     return (this->value * other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::operator /( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::operator /( const Register & other \
     ) const throw(){
     return (this->value / other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::operator |( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::operator |( const Register & other \
     ) const throw(){
     return (this->value | other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::operator &( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::operator &( const Register & other \
     ) const throw(){
     return (this->value & other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::operator ^( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::operator ^( const Register & other \
     ) const throw(){
     return (this->value ^ other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::operator <<( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::operator <<( const Register & other \
     ) const throw(){
     return (this->value << other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_1_delay_3::operator >>( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_1_delay_3::operator >>( const Register & other \
     ) const throw(){
     return (this->value >> other);
 }
 
-bool leon3_funcat_trap::Reg32_1_delay_3::operator <( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_1_delay_3::operator <( const Register & other ) const \
     throw(){
     return (this->value < other);
 }
 
-bool leon3_funcat_trap::Reg32_1_delay_3::operator >( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_1_delay_3::operator >( const Register & other ) const \
     throw(){
     return (this->value > other);
 }
 
-bool leon3_funcat_trap::Reg32_1_delay_3::operator <=( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_1_delay_3::operator <=( const Register & other ) const \
     throw(){
     return (this->value <= other);
 }
 
-bool leon3_funcat_trap::Reg32_1_delay_3::operator >=( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_1_delay_3::operator >=( const Register & other ) const \
     throw(){
     return (this->value >= other);
 }
 
-bool leon3_funcat_trap::Reg32_1_delay_3::operator ==( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_1_delay_3::operator ==( const Register & other ) const \
     throw(){
     return (this->value == other);
 }
 
-bool leon3_funcat_trap::Reg32_1_delay_3::operator !=( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_1_delay_3::operator !=( const Register & other ) const \
     throw(){
     return (this->value != other);
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator =( const Register \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator =( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] = other;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator +=( const Register \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator +=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] += other;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator -=( const Register \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator -=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] -= other;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator *=( const Register \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator *=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] *= other;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator /=( const Register \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator /=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] /= other;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator |=( const Register \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator |=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] |= other;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator &=( const Register \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator &=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] &= other;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator ^=( const Register \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator ^=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] ^= other;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator <<=( const Register \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator <<=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] <<= other;
     return *this;
 }
 
-Reg32_1_delay_3 & leon3_funcat_trap::Reg32_1_delay_3::operator >>=( const Register \
+Reg32_1_delay_3 & leon3_funclt_trap::Reg32_1_delay_3::operator >>=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] >>= other;
     return *this;
 }
 
-std::ostream & leon3_funcat_trap::Reg32_1_delay_3::operator <<( std::ostream & stream \
+std::ostream & leon3_funclt_trap::Reg32_1_delay_3::operator <<( std::ostream & stream \
     ) const throw(){
     stream << std::hex << std::showbase << this->value << std::dec;
     return stream;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::Reg32_1_delay_3( sc_module_name name ) : Register(name, \
+leon3_funclt_trap::Reg32_1_delay_3::Reg32_1_delay_3( sc_module_name name ) : Register(name, \
     32), field_WIM_28(this->value, this->values[2], this->updateSlot[2]), field_WIM_29(this->value, \
     this->values[2], this->updateSlot[2]), field_WIM_24(this->value, this->values[2], \
     this->updateSlot[2]), field_WIM_25(this->value, this->values[2], this->updateSlot[2]), \
@@ -1703,7 +1703,7 @@ leon3_funcat_trap::Reg32_1_delay_3::Reg32_1_delay_3( sc_module_name name ) : Reg
     this->updateSlot[2] = false;
 }
 
-leon3_funcat_trap::Reg32_1_delay_3::Reg32_1_delay_3() : Register(sc_gen_unique_name("Reg32_1_delay_3"), \
+leon3_funclt_trap::Reg32_1_delay_3::Reg32_1_delay_3() : Register(sc_gen_unique_name("Reg32_1_delay_3"), \
     32), field_WIM_28(this->value, this->values[2], this->updateSlot[2]), field_WIM_29(this->value, \
     this->values[2], this->updateSlot[2]), field_WIM_24(this->value, this->values[2], \
     this->updateSlot[2]), field_WIM_25(this->value, this->values[2], this->updateSlot[2]), \
@@ -1734,1575 +1734,1575 @@ leon3_funcat_trap::Reg32_1_delay_3::Reg32_1_delay_3() : Register(sc_gen_unique_n
     this->updateSlot[2] = false;
 }
 
-InnerField & leon3_funcat_trap::Reg32_2::InnerField_TBA::operator =( const unsigned \
+InnerField & leon3_funclt_trap::Reg32_2::InnerField_TBA::operator =( const unsigned \
     int & other ) throw(){
     this->value &= 0xfff;
     this->value |= ((other & 0xfffff) << 12);
     return *this;
 }
 
-leon3_funcat_trap::Reg32_2::InnerField_TBA::InnerField_TBA( unsigned int & value \
+leon3_funclt_trap::Reg32_2::InnerField_TBA::InnerField_TBA( unsigned int & value \
     ) : value(value){
 
 }
 
-leon3_funcat_trap::Reg32_2::InnerField_TBA::~InnerField_TBA(){
+leon3_funclt_trap::Reg32_2::InnerField_TBA::~InnerField_TBA(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_2::InnerField_TT::operator =( const unsigned \
+InnerField & leon3_funclt_trap::Reg32_2::InnerField_TT::operator =( const unsigned \
     int & other ) throw(){
     this->value &= 0xfffff00fL;
     this->value |= ((other & 0xff) << 4);
     return *this;
 }
 
-leon3_funcat_trap::Reg32_2::InnerField_TT::InnerField_TT( unsigned int & value ) \
+leon3_funclt_trap::Reg32_2::InnerField_TT::InnerField_TT( unsigned int & value ) \
     : value(value){
 
 }
 
-leon3_funcat_trap::Reg32_2::InnerField_TT::~InnerField_TT(){
+leon3_funclt_trap::Reg32_2::InnerField_TT::~InnerField_TT(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_2::InnerField_Empty::operator =( const unsigned \
+InnerField & leon3_funclt_trap::Reg32_2::InnerField_Empty::operator =( const unsigned \
     int & other ) throw(){
     return *this;
 }
 
-leon3_funcat_trap::Reg32_2::InnerField_Empty::InnerField_Empty(){
+leon3_funclt_trap::Reg32_2::InnerField_Empty::InnerField_Empty(){
 
 }
 
-leon3_funcat_trap::Reg32_2::InnerField_Empty::~InnerField_Empty(){
+leon3_funclt_trap::Reg32_2::InnerField_Empty::~InnerField_Empty(){
 
 }
-void leon3_funcat_trap::Reg32_2::immediateWrite( const unsigned int & value ) throw(){
+void leon3_funclt_trap::Reg32_2::immediateWrite( const unsigned int & value ) throw(){
     this->value = value;
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::readNewValue() throw(){
+unsigned int leon3_funclt_trap::Reg32_2::readNewValue() throw(){
     return this->value;
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::operator ~() throw(){
+unsigned int leon3_funclt_trap::Reg32_2::operator ~() throw(){
     return ~(this->value);
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator =( const unsigned int & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator =( const unsigned int & other ) throw(){
     this->value = other;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator +=( const unsigned int & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator +=( const unsigned int & other ) throw(){
     this->value += other;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator -=( const unsigned int & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator -=( const unsigned int & other ) throw(){
     this->value -= other;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator *=( const unsigned int & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator *=( const unsigned int & other ) throw(){
     this->value *= other;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator /=( const unsigned int & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator /=( const unsigned int & other ) throw(){
     this->value /= other;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator |=( const unsigned int & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator |=( const unsigned int & other ) throw(){
     this->value |= other;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator &=( const unsigned int & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator &=( const unsigned int & other ) throw(){
     this->value &= other;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator ^=( const unsigned int & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator ^=( const unsigned int & other ) throw(){
     this->value ^= other;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator <<=( const unsigned int & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator <<=( const unsigned int & other ) throw(){
     this->value <<= other;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator >>=( const unsigned int & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator >>=( const unsigned int & other ) throw(){
     this->value >>= other;
     return *this;
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::operator +( const Reg32_2 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_2::operator +( const Reg32_2 & other ) const \
     throw(){
     return (this->value + other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::operator -( const Reg32_2 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_2::operator -( const Reg32_2 & other ) const \
     throw(){
     return (this->value - other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::operator *( const Reg32_2 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_2::operator *( const Reg32_2 & other ) const \
     throw(){
     return (this->value * other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::operator /( const Reg32_2 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_2::operator /( const Reg32_2 & other ) const \
     throw(){
     return (this->value / other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::operator |( const Reg32_2 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_2::operator |( const Reg32_2 & other ) const \
     throw(){
     return (this->value | other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::operator &( const Reg32_2 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_2::operator &( const Reg32_2 & other ) const \
     throw(){
     return (this->value & other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::operator ^( const Reg32_2 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_2::operator ^( const Reg32_2 & other ) const \
     throw(){
     return (this->value ^ other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::operator <<( const Reg32_2 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_2::operator <<( const Reg32_2 & other ) const \
     throw(){
     return (this->value << other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::operator >>( const Reg32_2 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_2::operator >>( const Reg32_2 & other ) const \
     throw(){
     return (this->value >> other.value);
 }
 
-bool leon3_funcat_trap::Reg32_2::operator <( const Reg32_2 & other ) const throw(){
+bool leon3_funclt_trap::Reg32_2::operator <( const Reg32_2 & other ) const throw(){
     return (this->value < other.value);
 }
 
-bool leon3_funcat_trap::Reg32_2::operator >( const Reg32_2 & other ) const throw(){
+bool leon3_funclt_trap::Reg32_2::operator >( const Reg32_2 & other ) const throw(){
     return (this->value > other.value);
 }
 
-bool leon3_funcat_trap::Reg32_2::operator <=( const Reg32_2 & other ) const throw(){
+bool leon3_funclt_trap::Reg32_2::operator <=( const Reg32_2 & other ) const throw(){
     return (this->value <= other.value);
 }
 
-bool leon3_funcat_trap::Reg32_2::operator >=( const Reg32_2 & other ) const throw(){
+bool leon3_funclt_trap::Reg32_2::operator >=( const Reg32_2 & other ) const throw(){
     return (this->value >= other.value);
 }
 
-bool leon3_funcat_trap::Reg32_2::operator ==( const Reg32_2 & other ) const throw(){
+bool leon3_funclt_trap::Reg32_2::operator ==( const Reg32_2 & other ) const throw(){
     return (this->value == other.value);
 }
 
-bool leon3_funcat_trap::Reg32_2::operator !=( const Reg32_2 & other ) const throw(){
+bool leon3_funclt_trap::Reg32_2::operator !=( const Reg32_2 & other ) const throw(){
     return (this->value != other.value);
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator =( const Reg32_2 & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator =( const Reg32_2 & other ) throw(){
     this->value = other.value;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator +=( const Reg32_2 & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator +=( const Reg32_2 & other ) throw(){
     this->value += other.value;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator -=( const Reg32_2 & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator -=( const Reg32_2 & other ) throw(){
     this->value -= other.value;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator *=( const Reg32_2 & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator *=( const Reg32_2 & other ) throw(){
     this->value *= other.value;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator /=( const Reg32_2 & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator /=( const Reg32_2 & other ) throw(){
     this->value /= other.value;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator |=( const Reg32_2 & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator |=( const Reg32_2 & other ) throw(){
     this->value |= other.value;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator &=( const Reg32_2 & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator &=( const Reg32_2 & other ) throw(){
     this->value &= other.value;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator ^=( const Reg32_2 & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator ^=( const Reg32_2 & other ) throw(){
     this->value ^= other.value;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator <<=( const Reg32_2 & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator <<=( const Reg32_2 & other ) throw(){
     this->value <<= other.value;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator >>=( const Reg32_2 & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator >>=( const Reg32_2 & other ) throw(){
     this->value >>= other.value;
     return *this;
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::operator +( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_2::operator +( const Register & other ) const \
     throw(){
     return (this->value + other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::operator -( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_2::operator -( const Register & other ) const \
     throw(){
     return (this->value - other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::operator *( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_2::operator *( const Register & other ) const \
     throw(){
     return (this->value * other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::operator /( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_2::operator /( const Register & other ) const \
     throw(){
     return (this->value / other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::operator |( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_2::operator |( const Register & other ) const \
     throw(){
     return (this->value | other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::operator &( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_2::operator &( const Register & other ) const \
     throw(){
     return (this->value & other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::operator ^( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_2::operator ^( const Register & other ) const \
     throw(){
     return (this->value ^ other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::operator <<( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_2::operator <<( const Register & other ) const \
     throw(){
     return (this->value << other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_2::operator >>( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_2::operator >>( const Register & other ) const \
     throw(){
     return (this->value >> other);
 }
 
-bool leon3_funcat_trap::Reg32_2::operator <( const Register & other ) const throw(){
+bool leon3_funclt_trap::Reg32_2::operator <( const Register & other ) const throw(){
     return (this->value < other);
 }
 
-bool leon3_funcat_trap::Reg32_2::operator >( const Register & other ) const throw(){
+bool leon3_funclt_trap::Reg32_2::operator >( const Register & other ) const throw(){
     return (this->value > other);
 }
 
-bool leon3_funcat_trap::Reg32_2::operator <=( const Register & other ) const throw(){
+bool leon3_funclt_trap::Reg32_2::operator <=( const Register & other ) const throw(){
     return (this->value <= other);
 }
 
-bool leon3_funcat_trap::Reg32_2::operator >=( const Register & other ) const throw(){
+bool leon3_funclt_trap::Reg32_2::operator >=( const Register & other ) const throw(){
     return (this->value >= other);
 }
 
-bool leon3_funcat_trap::Reg32_2::operator ==( const Register & other ) const throw(){
+bool leon3_funclt_trap::Reg32_2::operator ==( const Register & other ) const throw(){
     return (this->value == other);
 }
 
-bool leon3_funcat_trap::Reg32_2::operator !=( const Register & other ) const throw(){
+bool leon3_funclt_trap::Reg32_2::operator !=( const Register & other ) const throw(){
     return (this->value != other);
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator =( const Register & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator =( const Register & other ) throw(){
     this->value = other;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator +=( const Register & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator +=( const Register & other ) throw(){
     this->value += other;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator -=( const Register & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator -=( const Register & other ) throw(){
     this->value -= other;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator *=( const Register & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator *=( const Register & other ) throw(){
     this->value *= other;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator /=( const Register & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator /=( const Register & other ) throw(){
     this->value /= other;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator |=( const Register & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator |=( const Register & other ) throw(){
     this->value |= other;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator &=( const Register & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator &=( const Register & other ) throw(){
     this->value &= other;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator ^=( const Register & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator ^=( const Register & other ) throw(){
     this->value ^= other;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator <<=( const Register & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator <<=( const Register & other ) throw(){
     this->value <<= other;
     return *this;
 }
 
-Reg32_2 & leon3_funcat_trap::Reg32_2::operator >>=( const Register & other ) throw(){
+Reg32_2 & leon3_funclt_trap::Reg32_2::operator >>=( const Register & other ) throw(){
     this->value >>= other;
     return *this;
 }
 
-std::ostream & leon3_funcat_trap::Reg32_2::operator <<( std::ostream & stream ) const \
+std::ostream & leon3_funclt_trap::Reg32_2::operator <<( std::ostream & stream ) const \
     throw(){
     stream << std::hex << std::showbase << this->value << std::dec;
     return stream;
 }
 
-leon3_funcat_trap::Reg32_2::Reg32_2( sc_module_name name ) : Register(name, 32), \
+leon3_funclt_trap::Reg32_2::Reg32_2( sc_module_name name ) : Register(name, 32), \
     field_TBA(this->value), field_TT(this->value){
     this->value = 0;
 }
 
-leon3_funcat_trap::Reg32_2::Reg32_2() : Register(sc_gen_unique_name("Reg32_2"), 32), \
+leon3_funclt_trap::Reg32_2::Reg32_2() : Register(sc_gen_unique_name("Reg32_2"), 32), \
     field_TBA(this->value), field_TT(this->value){
     this->value = 0;
 }
 
-InnerField & leon3_funcat_trap::Reg32_3::InnerField_Empty::operator =( const unsigned \
+InnerField & leon3_funclt_trap::Reg32_3::InnerField_Empty::operator =( const unsigned \
     int & other ) throw(){
     return *this;
 }
 
-leon3_funcat_trap::Reg32_3::InnerField_Empty::InnerField_Empty(){
+leon3_funclt_trap::Reg32_3::InnerField_Empty::InnerField_Empty(){
 
 }
 
-leon3_funcat_trap::Reg32_3::InnerField_Empty::~InnerField_Empty(){
+leon3_funclt_trap::Reg32_3::InnerField_Empty::~InnerField_Empty(){
 
 }
-void leon3_funcat_trap::Reg32_3::immediateWrite( const unsigned int & value ) throw(){
+void leon3_funclt_trap::Reg32_3::immediateWrite( const unsigned int & value ) throw(){
     this->value = value;
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::readNewValue() throw(){
+unsigned int leon3_funclt_trap::Reg32_3::readNewValue() throw(){
     return this->value;
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::operator ~() throw(){
+unsigned int leon3_funclt_trap::Reg32_3::operator ~() throw(){
     return ~(this->value);
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator =( const unsigned int & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator =( const unsigned int & other ) throw(){
     this->value = other;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator +=( const unsigned int & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator +=( const unsigned int & other ) throw(){
     this->value += other;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator -=( const unsigned int & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator -=( const unsigned int & other ) throw(){
     this->value -= other;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator *=( const unsigned int & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator *=( const unsigned int & other ) throw(){
     this->value *= other;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator /=( const unsigned int & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator /=( const unsigned int & other ) throw(){
     this->value /= other;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator |=( const unsigned int & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator |=( const unsigned int & other ) throw(){
     this->value |= other;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator &=( const unsigned int & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator &=( const unsigned int & other ) throw(){
     this->value &= other;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator ^=( const unsigned int & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator ^=( const unsigned int & other ) throw(){
     this->value ^= other;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator <<=( const unsigned int & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator <<=( const unsigned int & other ) throw(){
     this->value <<= other;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator >>=( const unsigned int & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator >>=( const unsigned int & other ) throw(){
     this->value >>= other;
     return *this;
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::operator +( const Reg32_3 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_3::operator +( const Reg32_3 & other ) const \
     throw(){
     return (this->value + other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::operator -( const Reg32_3 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_3::operator -( const Reg32_3 & other ) const \
     throw(){
     return (this->value - other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::operator *( const Reg32_3 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_3::operator *( const Reg32_3 & other ) const \
     throw(){
     return (this->value * other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::operator /( const Reg32_3 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_3::operator /( const Reg32_3 & other ) const \
     throw(){
     return (this->value / other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::operator |( const Reg32_3 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_3::operator |( const Reg32_3 & other ) const \
     throw(){
     return (this->value | other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::operator &( const Reg32_3 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_3::operator &( const Reg32_3 & other ) const \
     throw(){
     return (this->value & other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::operator ^( const Reg32_3 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_3::operator ^( const Reg32_3 & other ) const \
     throw(){
     return (this->value ^ other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::operator <<( const Reg32_3 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_3::operator <<( const Reg32_3 & other ) const \
     throw(){
     return (this->value << other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::operator >>( const Reg32_3 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_3::operator >>( const Reg32_3 & other ) const \
     throw(){
     return (this->value >> other.value);
 }
 
-bool leon3_funcat_trap::Reg32_3::operator <( const Reg32_3 & other ) const throw(){
+bool leon3_funclt_trap::Reg32_3::operator <( const Reg32_3 & other ) const throw(){
     return (this->value < other.value);
 }
 
-bool leon3_funcat_trap::Reg32_3::operator >( const Reg32_3 & other ) const throw(){
+bool leon3_funclt_trap::Reg32_3::operator >( const Reg32_3 & other ) const throw(){
     return (this->value > other.value);
 }
 
-bool leon3_funcat_trap::Reg32_3::operator <=( const Reg32_3 & other ) const throw(){
+bool leon3_funclt_trap::Reg32_3::operator <=( const Reg32_3 & other ) const throw(){
     return (this->value <= other.value);
 }
 
-bool leon3_funcat_trap::Reg32_3::operator >=( const Reg32_3 & other ) const throw(){
+bool leon3_funclt_trap::Reg32_3::operator >=( const Reg32_3 & other ) const throw(){
     return (this->value >= other.value);
 }
 
-bool leon3_funcat_trap::Reg32_3::operator ==( const Reg32_3 & other ) const throw(){
+bool leon3_funclt_trap::Reg32_3::operator ==( const Reg32_3 & other ) const throw(){
     return (this->value == other.value);
 }
 
-bool leon3_funcat_trap::Reg32_3::operator !=( const Reg32_3 & other ) const throw(){
+bool leon3_funclt_trap::Reg32_3::operator !=( const Reg32_3 & other ) const throw(){
     return (this->value != other.value);
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator =( const Reg32_3 & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator =( const Reg32_3 & other ) throw(){
     this->value = other.value;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator +=( const Reg32_3 & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator +=( const Reg32_3 & other ) throw(){
     this->value += other.value;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator -=( const Reg32_3 & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator -=( const Reg32_3 & other ) throw(){
     this->value -= other.value;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator *=( const Reg32_3 & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator *=( const Reg32_3 & other ) throw(){
     this->value *= other.value;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator /=( const Reg32_3 & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator /=( const Reg32_3 & other ) throw(){
     this->value /= other.value;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator |=( const Reg32_3 & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator |=( const Reg32_3 & other ) throw(){
     this->value |= other.value;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator &=( const Reg32_3 & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator &=( const Reg32_3 & other ) throw(){
     this->value &= other.value;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator ^=( const Reg32_3 & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator ^=( const Reg32_3 & other ) throw(){
     this->value ^= other.value;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator <<=( const Reg32_3 & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator <<=( const Reg32_3 & other ) throw(){
     this->value <<= other.value;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator >>=( const Reg32_3 & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator >>=( const Reg32_3 & other ) throw(){
     this->value >>= other.value;
     return *this;
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::operator +( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_3::operator +( const Register & other ) const \
     throw(){
     return (this->value + other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::operator -( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_3::operator -( const Register & other ) const \
     throw(){
     return (this->value - other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::operator *( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_3::operator *( const Register & other ) const \
     throw(){
     return (this->value * other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::operator /( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_3::operator /( const Register & other ) const \
     throw(){
     return (this->value / other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::operator |( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_3::operator |( const Register & other ) const \
     throw(){
     return (this->value | other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::operator &( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_3::operator &( const Register & other ) const \
     throw(){
     return (this->value & other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::operator ^( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_3::operator ^( const Register & other ) const \
     throw(){
     return (this->value ^ other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::operator <<( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_3::operator <<( const Register & other ) const \
     throw(){
     return (this->value << other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3::operator >>( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_3::operator >>( const Register & other ) const \
     throw(){
     return (this->value >> other);
 }
 
-bool leon3_funcat_trap::Reg32_3::operator <( const Register & other ) const throw(){
+bool leon3_funclt_trap::Reg32_3::operator <( const Register & other ) const throw(){
     return (this->value < other);
 }
 
-bool leon3_funcat_trap::Reg32_3::operator >( const Register & other ) const throw(){
+bool leon3_funclt_trap::Reg32_3::operator >( const Register & other ) const throw(){
     return (this->value > other);
 }
 
-bool leon3_funcat_trap::Reg32_3::operator <=( const Register & other ) const throw(){
+bool leon3_funclt_trap::Reg32_3::operator <=( const Register & other ) const throw(){
     return (this->value <= other);
 }
 
-bool leon3_funcat_trap::Reg32_3::operator >=( const Register & other ) const throw(){
+bool leon3_funclt_trap::Reg32_3::operator >=( const Register & other ) const throw(){
     return (this->value >= other);
 }
 
-bool leon3_funcat_trap::Reg32_3::operator ==( const Register & other ) const throw(){
+bool leon3_funclt_trap::Reg32_3::operator ==( const Register & other ) const throw(){
     return (this->value == other);
 }
 
-bool leon3_funcat_trap::Reg32_3::operator !=( const Register & other ) const throw(){
+bool leon3_funclt_trap::Reg32_3::operator !=( const Register & other ) const throw(){
     return (this->value != other);
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator =( const Register & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator =( const Register & other ) throw(){
     this->value = other;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator +=( const Register & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator +=( const Register & other ) throw(){
     this->value += other;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator -=( const Register & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator -=( const Register & other ) throw(){
     this->value -= other;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator *=( const Register & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator *=( const Register & other ) throw(){
     this->value *= other;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator /=( const Register & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator /=( const Register & other ) throw(){
     this->value /= other;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator |=( const Register & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator |=( const Register & other ) throw(){
     this->value |= other;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator &=( const Register & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator &=( const Register & other ) throw(){
     this->value &= other;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator ^=( const Register & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator ^=( const Register & other ) throw(){
     this->value ^= other;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator <<=( const Register & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator <<=( const Register & other ) throw(){
     this->value <<= other;
     return *this;
 }
 
-Reg32_3 & leon3_funcat_trap::Reg32_3::operator >>=( const Register & other ) throw(){
+Reg32_3 & leon3_funclt_trap::Reg32_3::operator >>=( const Register & other ) throw(){
     this->value >>= other;
     return *this;
 }
 
-std::ostream & leon3_funcat_trap::Reg32_3::operator <<( std::ostream & stream ) const \
+std::ostream & leon3_funclt_trap::Reg32_3::operator <<( std::ostream & stream ) const \
     throw(){
     stream << std::hex << std::showbase << this->value << std::dec;
     return stream;
 }
 
-leon3_funcat_trap::Reg32_3::Reg32_3( sc_module_name name ) : Register(name, 32){
+leon3_funclt_trap::Reg32_3::Reg32_3( sc_module_name name ) : Register(name, 32){
     this->value = 0;
 }
 
-leon3_funcat_trap::Reg32_3::Reg32_3() : Register(sc_gen_unique_name("Reg32_3"), 32){
+leon3_funclt_trap::Reg32_3::Reg32_3() : Register(sc_gen_unique_name("Reg32_3"), 32){
     this->value = 0;
 }
 
-InnerField & leon3_funcat_trap::Reg32_3_off_4::InnerField_Empty::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_3_off_4::InnerField_Empty::operator =( const \
     unsigned int & other ) throw(){
     return *this;
 }
 
-leon3_funcat_trap::Reg32_3_off_4::InnerField_Empty::InnerField_Empty(){
+leon3_funclt_trap::Reg32_3_off_4::InnerField_Empty::InnerField_Empty(){
 
 }
 
-leon3_funcat_trap::Reg32_3_off_4::InnerField_Empty::~InnerField_Empty(){
+leon3_funclt_trap::Reg32_3_off_4::InnerField_Empty::~InnerField_Empty(){
 
 }
-void leon3_funcat_trap::Reg32_3_off_4::immediateWrite( const unsigned int & value \
+void leon3_funclt_trap::Reg32_3_off_4::immediateWrite( const unsigned int & value \
     ) throw(){
     this->value = value;
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::readNewValue() throw(){
+unsigned int leon3_funclt_trap::Reg32_3_off_4::readNewValue() throw(){
     return this->value + 4;
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::operator ~() throw(){
+unsigned int leon3_funclt_trap::Reg32_3_off_4::operator ~() throw(){
     return ~(this->value + 4);
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator =( const unsigned int \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator =( const unsigned int \
     & other ) throw(){
     this->value = other;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator +=( const unsigned int \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator +=( const unsigned int \
     & other ) throw(){
     this->value += other;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator -=( const unsigned int \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator -=( const unsigned int \
     & other ) throw(){
     this->value -= other;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator *=( const unsigned int \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator *=( const unsigned int \
     & other ) throw(){
     this->value *= other;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator /=( const unsigned int \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator /=( const unsigned int \
     & other ) throw(){
     this->value /= other;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator |=( const unsigned int \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator |=( const unsigned int \
     & other ) throw(){
     this->value |= other;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator &=( const unsigned int \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator &=( const unsigned int \
     & other ) throw(){
     this->value &= other;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator ^=( const unsigned int \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator ^=( const unsigned int \
     & other ) throw(){
     this->value ^= other;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator <<=( const unsigned int \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator <<=( const unsigned int \
     & other ) throw(){
     this->value <<= other;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator >>=( const unsigned int \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator >>=( const unsigned int \
     & other ) throw(){
     this->value >>= other;
     return *this;
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::operator +( const Reg32_3_off_4 & \
+unsigned int leon3_funclt_trap::Reg32_3_off_4::operator +( const Reg32_3_off_4 & \
     other ) const throw(){
     return ((this->value  + 4) + (other.value + 4));
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::operator -( const Reg32_3_off_4 & \
+unsigned int leon3_funclt_trap::Reg32_3_off_4::operator -( const Reg32_3_off_4 & \
     other ) const throw(){
     return ((this->value  + 4) - (other.value + 4));
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::operator *( const Reg32_3_off_4 & \
+unsigned int leon3_funclt_trap::Reg32_3_off_4::operator *( const Reg32_3_off_4 & \
     other ) const throw(){
     return ((this->value  + 4) * (other.value + 4));
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::operator /( const Reg32_3_off_4 & \
+unsigned int leon3_funclt_trap::Reg32_3_off_4::operator /( const Reg32_3_off_4 & \
     other ) const throw(){
     return ((this->value  + 4) / (other.value + 4));
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::operator |( const Reg32_3_off_4 & \
+unsigned int leon3_funclt_trap::Reg32_3_off_4::operator |( const Reg32_3_off_4 & \
     other ) const throw(){
     return ((this->value  + 4) | (other.value + 4));
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::operator &( const Reg32_3_off_4 & \
+unsigned int leon3_funclt_trap::Reg32_3_off_4::operator &( const Reg32_3_off_4 & \
     other ) const throw(){
     return ((this->value  + 4) & (other.value + 4));
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::operator ^( const Reg32_3_off_4 & \
+unsigned int leon3_funclt_trap::Reg32_3_off_4::operator ^( const Reg32_3_off_4 & \
     other ) const throw(){
     return ((this->value  + 4) ^ (other.value + 4));
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::operator <<( const Reg32_3_off_4 & \
+unsigned int leon3_funclt_trap::Reg32_3_off_4::operator <<( const Reg32_3_off_4 & \
     other ) const throw(){
     return ((this->value  + 4) << (other.value + 4));
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::operator >>( const Reg32_3_off_4 & \
+unsigned int leon3_funclt_trap::Reg32_3_off_4::operator >>( const Reg32_3_off_4 & \
     other ) const throw(){
     return ((this->value  + 4) >> (other.value + 4));
 }
 
-bool leon3_funcat_trap::Reg32_3_off_4::operator <( const Reg32_3_off_4 & other ) \
+bool leon3_funclt_trap::Reg32_3_off_4::operator <( const Reg32_3_off_4 & other ) \
     const throw(){
     return ((this->value + 4) < (other.value + 4));
 }
 
-bool leon3_funcat_trap::Reg32_3_off_4::operator >( const Reg32_3_off_4 & other ) \
+bool leon3_funclt_trap::Reg32_3_off_4::operator >( const Reg32_3_off_4 & other ) \
     const throw(){
     return ((this->value + 4) > (other.value + 4));
 }
 
-bool leon3_funcat_trap::Reg32_3_off_4::operator <=( const Reg32_3_off_4 & other ) \
+bool leon3_funclt_trap::Reg32_3_off_4::operator <=( const Reg32_3_off_4 & other ) \
     const throw(){
     return ((this->value + 4) <= (other.value + 4));
 }
 
-bool leon3_funcat_trap::Reg32_3_off_4::operator >=( const Reg32_3_off_4 & other ) \
+bool leon3_funclt_trap::Reg32_3_off_4::operator >=( const Reg32_3_off_4 & other ) \
     const throw(){
     return ((this->value + 4) >= (other.value + 4));
 }
 
-bool leon3_funcat_trap::Reg32_3_off_4::operator ==( const Reg32_3_off_4 & other ) \
+bool leon3_funclt_trap::Reg32_3_off_4::operator ==( const Reg32_3_off_4 & other ) \
     const throw(){
     return ((this->value + 4) == (other.value + 4));
 }
 
-bool leon3_funcat_trap::Reg32_3_off_4::operator !=( const Reg32_3_off_4 & other ) \
+bool leon3_funclt_trap::Reg32_3_off_4::operator !=( const Reg32_3_off_4 & other ) \
     const throw(){
     return ((this->value + 4) != (other.value + 4));
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator =( const Reg32_3_off_4 \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator =( const Reg32_3_off_4 \
     & other ) throw(){
     this->value = other.value;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator +=( const Reg32_3_off_4 \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator +=( const Reg32_3_off_4 \
     & other ) throw(){
     this->value += other.value;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator -=( const Reg32_3_off_4 \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator -=( const Reg32_3_off_4 \
     & other ) throw(){
     this->value -= other.value;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator *=( const Reg32_3_off_4 \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator *=( const Reg32_3_off_4 \
     & other ) throw(){
     this->value *= other.value;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator /=( const Reg32_3_off_4 \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator /=( const Reg32_3_off_4 \
     & other ) throw(){
     this->value /= other.value;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator |=( const Reg32_3_off_4 \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator |=( const Reg32_3_off_4 \
     & other ) throw(){
     this->value |= other.value;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator &=( const Reg32_3_off_4 \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator &=( const Reg32_3_off_4 \
     & other ) throw(){
     this->value &= other.value;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator ^=( const Reg32_3_off_4 \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator ^=( const Reg32_3_off_4 \
     & other ) throw(){
     this->value ^= other.value;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator <<=( const Reg32_3_off_4 \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator <<=( const Reg32_3_off_4 \
     & other ) throw(){
     this->value <<= other.value;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator >>=( const Reg32_3_off_4 \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator >>=( const Reg32_3_off_4 \
     & other ) throw(){
     this->value >>= other.value;
     return *this;
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::operator +( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_off_4::operator +( const Register & other \
     ) const throw(){
     return ((this->value  + 4) + other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::operator -( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_off_4::operator -( const Register & other \
     ) const throw(){
     return ((this->value  + 4) - other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::operator *( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_off_4::operator *( const Register & other \
     ) const throw(){
     return ((this->value  + 4) * other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::operator /( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_off_4::operator /( const Register & other \
     ) const throw(){
     return ((this->value  + 4) / other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::operator |( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_off_4::operator |( const Register & other \
     ) const throw(){
     return ((this->value  + 4) | other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::operator &( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_off_4::operator &( const Register & other \
     ) const throw(){
     return ((this->value  + 4) & other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::operator ^( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_off_4::operator ^( const Register & other \
     ) const throw(){
     return ((this->value  + 4) ^ other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::operator <<( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_off_4::operator <<( const Register & other \
     ) const throw(){
     return ((this->value  + 4) << other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_off_4::operator >>( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_off_4::operator >>( const Register & other \
     ) const throw(){
     return ((this->value  + 4) >> other);
 }
 
-bool leon3_funcat_trap::Reg32_3_off_4::operator <( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_3_off_4::operator <( const Register & other ) const \
     throw(){
     return ((this->value  + 4) < other);
 }
 
-bool leon3_funcat_trap::Reg32_3_off_4::operator >( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_3_off_4::operator >( const Register & other ) const \
     throw(){
     return ((this->value  + 4) > other);
 }
 
-bool leon3_funcat_trap::Reg32_3_off_4::operator <=( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_3_off_4::operator <=( const Register & other ) const \
     throw(){
     return ((this->value  + 4) <= other);
 }
 
-bool leon3_funcat_trap::Reg32_3_off_4::operator >=( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_3_off_4::operator >=( const Register & other ) const \
     throw(){
     return ((this->value  + 4) >= other);
 }
 
-bool leon3_funcat_trap::Reg32_3_off_4::operator ==( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_3_off_4::operator ==( const Register & other ) const \
     throw(){
     return ((this->value  + 4) == other);
 }
 
-bool leon3_funcat_trap::Reg32_3_off_4::operator !=( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_3_off_4::operator !=( const Register & other ) const \
     throw(){
     return ((this->value  + 4) != other);
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator =( const Register & other \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator =( const Register & other \
     ) throw(){
     this->value = other;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator +=( const Register & other \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator +=( const Register & other \
     ) throw(){
     this->value += other;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator -=( const Register & other \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator -=( const Register & other \
     ) throw(){
     this->value -= other;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator *=( const Register & other \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator *=( const Register & other \
     ) throw(){
     this->value *= other;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator /=( const Register & other \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator /=( const Register & other \
     ) throw(){
     this->value /= other;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator |=( const Register & other \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator |=( const Register & other \
     ) throw(){
     this->value |= other;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator &=( const Register & other \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator &=( const Register & other \
     ) throw(){
     this->value &= other;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator ^=( const Register & other \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator ^=( const Register & other \
     ) throw(){
     this->value ^= other;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator <<=( const Register & \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator <<=( const Register & \
     other ) throw(){
     this->value <<= other;
     return *this;
 }
 
-Reg32_3_off_4 & leon3_funcat_trap::Reg32_3_off_4::operator >>=( const Register & \
+Reg32_3_off_4 & leon3_funclt_trap::Reg32_3_off_4::operator >>=( const Register & \
     other ) throw(){
     this->value >>= other;
     return *this;
 }
 
-std::ostream & leon3_funcat_trap::Reg32_3_off_4::operator <<( std::ostream & stream \
+std::ostream & leon3_funclt_trap::Reg32_3_off_4::operator <<( std::ostream & stream \
     ) const throw(){
     stream << std::hex << std::showbase << this->value << std::dec;
     return stream;
 }
 
-leon3_funcat_trap::Reg32_3_off_4::Reg32_3_off_4( sc_module_name name ) : Register(name, \
+leon3_funclt_trap::Reg32_3_off_4::Reg32_3_off_4( sc_module_name name ) : Register(name, \
     32){
     this->value = 0;
 }
 
-leon3_funcat_trap::Reg32_3_off_4::Reg32_3_off_4() : Register(sc_gen_unique_name("Reg32_3_off_4"), \
+leon3_funclt_trap::Reg32_3_off_4::Reg32_3_off_4() : Register(sc_gen_unique_name("Reg32_3_off_4"), \
     32){
     this->value = 0;
 }
 
-InnerField & leon3_funcat_trap::Reg32_0::InnerField_PS::operator =( const unsigned \
+InnerField & leon3_funclt_trap::Reg32_0::InnerField_PS::operator =( const unsigned \
     int & other ) throw(){
     this->value &= 0xffffffbfL;
     this->value |= ((other & 0x1) << 6);
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_PS::InnerField_PS( unsigned int & value ) \
+leon3_funclt_trap::Reg32_0::InnerField_PS::InnerField_PS( unsigned int & value ) \
     : value(value){
 
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_PS::~InnerField_PS(){
+leon3_funclt_trap::Reg32_0::InnerField_PS::~InnerField_PS(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0::InnerField_VER::operator =( const unsigned \
+InnerField & leon3_funclt_trap::Reg32_0::InnerField_VER::operator =( const unsigned \
     int & other ) throw(){
     this->value &= 0xf0ffffffL;
     this->value |= ((other & 0xf) << 24);
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_VER::InnerField_VER( unsigned int & value \
+leon3_funclt_trap::Reg32_0::InnerField_VER::InnerField_VER( unsigned int & value \
     ) : value(value){
 
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_VER::~InnerField_VER(){
+leon3_funclt_trap::Reg32_0::InnerField_VER::~InnerField_VER(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0::InnerField_ICC_z::operator =( const unsigned \
+InnerField & leon3_funclt_trap::Reg32_0::InnerField_ICC_z::operator =( const unsigned \
     int & other ) throw(){
     this->value &= 0xffbfffffL;
     this->value |= ((other & 0x1) << 22);
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_ICC_z::InnerField_ICC_z( unsigned int & value \
+leon3_funclt_trap::Reg32_0::InnerField_ICC_z::InnerField_ICC_z( unsigned int & value \
     ) : value(value){
 
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_ICC_z::~InnerField_ICC_z(){
+leon3_funclt_trap::Reg32_0::InnerField_ICC_z::~InnerField_ICC_z(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0::InnerField_ICC_v::operator =( const unsigned \
+InnerField & leon3_funclt_trap::Reg32_0::InnerField_ICC_v::operator =( const unsigned \
     int & other ) throw(){
     this->value &= 0xffdfffffL;
     this->value |= ((other & 0x1) << 21);
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_ICC_v::InnerField_ICC_v( unsigned int & value \
+leon3_funclt_trap::Reg32_0::InnerField_ICC_v::InnerField_ICC_v( unsigned int & value \
     ) : value(value){
 
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_ICC_v::~InnerField_ICC_v(){
+leon3_funclt_trap::Reg32_0::InnerField_ICC_v::~InnerField_ICC_v(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0::InnerField_EF::operator =( const unsigned \
+InnerField & leon3_funclt_trap::Reg32_0::InnerField_EF::operator =( const unsigned \
     int & other ) throw(){
     this->value &= 0xffffefffL;
     this->value |= ((other & 0x1) << 12);
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_EF::InnerField_EF( unsigned int & value ) \
+leon3_funclt_trap::Reg32_0::InnerField_EF::InnerField_EF( unsigned int & value ) \
     : value(value){
 
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_EF::~InnerField_EF(){
+leon3_funclt_trap::Reg32_0::InnerField_EF::~InnerField_EF(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0::InnerField_EC::operator =( const unsigned \
+InnerField & leon3_funclt_trap::Reg32_0::InnerField_EC::operator =( const unsigned \
     int & other ) throw(){
     this->value &= 0xffffdfffL;
     this->value |= ((other & 0x1) << 13);
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_EC::InnerField_EC( unsigned int & value ) \
+leon3_funclt_trap::Reg32_0::InnerField_EC::InnerField_EC( unsigned int & value ) \
     : value(value){
 
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_EC::~InnerField_EC(){
+leon3_funclt_trap::Reg32_0::InnerField_EC::~InnerField_EC(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0::InnerField_ICC_n::operator =( const unsigned \
+InnerField & leon3_funclt_trap::Reg32_0::InnerField_ICC_n::operator =( const unsigned \
     int & other ) throw(){
     this->value &= 0xff7fffffL;
     this->value |= ((other & 0x1) << 23);
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_ICC_n::InnerField_ICC_n( unsigned int & value \
+leon3_funclt_trap::Reg32_0::InnerField_ICC_n::InnerField_ICC_n( unsigned int & value \
     ) : value(value){
 
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_ICC_n::~InnerField_ICC_n(){
+leon3_funclt_trap::Reg32_0::InnerField_ICC_n::~InnerField_ICC_n(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0::InnerField_S::operator =( const unsigned \
+InnerField & leon3_funclt_trap::Reg32_0::InnerField_S::operator =( const unsigned \
     int & other ) throw(){
     this->value &= 0xffffff7fL;
     this->value |= ((other & 0x1) << 7);
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_S::InnerField_S( unsigned int & value ) : \
+leon3_funclt_trap::Reg32_0::InnerField_S::InnerField_S( unsigned int & value ) : \
     value(value){
 
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_S::~InnerField_S(){
+leon3_funclt_trap::Reg32_0::InnerField_S::~InnerField_S(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0::InnerField_CWP::operator =( const unsigned \
+InnerField & leon3_funclt_trap::Reg32_0::InnerField_CWP::operator =( const unsigned \
     int & other ) throw(){
     this->value &= 0xffffffe0L;
     this->value |= other;
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_CWP::InnerField_CWP( unsigned int & value \
+leon3_funclt_trap::Reg32_0::InnerField_CWP::InnerField_CWP( unsigned int & value \
     ) : value(value){
 
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_CWP::~InnerField_CWP(){
+leon3_funclt_trap::Reg32_0::InnerField_CWP::~InnerField_CWP(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0::InnerField_ET::operator =( const unsigned \
+InnerField & leon3_funclt_trap::Reg32_0::InnerField_ET::operator =( const unsigned \
     int & other ) throw(){
     this->value &= 0xffffffdfL;
     this->value |= ((other & 0x1) << 5);
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_ET::InnerField_ET( unsigned int & value ) \
+leon3_funclt_trap::Reg32_0::InnerField_ET::InnerField_ET( unsigned int & value ) \
     : value(value){
 
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_ET::~InnerField_ET(){
+leon3_funclt_trap::Reg32_0::InnerField_ET::~InnerField_ET(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0::InnerField_PIL::operator =( const unsigned \
+InnerField & leon3_funclt_trap::Reg32_0::InnerField_PIL::operator =( const unsigned \
     int & other ) throw(){
     this->value &= 0xfffff0ffL;
     this->value |= ((other & 0xf) << 8);
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_PIL::InnerField_PIL( unsigned int & value \
+leon3_funclt_trap::Reg32_0::InnerField_PIL::InnerField_PIL( unsigned int & value \
     ) : value(value){
 
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_PIL::~InnerField_PIL(){
+leon3_funclt_trap::Reg32_0::InnerField_PIL::~InnerField_PIL(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0::InnerField_ICC_c::operator =( const unsigned \
+InnerField & leon3_funclt_trap::Reg32_0::InnerField_ICC_c::operator =( const unsigned \
     int & other ) throw(){
     this->value &= 0xffefffffL;
     this->value |= ((other & 0x1) << 20);
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_ICC_c::InnerField_ICC_c( unsigned int & value \
+leon3_funclt_trap::Reg32_0::InnerField_ICC_c::InnerField_ICC_c( unsigned int & value \
     ) : value(value){
 
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_ICC_c::~InnerField_ICC_c(){
+leon3_funclt_trap::Reg32_0::InnerField_ICC_c::~InnerField_ICC_c(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0::InnerField_IMPL::operator =( const unsigned \
+InnerField & leon3_funclt_trap::Reg32_0::InnerField_IMPL::operator =( const unsigned \
     int & other ) throw(){
     this->value &= 0xfffffff;
     this->value |= ((other & 0xf) << 28);
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_IMPL::InnerField_IMPL( unsigned int & value \
+leon3_funclt_trap::Reg32_0::InnerField_IMPL::InnerField_IMPL( unsigned int & value \
     ) : value(value){
 
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_IMPL::~InnerField_IMPL(){
+leon3_funclt_trap::Reg32_0::InnerField_IMPL::~InnerField_IMPL(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0::InnerField_Empty::operator =( const unsigned \
+InnerField & leon3_funclt_trap::Reg32_0::InnerField_Empty::operator =( const unsigned \
     int & other ) throw(){
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_Empty::InnerField_Empty(){
+leon3_funclt_trap::Reg32_0::InnerField_Empty::InnerField_Empty(){
 
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_Empty::~InnerField_Empty(){
+leon3_funclt_trap::Reg32_0::InnerField_Empty::~InnerField_Empty(){
 
 }
-void leon3_funcat_trap::Reg32_0::immediateWrite( const unsigned int & value ) throw(){
+void leon3_funclt_trap::Reg32_0::immediateWrite( const unsigned int & value ) throw(){
     this->value = value;
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::readNewValue() throw(){
+unsigned int leon3_funclt_trap::Reg32_0::readNewValue() throw(){
     return this->value;
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::operator ~() throw(){
+unsigned int leon3_funclt_trap::Reg32_0::operator ~() throw(){
     return ~(this->value);
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator =( const unsigned int & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator =( const unsigned int & other ) throw(){
     this->value = other;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator +=( const unsigned int & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator +=( const unsigned int & other ) throw(){
     this->value += other;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator -=( const unsigned int & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator -=( const unsigned int & other ) throw(){
     this->value -= other;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator *=( const unsigned int & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator *=( const unsigned int & other ) throw(){
     this->value *= other;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator /=( const unsigned int & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator /=( const unsigned int & other ) throw(){
     this->value /= other;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator |=( const unsigned int & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator |=( const unsigned int & other ) throw(){
     this->value |= other;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator &=( const unsigned int & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator &=( const unsigned int & other ) throw(){
     this->value &= other;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator ^=( const unsigned int & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator ^=( const unsigned int & other ) throw(){
     this->value ^= other;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator <<=( const unsigned int & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator <<=( const unsigned int & other ) throw(){
     this->value <<= other;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator >>=( const unsigned int & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator >>=( const unsigned int & other ) throw(){
     this->value >>= other;
     return *this;
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::operator +( const Reg32_0 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_0::operator +( const Reg32_0 & other ) const \
     throw(){
     return (this->value + other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::operator -( const Reg32_0 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_0::operator -( const Reg32_0 & other ) const \
     throw(){
     return (this->value - other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::operator *( const Reg32_0 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_0::operator *( const Reg32_0 & other ) const \
     throw(){
     return (this->value * other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::operator /( const Reg32_0 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_0::operator /( const Reg32_0 & other ) const \
     throw(){
     return (this->value / other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::operator |( const Reg32_0 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_0::operator |( const Reg32_0 & other ) const \
     throw(){
     return (this->value | other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::operator &( const Reg32_0 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_0::operator &( const Reg32_0 & other ) const \
     throw(){
     return (this->value & other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::operator ^( const Reg32_0 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_0::operator ^( const Reg32_0 & other ) const \
     throw(){
     return (this->value ^ other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::operator <<( const Reg32_0 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_0::operator <<( const Reg32_0 & other ) const \
     throw(){
     return (this->value << other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::operator >>( const Reg32_0 & other ) const \
+unsigned int leon3_funclt_trap::Reg32_0::operator >>( const Reg32_0 & other ) const \
     throw(){
     return (this->value >> other.value);
 }
 
-bool leon3_funcat_trap::Reg32_0::operator <( const Reg32_0 & other ) const throw(){
+bool leon3_funclt_trap::Reg32_0::operator <( const Reg32_0 & other ) const throw(){
     return (this->value < other.value);
 }
 
-bool leon3_funcat_trap::Reg32_0::operator >( const Reg32_0 & other ) const throw(){
+bool leon3_funclt_trap::Reg32_0::operator >( const Reg32_0 & other ) const throw(){
     return (this->value > other.value);
 }
 
-bool leon3_funcat_trap::Reg32_0::operator <=( const Reg32_0 & other ) const throw(){
+bool leon3_funclt_trap::Reg32_0::operator <=( const Reg32_0 & other ) const throw(){
     return (this->value <= other.value);
 }
 
-bool leon3_funcat_trap::Reg32_0::operator >=( const Reg32_0 & other ) const throw(){
+bool leon3_funclt_trap::Reg32_0::operator >=( const Reg32_0 & other ) const throw(){
     return (this->value >= other.value);
 }
 
-bool leon3_funcat_trap::Reg32_0::operator ==( const Reg32_0 & other ) const throw(){
+bool leon3_funclt_trap::Reg32_0::operator ==( const Reg32_0 & other ) const throw(){
     return (this->value == other.value);
 }
 
-bool leon3_funcat_trap::Reg32_0::operator !=( const Reg32_0 & other ) const throw(){
+bool leon3_funclt_trap::Reg32_0::operator !=( const Reg32_0 & other ) const throw(){
     return (this->value != other.value);
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator =( const Reg32_0 & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator =( const Reg32_0 & other ) throw(){
     this->value = other.value;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator +=( const Reg32_0 & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator +=( const Reg32_0 & other ) throw(){
     this->value += other.value;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator -=( const Reg32_0 & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator -=( const Reg32_0 & other ) throw(){
     this->value -= other.value;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator *=( const Reg32_0 & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator *=( const Reg32_0 & other ) throw(){
     this->value *= other.value;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator /=( const Reg32_0 & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator /=( const Reg32_0 & other ) throw(){
     this->value /= other.value;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator |=( const Reg32_0 & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator |=( const Reg32_0 & other ) throw(){
     this->value |= other.value;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator &=( const Reg32_0 & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator &=( const Reg32_0 & other ) throw(){
     this->value &= other.value;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator ^=( const Reg32_0 & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator ^=( const Reg32_0 & other ) throw(){
     this->value ^= other.value;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator <<=( const Reg32_0 & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator <<=( const Reg32_0 & other ) throw(){
     this->value <<= other.value;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator >>=( const Reg32_0 & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator >>=( const Reg32_0 & other ) throw(){
     this->value >>= other.value;
     return *this;
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::operator +( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_0::operator +( const Register & other ) const \
     throw(){
     return (this->value + other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::operator -( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_0::operator -( const Register & other ) const \
     throw(){
     return (this->value - other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::operator *( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_0::operator *( const Register & other ) const \
     throw(){
     return (this->value * other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::operator /( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_0::operator /( const Register & other ) const \
     throw(){
     return (this->value / other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::operator |( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_0::operator |( const Register & other ) const \
     throw(){
     return (this->value | other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::operator &( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_0::operator &( const Register & other ) const \
     throw(){
     return (this->value & other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::operator ^( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_0::operator ^( const Register & other ) const \
     throw(){
     return (this->value ^ other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::operator <<( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_0::operator <<( const Register & other ) const \
     throw(){
     return (this->value << other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_0::operator >>( const Register & other ) const \
+unsigned int leon3_funclt_trap::Reg32_0::operator >>( const Register & other ) const \
     throw(){
     return (this->value >> other);
 }
 
-bool leon3_funcat_trap::Reg32_0::operator <( const Register & other ) const throw(){
+bool leon3_funclt_trap::Reg32_0::operator <( const Register & other ) const throw(){
     return (this->value < other);
 }
 
-bool leon3_funcat_trap::Reg32_0::operator >( const Register & other ) const throw(){
+bool leon3_funclt_trap::Reg32_0::operator >( const Register & other ) const throw(){
     return (this->value > other);
 }
 
-bool leon3_funcat_trap::Reg32_0::operator <=( const Register & other ) const throw(){
+bool leon3_funclt_trap::Reg32_0::operator <=( const Register & other ) const throw(){
     return (this->value <= other);
 }
 
-bool leon3_funcat_trap::Reg32_0::operator >=( const Register & other ) const throw(){
+bool leon3_funclt_trap::Reg32_0::operator >=( const Register & other ) const throw(){
     return (this->value >= other);
 }
 
-bool leon3_funcat_trap::Reg32_0::operator ==( const Register & other ) const throw(){
+bool leon3_funclt_trap::Reg32_0::operator ==( const Register & other ) const throw(){
     return (this->value == other);
 }
 
-bool leon3_funcat_trap::Reg32_0::operator !=( const Register & other ) const throw(){
+bool leon3_funclt_trap::Reg32_0::operator !=( const Register & other ) const throw(){
     return (this->value != other);
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator =( const Register & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator =( const Register & other ) throw(){
     this->value = other;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator +=( const Register & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator +=( const Register & other ) throw(){
     this->value += other;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator -=( const Register & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator -=( const Register & other ) throw(){
     this->value -= other;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator *=( const Register & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator *=( const Register & other ) throw(){
     this->value *= other;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator /=( const Register & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator /=( const Register & other ) throw(){
     this->value /= other;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator |=( const Register & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator |=( const Register & other ) throw(){
     this->value |= other;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator &=( const Register & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator &=( const Register & other ) throw(){
     this->value &= other;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator ^=( const Register & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator ^=( const Register & other ) throw(){
     this->value ^= other;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator <<=( const Register & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator <<=( const Register & other ) throw(){
     this->value <<= other;
     return *this;
 }
 
-Reg32_0 & leon3_funcat_trap::Reg32_0::operator >>=( const Register & other ) throw(){
+Reg32_0 & leon3_funclt_trap::Reg32_0::operator >>=( const Register & other ) throw(){
     this->value >>= other;
     return *this;
 }
 
-std::ostream & leon3_funcat_trap::Reg32_0::operator <<( std::ostream & stream ) const \
+std::ostream & leon3_funclt_trap::Reg32_0::operator <<( std::ostream & stream ) const \
     throw(){
     stream << std::hex << std::showbase << this->value << std::dec;
     return stream;
 }
 
-leon3_funcat_trap::Reg32_0::Reg32_0( sc_module_name name ) : Register(name, 32), \
+leon3_funclt_trap::Reg32_0::Reg32_0( sc_module_name name ) : Register(name, 32), \
     field_PS(this->value), field_VER(this->value), field_ICC_z(this->value), field_ICC_v(this->value), \
     field_EF(this->value), field_EC(this->value), field_ICC_n(this->value), field_S(this->value), \
     field_CWP(this->value), field_ET(this->value), field_PIL(this->value), field_ICC_c(this->value), \
@@ -3310,7 +3310,7 @@ leon3_funcat_trap::Reg32_0::Reg32_0( sc_module_name name ) : Register(name, 32),
     this->value = 0;
 }
 
-leon3_funcat_trap::Reg32_0::Reg32_0() : Register(sc_gen_unique_name("Reg32_0"), 32), \
+leon3_funclt_trap::Reg32_0::Reg32_0() : Register(sc_gen_unique_name("Reg32_0"), 32), \
     field_PS(this->value), field_VER(this->value), field_ICC_z(this->value), field_ICC_v(this->value), \
     field_EF(this->value), field_EC(this->value), field_ICC_n(this->value), field_S(this->value), \
     field_CWP(this->value), field_ET(this->value), field_PIL(this->value), field_ICC_c(this->value), \
@@ -3318,360 +3318,360 @@ leon3_funcat_trap::Reg32_0::Reg32_0() : Register(sc_gen_unique_name("Reg32_0"), 
     this->value = 0;
 }
 
-InnerField & leon3_funcat_trap::Reg32_3_const_0::InnerField_Empty::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_3_const_0::InnerField_Empty::operator =( const \
     unsigned int & other ) throw(){
     return *this;
 }
 
-leon3_funcat_trap::Reg32_3_const_0::InnerField_Empty::InnerField_Empty(){
+leon3_funclt_trap::Reg32_3_const_0::InnerField_Empty::InnerField_Empty(){
 
 }
 
-leon3_funcat_trap::Reg32_3_const_0::InnerField_Empty::~InnerField_Empty(){
+leon3_funclt_trap::Reg32_3_const_0::InnerField_Empty::~InnerField_Empty(){
 
 }
-void leon3_funcat_trap::Reg32_3_const_0::immediateWrite( const unsigned int & value \
+void leon3_funclt_trap::Reg32_3_const_0::immediateWrite( const unsigned int & value \
     ) throw(){
 
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::readNewValue() throw(){
+unsigned int leon3_funclt_trap::Reg32_3_const_0::readNewValue() throw(){
     return this->value;
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::operator ~() throw(){
+unsigned int leon3_funclt_trap::Reg32_3_const_0::operator ~() throw(){
     return ~(0);
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator =( const unsigned \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator =( const unsigned \
     int & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator +=( const unsigned \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator +=( const unsigned \
     int & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator -=( const unsigned \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator -=( const unsigned \
     int & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator *=( const unsigned \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator *=( const unsigned \
     int & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator /=( const unsigned \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator /=( const unsigned \
     int & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator |=( const unsigned \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator |=( const unsigned \
     int & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator &=( const unsigned \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator &=( const unsigned \
     int & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator ^=( const unsigned \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator ^=( const unsigned \
     int & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator <<=( const unsigned \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator <<=( const unsigned \
     int & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator >>=( const unsigned \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator >>=( const unsigned \
     int & other ) throw(){
     return *this;
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::operator +( const Reg32_3_const_0 \
+unsigned int leon3_funclt_trap::Reg32_3_const_0::operator +( const Reg32_3_const_0 \
     & other ) const throw(){
     return (0 + other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::operator -( const Reg32_3_const_0 \
+unsigned int leon3_funclt_trap::Reg32_3_const_0::operator -( const Reg32_3_const_0 \
     & other ) const throw(){
     return (0 - other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::operator *( const Reg32_3_const_0 \
+unsigned int leon3_funclt_trap::Reg32_3_const_0::operator *( const Reg32_3_const_0 \
     & other ) const throw(){
     return (0 * other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::operator /( const Reg32_3_const_0 \
+unsigned int leon3_funclt_trap::Reg32_3_const_0::operator /( const Reg32_3_const_0 \
     & other ) const throw(){
     return (0 / other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::operator |( const Reg32_3_const_0 \
+unsigned int leon3_funclt_trap::Reg32_3_const_0::operator |( const Reg32_3_const_0 \
     & other ) const throw(){
     return (0 | other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::operator &( const Reg32_3_const_0 \
+unsigned int leon3_funclt_trap::Reg32_3_const_0::operator &( const Reg32_3_const_0 \
     & other ) const throw(){
     return (0 & other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::operator ^( const Reg32_3_const_0 \
+unsigned int leon3_funclt_trap::Reg32_3_const_0::operator ^( const Reg32_3_const_0 \
     & other ) const throw(){
     return (0 ^ other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::operator <<( const Reg32_3_const_0 \
+unsigned int leon3_funclt_trap::Reg32_3_const_0::operator <<( const Reg32_3_const_0 \
     & other ) const throw(){
     return (0 << other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::operator >>( const Reg32_3_const_0 \
+unsigned int leon3_funclt_trap::Reg32_3_const_0::operator >>( const Reg32_3_const_0 \
     & other ) const throw(){
     return (0 >> other.value);
 }
 
-bool leon3_funcat_trap::Reg32_3_const_0::operator <( const Reg32_3_const_0 & other \
+bool leon3_funclt_trap::Reg32_3_const_0::operator <( const Reg32_3_const_0 & other \
     ) const throw(){
     return (0 < other.value);
 }
 
-bool leon3_funcat_trap::Reg32_3_const_0::operator >( const Reg32_3_const_0 & other \
+bool leon3_funclt_trap::Reg32_3_const_0::operator >( const Reg32_3_const_0 & other \
     ) const throw(){
     return (0 > other.value);
 }
 
-bool leon3_funcat_trap::Reg32_3_const_0::operator <=( const Reg32_3_const_0 & other \
+bool leon3_funclt_trap::Reg32_3_const_0::operator <=( const Reg32_3_const_0 & other \
     ) const throw(){
     return (0 <= other.value);
 }
 
-bool leon3_funcat_trap::Reg32_3_const_0::operator >=( const Reg32_3_const_0 & other \
+bool leon3_funclt_trap::Reg32_3_const_0::operator >=( const Reg32_3_const_0 & other \
     ) const throw(){
     return (0 >= other.value);
 }
 
-bool leon3_funcat_trap::Reg32_3_const_0::operator ==( const Reg32_3_const_0 & other \
+bool leon3_funclt_trap::Reg32_3_const_0::operator ==( const Reg32_3_const_0 & other \
     ) const throw(){
     return (0 == other.value);
 }
 
-bool leon3_funcat_trap::Reg32_3_const_0::operator !=( const Reg32_3_const_0 & other \
+bool leon3_funclt_trap::Reg32_3_const_0::operator !=( const Reg32_3_const_0 & other \
     ) const throw(){
     return (0 != other.value);
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator =( const Reg32_3_const_0 \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator =( const Reg32_3_const_0 \
     & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator +=( const Reg32_3_const_0 \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator +=( const Reg32_3_const_0 \
     & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator -=( const Reg32_3_const_0 \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator -=( const Reg32_3_const_0 \
     & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator *=( const Reg32_3_const_0 \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator *=( const Reg32_3_const_0 \
     & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator /=( const Reg32_3_const_0 \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator /=( const Reg32_3_const_0 \
     & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator |=( const Reg32_3_const_0 \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator |=( const Reg32_3_const_0 \
     & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator &=( const Reg32_3_const_0 \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator &=( const Reg32_3_const_0 \
     & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator ^=( const Reg32_3_const_0 \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator ^=( const Reg32_3_const_0 \
     & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator <<=( const Reg32_3_const_0 \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator <<=( const Reg32_3_const_0 \
     & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator >>=( const Reg32_3_const_0 \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator >>=( const Reg32_3_const_0 \
     & other ) throw(){
     return *this;
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::operator +( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_const_0::operator +( const Register & other \
     ) const throw(){
     return (0 + other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::operator -( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_const_0::operator -( const Register & other \
     ) const throw(){
     return (0 - other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::operator *( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_const_0::operator *( const Register & other \
     ) const throw(){
     return (0 * other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::operator /( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_const_0::operator /( const Register & other \
     ) const throw(){
     return (0 / other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::operator |( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_const_0::operator |( const Register & other \
     ) const throw(){
     return (0 | other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::operator &( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_const_0::operator &( const Register & other \
     ) const throw(){
     return (0 & other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::operator ^( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_const_0::operator ^( const Register & other \
     ) const throw(){
     return (0 ^ other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::operator <<( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_const_0::operator <<( const Register & other \
     ) const throw(){
     return (0 << other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_const_0::operator >>( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_const_0::operator >>( const Register & other \
     ) const throw(){
     return (0 >> other);
 }
 
-bool leon3_funcat_trap::Reg32_3_const_0::operator <( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_3_const_0::operator <( const Register & other ) const \
     throw(){
     return (0 < other);
 }
 
-bool leon3_funcat_trap::Reg32_3_const_0::operator >( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_3_const_0::operator >( const Register & other ) const \
     throw(){
     return (0 > other);
 }
 
-bool leon3_funcat_trap::Reg32_3_const_0::operator <=( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_3_const_0::operator <=( const Register & other ) const \
     throw(){
     return (0 <= other);
 }
 
-bool leon3_funcat_trap::Reg32_3_const_0::operator >=( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_3_const_0::operator >=( const Register & other ) const \
     throw(){
     return (0 >= other);
 }
 
-bool leon3_funcat_trap::Reg32_3_const_0::operator ==( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_3_const_0::operator ==( const Register & other ) const \
     throw(){
     return (0 == other);
 }
 
-bool leon3_funcat_trap::Reg32_3_const_0::operator !=( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_3_const_0::operator !=( const Register & other ) const \
     throw(){
     return (0 != other);
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator =( const Register \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator =( const Register \
     & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator +=( const Register \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator +=( const Register \
     & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator -=( const Register \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator -=( const Register \
     & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator *=( const Register \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator *=( const Register \
     & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator /=( const Register \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator /=( const Register \
     & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator |=( const Register \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator |=( const Register \
     & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator &=( const Register \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator &=( const Register \
     & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator ^=( const Register \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator ^=( const Register \
     & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator <<=( const Register \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator <<=( const Register \
     & other ) throw(){
     return *this;
 }
 
-Reg32_3_const_0 & leon3_funcat_trap::Reg32_3_const_0::operator >>=( const Register \
+Reg32_3_const_0 & leon3_funclt_trap::Reg32_3_const_0::operator >>=( const Register \
     & other ) throw(){
     return *this;
 }
 
-std::ostream & leon3_funcat_trap::Reg32_3_const_0::operator <<( std::ostream & stream \
+std::ostream & leon3_funclt_trap::Reg32_3_const_0::operator <<( std::ostream & stream \
     ) const throw(){
     stream << std::hex << std::showbase << 0 << std::dec;
     return stream;
 }
 
-leon3_funcat_trap::Reg32_3_const_0::Reg32_3_const_0( sc_module_name name ) : Register(name, \
+leon3_funclt_trap::Reg32_3_const_0::Reg32_3_const_0( sc_module_name name ) : Register(name, \
     32){
     this->value = 0;
 }
 
-leon3_funcat_trap::Reg32_3_const_0::Reg32_3_const_0() : Register(sc_gen_unique_name("Reg32_3_const_0"), \
+leon3_funclt_trap::Reg32_3_const_0::Reg32_3_const_0() : Register(sc_gen_unique_name("Reg32_3_const_0"), \
     32){
     this->value = 0;
 }
 
-InnerField & leon3_funcat_trap::Reg32_3_delay_3::InnerField_Empty::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_3_delay_3::InnerField_Empty::operator =( const \
     unsigned int & other ) throw(){
     return *this;
 }
 
-leon3_funcat_trap::Reg32_3_delay_3::InnerField_Empty::InnerField_Empty(){
+leon3_funclt_trap::Reg32_3_delay_3::InnerField_Empty::InnerField_Empty(){
 
 }
 
-leon3_funcat_trap::Reg32_3_delay_3::InnerField_Empty::~InnerField_Empty(){
+leon3_funclt_trap::Reg32_3_delay_3::InnerField_Empty::~InnerField_Empty(){
 
 }
-void leon3_funcat_trap::Reg32_3_delay_3::immediateWrite( const unsigned int & value \
+void leon3_funclt_trap::Reg32_3_delay_3::immediateWrite( const unsigned int & value \
     ) throw(){
     this->value = value;
     this->updateSlot[0] = false;
@@ -3679,7 +3679,7 @@ void leon3_funcat_trap::Reg32_3_delay_3::immediateWrite( const unsigned int & va
     this->updateSlot[2] = false;
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::readNewValue() throw(){
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::readNewValue() throw(){
     if(this->updateSlot[2]){
         return this->values[2];
     }
@@ -3692,377 +3692,377 @@ unsigned int leon3_funcat_trap::Reg32_3_delay_3::readNewValue() throw(){
     return this->value;
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::operator ~() throw(){
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::operator ~() throw(){
     return ~(this->value);
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator =( const unsigned \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator =( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] = other;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator +=( const unsigned \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator +=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] += other;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator -=( const unsigned \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator -=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] -= other;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator *=( const unsigned \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator *=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] *= other;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator /=( const unsigned \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator /=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] /= other;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator |=( const unsigned \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator |=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] |= other;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator &=( const unsigned \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator &=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] &= other;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator ^=( const unsigned \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator ^=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] ^= other;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator <<=( const unsigned \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator <<=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] <<= other;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator >>=( const unsigned \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator >>=( const unsigned \
     int & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] >>= other;
     return *this;
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::operator +( const Reg32_3_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::operator +( const Reg32_3_delay_3 \
     & other ) const throw(){
     return (this->value + other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::operator -( const Reg32_3_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::operator -( const Reg32_3_delay_3 \
     & other ) const throw(){
     return (this->value - other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::operator *( const Reg32_3_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::operator *( const Reg32_3_delay_3 \
     & other ) const throw(){
     return (this->value * other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::operator /( const Reg32_3_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::operator /( const Reg32_3_delay_3 \
     & other ) const throw(){
     return (this->value / other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::operator |( const Reg32_3_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::operator |( const Reg32_3_delay_3 \
     & other ) const throw(){
     return (this->value | other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::operator &( const Reg32_3_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::operator &( const Reg32_3_delay_3 \
     & other ) const throw(){
     return (this->value & other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::operator ^( const Reg32_3_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::operator ^( const Reg32_3_delay_3 \
     & other ) const throw(){
     return (this->value ^ other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::operator <<( const Reg32_3_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::operator <<( const Reg32_3_delay_3 \
     & other ) const throw(){
     return (this->value << other.value);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::operator >>( const Reg32_3_delay_3 \
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::operator >>( const Reg32_3_delay_3 \
     & other ) const throw(){
     return (this->value >> other.value);
 }
 
-bool leon3_funcat_trap::Reg32_3_delay_3::operator <( const Reg32_3_delay_3 & other \
+bool leon3_funclt_trap::Reg32_3_delay_3::operator <( const Reg32_3_delay_3 & other \
     ) const throw(){
     return (this->value < other.value);
 }
 
-bool leon3_funcat_trap::Reg32_3_delay_3::operator >( const Reg32_3_delay_3 & other \
+bool leon3_funclt_trap::Reg32_3_delay_3::operator >( const Reg32_3_delay_3 & other \
     ) const throw(){
     return (this->value > other.value);
 }
 
-bool leon3_funcat_trap::Reg32_3_delay_3::operator <=( const Reg32_3_delay_3 & other \
+bool leon3_funclt_trap::Reg32_3_delay_3::operator <=( const Reg32_3_delay_3 & other \
     ) const throw(){
     return (this->value <= other.value);
 }
 
-bool leon3_funcat_trap::Reg32_3_delay_3::operator >=( const Reg32_3_delay_3 & other \
+bool leon3_funclt_trap::Reg32_3_delay_3::operator >=( const Reg32_3_delay_3 & other \
     ) const throw(){
     return (this->value >= other.value);
 }
 
-bool leon3_funcat_trap::Reg32_3_delay_3::operator ==( const Reg32_3_delay_3 & other \
+bool leon3_funclt_trap::Reg32_3_delay_3::operator ==( const Reg32_3_delay_3 & other \
     ) const throw(){
     return (this->value == other.value);
 }
 
-bool leon3_funcat_trap::Reg32_3_delay_3::operator !=( const Reg32_3_delay_3 & other \
+bool leon3_funclt_trap::Reg32_3_delay_3::operator !=( const Reg32_3_delay_3 & other \
     ) const throw(){
     return (this->value != other.value);
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator =( const Reg32_3_delay_3 \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator =( const Reg32_3_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] = other.value;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator +=( const Reg32_3_delay_3 \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator +=( const Reg32_3_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] += other.value;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator -=( const Reg32_3_delay_3 \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator -=( const Reg32_3_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] -= other.value;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator *=( const Reg32_3_delay_3 \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator *=( const Reg32_3_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] *= other.value;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator /=( const Reg32_3_delay_3 \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator /=( const Reg32_3_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] /= other.value;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator |=( const Reg32_3_delay_3 \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator |=( const Reg32_3_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] |= other.value;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator &=( const Reg32_3_delay_3 \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator &=( const Reg32_3_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] &= other.value;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator ^=( const Reg32_3_delay_3 \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator ^=( const Reg32_3_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] ^= other.value;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator <<=( const Reg32_3_delay_3 \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator <<=( const Reg32_3_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] <<= other.value;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator >>=( const Reg32_3_delay_3 \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator >>=( const Reg32_3_delay_3 \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] >>= other.value;
     return *this;
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::operator +( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::operator +( const Register & other \
     ) const throw(){
     return (this->value + other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::operator -( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::operator -( const Register & other \
     ) const throw(){
     return (this->value - other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::operator *( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::operator *( const Register & other \
     ) const throw(){
     return (this->value * other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::operator /( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::operator /( const Register & other \
     ) const throw(){
     return (this->value / other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::operator |( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::operator |( const Register & other \
     ) const throw(){
     return (this->value | other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::operator &( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::operator &( const Register & other \
     ) const throw(){
     return (this->value & other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::operator ^( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::operator ^( const Register & other \
     ) const throw(){
     return (this->value ^ other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::operator <<( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::operator <<( const Register & other \
     ) const throw(){
     return (this->value << other);
 }
 
-unsigned int leon3_funcat_trap::Reg32_3_delay_3::operator >>( const Register & other \
+unsigned int leon3_funclt_trap::Reg32_3_delay_3::operator >>( const Register & other \
     ) const throw(){
     return (this->value >> other);
 }
 
-bool leon3_funcat_trap::Reg32_3_delay_3::operator <( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_3_delay_3::operator <( const Register & other ) const \
     throw(){
     return (this->value < other);
 }
 
-bool leon3_funcat_trap::Reg32_3_delay_3::operator >( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_3_delay_3::operator >( const Register & other ) const \
     throw(){
     return (this->value > other);
 }
 
-bool leon3_funcat_trap::Reg32_3_delay_3::operator <=( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_3_delay_3::operator <=( const Register & other ) const \
     throw(){
     return (this->value <= other);
 }
 
-bool leon3_funcat_trap::Reg32_3_delay_3::operator >=( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_3_delay_3::operator >=( const Register & other ) const \
     throw(){
     return (this->value >= other);
 }
 
-bool leon3_funcat_trap::Reg32_3_delay_3::operator ==( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_3_delay_3::operator ==( const Register & other ) const \
     throw(){
     return (this->value == other);
 }
 
-bool leon3_funcat_trap::Reg32_3_delay_3::operator !=( const Register & other ) const \
+bool leon3_funclt_trap::Reg32_3_delay_3::operator !=( const Register & other ) const \
     throw(){
     return (this->value != other);
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator =( const Register \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator =( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] = other;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator +=( const Register \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator +=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] += other;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator -=( const Register \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator -=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] -= other;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator *=( const Register \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator *=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] *= other;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator /=( const Register \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator /=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] /= other;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator |=( const Register \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator |=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] |= other;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator &=( const Register \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator &=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] &= other;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator ^=( const Register \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator ^=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] ^= other;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator <<=( const Register \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator <<=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] <<= other;
     return *this;
 }
 
-Reg32_3_delay_3 & leon3_funcat_trap::Reg32_3_delay_3::operator >>=( const Register \
+Reg32_3_delay_3 & leon3_funclt_trap::Reg32_3_delay_3::operator >>=( const Register \
     & other ) throw(){
     this->updateSlot[2] = true;
     this->values[2] >>= other;
     return *this;
 }
 
-std::ostream & leon3_funcat_trap::Reg32_3_delay_3::operator <<( std::ostream & stream \
+std::ostream & leon3_funclt_trap::Reg32_3_delay_3::operator <<( std::ostream & stream \
     ) const throw(){
     stream << std::hex << std::showbase << this->value << std::dec;
     return stream;
 }
 
-leon3_funcat_trap::Reg32_3_delay_3::Reg32_3_delay_3( sc_module_name name ) : Register(name, \
+leon3_funclt_trap::Reg32_3_delay_3::Reg32_3_delay_3( sc_module_name name ) : Register(name, \
     32){
     this->value = 0;
     this->updateSlot[0] = false;
@@ -4070,7 +4070,7 @@ leon3_funcat_trap::Reg32_3_delay_3::Reg32_3_delay_3( sc_module_name name ) : Reg
     this->updateSlot[2] = false;
 }
 
-leon3_funcat_trap::Reg32_3_delay_3::Reg32_3_delay_3() : Register(sc_gen_unique_name("Reg32_3_delay_3"), \
+leon3_funclt_trap::Reg32_3_delay_3::Reg32_3_delay_3() : Register(sc_gen_unique_name("Reg32_3_delay_3"), \
     32){
     this->value = 0;
     this->updateSlot[0] = false;
@@ -4078,7 +4078,7 @@ leon3_funcat_trap::Reg32_3_delay_3::Reg32_3_delay_3() : Register(sc_gen_unique_n
     this->updateSlot[2] = false;
 }
 
-void leon3_funcat_trap::RegisterBankClass::setNewRegister( unsigned int numReg, Register \
+void leon3_funclt_trap::RegisterBankClass::setNewRegister( unsigned int numReg, Register \
     * newReg ){
     if(numReg > this->size - 1){
         THROW_EXCEPTION("Register number " << numReg << " is out of register bank boundaries");
@@ -4088,7 +4088,7 @@ void leon3_funcat_trap::RegisterBankClass::setNewRegister( unsigned int numReg, 
     }
 }
 
-void leon3_funcat_trap::RegisterBankClass::setSize( unsigned int size ) throw(){
+void leon3_funclt_trap::RegisterBankClass::setSize( unsigned int size ) throw(){
 
     for(unsigned int i = 0; i < this->size; i++){
         if(this->registers[i] != NULL){
@@ -4105,7 +4105,7 @@ void leon3_funcat_trap::RegisterBankClass::setSize( unsigned int size ) throw(){
     }
 }
 
-leon3_funcat_trap::RegisterBankClass::RegisterBankClass( unsigned int size ){
+leon3_funclt_trap::RegisterBankClass::RegisterBankClass( unsigned int size ){
     this->size = size;
     this->registers = new Register *[this->size];
     for(unsigned int i = 0; i < this->size; i++){
@@ -4113,12 +4113,12 @@ leon3_funcat_trap::RegisterBankClass::RegisterBankClass( unsigned int size ){
     }
 }
 
-leon3_funcat_trap::RegisterBankClass::RegisterBankClass(){
+leon3_funclt_trap::RegisterBankClass::RegisterBankClass(){
     this->size = 0;
     this->registers = NULL;
 }
 
-leon3_funcat_trap::RegisterBankClass::~RegisterBankClass(){
+leon3_funclt_trap::RegisterBankClass::~RegisterBankClass(){
 
     for(unsigned int i = 0; i < this->size; i++){
         if(this->registers[i] != NULL){

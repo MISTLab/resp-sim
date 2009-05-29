@@ -80,7 +80,7 @@
 #include <externalPins.hpp>
 
 using namespace trap;
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class Processor : public sc_module{
         private:

@@ -39,14 +39,14 @@ def create_startSim(task):
     print >> startFile,  """################################################################################"""
     print >> startFile,  '\n\n\n'
 
-    print >> startFile,  'CUR_LIB_PATH=' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'lib', 'systemc')
-    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'src', 'bfdFrontend')
-    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'src', 'controller')
-    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'src', 'utils')
-    for extLib in task.env['NON_STD_LIBS']:
-        print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + extLib
-    print >> startFile,  'export LD_LIBRARY_PATH=$CUR_LIB_PATH:$LD_LIBRARY_PATH'
-    print >> startFile,  'export DYLD_LIBRARY_PATH=$LD_LIBRARY_PATH:$DYLD_LIBRARY_PATH\n'
+#    print >> startFile,  'CUR_LIB_PATH=' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'lib', 'systemc')
+#    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'src', 'bfdFrontend')
+#    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'src', 'controller')
+#    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'src', 'utils')
+#    for extLib in task.env['NON_STD_LIBS']:
+#        print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + extLib
+#    print >> startFile,  'export LD_LIBRARY_PATH=$CUR_LIB_PATH:$LD_LIBRARY_PATH'
+#    print >> startFile,  'export DYLD_LIBRARY_PATH=$LD_LIBRARY_PATH:$DYLD_LIBRARY_PATH\n'
     print >> startFile,  'case $TERM in'
     print >> startFile,  'xterm*|rxvt*|Eterm)'
     print >> startFile,  """echo -ne \"\\033]0;ReSP: Reflective Simulation Platform\\007\""""

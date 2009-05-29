@@ -48,7 +48,7 @@
 #include <ostream>
 #include <set>
 
-namespace leon3_funcat_trap{
+namespace leon3_funclt_trap{
 
     class Alias{
         private:

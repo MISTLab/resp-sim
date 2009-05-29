@@ -204,6 +204,8 @@ def process_headers(self):
         pypptask.generate_include = self.generate_include
         pypptask.virtuality = self.virtuality
         pypptask.path_lst = self.env['INC_PATHS']
+        pypptask.includes = [os.path.join(self.path.abspath(), i) for i in self.to_list(self.includes)]
+
 
         #pypptask.defines  = self.scanner_defines
         pypptask.templates  = self.templates
@@ -487,7 +489,8 @@ def dopypp(task):
     sources = map(lambda a: os.path.abspath(os.path.join(task.env['RESP_HOME'], '_build_',  a.srcpath(task.env))), srcs)
 
     # Create include list
-    global_includes = task.env['CPPPATH']
+    global_includes = task.includes
+    global_includes += task.env['CPPPATH']
     global_includes += [os.path.abspath(os.path.join(task.env['RESP_HOME'], '_build_', i.srcpath(task.env))) for i in task.path_lst]
     global_includes += task.extra_includes
 

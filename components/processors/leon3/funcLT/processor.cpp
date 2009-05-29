@@ -78,9 +78,9 @@
 
 #include <externalPins.hpp>
 
-using namespace leon3_funcat_trap;
+using namespace leon3_funclt_trap;
 using namespace trap;
-void leon3_funcat_trap::Processor::mainLoop(){
+void leon3_funclt_trap::Processor::mainLoop(){
     template_map< unsigned int, Instruction * >::iterator instrCacheEnd = Processor::instrCache.end();
     template_map< unsigned int, unsigned int > freqInstrMap;
     template_map< unsigned int, unsigned int >::iterator freqInstrMapEnd = freqInstrMap.end();
@@ -185,7 +185,7 @@ void leon3_funcat_trap::Processor::mainLoop(){
     }
 }
 
-void leon3_funcat_trap::Processor::resetOp(){
+void leon3_funclt_trap::Processor::resetOp(){
     GLOBAL[1].immediateWrite(0x0);
     GLOBAL[2].immediateWrite(0x0);
     GLOBAL[3].immediateWrite(0x0);
@@ -365,7 +365,7 @@ void leon3_funcat_trap::Processor::resetOp(){
     PCR.immediateWrite(0x307);
 }
 
-Instruction * leon3_funcat_trap::Processor::decode( unsigned int bitString ){
+Instruction * leon3_funclt_trap::Processor::decode( unsigned int bitString ){
     int instrId = this->decoder.decode(bitString);
     if(instrId >= 0){
         Instruction * instr = Processor::INSTRUCTIONS[instrId];
@@ -375,14 +375,14 @@ Instruction * leon3_funcat_trap::Processor::decode( unsigned int bitString ){
     return NULL;
 }
 
-void leon3_funcat_trap::Processor::end_of_elaboration(){
+void leon3_funclt_trap::Processor::end_of_elaboration(){
     this->resetOp();
 }
 
-Instruction * * leon3_funcat_trap::Processor::INSTRUCTIONS = NULL;
-template_map< unsigned int, Instruction * > leon3_funcat_trap::Processor::instrCache;
-int leon3_funcat_trap::Processor::numInstances = 0;
-leon3_funcat_trap::Processor::Processor( sc_module_name name, sc_time latency ) : \
+Instruction * * leon3_funclt_trap::Processor::INSTRUCTIONS = NULL;
+template_map< unsigned int, Instruction * > leon3_funclt_trap::Processor::instrCache;
+int leon3_funclt_trap::Processor::numInstances = 0;
+leon3_funclt_trap::Processor::Processor( sc_module_name name, sc_time latency ) : \
     sc_module(name), latency(latency), PSR("PSR"), WIM("WIM"), TBR("TBR"), Y("Y"), PC("PC"), \
     NPC("NPC"), PSRbp("PSRbp"), Ybp("Ybp"), ASR18bp("ASR18bp"), instrMem("instrMem", \
     this->quantKeeper), dataMem("dataMem", this->quantKeeper), irqAck("irqAck_PIN"){
@@ -728,8 +728,8 @@ leon3_funcat_trap::Processor::Processor( sc_module_name name, sc_time latency ) 
     this->REGS[30].updateAlias(this->WINREGS[22]);
     this->REGS[31].updateAlias(this->WINREGS[23]);
     this->FP.updateAlias(this->REGS[30], 0);
-    this->SP.updateAlias(this->REGS[14], 0);
     this->PCR.updateAlias(this->ASR[17], 0);
+    this->SP.updateAlias(this->REGS[14], 0);
     this->LR.updateAlias(this->REGS[31], 0);
     this->numInstructions = 0;
     this->ENTRY_POINT = 0;
@@ -742,7 +742,7 @@ leon3_funcat_trap::Processor::Processor( sc_module_name name, sc_time latency ) 
     end_module();
 }
 
-leon3_funcat_trap::Processor::~Processor(){
+leon3_funclt_trap::Processor::~Processor(){
     Processor::numInstances--;
     if(Processor::numInstances == 0){
         for(int i = 0; i < 145; i++){
