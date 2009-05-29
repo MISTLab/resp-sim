@@ -23,7 +23,12 @@ import os, types, sys, copy,  stat
 def add_rpaths(self):
     self.env[ccroot.c_attrs['rpath']] = self.to_list(self.env[ccroot.c_attrs['rpath']])
 
-    names = self.to_list(self.uselib_local)[:]
+    try:
+        self.uselib_local
+    except:
+        return
+
+    names = self.to_list(self.uselib_local)
     while names:
         x = names.pop(0)
         y = self.name_to_obj(x)
@@ -556,19 +561,38 @@ def set_options(opt):
     opt.add_option('--with-mpfrcpp-libs', type='string', help='Specifies the location of the library for MPFRCPP', dest='mpfrcpp_libs')
 
 def shutdown():
-
-    if Options.commands['build'] == 1:
-        import os
-        # Finally, lets print some usefull messages to the user
-        print('\nTo start the simulator type ' + Logs.colors.BOLD + Logs.colors.GREEN + os.path.join('.' , 'startSim.sh') + Logs.colors.NORMAL + ' at the command prompt\n')
+    pass
 
 #Installing custom distclean function so that some files are
 def distclean():
-
-    # Removing SystemC dynamic library
+    # Removing SystemC copied library
     try:
         import glob
-        toRemove = glob.glob(os.path.abspath(os.path.join('lib' , 'systemc' , 'libsystemc*')))
+        toRemove = glob.glob(os.path.abspath(os.path.join('lib' , 'systemc' , '*systemc*.*')))
+        for i in toRemove:
+            try:
+                os.remove(i)
+            except:
+                pass
+    except:
+        pass
+
+    #removing bfd copied library
+    try:
+        import glob
+        toRemove = glob.glob(os.path.abspath(os.path.join('lib' , 'binutils' , '*bfd*.*')))
+        for i in toRemove:
+            try:
+                os.remove(i)
+            except:
+                pass
+    except:
+        pass
+
+    #removing iberty copied library
+    try:
+        import glob
+        toRemove = glob.glob(os.path.abspath(os.path.join('lib' , 'binutils' , '*iberty*.*')))
         for i in toRemove:
             try:
                 os.remove(i)

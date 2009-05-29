@@ -1,7 +1,8 @@
 #!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
 
 # Build
 
 def build(bld):
-    bld.add_subdirs('systemc')
-    #bld.add_subdirs('systemc binutils')
+    #bld.add_subdirs('systemc')
+    bld.add_subdirs('systemc binutils')

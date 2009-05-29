@@ -48,18 +48,15 @@ unpack_ar = 'cd ${SRC[0].bld_dir(env)} && ${AR} -x ${SRC[0].abspath()}' # && rm 
 def do_unpack_ar(self, node):
         unpack_task = self.create_task('unpack_ar', self.env)
         unpack_task.set_inputs(node)
-        unpack_task.set_outputs(self.additional_objs)
-
+        unpack_task.set_outputs(self.lib_obj[node.name])
 
 @taskgen
 @feature('cxx')
 @feature('cc')
-@before('apply_core')
-def parse_libs(self):
+@before('sequence_order')
+def copy_libs(self):
     # Copy library and update source list
     files = self.to_list(self.source)
-
-    self.source = ''
 
     for filename in files:
         if self.env['LIB_'+filename]:
@@ -87,12 +84,47 @@ def parse_libs(self):
                         print('copying ' + libpath + ' --> '+ self.path.abspath())
                     shutil.copyfile( libpath, self.library )
 
+@taskgen
+@feature('cxx')
+@feature('cc')
+@before('apply_core')
+@after('copy_libs')
+def parse_libs(self):
+    # Copy library and update source list
+    files = self.to_list(self.source)
+
+    self.source = ''
+
+    for filename in files:
+        if self.env['LIB_'+filename]:
+
+            if type(self.env['LIB_'+filename]) == type(''):
+                self.env['LIB_'+filename] = [self.env['LIB_'+filename]]
+
+            for baselibname in self.env['LIB_' + filename]:
+                # I make sure that the library actually exists and I determine its path
+                libname =  self.env['staticlib_PATTERN'] % baselibname
+                if not os.path.exists(os.path.join(self.path.abspath(), libname)):
+                    continue
+
                 # Check the contents
                 # UGLY!
-                f = os.popen( self.env['AR'] + ' t ' + libpath )
-                self.additional_objs = [ self.path.find_or_declare(t.strip()) for t in f ]
-                filenames = map( lambda x : os.path.splitext(x)[0] , files[1:])
-                self.additional_objs = filter(lambda x: not os.path.splitext(x.name)[0] in filenames , self.additional_objs)
+                try:
+                    if type(self.additional_objs) == type(''):
+                        self.additional_objs = self.additional_objs.split(' ')
+                except AttributeError:
+                    self.additional_objs = []
+
+                f = os.popen( self.env['AR'] + ' t ' + os.path.join(self.path.abspath(), libname) )
+                newObj = [ self.path.find_or_declare(t.strip()) for t in f ]
+                try:
+                    self.lib_obj
+                except AttributeError:
+                    self.lib_obj = {}
+                self.lib_obj[libname] = newObj
+                filenames = map( lambda x : os.path.splitext(x)[0] , files)
+                newObj = filter(lambda x: not os.path.splitext(x.name)[0] in filenames , self.additional_objs)
+                self.additional_objs += newObj
 
                 self.source += ' ' + libname
         else:
@@ -112,3 +144,5 @@ def setup(env):
 
 def detect(conf):
     conf.check_tool('cxx')
+    conf.check_tool('cc')
+    conf.check_tool('ar')

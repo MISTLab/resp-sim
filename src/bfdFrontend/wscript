@@ -5,21 +5,19 @@ import os, sys
 
 def build(bld):
     obj = bld.new_task_gen('cxx', 'cshlib')
-    obj.env['shlib_PREFIX'] = "lib"
-    if sys.platform == 'darwin':
-        obj.env['shlib_SUFFIX'] = obj.env['shlib_ORIG_SUFFIX']
     obj.source = """
         bfdFrontend.cpp
     """
     obj.target = 'BFDFrontend'
-    obj.uselib = 'BOOST BOOST_REGEX OPCODES BFD LIBERTY'
+    obj.uselib_local = 'binutils'
+    obj.uselib = 'BOOST BOOST_REGEX'
 
     obj = bld.new_task_gen('pypp')
     obj.source = """
         bfdFrontend.hpp
     """
     obj.target = 'bfdwrapper'
-    obj.uselib = 'BOOST BOOST_REGEX PYEXT BOOST_PYTHON OPCODES BFD LIBERTY'
+    obj.uselib = 'BOOST BOOST_REGEX PYEXT BOOST_PYTHON'
     obj.uselib_local = 'BFDFrontend'
     obj.start_decls = 'BFDFrontend'
     obj.custom_declaration_code = '''
