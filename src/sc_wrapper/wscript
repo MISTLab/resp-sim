@@ -17,9 +17,6 @@ def build(bld):
     systemc_export.hpp
     systemc_export.cpp
     '''
-
-    obj.extra_headers = 'components'
-
     obj.target = 'scwrapper'
     #obj.generate_include = True
     obj.start_decls = 'sc_core sc_dt'
