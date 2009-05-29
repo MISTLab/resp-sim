@@ -559,7 +559,8 @@ def dopypp(task):
         for member in members:
             try:
                 member.add_override_precall_code('extern bool interactiveSimulation;\npyplusplus::threading::gil_guard_t gil_guard( interactiveSimulation );')
-                task.ext_headers.append(code_repository.gil_guard.file_name)
+                if not code_repository.gil_guard.file_name in task.ext_headers:
+                    task.ext_headers.append(code_repository.gil_guard.file_name)
                 if not os.path.exists(os.path.abspath(os.path.join( task.env['RESP_HOME'], '_build_', os.path.dirname(task.outputs[0].bldpath(task.env)),  code_repository.gil_guard.file_name) )):
                     guard = open(os.path.abspath(os.path.join( task.env['RESP_HOME'], '_build_', os.path.dirname(task.outputs[0].bldpath(task.env)),  code_repository.gil_guard.file_name) ), 'w')
                     guard.write(code_repository.gil_guard.code)
