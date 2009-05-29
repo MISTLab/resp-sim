@@ -42,4 +42,14 @@ def build(bld):
     obj.include = 'scwrapper tlmwrapper'
     obj.start_decls = 'leon3_funclt_trap trap'
     obj.custom_code = """
+for i in mb.global_ns.classes():
+    if i.recursive_bases and i.recursive_bases[-1].related_class.name == 'Instruction':
+        i.exclude()
+mb.global_ns.class_('Instruction').exclude()
+
+mb.global_ns.class_('Register').exclude()
+mb.global_ns.class_('Register').ignore = False
+mb.global_ns.class_('InnerField').exclude()
+mb.global_ns.class_('InnerField').ignore = False
+mb.global_ns.class_('Processor').member_function('decode').exclude()
 """
