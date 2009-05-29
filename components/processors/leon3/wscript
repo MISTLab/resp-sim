@@ -4,4 +4,5 @@
 # Build
 
 def build(bld):
-    bld.add_subdirs('processors testComponents')
+    #accAT accLT
+    bld.add_subdirs('funcAT funcLT funcLT_trace')

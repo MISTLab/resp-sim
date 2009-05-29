@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+
+# -*- coding: iso-8859-1 -*-
+
+import os
+
+def build(bld):
+    obj = bld.new_task_gen('cxx', 'cshlib')
+    obj.source="""
+        instructions.cpp
+        registers.cpp
+        alias.cpp
+        processor.cpp
+        interface.cpp
+        decoder.cpp
+        memory.cpp
+        externalPorts.cpp
+        externalPins.cpp
+    """
+    obj.uselib = 'BOOST BOOST_FILESYSTEM BOOST_THREAD SYSTEMC_H TLM TRAP'
+    obj.includes = '.'
+    obj.uselib_local = 'systemc'
+    obj.name = 'leon3_trace'
+    obj.target = 'leon3_trace'
+

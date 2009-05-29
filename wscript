@@ -162,23 +162,8 @@ def configure(conf):
     ########################################
     # Now I permanently save some compilation options specified at configure time
     ########################################
-    conf.env['NON_STD_LIBS'] = []
-    momh_libs = getattr(Options.options, 'momh_libs', '')
-    if momh_libs:
-        conf.env['NON_STD_LIBS'].append(os.path.normpath(os.path.expandvars(os.path.expanduser(momh_libs))))
-    gmp_libs = getattr(Options.options, 'gmp_libs', '')
-    if gmp_libs:
-        conf.env['NON_STD_LIBS'].append(os.path.normpath(os.path.expandvars(os.path.expanduser(gmp_libs))))
-    mpfr_libs = getattr(Options.options, 'mpfr_libs', '')
-    if mpfr_libs:
-        conf.env['NON_STD_LIBS'].append(os.path.normpath(os.path.expandvars(os.path.expanduser(mpfr_libs))))
-
-    mpfrcpp_libs = getattr(Options.options, 'mpfrcpp_libs', '')
-    if mpfrcpp_libs:
-        conf.env['NON_STD_LIBS'].append(os.path.normpath(os.path.expandvars(os.path.expanduser(mpfrcpp_libs))))
-    boostlibs = getattr(Options.options, 'boostlibs', '')
-    if boostlibs:
-        conf.env['NON_STD_LIBS'].append(os.path.normpath(os.path.expandvars(os.path.expanduser(boostlibs))))
+    if Options.options.boostlibs:
+        conf.env.append_unique('RPATH', conf.env['LIBPATH_BOOST_THREAD'])
 
     ########################################
     # Check for python
@@ -425,6 +410,7 @@ def configure(conf):
             #endif
             int main(int argc, char * argv[]){return 0;}
         ''', msg='Check for TRAP version', uselib='TRAP BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', mandatory=1, includes=trapDirInc, errmsg='Error, at least revision 420 required')
+        conf.env.append_unique('RPATH', trapDirLib)
     else:
         conf.check_cxx(lib='trap', uselib='BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', uselib_store='TRAP', mandatory=1)
         conf.check_cxx(header_name='trap.hpp', uselib='TRAP BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', uselib_store='TRAP', mandatory=1, errmsg='not found, use --with-trap option')
@@ -445,51 +431,51 @@ def configure(conf):
     # Check for GMP & GMPXX libraries and headers
     # used to represent precise floating point values
     ##################################################
-    foundGMPLibs = False
-    if Options.options.gmp_libs:
-        foundGMPLibs = conf.check_cc(lib='gmp', uselib_store='GMP', libpath=Options.options.gmp_libs)
-    else:
-        foundGMPLibs = conf.check_cc(lib='gmp', uselib_store='GMP')
-    if foundGMPLibs:
-        if Options.options.gmp_header:
-            foundGMPLibs = conf.check_cc(header_name='gmp.h', uselib_store='GMP', uselib='GMP',  includes=Options.options.gmp_header)
-        else:
-            foundGMPLibs = conf.check_cc(header_name='gmp.h', uselib_store='GMP', uselib='GMP')
-    if foundGMPLibs:
-        if Options.options.gmpxx_libs:
-            foundGMPLibs = conf.check_cxx(lib='gmpxx', uselib_store='GMPXX', libpath=Options.options.gmpxx_libs)
-        else:
-            foundGMPLibs = conf.check_cxx(lib='gmpxx', uselib_store='GMPXX')
-    if foundGMPLibs:
-        if Options.options.gmpxx_header:
-            foundGMPLibs = conf.check_cxx(header_name='gmpxx.h', uselib_store='GMPXX', uselib='GMPXX GMP', includes=Options.options.gmpxx_header)
-        else:
-            foundGMPLibs = conf.check_cxx(header_name='gmpxx.h', uselib_store='GMPXX', uselib='GMPXX GMP')
+    #foundGMPLibs = False
+    #if Options.options.gmp_libs:
+        #foundGMPLibs = conf.check_cc(lib='gmp', uselib_store='GMP', libpath=Options.options.gmp_libs)
+    #else:
+        #foundGMPLibs = conf.check_cc(lib='gmp', uselib_store='GMP')
+    #if foundGMPLibs:
+        #if Options.options.gmp_header:
+            #foundGMPLibs = conf.check_cc(header_name='gmp.h', uselib_store='GMP', uselib='GMP',  includes=Options.options.gmp_header)
+        #else:
+            #foundGMPLibs = conf.check_cc(header_name='gmp.h', uselib_store='GMP', uselib='GMP')
+    #if foundGMPLibs:
+        #if Options.options.gmpxx_libs:
+            #foundGMPLibs = conf.check_cxx(lib='gmpxx', uselib_store='GMPXX', libpath=Options.options.gmpxx_libs)
+        #else:
+            #foundGMPLibs = conf.check_cxx(lib='gmpxx', uselib_store='GMPXX')
+    #if foundGMPLibs:
+        #if Options.options.gmpxx_header:
+            #foundGMPLibs = conf.check_cxx(header_name='gmpxx.h', uselib_store='GMPXX', uselib='GMPXX GMP', includes=Options.options.gmpxx_header)
+        #else:
+            #foundGMPLibs = conf.check_cxx(header_name='gmpxx.h', uselib_store='GMPXX', uselib='GMPXX GMP')
 
     ##################################################
     # Check for MPFR & MPFRCPP libraries and headers
     # used to represent precise floating point values
     ##################################################
-    foundMPFR = False
-    if Options.options.mpfr_libs:
-        foundMPFR = conf.check_cc(lib='mpfr', uselib_store='MPFR', libpath=Options.options.mpfr_libs)
-    else:
-        foundMPFR = conf.check_cc(lib='mpfr', uselib_store='MPFR')
-    if foundMPFR:
-        if Options.options.mpfr_header:
-            foundMPFR = conf.check_cc(header_name='mpfr.h', uselib_store='MPFR', uselib='MPFR', includes=Options.options.mpfr_header)
-        else:
-            foundMPFR = conf.check_cc(header_name='mpfr.h', uselib_store='MPFR', uselib='MPFR')
-    if foundMPFR:
-        if Options.options.mpfrcpp_libs:
-            foundMPFR = conf.check_cxx(lib='mpfrcpp', uselib_store='MPFRCPP', libpath=Options.options.mpfrcpp_libs)
-        else:
-            foundMPFR = conf.check_cxx(lib='mpfrcpp', uselib_store='MPFRCPP')
-    if foundMPFR:
-        if Options.options.mpfrcpp_header:
-            foundMPFR = conf.check_cxx(header_name='mpfrcpp/mpfrcpp.hpp', uselib='MPFR MPFRCPP', uselib_store='MPFRCPP', includes=Options.options.mpfrcpp_header)
-        else:
-            foundMPFR = conf.check_cxx(header_name='mpfrcpp/mpfrcpp.hpp', uselib='MPFR MPFRCPP', uselib_store='MPFRCPP')
+    #foundMPFR = False
+    #if Options.options.mpfr_libs:
+        #foundMPFR = conf.check_cc(lib='mpfr', uselib_store='MPFR', libpath=Options.options.mpfr_libs)
+    #else:
+        #foundMPFR = conf.check_cc(lib='mpfr', uselib_store='MPFR')
+    #if foundMPFR:
+        #if Options.options.mpfr_header:
+            #foundMPFR = conf.check_cc(header_name='mpfr.h', uselib_store='MPFR', uselib='MPFR', includes=Options.options.mpfr_header)
+        #else:
+            #foundMPFR = conf.check_cc(header_name='mpfr.h', uselib_store='MPFR', uselib='MPFR')
+    #if foundMPFR:
+        #if Options.options.mpfrcpp_libs:
+            #foundMPFR = conf.check_cxx(lib='mpfrcpp', uselib_store='MPFRCPP', libpath=Options.options.mpfrcpp_libs)
+        #else:
+            #foundMPFR = conf.check_cxx(lib='mpfrcpp', uselib_store='MPFRCPP')
+    #if foundMPFR:
+        #if Options.options.mpfrcpp_header:
+            #foundMPFR = conf.check_cxx(header_name='mpfrcpp/mpfrcpp.hpp', uselib='MPFR MPFRCPP', uselib_store='MPFRCPP', includes=Options.options.mpfrcpp_header)
+        #else:
+            #foundMPFR = conf.check_cxx(header_name='mpfrcpp/mpfrcpp.hpp', uselib='MPFR MPFRCPP', uselib_store='MPFRCPP')
 
     ##################################################
     # Check for the SigC++ library

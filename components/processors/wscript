@@ -4,4 +4,4 @@
 # Build
 
 def build(bld):
-    bld.add_subdirs('processors testComponents')
+    bld.add_subdirs('leon3')
