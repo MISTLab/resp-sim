@@ -130,7 +130,6 @@ def parse_libs(self):
                 self.source += ' ' + libname
         else:
             self.source += ' ' + filename
-    print self.additional_objs
 
 @taskgen
 @feature('cshlib')
