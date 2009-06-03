@@ -17,11 +17,12 @@
  *                                                                         *
  ***************************************************************************/
 
- #ifndef PROBFUNCTION_HPP
- #define PROBFUNCTION_HPP
+#ifndef PROBFUNCTION_HPP
+#define PROBFUNCTION_HPP
 
 #include <string>
 #include <list>
+#include <map>
 #include <vector>
 
 #include <boost/graph/graph_traits.hpp>
@@ -32,10 +33,6 @@
 #include <boost/graph/depth_first_search.hpp>
 
 #include "utils.hpp"
-
-#ifdef MEMORY_DEBUG
-#include <mpatrol.h>
-#endif
 
 ///This graph is used to express the probability and the virtual samples associated to the
 ///metric space after each action
@@ -55,7 +52,7 @@ struct ProbVertexInfo{
     // The name of the metric represented by the current node: present for every node but the leaf ones
     std::string metricName;
     // The values of the metric: present for every node but the leaf ones
-    list_pair_float_float metricValue;
+    std::list<std::pair<float, float> > metricValue;
     // Probability; note that this value is associated
     // only to leaf nodes
     float probability;
@@ -191,9 +188,9 @@ struct ToRescaleSeeker : public boost::dfs_visitor<>{
     unsigned int &difference;
     //The new metrics which I have to compare with the current graph: in case
     //some elements have a different number I change
-    const list_float_map &newMetrics;
+    const std::map<std::string, std::list<std::pair<float, float> > > &newMetrics;
     ProbGraph &graph;
-    ToRescaleSeeker(const list_float_map &newMetrics, ProbGraph &graph,
+    ToRescaleSeeker(const std::map<std::string, std::list<std::pair<float, float> > > &newMetrics, ProbGraph &graph,
                             bool &foundToScale, prob_vertex_t &vertexToChange, bool &decrease, unsigned int &difference) :
                             newMetrics(newMetrics), graph(graph), foundToScale(foundToScale), vertexToChange(vertexToChange),
                                                                                     decrease(decrease), difference(difference){
@@ -209,7 +206,7 @@ struct ToRescaleSeeker : public boost::dfs_visitor<>{
             //std::cerr << "leaf node, continuing" << std::endl;
             return;
         }
-        list_float_map::const_iterator curMetric = this->newMetrics.find(vertexInfo.metricName);
+        std::map<std::string, std::list<std::pair<float, float> > >::const_iterator curMetric = this->newMetrics.find(vertexInfo.metricName);
         if(curMetric == this->newMetrics.end())
             THROW_EXCEPTION("Unable to find in the probability graph metric " << vertexInfo.metricName);
         //std::cerr << "New metric size " << curMetric->second.size() << " current vertex metric size (out edges) " << boost::out_degree(u, graph) << std::endl;
@@ -249,13 +246,13 @@ void copyGraph(ProbGraph &inGraph, ProbGraph &outGraph);
 /// given the outcome of the current action, it updates the probability
 /// graph to reflect the number of actions (since it is possible that, for this action,
 /// the number of outcomes is not the same as it was for the father)
-void updateGraph(const list_float_map &newMetrics, ProbGraph &graph);
+void updateGraph(const std::map<std::string, std::list<std::pair<float, float> > > &newMetrics, ProbGraph &graph);
 /// given the outcome of the current action, it creates the probability
 /// graph to reflect the actions; a uniform distribution is used
-void createUniformGraph(const list_float_map &newMetrics, ProbGraph &graph);
+void createUniformGraph(const std::map<std::string, std::list<std::pair<float, float> > > &newMetrics, ProbGraph &graph);
 /// Given the value of the current metric, it updates the probability function
 /// of the graph adding the virtual samples
-unsigned int addVirtualSample(metric_map &currentMetric, ProbGraph &graph);
+unsigned int addVirtualSample(std::map<std::string, std::pair<float, float> > &currentMetric, ProbGraph &graph);
 /// Given the probability graph it creates the new vertices and returns the probability which has to be associated
 /// with the incoming edge. It also update the internal structure of a vertex for what concerns the
 /// metric values
@@ -278,7 +275,7 @@ void getProbDecreseInfo(std::string vertexToChange, unsigned int leavesToKeep, s
 ///of all the metrics but vertexToChange, and it orders them for increasing values of the edges exiting from vertexToChange
 std::map<std::string, std::deque<prob_vertex_t> > getOrderedLeaves(std::string vertexToChange, ProbGraph &graph);
 ///Updates the labels of the graph with the new intervals
-void updateIntervalLabels(const list_float_map &newMetrics, ProbGraph &graph);
+void updateIntervalLabels(const std::map<std::string, std::list<std::pair<float, float> > > &newMetrics, ProbGraph &graph);
 ///Checks that the graph is coherent, that the number of metrics for each node is coherent with the number
 ///of out edges
 void checkGraphCoherency(ProbGraph &graph);

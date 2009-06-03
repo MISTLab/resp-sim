@@ -37,10 +37,6 @@ namespace std {
 }
 #endif
 
-#ifdef MEMORY_DEBUG
-#include <mpatrol.h>
-#endif
-
 class Configuration{
   private:
     static std::string& TrimSpaces(std::string& str);

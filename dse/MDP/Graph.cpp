@@ -37,12 +37,12 @@ NodeWriter::NodeWriter(Graph &graph) : graph(graph){
 void NodeWriter::operator()(std::ostream& out, const vertex_t & v) const {
     VertexInfo * vert = dynamic_cast<VertexInfo *>(this->nodeInfo[v]);
     out << "[label=\"";
-    plugin_int_map::iterator paramIter, paramEnd;
+    std::map<PluginIf*, int>::iterator paramIter, paramEnd;
     for(paramIter = vert->parameters.begin(), paramEnd = vert->parameters.end(); paramIter != paramEnd; paramIter++){
         out << rev_plugin_handler[paramIter->first] << "=" << paramIter->first->getParameterName(paramIter->second) << " ";
     }
     out << "\\n";
-    metric_map::iterator metricIter, metricEnd;
+    std::map<std::string, std::pair<float, float> >::iterator metricIter, metricEnd;
     for(metricIter = vert->metrics.begin(), metricEnd = vert->metrics.end(); metricIter != metricEnd; metricIter++){
         out << metricIter->first << "=(" << metricIter->second.first << "," << metricIter->second.second << ")\\n";
     }

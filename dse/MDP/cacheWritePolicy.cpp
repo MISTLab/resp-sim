@@ -30,10 +30,6 @@
 
 #include "utils.hpp"
 
-#ifdef MEMORY_DEBUG
-#include <mpatrol.h>
-#endif
-
 ///Creator variable: this variable is initialized when the dll
 ///is loaded; this action also automatically registers the plugin
 ///in the application
@@ -51,9 +47,9 @@ CacheWritePolicyIf::CacheWritePolicyIf(const std::vector<std::string> &values, s
 ///Given a metric and the new parameter value, we obtain an
 ///estimation of the metric change from the old value to the new
 ///one
-std::pair<float, float> CacheWritePolicyIf::changeValue(plugin_int_map &parameters,
-            int newValue, const std::string &metric, const float_map &centroidMap,
-                const float_map &statistics, const std::map<PluginIf *, std::string> &parameter_values){
+std::pair<float, float> CacheWritePolicyIf::changeValue(std::map<PluginIf*, int> &parameters,
+            int newValue, const std::string &metric, const std::map<std::string, float> &centroidMap,
+                const std::map<std::string, float> &statistics, const std::map<PluginIf *, std::string> &parameter_values){
     // Note that actually I do not consider the write policy of the instruction cache, so no
     // action can be performed if we are in the instruction cache
     std::pair<float, float> retVal;
@@ -168,7 +164,7 @@ std::pair<float, float> CacheWritePolicyIf::changeValue(plugin_int_map &paramete
 
 ///It computes the new value of the metrics according to
 ///the specified value and returns it
-void CacheWritePolicyIf::updateStatistics(float_map &curStats, int oldValue, int action,
+void CacheWritePolicyIf::updateStatistics(std::map<std::string, float> &curStats, int oldValue, int action,
                                                         const std::map<PluginIf *, std::string> &parameter_values){
     //I have to update the generic statistics of the cache with the numbers
     //from the actual statistic
@@ -206,7 +202,7 @@ void CacheWritePolicyIf::updateStatistics(float_map &curStats, int oldValue, int
 ///Using the current instance of ReSPClient, it queries ReSP for the new
 ///values of the metrics (i.e. CPI, frequency etc. for a processor) and returns
 ///this value
-void CacheWritePolicyIf::getStats(RespClient &client, float_map &toUpdateStats){
+void CacheWritePolicyIf::getStats(RespClient &client, std::map<std::string, float> &toUpdateStats){
     //Here I get the stats for all the policies, the current one and all the
     //others
     std::string curCache = this->pluginName.substr(0, 1);

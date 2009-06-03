@@ -1,54 +1,35 @@
+#ifndef MAP_DEFS_HPP
+#define MAP_DEFS_HPP
+
 #include <map>
 #include <list>
 #include <string>
 
-#include <boost/pool/pool_alloc.hpp>
-#include <ext/malloc_allocator.h>
-
-class PluginIf;
-
-#ifndef MAP_DEFS
-#define MAP_DEFS
-/// Type definitions for differen kinds of maps
-// typedef std::list<std::pair<float, float>, __gnu_cxx::malloc_allocator<std::pair<float, float> > > list_pair_float_float;
-//
-// typedef std::map<std::string, int, std::less<std::string>, __gnu_cxx::malloc_allocator< std::pair<std::string const, int> > > int_map;
-// typedef std::map<std::string, float, std::less<std::string>, __gnu_cxx::malloc_allocator< std::pair<std::string const, float> > > float_map;
-// typedef std::map<std::string, double, std::less<std::string>, __gnu_cxx::malloc_allocator< std::pair<std::string const, double> > > double_map;
-// typedef std::map<std::string, std::pair<float, float>, std::less<std::string>, __gnu_cxx::malloc_allocator< std::pair<std::string const, std::pair<float,float> > > > metric_map;
-// typedef std::multimap<std::string, int, std::less<std::string>, __gnu_cxx::malloc_allocator< std::pair<std::string const, int> > > int_multimap;
-// typedef std::map<std::string, list_pair_float_float,
-//                  std::less<std::string>,
-//                  __gnu_cxx::malloc_allocator< std::pair<std::string const,
-//                  list_pair_float_float> > > list_float_map;
-
-// typedef std::list<std::pair<float, float>, boost::fast_pool_allocator<std::pair<float, float> > > list_pair_float_float;
-//
-// typedef std::map<std::string, int, std::less<std::string>, boost::pool_allocator< std::pair<std::string const, int> > > int_map;
-// typedef std::map<std::string, float, std::less<std::string>, boost::pool_allocator< std::pair<std::string const, float> > > float_map;
-// typedef std::map<std::string, double, std::less<std::string>, boost::pool_allocator< std::pair<std::string const, double> > > double_map;
-// typedef std::map<std::string, std::pair<float, float>, std::less<std::string>, boost::pool_allocator< std::pair<std::string const, std::pair<float,float> > > > metric_map;
-// typedef std::multimap<std::string, int, std::less<std::string>, boost::pool_allocator< std::pair<std::string const, int> > > int_multimap;
-// typedef std::map<std::string, list_pair_float_float,
-//                  std::less<std::string>,
-//                  boost::pool_allocator< std::pair<std::string const,
-//                  list_pair_float_float> > > list_float_map;
-
-
-typedef std::list<std::pair<float, float> > list_pair_float_float;
-typedef std::map<std::string, int> int_map;
-typedef std::map<int, std::string> reverse_int_map;
-typedef std::map<std::string, float> float_map;
-typedef std::map<std::string, double> double_map;
-typedef std::map<int, float> stats_map;
-typedef std::map<std::string, std::pair<float, float> > metric_map;
-typedef std::multimap<std::string, int> int_multimap;
-typedef std::map<std::string, list_pair_float_float> list_float_map;
-
-typedef std::map<PluginIf*, int> plugin_int_map;
-typedef std::map<PluginIf*, float> plugin_float_map;
-typedef std::map<PluginIf*, double> plugin_double_map;
-typedef std::multimap<PluginIf*, int> plugin_int_multimap;
-typedef std::map<PluginIf*, list_pair_float_float> plugin_list_float_map;
+#ifdef __GNUC__
+#ifdef __GNUC_MINOR__
+#if (__GNUC__ >= 4 && __GNUC_MINOR__ >= 3)
+#include <tr1/unordered_map>
+#define template_map std::tr1::unordered_map
+#define hash_fun_char std::tr1::hash<const char *>()
+#else
+#include <ext/hash_map>
+#define  template_map __gnu_cxx::hash_map
+#define  hash_fun_char __gnu_cxx::hash<const char *>()
+#endif
+#else
+#include <ext/hash_map>
+#define  template_map __gnu_cxx::hash_map
+#define  hash_fun_char __gnu_cxx::hash<const char *>()
+#endif
+#else
+#ifdef _WIN32
+#include <hash_map>
+#define  template_map stdext::hash_map
+#define  hash_fun_char stdext::hash_value
+#else
+#include <map>
+#define  template_map std::map
+#endif
+#endif
 
 #endif

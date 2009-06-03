@@ -26,10 +26,6 @@
 #include "configuration.hpp"
 #include "pluginIf.hpp"
 
-#ifdef MEMORY_DEBUG
-#include <mpatrol.h>
-#endif
-
 SystemConfig::SystemConfig(){
     this->dominated = false;
 }
@@ -37,7 +33,7 @@ SystemConfig::SystemConfig(){
 ///Compares two solutions to see if one dominates the other
 ///Returns true of the current solution dominates the other
 bool SystemConfig::dominates(const SystemConfig & other){
-    double_map::iterator metricIter, metricEnd;
+    std::map<std::string, double>::iterator metricIter, metricEnd;
     for(metricIter = this->metric2Value.begin(), metricEnd = this->metric2Value.end(); metricIter != metricEnd; metricIter++){
         if(metricIter->second > other.metric2Value.find(metricIter->first)->second)
             return false;
@@ -48,13 +44,13 @@ bool SystemConfig::dominates(const SystemConfig & other){
 ///Print CSV file containin the solution
 void SystemConfig::printcsv(std::ostream & stream) const{
     stream << alpha << ";";
-    
-    int_map::const_iterator paramIter, paramEnd;
+
+    std::map<std::string, int>::const_iterator paramIter, paramEnd;
     for(paramIter = this->param2Value.begin(), paramEnd = this->param2Value.end(); paramIter != paramEnd; paramIter++){
         stream << plugin_handler[paramIter->first]->getParameterName(paramIter->second) << ";";
     }
-    double_map::const_reverse_iterator metricIter, metricEnd;
-    double_map::const_reverse_iterator metricIterTemp;
+    std::map<std::string, double>::const_reverse_iterator metricIter, metricEnd;
+    std::map<std::string, double>::const_reverse_iterator metricIterTemp;
     for (metricIter = this->metric2Value.rbegin(), metricIterTemp = metricIter, metricIterTemp++, metricEnd = this->metric2Value.rend(); metricIter != metricEnd; metricIter++, metricIterTemp++){
         stream << metricIter->second;
         if(metricIterTemp != metricEnd)
@@ -65,13 +61,13 @@ void SystemConfig::printcsv(std::ostream & stream) const{
 
 ///Print the current solution to an output stream
 void SystemConfig::print(std::ostream & stream) const{
-    int_map::const_iterator paramIter, paramEnd;
+    std::map<std::string, int>::const_iterator paramIter, paramEnd;
     stream << "Parameters:" << std::endl;
     for(paramIter = this->param2Value.begin(), paramEnd = this->param2Value.end(); paramIter != paramEnd; paramIter++){
         stream << '\x09' << paramIter->first << " = " << plugin_handler[paramIter->first]->getParameterName(paramIter->second) << std::endl;
     }
     stream << "Metrics:" << std::endl;
-    double_map::const_iterator metricIter, metricEnd;
+    std::map<std::string, double>::const_iterator metricIter, metricEnd;
     for (metricIter = this->metric2Value.begin(), metricEnd = this->metric2Value.end(); metricIter != metricEnd; metricIter++){
         stream << '\x09' << metricIter->first << "=" << metricIter->second << std::endl;
     }
@@ -88,8 +84,8 @@ std::ostream& operator<< (std::ostream &os, const SystemConfig& conf){
 }
 
 bool SystemConfig::operator ==( const SystemConfig & other ) const{
-    int_map::const_iterator param2ValueIter, param2ValueEnd, foundParameter;
-    double_map::const_iterator metric2ValueIter, metric2ValueEnd, foundMetric;
+    std::map<std::string, int>::const_iterator param2ValueIter, param2ValueEnd, foundParameter;
+    std::map<std::string, double>::const_iterator metric2ValueIter, metric2ValueEnd, foundMetric;
 
     for(param2ValueIter = this->param2Value.begin(), param2ValueEnd = this->param2Value.end(); param2ValueIter != param2ValueEnd; param2ValueIter++){
         foundParameter = other.param2Value.find(param2ValueIter->first);

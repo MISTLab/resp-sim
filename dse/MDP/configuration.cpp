@@ -50,10 +50,6 @@ namespace std {
 }
 #endif
 
-#ifdef MEMORY_DEBUG
-#include <mpatrol.h>
-#endif
-
 //* Global variable declared external in problem.h */
 Configuration config;
 

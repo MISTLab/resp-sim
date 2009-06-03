@@ -27,11 +27,6 @@
 
 #include "utils.hpp"
 
-#ifdef MEMORY_DEBUG
-#include <mpatrol.h>
-#endif
-
-
 ObjectiveFunction::ObjectiveFunction(const std::map<std::string, std::string> & objFunParams){
     std::map<std::string, std::string>::const_iterator foundAlpha = objFunParams.find("alpha");
     if(foundAlpha == objFunParams.end())
@@ -39,9 +34,9 @@ ObjectiveFunction::ObjectiveFunction(const std::map<std::string, std::string> & 
     this->alpha = boost::lexical_cast<double>(foundAlpha->second);
 }
 
-double ObjectiveFunction::estimate(const float_map &metrics){
+double ObjectiveFunction::estimate(const std::map<std::string, float> &metrics){
     double outValue = 1;
-    float_map::const_iterator metricIter, metricEnd;
+    std::map<std::string, float>::const_iterator metricIter, metricEnd;
     for(metricIter = metrics.begin(), metricEnd = metrics.end(); metricIter != metricEnd; metricIter++){
         if(metricIter->first == "execTime")
             outValue *= metricIter->second;
@@ -53,9 +48,9 @@ double ObjectiveFunction::estimate(const float_map &metrics){
     return outValue;
 }
 
-double ObjectiveFunction::estimate(const double_map &metrics){
+double ObjectiveFunction::estimate(const std::map<std::string, double> &metrics){
     double outValue = 1;
-    double_map::const_iterator metricIter, metricEnd;
+    std::map<std::string, double>::const_iterator metricIter, metricEnd;
     for(metricIter = metrics.begin(), metricEnd = metrics.end(); metricIter != metricEnd; metricIter++){
         if(metricIter->first == "execTime")
             outValue *= pow(metricIter->second, 1-this->alpha);

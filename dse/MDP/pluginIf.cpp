@@ -23,10 +23,6 @@
 
 #include "pluginIf.hpp"
 
-#ifdef MEMORY_DEBUG
-#include <mpatrol.h>
-#endif
-
 std::map<std::string, PluginCreator* > plugin_creator_handler;
 std::map<std::string, PluginIf* > plugin_handler;
 std::map<PluginIf*, std::string > rev_plugin_handler;
@@ -39,8 +35,8 @@ bool PluginIf::numericSorter(const std::string &a, const std::string &b){
 ///Given the current value of the parameter and the action which has to be
 ///applied to it, it returns the interval value of the corresponding metric.
 ///This method has more or less the same functionality of the previous one
-std::pair<float, float> PluginIf::applyAction(plugin_int_map &parameters, int action, const std::string &metric,
-                                const float_map &centroidMap, const float_map &statistics,
+std::pair<float, float> PluginIf::applyAction(std::map<PluginIf*, int> &parameters, int action, const std::string &metric,
+                                const std::map<std::string, float> &centroidMap, const std::map<std::string, float> &statistics,
                                                                     const std::map<PluginIf *, std::string> &parameter_values){
     return this->changeValue(parameters, this->applyAction(parameters[this], action), metric, centroidMap, statistics, parameter_values);
 }
@@ -54,7 +50,7 @@ int PluginIf::getDualAction(int curAction){
 
 ///Specifies whether it is possible to estimate the effects of the current action or if simulation
 ///is needed
-bool PluginIf::needsSimulation(int oldValue, int action, const float_map &curStats){
+bool PluginIf::needsSimulation(int oldValue, int action, const std::map<std::string, float> &curStats){
     return false;
 }
 

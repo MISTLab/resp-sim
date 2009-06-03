@@ -28,13 +28,10 @@
 #include <boost/graph/filtered_graph.hpp>
 #include <boost/config.hpp>
 
-#include "map_defs.hpp"
 #include "ProbFunction.hpp"
 
 #include "pluginIf.hpp"
 
-// Use boost::pool_allocator
-//typedef std::map<std::pair<std::string, int>, ProbGraph *, std::less<std::pair<std::string, int> >, boost::pool_allocator< std::pair<std::pair<std::string, int> const, ProbGraph *> > > density_map;
 // Redifine to use different allocators
 typedef std::map<std::pair<PluginIf *, int>, ProbGraph *> density_map;
 
@@ -71,18 +68,18 @@ struct VertexInfo{
     // The int is not directly the value of the parameter,
     // but an enumeration; refer to the specific parameter plugin
     // for the decoding of this value
-    plugin_int_map parameters;
+    std::map<PluginIf*, int> parameters;
     // For every plugin, this variables holds the value of the statistics
     // for the plugin itself. Note that the application of an action
     // modifies the statistics themselves
-    stats_map curStats;
+    std::map<int, float> curStats;
     // Estimated metric intervals; in case the two estimated boundaries
     // are equal it means that we have determined a precise metric value
-    metric_map metrics;
+    std::map<std::string, std::pair<float, float> > metrics;
     // For each parameters it contains a list of the forbidden
     // actions; again the action is represented by an enumeration
     // which can be resolved by the corresponding plugin
-    plugin_int_multimap forbiddenActions;
+    std::multimap<PluginIf*, int> forbiddenActions;
     // probability density functions; there is a graph which
     // repsents the probability density: note that I have a different
     // probability function for each action

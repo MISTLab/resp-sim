@@ -143,7 +143,7 @@ def configure(conf):
     conf.check_python_version((2,4))
     conf.check_python_headers()
     if float(conf.env['PYTHON_VERSION']) < 2.5:
-        conf.env.append_unique('CPPFLAGS' , '-DPy_ssize_t=long' )
+        conf.env.append_unique('CPPFLAGS', '-DPy_ssize_t=long' )
 
     ########################################
     # Check for special tools

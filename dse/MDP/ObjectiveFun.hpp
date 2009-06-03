@@ -23,12 +23,6 @@
 #include <map>
 #include <string>
 
-#include "map_defs.hpp"
-
-#ifdef MEMORY_DEBUG
-#include <mpatrol.h>
-#endif
-
 ///Note how, so far, in order to change the objective function
 ///we need to change this class. In future a better mechanism
 ///could be used and we could think of using a plugin architecture
@@ -39,8 +33,8 @@ class ObjectiveFunction{
     ObjectiveFunction(const std::map<std::string, std::string> &objFunParams);
     ///Given the metrics values, it estimates the scalarizing function for
     ///those metrics
-    double estimate(const float_map &metrics);
-    double estimate(const double_map &metrics);
+    double estimate(const std::map<std::string, float> &metrics);
+    double estimate(const std::map<std::string, double> &metrics);
 };
 
 #endif

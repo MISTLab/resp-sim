@@ -50,10 +50,6 @@
 #include "pluginIf.hpp"
 #include "utils.hpp"
 
-#ifdef MEMORY_DEBUG
-#include <mpatrol.h>
-#endif
-
 void resp_close_terminate_handler(){
     std::string mex = "";
     try{

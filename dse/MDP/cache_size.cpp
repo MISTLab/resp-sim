@@ -30,10 +30,6 @@
 
 #include "utils.hpp"
 
-#ifdef MEMORY_DEBUG
-#include <mpatrol.h>
-#endif
-
 ///Creator variable: this variable is initialized when the dll
 ///is loaded; this action also automatically registers the plugin
 ///in the application
@@ -56,8 +52,8 @@ CacheSizeIf::CacheSizeIf(const std::vector<std::string> &values, std::string plu
 ///Given a metric and the new parameter value, we obtain an
 ///estimation of the metric change from the old value to the new
 ///one
-std::pair<float, float> CacheSizeIf::changeValue(plugin_int_map &parameters, int newValue, const std::string &metric,
-                                    const float_map &centroidMap, const float_map &statistics,
+std::pair<float, float> CacheSizeIf::changeValue(std::map<PluginIf*, int> &parameters, int newValue, const std::string &metric,
+                                    const std::map<std::string, float> &centroidMap, const std::map<std::string, float> &statistics,
                                                                             const std::map<PluginIf *, std::string> &parameter_values){
     int oldValue = parameters[this];
     std::pair<float, float> retVal;
@@ -207,7 +203,7 @@ std::pair<float, float> CacheSizeIf::changeValue(plugin_int_map &parameters, int
 
 ///It computes the new value of the metrics according to
 ///the specified value and returns it
-void CacheSizeIf::updateStatistics(float_map &curStats, int oldValue, int action, const std::map<PluginIf *, std::string> &parameter_values){
+void CacheSizeIf::updateStatistics(std::map<std::string, float> &curStats, int oldValue, int action, const std::map<PluginIf *, std::string> &parameter_values){
     std::string k = this->pluginName.substr(0, 1);
 
     if(action == 0){ // Increase
@@ -323,7 +319,7 @@ void CacheSizeIf::updateStatistics(float_map &curStats, int oldValue, int action
 ///Using the current instance of ReSPClient, it queries ReSP for the new
 ///values of the metrics (i.e. CPI, frequency etc. for a processor) and returns
 ///this value
-void CacheSizeIf::getStats(RespClient &client, float_map &toUpdateStats){
+void CacheSizeIf::getStats(RespClient &client, std::map<std::string, float> &toUpdateStats){
     std::string curCache = this->pluginName.substr(0, 1);
     std::string cacheStatus;
     client.get_probe_value(curCache + "CacheStatus", cacheStatus);

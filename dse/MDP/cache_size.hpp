@@ -32,10 +32,6 @@
 #include "pluginIf.hpp"
 #include "cache.hpp"
 
-#ifdef MEMORY_DEBUG
-#include <mpatrol.h>
-#endif
-
 class CacheSizeIf : public IntegerPlugin{
   protected:
     ECacti model;
@@ -45,18 +41,18 @@ class CacheSizeIf : public IntegerPlugin{
     ///Given a metric and the new parameter value, we obtain an
     ///estimation of the metric change from the old value to the new
     ///one
-    std::pair<float, float> changeValue(plugin_int_map &parameters, int newValue, const std::string &metric,
-                            const float_map &centroidMap, const float_map &statistics,
+    std::pair<float, float> changeValue(std::map<PluginIf*, int> &parameters, int newValue, const std::string &metric,
+                            const std::map<std::string, float> &centroidMap, const std::map<std::string, float> &statistics,
                                                                     const std::map<PluginIf *, std::string> &parameter_values);
 
     ///It computes the new value of the metrics according to
     ///the specified value and returns it
-    void updateStatistics(float_map &curStats, int oldValue, int action, const std::map<PluginIf *, std::string> &parameter_values);
+    void updateStatistics(std::map<std::string, float> &curStats, int oldValue, int action, const std::map<PluginIf *, std::string> &parameter_values);
 
     ///Using the current instance of ReSPClient, it queries ReSP for the new
     ///values of the metrics (i.e. CPI, frequency etc. for a processor) and returns
     ///this value
-    void getStats(RespClient &client, float_map &toUpdateStats);
+    void getStats(RespClient &client, std::map<std::string, float> &toUpdateStats);
 
     ///Given the enumeration representing the parameter value of this plugin (i.e. the memory
     ///latency) it returns the corresponding memory latency

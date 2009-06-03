@@ -44,11 +44,8 @@
 #include "ProbFunction.hpp"
 #include "ObjectiveFun.hpp"
 
+#include "map_defs.hpp"
 #include "utils.hpp"
-
-#ifdef MEMORY_DEBUG
-#include <mpatrol.h>
-#endif
 
 unsigned int MDPSolver::numSimulations = 0;
 unsigned int MDPSolver::numIIKindUncertainty = 0;
@@ -59,8 +56,8 @@ std::vector<SystemConfig> MDPSolver::nonDominated;
 double MDPSolver::current_alpha;
 SimulationCache *MDPSolver::simulationCache = NULL;
 
-int_map MDPSolver::global_stats;
-reverse_int_map MDPSolver::reverse_global_stats;
+std::map<std::string, int> MDPSolver::global_stats;
+std::map<int, std::string> MDPSolver::reverse_global_stats;
 
 RespClient* MDPSolver::client = NULL;
 
@@ -69,7 +66,7 @@ RespClient* MDPSolver::client = NULL;
 ///In case an initial solution is provided, the creation of the
 ///graph starts from there. Otherwise we randomly select a point,
 ///simulate it and start the creation of the graph
-void MDPSolver::createExplorationGraph(SystemConfig * initialSol, plugin_int_multimap initForbiddenActions){
+void MDPSolver::createExplorationGraph(SystemConfig * initialSol, std::multimap<PluginIf*, int> initForbiddenActions){
     // This map keeps track of the probability graphs currently in use in the system: when
     // the count reaches 0 it means that the associated graph can be eliminated from the system
     //std::map<ProbGraph *, int, std::less<ProbGraph *>, boost::pool_allocator<std::pair<ProbGraph * const, int> > > refCountMap;
@@ -121,7 +118,7 @@ void MDPSolver::createExplorationGraph(SystemConfig * initialSol, plugin_int_mul
     for(initParamsIter = initialSol->param2Value.begin(), initParamsEnd = initialSol->param2Value.end(); initParamsIter != initParamsEnd; initParamsIter++){
         initVert->parameters[plugin_handler[initParamsIter->first]] = initParamsIter->second;
     }
-    double_map::iterator metricIter, metricEnd;
+    std::map<std::string, double>::iterator metricIter, metricEnd;
     for(metricIter = initialSol->metric2Value.begin(), metricEnd = initialSol->metric2Value.end(); metricIter != metricEnd; metricIter++){
         //std::cerr << "setting initial value " << metricIter->second << " for metric " << metricIter->first << std::endl;
         initVert->metrics[metricIter->first] = std::pair<float, float>((float)metricIter->second, (float)metricIter->second);
@@ -152,11 +149,11 @@ void MDPSolver::createExplorationGraph(SystemConfig * initialSol, plugin_int_mul
         std::vector<vertex_t>::iterator leafIter, leafEnd;
         for(leafIter = leafVert.begin(), leafEnd = leafVert.end(); leafIter != leafEnd; leafIter++){
             //std::cerr << std::endl << " ** ** processing leaf ** ** " << std::endl;
-            plugin_int_multimap &forbiddenActions = Exploration::getVertexProp(*leafIter, *this->explorationGraph).forbiddenActions;
-            plugin_int_map &parameters = Exploration::getVertexProp(*leafIter, *this->explorationGraph).parameters;
-            metric_map &metrics = Exploration::getVertexProp(*leafIter, *this->explorationGraph).metrics;
+            std::multimap<PluginIf*, int> &forbiddenActions = Exploration::getVertexProp(*leafIter, *this->explorationGraph).forbiddenActions;
+            std::map<PluginIf*, int> &parameters = Exploration::getVertexProp(*leafIter, *this->explorationGraph).parameters;
+            std::map<std::string, std::pair<float, float> > &metrics = Exploration::getVertexProp(*leafIter, *this->explorationGraph).metrics;
             density_map &proDensities = Exploration::getVertexProp(*leafIter, *this->explorationGraph).proDensities;
-            stats_map &curStats = Exploration::getVertexProp(*leafIter, *this->explorationGraph).curStats;
+            std::map<int, float> &curStats = Exploration::getVertexProp(*leafIter, *this->explorationGraph).curStats;
             //std::cerr << "now there are " << forbiddenActions.size() << " forbidden actions" << std::endl;
 
 //             if( counter % 60000 > 49000 && counter % 60000 < 50000 )
@@ -170,8 +167,8 @@ void MDPSolver::createExplorationGraph(SystemConfig * initialSol, plugin_int_mul
                 for(actionIter = actions.begin(), actionEnd  = actions.end(); actionIter != actionEnd; actionIter++){
                     //std::cerr << "       ACTION  " << *actionIter << std::endl;
                     //I check that this action if not forbidden:
-                    std::pair<plugin_int_multimap::iterator, plugin_int_multimap::iterator> foundAction = forbiddenActions.equal_range(pluginIter->second);
-                    plugin_int_multimap::iterator it;
+                    std::pair<std::multimap<PluginIf*, int>::iterator, std::multimap<PluginIf*, int>::iterator> foundAction = forbiddenActions.equal_range(pluginIter->second);
+                    std::multimap<PluginIf*, int>::iterator it;
                     bool skip = false;
                     for(it = foundAction.first; it != foundAction.second; it++){
                         if(it->second == *actionIter)
@@ -184,21 +181,21 @@ void MDPSolver::createExplorationGraph(SystemConfig * initialSol, plugin_int_mul
                     //std::cerr << "executing apply action 1" << std::endl;
                     int currentParameter = pluginIter->second->applyAction(parameters[pluginIter->second], *actionIter);
 //                     std::cerr << "plugin " << pluginIter->first << " old parameter value " << pluginIter->second->getParameterName(parameters[pluginIter->first]) << " new parameter value " << pluginIter->second->getParameterName(currentParameter) << std::endl;
-                    float_map currentStats;
-                    float_map curStats_plugin;
-                    for( stats_map::iterator it = curStats.begin() ; it != curStats.end(); it++) {
+                    std::map<std::string, float> currentStats;
+                    std::map<std::string, float> curStats_plugin;
+                    for( std::map<int, float>::iterator it = curStats.begin() ; it != curStats.end(); it++) {
                         curStats_plugin[this->reverse_global_stats[it->first]] = it->second;
                     }
 
 
                     //First lets actually modify all the metrics for the current action
-                    list_float_map partitionedMetrics;
+                    std::map<std::string, std::list<std::pair<float, float> > > partitionedMetrics;
                     //First of all I check if the current plugin is not able to make estimations: in this case
                     //we resort to simulation
                     if(pluginIter->second->needsSimulation(parameters[pluginIter->second], *actionIter, curStats_plugin)){
                         // ok, a simulation is needed, I perform it
-                        plugin_int_map newPoint;
-                        plugin_int_map::iterator newPointIter, newPointEnd;
+                        std::map<PluginIf*, int> newPoint;
+                        std::map<PluginIf*, int>::iterator newPointIter, newPointEnd;
                         for(newPointIter = parameters.begin(), newPointEnd = parameters.end(); newPointIter != newPointEnd; newPointIter++){
                             if(newPointIter->first == pluginIter->second){
                                 newPoint[newPointIter->first] = currentParameter;
@@ -217,7 +214,7 @@ void MDPSolver::createExplorationGraph(SystemConfig * initialSol, plugin_int_mul
                     for(simConfigIter = MDPSolver::simulatedConfigs.begin(), simConfigEnd = MDPSolver::simulatedConfigs.end();
                                                                                     simConfigIter != simConfigEnd; simConfigIter++){
                         found = false;
-                        int_map::iterator param2ValIter, param2ValEnd;
+                        std::map<std::string, int>::iterator param2ValIter, param2ValEnd;
                         for(param2ValIter = simConfigIter->param2Value.begin(), param2ValEnd = simConfigIter->param2Value.end();
                                                                                         param2ValIter != param2ValEnd; param2ValIter++){
                             int value = 0;
@@ -239,7 +236,7 @@ void MDPSolver::createExplorationGraph(SystemConfig * initialSol, plugin_int_mul
                                 partitionedMetrics[*metricsIter].push_back(std::pair<float, float>(simConfigIter->metric2Value[*metricsIter], simConfigIter->metric2Value[*metricsIter]));
                             }
 
-                            for( stats_map::iterator it = simConfigIter->param2Stats.begin() ; it != simConfigIter->param2Stats.end(); it++) {
+                            for( std::map<int, float>::iterator it = simConfigIter->param2Stats.begin() ; it != simConfigIter->param2Stats.end(); it++) {
                                 currentStats[this->reverse_global_stats[it->first]] = it->second;
                             }
                             //std::cerr << "found simulated config" << std::endl;
@@ -249,7 +246,7 @@ void MDPSolver::createExplorationGraph(SystemConfig * initialSol, plugin_int_mul
                     if(!found){
                         //Not found statistic, resorting to estimation
                         //std::cerr << "not found simulated config" << std::endl;
-                        float_map centroidMap;
+                        std::map<std::string, float> centroidMap;
                         std::map<PluginIf*, std::string> parameter_values;
                         for( std::map<std::string, PluginIf*>::iterator it = plugin_handler.begin() ; it != plugin_handler.end() ; it++ ){
                             parameter_values[it->second] = it->second->getParameterName(parameters[it->second]);
@@ -373,7 +370,7 @@ void MDPSolver::createExplorationGraph(SystemConfig * initialSol, plugin_int_mul
 //                             usedMem = mallinfo().arena;
 //                         }
 //                         std::cerr << "Adding " << vs << " virtual samples to metric: ";
-//                         metric_map::const_iterator metrTempIter, metrTempEnd;
+//                         std::map<std::string, std::pair<float, float> >::const_iterator metrTempIter, metrTempEnd;
 //                         for(metrTempIter = newVertIter->first->metrics.begin(), metrTempEnd = newVertIter->first->metrics.end(); metrTempIter != metrTempEnd; metrTempIter++){
 //                             std::cerr << metrTempIter->first << "(" << metrTempIter->second.first << ", " << metrTempIter->second.second << ") -- ";
 //                         }
@@ -414,7 +411,7 @@ void MDPSolver::createExplorationGraph(SystemConfig * initialSol, plugin_int_mul
 
 
                         //newVertIter->first->curStats = currentStats;
-                        for( float_map::iterator it = currentStats.begin() ; it != currentStats.end() ; it++ ) {
+                        for( std::map<std::string, float>::iterator it = currentStats.begin() ; it != currentStats.end() ; it++ ) {
                             newVertIter->first->curStats[this->global_stats[it->first]] = it->second;
                         }
 
@@ -478,7 +475,7 @@ void MDPSolver::createExplorationGraph(SystemConfig * initialSol, plugin_int_mul
 
 ///Given a metric and an interval of values in that metric's space, it partitions
 ///the space according to the accuracy lambda.
-list_pair_float_float MDPSolver::partitionMetrics(const std::string &metric,
+std::list<std::pair<float, float> > MDPSolver::partitionMetrics(const std::string &metric,
                                                         const std::pair<float, float> &metricVal){
     //Rember to sort the list on the boundaries from the smallest to the
     //biggest; I split so that all the intervals are smaller than
@@ -490,7 +487,7 @@ list_pair_float_float MDPSolver::partitionMetrics(const std::string &metric,
     if(metricVal.first < 0 || metricVal.second < 0){
         THROW_EXCEPTION("Metric " << metric << " we have interval (" << metricVal.first << "," << metricVal.second << ") is negative!");
     }
-    list_pair_float_float splitted;
+    std::list<std::pair<float, float> > splitted;
     double startInter = metricVal.first;
 
     double maxInter = (abs(metricVal.second+metricVal.first)/(float) 2)*config.lambda;
@@ -557,8 +554,8 @@ void MDPSolver::computeStrategy(){
                 double curProb = Exploration::getEdgeProp(*outEIter, *this->explorationGraph).prob;
                 //std::cerr << "computed transition probability " << curProb << std::endl;
                 vertex_t nextVertex = boost::target(*outEIter, *this->explorationGraph);
-                float_map sourceMetrics = MDPSolver::getMetricCentroid(Exploration::getVertexProp(*topoVertIter, *this->explorationGraph).metrics);
-                float_map destMetrics = MDPSolver::getMetricCentroid(Exploration::getVertexProp(nextVertex, *this->explorationGraph).metrics);
+                std::map<std::string, float> sourceMetrics = MDPSolver::getMetricCentroid(Exploration::getVertexProp(*topoVertIter, *this->explorationGraph).metrics);
+                std::map<std::string, float> destMetrics = MDPSolver::getMetricCentroid(Exploration::getVertexProp(nextVertex, *this->explorationGraph).metrics);
                 double reward = this->objFun->estimate(sourceMetrics) - this->objFun->estimate(destMetrics);
                 //std::cerr << "computed reward " << reward << std::endl;
                 //std::cerr << "reward " << reward << " src: " << this->objFun->estimate(sourceMetrics) << " dst: "<< this->objFun->estimate(destMetrics) << std::endl;
@@ -600,7 +597,7 @@ void MDPSolver::computeStrategy(){
 ///current simulated point so that it can be reused in
 ///later algorithm runs
 ///Note that I also return the forbidden actions for each system configuration
-std::pair<SystemConfig, plugin_int_multimap > MDPSolver::applyStrategy(vertex_t initialNode, bool &convergence){
+std::pair<SystemConfig, std::multimap<PluginIf*, int> > MDPSolver::applyStrategy(vertex_t initialNode, bool &convergence){
     // Start from the initialNode and execute the corresponding
     // action, as mapped in the strategy: this means that I look
     // in all the out-edges of the node to find all the ones that are
@@ -613,7 +610,7 @@ std::pair<SystemConfig, plugin_int_multimap > MDPSolver::applyStrategy(vertex_t 
     // When strategy application end a simulation run is executed on
     // each of the optimal found solutions. I return the result
     // of these runs
-    std::vector<std::pair<SystemConfig, plugin_int_multimap > > retVal;
+    std::vector<std::pair<SystemConfig, std::multimap<PluginIf*, int> > > retVal;
     double maxMetric = 0;
     double gain = 1;
     std::set<vertex_t> curNodes;
@@ -642,8 +639,8 @@ std::pair<SystemConfig, plugin_int_multimap > MDPSolver::applyStrategy(vertex_t 
             bool found = false;
             vertex_t realNode;
             for(curNodesIter = curNodes.begin(), curNodesEnd = curNodes.end(); curNodesIter != curNodesEnd && !found; curNodesIter++){
-                metric_map &metrics = Exploration::getVertexProp(*curNodesIter, *this->explorationGraph).metrics;
-                metric_map::iterator metricIter, metricEnd;
+                std::map<std::string, std::pair<float, float> > &metrics = Exploration::getVertexProp(*curNodesIter, *this->explorationGraph).metrics;
+                std::map<std::string, std::pair<float, float> >::iterator metricIter, metricEnd;
                 unsigned int numFound = 0;
                 for(metricIter = metrics.begin(), metricEnd = metrics.end(); metricIter != metricEnd; metricIter++){
                     if(simulatedPoint.metric2Value[metricIter->first] >= metricIter->second.first &&
@@ -685,8 +682,8 @@ std::pair<SystemConfig, plugin_int_multimap > MDPSolver::applyStrategy(vertex_t 
         //Now I actually apply the strategy to the nodes
         for(curNodesIter = curNodes.begin(), curNodesEnd = curNodes.end(); curNodesIter != curNodesEnd; curNodesIter++){
             //std::cout << "applying action to: ";
-/*            int_map parameters = Exploration::getVertexProp(*curNodesIter, *this->explorationGraph).parameters;
-            int_map::const_iterator parametersIter, parametersEnd;
+/*            std::map<std::string, int> parameters = Exploration::getVertexProp(*curNodesIter, *this->explorationGraph).parameters;
+            std::map<std::string, int>::const_iterator parametersIter, parametersEnd;
             for(parametersIter = parameters.begin(), parametersEnd = parameters.end(); parametersIter != parametersEnd; parametersIter++){
                 std::cout << parametersIter->first << " = " << parametersIter->second << ", ";
             }
@@ -706,8 +703,8 @@ std::pair<SystemConfig, plugin_int_multimap > MDPSolver::applyStrategy(vertex_t 
 //                     std::cout << endl;
 
                     //Now I compute the gain given by the execution of this action
-                    float_map sourceMetrics = MDPSolver::getMetricCentroid(Exploration::getVertexProp(*curNodesIter, *this->explorationGraph).metrics);
-                    float_map destMetrics = MDPSolver::getMetricCentroid(Exploration::getVertexProp(nextNode, *this->explorationGraph).metrics);
+                    std::map<std::string, float> sourceMetrics = MDPSolver::getMetricCentroid(Exploration::getVertexProp(*curNodesIter, *this->explorationGraph).metrics);
+                    std::map<std::string, float> destMetrics = MDPSolver::getMetricCentroid(Exploration::getVertexProp(nextNode, *this->explorationGraph).metrics);
                     double curGain = this->objFun->estimate(sourceMetrics) - this->objFun->estimate(destMetrics);
                     //std::cout << "curGain=" << curGain << " sourceSpeed=" << sourceMetrics["execTime"] << " destSpeed=" << destMetrics["execTime"] <<  std::endl;
                     if(curGain > gain){
@@ -736,7 +733,7 @@ std::pair<SystemConfig, plugin_int_multimap > MDPSolver::applyStrategy(vertex_t 
         convergence = true;
     } else
         convergence = false;
-    std::pair<SystemConfig, plugin_int_multimap > curSystemConfig;
+    std::pair<SystemConfig, std::multimap<PluginIf*, int> > curSystemConfig;
     // Lets now simulate the obtained point
     //std::cout << "END obtained processors --> " << Exploration::getVertexProp(*curNodes.begin(), *this->explorationGraph).parameters["procNum"] << std::endl;
     //std::cerr << "Simulating at the end of the strategy application" << std::endl;
@@ -809,7 +806,7 @@ void MDPSolver::simulatePoint(SystemConfig &curSol){
     for(simConfigIter = MDPSolver::simulatedConfigs.begin(), simConfigEnd = MDPSolver::simulatedConfigs.end();
                                                                     simConfigIter != simConfigEnd; simConfigIter++){
         found = false;
-        int_map::iterator param2ValIter, param2ValEnd;
+        std::map<std::string, int>::iterator param2ValIter, param2ValEnd;
         for(param2ValIter = simConfigIter->param2Value.begin(), param2ValEnd = simConfigIter->param2Value.end();
                                                                         param2ValIter != param2ValEnd; param2ValIter++){
             //std::cerr << param2ValIter->first << " = " << curSol.param2Value[param2ValIter->first] << " name=" << plugin_handler[param2ValIter->first]->getParameterName(curSol.param2Value[param2ValIter->first]) << std::endl;
@@ -835,7 +832,7 @@ void MDPSolver::simulatePoint(SystemConfig &curSol){
 
     // Here I determine if there is really the need for simulations of if the solution is already present in the simulation cache
     std::map<std::string, std::string> param2ValString;
-    int_map::const_iterator solIter, solEnd;
+    std::map<std::string, int>::const_iterator solIter, solEnd;
     if(MDPSolver::simulationCache != NULL){
         for(solIter = curSol.param2Value.begin(), solEnd = curSol.param2Value.end(); solIter != solEnd; solIter++){
             param2ValString.insert(std::pair<std::string, std::string>(solIter->first, plugin_handler[solIter->first]->getParameterName(solIter->second)));
@@ -846,7 +843,7 @@ void MDPSolver::simulatePoint(SystemConfig &curSol){
             // I found the solution, I just have to correctly update the statistics
             std::map<std::string, float>::iterator statsIter, statsEnd;
             for(statsIter = statsMap.begin(), statsEnd = statsMap.end(); statsIter != statsEnd; statsIter++){
-                unsigned int value = __gnu_cxx::hash<char*>()(statsIter->first.c_str());
+                unsigned int value = hash_fun_char(statsIter->first.c_str());
                 global_stats[statsIter->first] = value;
                 reverse_global_stats[value] = statsIter->first;
                 curSol.param2Stats.insert(std::pair<int, float>(value, statsIter->second));
@@ -917,15 +914,15 @@ void MDPSolver::simulatePoint(SystemConfig &curSol){
         }
     }
     // Finally I have to update the metrics of each plugin and save the just simulated solution
-    float_map realStatsTemp;
+    std::map<std::string, float> realStatsTemp;
     std::map<std::string, PluginIf* >::const_iterator pluginIter, pluginEnd;
     for(pluginIter = plugin_handler.begin(), pluginEnd = plugin_handler.end(); pluginIter != pluginEnd; pluginIter++){
         //std::cerr << "Setting statistics for plugin " << pluginIter->first << std::endl;
-        float_map temp;
+        std::map<std::string, float> temp;
         pluginIter->second->getStats(*client, temp);
         // Put the values in curSol.param2Stats and the global statistics
-        for( float_map::iterator it = temp.begin() ; it != temp.end() ; it++ ) {
-            unsigned int value = __gnu_cxx::hash<char*>()(it->first.c_str());
+        for( std::map<std::string, float>::iterator it = temp.begin() ; it != temp.end() ; it++ ) {
+            unsigned int value = hash_fun_char(it->first.c_str());
             global_stats[it->first] = value;
             reverse_global_stats[value] = it->first;
             curSol.param2Stats[value] = it->second;
@@ -970,10 +967,10 @@ void MDPSolver::simulatePoint(SystemConfig &curSol){
 ///Given a point (determined by the name of each parameter and its
 ///corresponding value) it performs a simulation run and
 ///it returns the computed metric values
-SystemConfig MDPSolver::simulatePoint(const plugin_int_map &point){
+SystemConfig MDPSolver::simulatePoint(const std::map<PluginIf*, int> &point){
     //std::cerr << "simulating single point" << std::endl;
     SystemConfig curSol;
-    plugin_int_map::const_iterator curPointIter, curPointEnd;
+    std::map<PluginIf*, int>::const_iterator curPointIter, curPointEnd;
     for(curPointIter = point.begin(), curPointEnd = point.end(); curPointIter != curPointEnd; curPointIter++){
         curSol.param2Value[rev_plugin_handler[curPointIter->first]] = curPointIter->second;
     }
@@ -1004,7 +1001,7 @@ void MDPSolver::run(){
     //TODO -- TODO -- I start by computing all the possible combination of the parameters of the
     //objective function
     //TODO: So far I hardcoded the fact that our objective function only has parameter alpha
-    std::pair<SystemConfig, plugin_int_multimap > bestPoint;
+    std::pair<SystemConfig, std::multimap<PluginIf*, int> > bestPoint;
     for(unsigned int j = 0; j < config.objFunParams["alpha"].size(); j++){
         //std::cerr << std::endl << "   RESTARTING WITH A NEW OBJECTIVE FUNCTION" << std::endl << std::endl;
         std::map<std::string, std::string> curObjParam;
@@ -1023,9 +1020,9 @@ void MDPSolver::run(){
         do{
             restart = false;
             if(j == 0)
-                this->createExplorationGraph(NULL, plugin_int_multimap());
+                this->createExplorationGraph(NULL, std::multimap<PluginIf*, int>());
             else
-                this->createExplorationGraph(&(bestPoint.first), plugin_int_multimap());
+                this->createExplorationGraph(&(bestPoint.first), std::multimap<PluginIf*, int>());
             if(config.verbose){
                 std::ofstream graphOut(("explorationGraph" + boost::lexical_cast<std::string>(this->numGraphs) + ".dot").c_str());
                 boost::write_graphviz(graphOut,  *this->explorationGraph,  NodeWriter(*this->explorationGraph),  EdgeWriter(*this->explorationGraph));
@@ -1108,7 +1105,7 @@ void MDPSolver::run(){
             if(converged){
                 if(config.verbose)
                     std::cout << "Optimality restart: convergence was reached" << std::endl;
-                this->createExplorationGraph(&(bestPoint.first), plugin_int_multimap());
+                this->createExplorationGraph(&(bestPoint.first), std::multimap<PluginIf*, int>());
                 if(config.verbose){
                     std::ofstream graphOut(("explorationGraph" + boost::lexical_cast<std::string>(this->numGraphs) + ".dot").c_str());
                     boost::write_graphviz(graphOut,  *this->explorationGraph,  NodeWriter(*this->explorationGraph),  EdgeWriter(*this->explorationGraph));
@@ -1197,18 +1194,18 @@ void MDPSolver::clearExplorationGraph(){
     }
 }
 
-float_map MDPSolver::getMetricCentroid(const metric_map &approxMetric){
-    float_map retVal;
-    metric_map::const_iterator iter, iterEnd;
+std::map<std::string, float> MDPSolver::getMetricCentroid(const std::map<std::string, std::pair<float, float> > &approxMetric){
+    std::map<std::string, float> retVal;
+    std::map<std::string, std::pair<float, float> >::const_iterator iter, iterEnd;
     for(iter = approxMetric.begin(), iterEnd = approxMetric.end(); iter != iterEnd; iter++){
         retVal[iter->first] = (iter->second.first + iter->second.second)/2;
     }
     return retVal;
 }
 
-float_map MDPSolver::getMinMetric(const metric_map &approxMetric){
-    float_map retVal;
-    metric_map::const_iterator iter, iterEnd;
+std::map<std::string, float> MDPSolver::getMinMetric(const std::map<std::string, std::pair<float, float> > &approxMetric){
+    std::map<std::string, float> retVal;
+    std::map<std::string, std::pair<float, float> >::const_iterator iter, iterEnd;
     for(iter = approxMetric.begin(), iterEnd = approxMetric.end(); iter != iterEnd; iter++){
         retVal[iter->first] = iter->second.first ;
     }
@@ -1218,14 +1215,14 @@ float_map MDPSolver::getMinMetric(const metric_map &approxMetric){
 void MDPSolver::printStrategy(){
     strategy_map::const_iterator strategyIter, strageyEnd;
     for(strategyIter = this->strategy.begin(), strageyEnd = this->strategy.end(); strategyIter != strageyEnd; strategyIter++){
-        plugin_int_map parameters = Exploration::getVertexProp(strategyIter->first, *this->explorationGraph).parameters;
-        metric_map metrics = Exploration::getVertexProp(strategyIter->first, *this->explorationGraph).metrics;
-        plugin_int_map::const_iterator parametersIter, parametersEnd;
+        std::map<PluginIf*, int> parameters = Exploration::getVertexProp(strategyIter->first, *this->explorationGraph).parameters;
+        std::map<std::string, std::pair<float, float> > metrics = Exploration::getVertexProp(strategyIter->first, *this->explorationGraph).metrics;
+        std::map<PluginIf*, int>::const_iterator parametersIter, parametersEnd;
         for(parametersIter = parameters.begin(), parametersEnd = parameters.end(); parametersIter != parametersEnd; parametersIter++){
             std::cout << rev_plugin_handler[parametersIter->first] << " = " << parametersIter->second << ", ";
         }
         std::cout << std::endl;
-        metric_map::const_iterator metricsIter, metricsEnd;
+        std::map<std::string, std::pair<float, float> >::const_iterator metricsIter, metricsEnd;
         for(metricsIter = metrics.begin(), metricsEnd = metrics.end(); metricsIter != metricsEnd; metricsIter++){
             std::cout << metricsIter->first << " = (" << metricsIter->second.first << "," << metricsIter->second.second << ") - ";
         }
@@ -1236,12 +1233,12 @@ void MDPSolver::printStrategy(){
 
 SystemConfig MDPSolver::getSystemConfig(vertex_t node){
     SystemConfig curSol;
-    plugin_int_map::const_iterator curPointIter, curPointEnd;
+    std::map<PluginIf*, int>::const_iterator curPointIter, curPointEnd;
     for(curPointIter = Exploration::getVertexProp(node, *this->explorationGraph).parameters.begin(),
             curPointEnd = Exploration::getVertexProp(node, *this->explorationGraph).parameters.end(); curPointIter != curPointEnd; curPointIter++){
         curSol.param2Value[rev_plugin_handler[curPointIter->first]] = curPointIter->second;
     }
-    metric_map::const_iterator metricsIter, metricsEnd;
+    std::map<std::string, std::pair<float, float> >::const_iterator metricsIter, metricsEnd;
     for(metricsIter = Exploration::getVertexProp(node, *this->explorationGraph).metrics.begin(), metricsEnd = Exploration::getVertexProp(node, *this->explorationGraph).metrics.end();
                         metricsIter != metricsEnd; metricsIter++){
         curSol.metric2Value[metricsIter->first] = (metricsIter->second.first + metricsIter->second.second)/2;

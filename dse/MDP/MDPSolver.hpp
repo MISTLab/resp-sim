@@ -28,15 +28,10 @@
 #include <boost/pool/pool_alloc.hpp>
 
 #include "simulationCache.hpp"
-#include "map_defs.hpp"
 #include "Graph.hpp"
 #include "ProbFunction.hpp"
 #include "systemConfig.hpp"
 #include "ObjectiveFun.hpp"
-
-#ifdef MEMORY_DEBUG
-#include <mpatrol.h>
-#endif
 
 class PluginIf;
 class RespClient;
@@ -60,12 +55,12 @@ class MDPSolver{
   protected:
     /// The current alpha in use
     static double current_alpha;
-      
+
     ///The number of printed graphs
     unsigned int numGraphs;
     /// Map passing from statistics names to integer identifiers
-    static int_map global_stats;
-    static reverse_int_map reverse_global_stats;
+    static std::map<std::string, int> global_stats;
+    static std::map<int, std::string> reverse_global_stats;
 
     ///Exploration graph, on which the strategy is computed
     Graph *explorationGraph;
@@ -83,7 +78,7 @@ class MDPSolver{
 
     ///Creation of the initial graph; during the creation, the
     ///virtual samples for each node are also computed
-    void createExplorationGraph(SystemConfig * initialSol, plugin_int_multimap initForbiddenActions);
+    void createExplorationGraph(SystemConfig * initialSol, std::multimap<PluginIf*, int> initForbiddenActions);
     ///Given the graph, it computes the strategy, obtaining,
     ///for each node, the actions that have to be performed
     void computeStrategy();
@@ -104,7 +99,7 @@ class MDPSolver{
     ///in case of multiple paths I consider I reached convergence if at
     ///least one path reached convergence.
     ///Note that I also return the forbidden actions for each system configuration
-    std::pair<SystemConfig, plugin_int_multimap> applyStrategy(vertex_t initialNode, bool &convergence);
+    std::pair<SystemConfig, std::multimap<PluginIf*, int> > applyStrategy(vertex_t initialNode, bool &convergence);
     ///Updates the set of non-dominated solutions;
     ///if the current solution is dominated by another in
     ///the set it is not added to the set. I call this
@@ -114,15 +109,15 @@ class MDPSolver{
     ///corresponding value) it performs a simulation run and
     ///it returns the computed metric values
     static void simulatePoint(SystemConfig &curSol);
-    static SystemConfig simulatePoint(const plugin_int_map &point);
+    static SystemConfig simulatePoint(const std::map<PluginIf*, int> &point);
     ///Given a metric and an interval of values in that metric's space, it partitions
     ///the space according to the accuracy lambda.
-    static list_pair_float_float partitionMetrics(const std::string &metric,
+    static std::list<std::pair<float, float> > partitionMetrics(const std::string &metric,
                                                         const std::pair<float, float> &metricVal);
     void clearExplorationGraph();
     void printStrategy();
-    static float_map getMetricCentroid(const metric_map &approxMetric);
-    static float_map getMinMetric(const metric_map &approxMetric);
+    static std::map<std::string, float> getMetricCentroid(const std::map<std::string, std::pair<float, float> > &approxMetric);
+    static std::map<std::string, float> getMinMetric(const std::map<std::string, std::pair<float, float> > &approxMetric);
     SystemConfig getSystemConfig(vertex_t node);
 
   public:

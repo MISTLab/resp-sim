@@ -23,6 +23,8 @@ def build(bld):
     obj.uselib_local = 'utils RespClient powerframework'
     obj.name = 'mdp'
     obj.target = 'mdp'
+    if int(obj.env['CC_VERSION'][1]) > 2 and int(obj.env['BOOST_VERSION'].split('_')[1]) < 38:
+        obj.env.append_unique('CPPFLAGS', '-DBOOST_NO_HASH')
 
     # Creates the MDP plugins; note that the different plugins
     # can either be grouped in a single shared library file or
@@ -41,3 +43,5 @@ def build(bld):
     obj.uselib_local = 'utils RespClient powerframework'
     obj.name = 'mdpPlugins'
     obj.target = 'mdpPlugins'
+    if int(obj.env['CC_VERSION'][1]) > 2 and int(obj.env['BOOST_VERSION'].split('_')[1]) < 38:
+        obj.env.append_unique('CPPFLAGS', '-DBOOST_NO_HASH')

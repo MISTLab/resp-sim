@@ -40,10 +40,6 @@
 #include "configuration.hpp"
 #include "ProbFunction.hpp"
 
-#ifdef MEMORY_DEBUG
-#include <mpatrol.h>
-#endif
-
 bool EdgeSorter::operator()(const prob_edge_t &a, const prob_edge_t &b){
     return Probability::getProbEdgeProp(a, this->graph).metricVal.second < Probability::getProbEdgeProp(b, this->graph).metricVal.second;
 }
@@ -150,7 +146,7 @@ void Probability::copyGraph(ProbGraph &inGraph, ProbGraph &outGraph){
 /// given the outcome of the current action, it updates the probability
 /// graph to reflect the number of actions (since it is possible that, for this action,
 /// the number of outcomes is not the same as it was for the father)
-void Probability::updateGraph(const list_float_map &newMetrics, ProbGraph &graph){
+void Probability::updateGraph(const std::map<std::string, std::list<std::pair<float, float> > > &newMetrics, ProbGraph &graph){
     //The idea is to examine the tree in a depth first fashion: as soon as I find a
     //node (metric) with a different number of out edges (metrics) from the new ones,
     //I have to rescale the whole tree. I then restart examioning the new tree, until
@@ -371,13 +367,13 @@ void Probability::updateGraph(const list_float_map &newMetrics, ProbGraph &graph
 
 /// given the outcome of the current action, it creates the probability
 /// graph to reflect the actions; a uniform distribution is used
-void Probability::createUniformGraph(const list_float_map &newMetrics, ProbGraph &graph){
+void Probability::createUniformGraph(const std::map<std::string, std::list<std::pair<float, float> > > &newMetrics, ProbGraph &graph){
     //I start creating the root node
     //std::cerr << "Creating uniform probability density" << std::endl;
     std::vector<prob_vertex_t> curLeaves;
     ProbVertexInfo * newVertInfo = new ProbVertexInfo();
     curLeaves.push_back(addProbGraphVertex(*newVertInfo, graph));
-    list_float_map::const_iterator metricIter, metricEnd;
+    std::map<std::string, std::list<std::pair<float, float> > >::const_iterator metricIter, metricEnd;
     for(metricIter = newMetrics.begin(), metricEnd = newMetrics.end(); metricIter != metricEnd; metricIter++){
         //std::cerr << "Examining metric " << metricIter->first << std::endl;
         std::vector<prob_vertex_t> newLeaves;
@@ -414,7 +410,7 @@ void Probability::createUniformGraph(const list_float_map &newMetrics, ProbGraph
 
 /// Given the value of the current metric, it updates the probability function
 /// of the graph adding the virtual samples
-unsigned int Probability::addVirtualSample(metric_map &currentMetric, ProbGraph &graph){
+unsigned int Probability::addVirtualSample(std::map<std::string, std::pair<float, float> > &currentMetric, ProbGraph &graph){
     //int usedMem = mallinfo().arena;
     //Starting from the root node I have to go down along the edges following currentMetric
     //until I get to a leaf: then I add the virtual sample to that leaf.
@@ -782,13 +778,13 @@ std::map<std::string, std::deque<prob_vertex_t> > Probability::getOrderedLeaves(
 }
 
 ///Updates the labels of the graph with the new intervals
-void Probability::updateIntervalLabels(const list_float_map &newMetrics, ProbGraph &graph){
+void Probability::updateIntervalLabels(const std::map<std::string, std::list<std::pair<float, float> > > &newMetrics, ProbGraph &graph){
     //std::cerr << "updating interval labels" << std::endl;
     prob_vertex_iterator allVertIter, allVertEnd;
     for(boost::tie(allVertIter, allVertEnd) = boost::vertices(graph); allVertIter != allVertEnd; allVertIter++){
         std::string curMetricName = Probability::getProbVertexProp(*allVertIter, graph).metricName;
         //std::cerr << "updating metric " << curMetricName << std::endl;
-        list_float_map::const_iterator foundInterval = newMetrics.find(curMetricName);
+        std::map<std::string, std::list<std::pair<float, float> > >::const_iterator foundInterval = newMetrics.find(curMetricName);
         if(foundInterval == newMetrics.end()){
             if(curMetricName != ""){
                 std::ofstream graphOut("ErrorProbGraph.dot");

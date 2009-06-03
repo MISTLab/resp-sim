@@ -35,11 +35,6 @@
 #include <vector>
 #include <boost/bimap.hpp>
 #include "RespClient.hpp"
-#include "map_defs.hpp"
-
-#ifdef MEMORY_DEBUG
-#include <mpatrol.h>
-#endif
 
 ///Basic interface for the plugins; each plugin must
 ///provide the methods of this interface; in case one plugin
@@ -56,15 +51,15 @@ class PluginIf{
     ///Given a metric and the new parameter value, we obtain an
     ///estimation of the metric change from the old value to the new
     ///one
-    virtual std::pair<float, float> changeValue(plugin_int_map &parameters, int newValue, const std::string &metric,
-                const float_map &centroidMap, const float_map &statistics,
+    virtual std::pair<float, float> changeValue(std::map<PluginIf*, int> &parameters, int newValue, const std::string &metric,
+                const std::map<std::string, float> &centroidMap, const std::map<std::string, float> &statistics,
                 const std::map<PluginIf*, std::string> &parameter_values) = 0;
 
     ///Given the current value of the parameter and the action which has to be
     ///applied to it, it returns the interval value of the corresponding metric.
     ///This method has more or less the same functionality of the previous one
-    virtual std::pair<float, float> applyAction(plugin_int_map &parameters, int action, const std::string &metric,
-            const float_map &centroidMap, const float_map &statistics,
+    virtual std::pair<float, float> applyAction(std::map<PluginIf*, int> &parameters, int action, const std::string &metric,
+            const std::map<std::string, float> &centroidMap, const std::map<std::string, float> &statistics,
             const std::map<PluginIf*, std::string> &parameter_values);
 
     ///It returns the list of possible parameter values as an enumeration
@@ -94,16 +89,16 @@ class PluginIf{
 
     ///It computes the new value of the metrics according to
     ///the specified value and returns it
-    virtual void updateStatistics(float_map &curStats, int oldValue, int action, const std::map<PluginIf*, std::string> &parameter_values) = 0;
+    virtual void updateStatistics(std::map<std::string, float> &curStats, int oldValue, int action, const std::map<PluginIf*, std::string> &parameter_values) = 0;
 
     ///Using the current instance of ReSPClient, it queries ReSP for the new
     ///values of the metrics (i.e. CPI, frequency etc. for a processor) and returns
     ///this value
-    virtual void getStats(RespClient &client, float_map &toUpdateStats) = 0;
+    virtual void getStats(RespClient &client, std::map<std::string, float> &toUpdateStats) = 0;
 
     ///Specifies whether it is possible to estimate the effects of the current action or if simulation
     ///is needed
-    virtual bool needsSimulation(int oldValue, int action, const float_map &curStats);
+    virtual bool needsSimulation(int oldValue, int action, const std::map<std::string, float> &curStats);
 
     ///Function used to sort two strings in numerical order
     static bool numericSorter(const std::string &a, const std::string &b);

@@ -30,10 +30,6 @@
 
 #include "utils.hpp"
 
-#ifdef MEMORY_DEBUG
-#include <mpatrol.h>
-#endif
-
 ///Creator variable: this variable is initialized when the dll
 ///is loaded; this action also automatically registers the plugin
 ///in the application
@@ -51,8 +47,8 @@ CacheSubstsPolicyIf::CacheSubstsPolicyIf(const std::vector<std::string> &values,
 ///Given a metric and the new parameter value, we obtain an
 ///estimation of the metric change from the old value to the new
 ///one
-std::pair<float, float> CacheSubstsPolicyIf::changeValue(plugin_int_map &parameters, int newValue, const std::string &metric,
-                                                const float_map &centroidMap, const float_map &statistics,
+std::pair<float, float> CacheSubstsPolicyIf::changeValue(std::map<PluginIf*, int> &parameters, int newValue, const std::string &metric,
+                                                const std::map<std::string, float> &centroidMap, const std::map<std::string, float> &statistics,
                                                                                             const std::map<PluginIf *, std::string> &parameter_values){
     // Note that actually I do not consider the write policy of the instruction cache, so no
     // action can be performed if we are in the instruction cache
@@ -77,7 +73,7 @@ std::pair<float, float> CacheSubstsPolicyIf::changeValue(plugin_int_map &paramet
     unsigned int oldWriteMissNum = (unsigned int)statistics.find(curCache + "writeMissNum")->second;
 
     double modifier = 1.0;
-    
+
     std::string newValueString = this->getParameterName(newValue);
     std::string newAllPolicy;
     if(newValueString.find("LRU") != std::string::npos)
@@ -160,7 +156,7 @@ std::pair<float, float> CacheSubstsPolicyIf::changeValue(plugin_int_map &paramet
 //         this->model.set_probe("writeMissNum", oldWriteMissNum);
 //         this->model.update_parameters();
 //         double oldEnergy = this->model.get_energy();
-// 
+//
 //         this->model.set_probe("readHitNum", newReadHitNum);
 //         this->model.set_probe("writeHitNum", newWriteHitNum);
 //         this->model.set_probe("readMissNum", newReadMissNum);
@@ -185,7 +181,7 @@ std::pair<float, float> CacheSubstsPolicyIf::changeValue(plugin_int_map &paramet
     return retVal;
 }
 
-void CacheSubstsPolicyIf::updateStatistics(float_map &curStats, int oldValue, int action, const std::map<PluginIf *, std::string> &parameter_values){
+void CacheSubstsPolicyIf::updateStatistics(std::map<std::string, float> &curStats, int oldValue, int action, const std::map<PluginIf *, std::string> &parameter_values){
     //I have to update the generic statistics of the cache with the numbers
     //from the actual statistic
     std::string newValueString = this->getParameterName(this->applyAction(oldValue, action));
@@ -234,7 +230,7 @@ void CacheSubstsPolicyIf::updateStatistics(float_map &curStats, int oldValue, in
 ///Using the current instance of ReSPClient, it queries ReSP for the new
 ///values of the metrics (i.e. CPI, frequency etc. for a processor) and returns
 ///this value
-void CacheSubstsPolicyIf::getStats(RespClient &client, float_map &toUpdateStats){
+void CacheSubstsPolicyIf::getStats(RespClient &client, std::map<std::string, float> &toUpdateStats){
     //Here I get the stats for all the policies, the current one and all the
     //others
     std::string curCache = this->pluginName.substr(0, 1);

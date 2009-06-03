@@ -25,25 +25,19 @@
 #include <ostream>
 #include <iostream>
 
-#include "map_defs.hpp"
-
-#ifdef MEMORY_DEBUG
-#include <mpatrol.h>
-#endif
-
 ///Represents a system configuration of the MDP; such a configuration
 ///is determined through simulation, thus is has precise values for the metrics
 struct SystemConfig{
     bool dominated;
 
     ///maps a parameter to its current value
-    int_map param2Value;
+    std::map<std::string, int> param2Value;
 
     ///maps a metric to its value
-    double_map metric2Value;
+    std::map<std::string, double> metric2Value;
 
     ///holds the statistics simulated for each parameter
-    stats_map param2Stats;
+    std::map<int, float> param2Stats;
 
     ///holds the target alpha
     double alpha;
