@@ -157,8 +157,6 @@ def configure(conf):
     conf.check_tool('boost')
     conf.check_boost(lib=boostlibs, static='both', min_version='1.35.0', mandatory = 1, errmsg = 'Unable to find ' + boostlibs + ' boost libraries of at least version 1.35, please install them and specify their location with the --boost-includes and --boost-libs configuration options')
 
-    conf.env['RESP_HOME'] = os.path.abspath(os.path.dirname(sys.modules['__main__'].__file__))
-
     ########################################
     # Now I permanently save some compilation options specified at configure time
     ########################################

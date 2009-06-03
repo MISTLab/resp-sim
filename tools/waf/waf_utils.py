@@ -13,16 +13,16 @@ def find_files(paths, pattern, toRemove = []):
 
 def create_startSim(task):
     try:
-        os.remove(os.path.join(task.env['RESP_HOME'], 'startSim.sh'))
+        os.remove(os.path.join(task.bld.path.abspath(), 'startSim.sh'))
     except Exception, e:
         if Logs.verbose:
             print 'Error in removing file startSim.sh --> ' + str(e)
 
-    sys.path.append(os.path.join(task.env['RESP_HOME'], 'src', 'hci'))
-    sys.path.append(os.path.join(task.env['RESP_HOME'], 'src'))
+    sys.path.append(os.path.join(task.bld.path.abspath(), 'src', 'hci'))
+    sys.path.append(os.path.join(task.bld.path.abspath(), 'src'))
     import console
 
-    startFile = open(os.path.join(task.env['RESP_HOME'], 'startSim.sh'), 'w')
+    startFile = open(os.path.join(task.bld.path.abspath(), 'startSim.sh'), 'w')
     print >> startFile,  """#!/bin/bash"""
     print >> startFile,  '\n\n\n'
     print >> startFile,  """################################################################################"""
@@ -39,14 +39,6 @@ def create_startSim(task):
     print >> startFile,  """################################################################################"""
     print >> startFile,  '\n\n\n'
 
-#    print >> startFile,  'CUR_LIB_PATH=' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'lib', 'systemc')
-#    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'src', 'bfdFrontend')
-#    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'src', 'controller')
-#    print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + os.path.join(task.env['RESP_HOME'], '_build_', 'default', 'src', 'utils')
-#    for extLib in task.env['NON_STD_LIBS']:
-#        print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + extLib
-#    print >> startFile,  'export LD_LIBRARY_PATH=$CUR_LIB_PATH:$LD_LIBRARY_PATH'
-#    print >> startFile,  'export DYLD_LIBRARY_PATH=$LD_LIBRARY_PATH:$DYLD_LIBRARY_PATH\n'
     print >> startFile,  'case $TERM in'
     print >> startFile,  'xterm*|rxvt*|Eterm)'
     print >> startFile,  """echo -ne \"\\033]0;ReSP: Reflective Simulation Platform\\007\""""
@@ -55,12 +47,12 @@ def create_startSim(task):
     print >> startFile,  """echo -ne \"\\033_ReSP: Reflective Simulation Platform\\033\""""
     print >> startFile,  ';;'
     print >> startFile,  'esac'
-    print >> startFile,  '\n[ -d ' + os.path.join(task.env['RESP_HOME'], '_build_', 'default') + ' ] && (' + os.path.join(task.env['RESP_HOME'], 'src','resp.py') + ' $* || (reset && echo \"A disruptive error has occurred during the execution of ReSP\")) || (echo \"First please compile ReSP, then you can try to execute it :-)\" && exit)'
+    print >> startFile,  '\n[ -d ' + os.path.join(task.bld.bdir, 'default') + ' ] && (' + os.path.join(task.bld.path.abspath(), 'src','resp.py') + ' $* || (reset && echo \"A disruptive error has occurred during the execution of ReSP\")) || (echo \"First please compile ReSP, then you can try to execute it :-)\" && exit)'
     print >> startFile,  'echo \"\"'
 
     startFile.close()
 
-    os.chmod(os.path.join(task.env['RESP_HOME'], 'startSim.sh'), stat.S_IXOTH | stat.S_IXGRP | stat.S_IXUSR | os.stat(os.path.join(task.env['RESP_HOME'], 'startSim.sh'))[stat.ST_MODE])
+    os.chmod(os.path.join(task.bld.path.abspath(), 'startSim.sh'), stat.S_IXOTH | stat.S_IXGRP | stat.S_IXUSR | os.stat(os.path.join(task.bld.path.abspath(), 'startSim.sh'))[stat.ST_MODE])
 
 def rec_find(curPath,  exclude,  headerExt):
     global rec_find

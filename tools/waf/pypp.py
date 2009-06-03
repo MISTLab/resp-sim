@@ -195,6 +195,8 @@ def process_headers(self):
         pypptask = self.create_task('pypp', self.env)
 
         # Apply parameters passed by the wscript to the task
+        pypptask.bldpath = self.bld.bldnode.abspath()
+        pypptask.srcpath = self.bld.srcnode.abspath()
         pypptask.custom_code = self.custom_code
         pypptask.custom_declaration_code = self.custom_declaration_code
         pypptask.custom_registration_code = self.custom_registration_code
@@ -265,8 +267,7 @@ def process_headers(self):
                 if Logs.verbose:
                     print 'Folder ' + str(i) + ' to be searched for extra_headers does not exist'
                 continue
-            i, h = rec_find(os.path.abspath(os.path.join(self.env['RESP_HOME']
-                            , '_build_'
+            i, h = rec_find(os.path.abspath(os.path.join(self.bld.bldnode.abspath()
                             ,  Build.bld.srcnode.find_dir(i).srcpath(self.env)))
                             ,  self.exclude_dirs, self.header_ext)
             pypptask.extra_includes += i
@@ -296,7 +297,7 @@ def process_headers(self):
 
         # Specifiy the headers to be included in the .generated.cpp
         # This is done to avoid including the autogenerater _exp.hpp file
-        pypptask.ext_headers += map(lambda a: os.path.abspath(os.path.join(self.env['RESP_HOME'],'_build_', a.srcpath(self.env))) , self.srclist)
+        pypptask.ext_headers += map(lambda a: os.path.abspath(os.path.join(self.bld.bldnode.abspath(), a.srcpath(self.env))) , self.srclist)
 
         pypptask.outputs = tgnodes
 
@@ -448,8 +449,8 @@ def dopypp(task):
     global included_decls
 
     # Set the path for importing additional tools
-    if not os.path.join(task.env['RESP_HOME'],'tools','waf') in sys.path:
-        sys.path.append(os.path.join(task.env['RESP_HOME'],'tools','waf'))
+    if not os.path.join(task.srcpath, 'tools', 'waf') in sys.path:
+        sys.path.append(os.path.join(task.srcpath, 'tools', 'waf'))
 
     # Increase recursion limit for tough includes
     sys.setrecursionlimit(sys.getrecursionlimit()*2)
@@ -486,12 +487,12 @@ def dopypp(task):
             srcs.append(x)
 
     # Create source list with proper directories
-    sources = map(lambda a: os.path.abspath(os.path.join(task.env['RESP_HOME'], '_build_',  a.srcpath(task.env))), srcs)
+    sources = map(lambda a: os.path.abspath(os.path.join(task.bldpath,  a.srcpath(task.env))), srcs)
 
     # Create include list
     global_includes = task.includes
     global_includes += task.env['CPPPATH']
-    global_includes += [os.path.abspath(os.path.join(task.env['RESP_HOME'], '_build_', i.srcpath(task.env))) for i in task.path_lst]
+    global_includes += [os.path.abspath(os.path.join(task.bldpath, i.srcpath(task.env))) for i in task.path_lst]
     global_includes += task.extra_includes
 
     try:
@@ -503,10 +504,10 @@ def dopypp(task):
                                 files=sources
                                 , start_with_declarations = task.start_decls
                                 , define_symbols = task.define_symbols
-                                , working_directory = os.path.abspath(os.path.join(task.env['RESP_HOME'],'_build_'))
+                                , working_directory = task.bldpath
                                 , include_paths = global_includes
                                 , compiler = compilerExec
-                                , cache=parser.file_cache_t(os.path.abspath(os.path.join( task.env['RESP_HOME'], '_build_', task.outputs[0].bldpath(task.env)+'_cache' ))))
+                                , cache=parser.file_cache_t(os.path.abspath(os.path.join(task.bldpath, task.outputs[0].bldpath(task.env)+'_cache' ))))
     except Exception, e:
         print e
         if temp_handler:
@@ -561,8 +562,8 @@ def dopypp(task):
                 member.add_override_precall_code('extern bool interactiveSimulation;\npyplusplus::threading::gil_guard_t gil_guard( interactiveSimulation );')
                 if not code_repository.gil_guard.file_name in task.ext_headers:
                     task.ext_headers.append(code_repository.gil_guard.file_name)
-                if not os.path.exists(os.path.abspath(os.path.join( task.env['RESP_HOME'], '_build_', os.path.dirname(task.outputs[0].bldpath(task.env)),  code_repository.gil_guard.file_name) )):
-                    guard = open(os.path.abspath(os.path.join( task.env['RESP_HOME'], '_build_', os.path.dirname(task.outputs[0].bldpath(task.env)),  code_repository.gil_guard.file_name) ), 'w')
+                if not os.path.exists(os.path.abspath(os.path.join( task.bldpath, os.path.dirname(task.outputs[0].bldpath(task.env)),  code_repository.gil_guard.file_name) )):
+                    guard = open(os.path.abspath(os.path.join( task.bldpath, os.path.dirname(task.outputs[0].bldpath(task.env)),  code_repository.gil_guard.file_name) ), 'w')
                     guard.write(code_repository.gil_guard.code)
                     guard.close()
             except AttributeError:
@@ -589,7 +590,7 @@ def dopypp(task):
 
     try:
         if task.split == 1:
-            mb.write_module( os.path.abspath(os.path.join( task.env['RESP_HOME'], '_build_', task.outputs[0].bldpath(task.env) ) ))
+            mb.write_module( os.path.abspath(os.path.join( task.bldpath, task.outputs[0].bldpath(task.env) ) ))
         else:
             from balanced_files import resp_files_t
             try:
@@ -597,14 +598,14 @@ def dopypp(task):
             except:
                 mb._module_builder_t__merge_user_code()
             mfs = resp_files_t( mb.code_creator
-                                    ,os.path.abspath(os.path.join( task.env['RESP_HOME'], '_build_' ,os.path.dirname(task.outputs[0].bldpath(task.env))))
+                                    ,os.path.abspath(os.path.join( task.bldpath, os.path.dirname(task.outputs[0].bldpath(task.env))))
                                     ,task.split-1
                                     ,files_sum_repository=None
                                     ,encoding=mb.encoding )
             mfs.write()
 
             # When pyplusplus will be updated, this will be the syntax
-            #mb.balanced_split_module( os.path.abspath(os.path.join( task.env['RESP_HOME'], '_build_' ,os.path.dirname(task.outputs[0].bldpath(task.env))))
+            #mb.balanced_split_module( os.path.abspath(os.path.join( task.bldpath ,os.path.dirname(task.outputs[0].bldpath(task.env))))
             #                        ,task.split-1, on_unused_file_found=lambda fpath: fpath )
     except Exception, e:
         print e
