@@ -37,7 +37,7 @@
 # General Init code ############################################################
 
 __version__ = '0.5'
-__revision__ = '$Rev: 1881 $'
+__revision__ = '$Rev$'
 
 TLM_PREFIX = "TLM_"
 SC_PREFIX = "SYSC_"
