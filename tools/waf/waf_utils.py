@@ -1,6 +1,36 @@
 # -*- coding: iso-8859-1 -*-
 
-import os, types, sys, glob,  stat, Options,Logs
+import os, types, sys, glob,  stat, Options, Logs, ccroot
+from TaskGen import taskgen,feature,before,after,extension
+
+# Automatically add rpath for local dynamic uselib_local
+@after('add_extra_flags')
+@before('apply_obj_vars')
+@feature('cc', 'cxx')
+def add_rpaths(self):
+    self.env[ccroot.c_attrs['rpath']] = self.to_list(self.env[ccroot.c_attrs['rpath']])
+
+    try:
+        self.uselib_local
+    except:
+        return
+
+    names = self.to_list(self.uselib_local)
+    while names:
+        x = names.pop(0)
+        y = self.name_to_obj(x)
+        if os.path.splitext(ccroot.get_target_name(y))[1] != self.env['shlib_PATTERN'].split('%s')[1]:
+            continue
+        y.post()
+        newPath = os.path.split(y.link_task.outputs[0].abspath(self.env))[0]
+        if not newPath in self.env[ccroot.c_attrs['rpath']]:
+            self.env[ccroot.c_attrs['rpath']].append(newPath)
+        for k in self.to_list(y.env[ccroot.c_attrs['rpath']]):
+            if not k in self.env[ccroot.c_attrs['rpath']]:
+                self.env[ccroot.c_attrs['rpath']].append(k)
+
+    if '' in self.env[ccroot.c_attrs['rpath']] and len(self.env[ccroot.c_attrs['rpath']]) > 1:
+        self.env[ccroot.c_attrs['rpath']].remove('')
 
 def find_files(paths, pattern, toRemove = []):
     for path in paths:

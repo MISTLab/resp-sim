@@ -10,40 +10,14 @@ VERSION = '0.5'
 APPNAME = 'ReSP'
 
 # make sure waf has the version we want
-import Build, Utils, Options, TaskGen, Configure, Logs, ccroot
+import Build, Utils, Options, TaskGen, Configure, Logs, ccroot, Task
 from TaskGen import taskgen,feature,before,after,extension
 from Tools import cc
 from Tools import cxx
 import os, types, sys, copy,  stat
 
-# Automatically add rpath for local dynamic uselib_local
-@after('add_extra_flags')
-@before('apply_obj_vars')
-@feature('cc', 'cxx')
-def add_rpaths(self):
-    self.env[ccroot.c_attrs['rpath']] = self.to_list(self.env[ccroot.c_attrs['rpath']])
-
-    try:
-        self.uselib_local
-    except:
-        return
-
-    names = self.to_list(self.uselib_local)
-    while names:
-        x = names.pop(0)
-        y = self.name_to_obj(x)
-        if os.path.splitext(ccroot.get_target_name(y))[1] != self.env['shlib_PATTERN'].split('%s')[1]:
-            continue
-        y.post()
-        newPath = os.path.split(y.link_task.outputs[0].abspath(self.env))[0]
-        if not newPath in self.env[ccroot.c_attrs['rpath']]:
-            self.env[ccroot.c_attrs['rpath']].append(newPath)
-        for k in self.to_list(y.env[ccroot.c_attrs['rpath']]):
-            if not k in self.env[ccroot.c_attrs['rpath']]:
-                self.env[ccroot.c_attrs['rpath']].append(k)
-
-    if '' in self.env[ccroot.c_attrs['rpath']] and len(self.env[ccroot.c_attrs['rpath']]) > 1:
-        self.env[ccroot.c_attrs['rpath']].remove('')
+sys.path.append( os.path.join('tools', 'waf') )
+import waf_utils
 
 validProcessors = ['arm', 'leon3', 'microblaze']
 
@@ -52,8 +26,6 @@ def build(bld):
     """
     All building is delegated to subdirectories.
     """
-    sys.path.append( os.path.join('tools', 'waf') )
-    from waf_utils import create_startSim
 
     # Now I have to correct the extensions which are accepted by the tools since they forgot
     # assembly files
@@ -62,10 +34,11 @@ def build(bld):
     # process subfolders from here
     bld.add_subdirs('lib tools src components dse')
 
-    # Creates the startSim script
-    bld.add_group()
-    obj = bld.new_task_gen('cmd')
-    obj.fun = create_startSim
+    # Creates the startSim script only if it does not exists yet
+    if not os.path.exists(os.path.join(bld.path.abspath(), 'startSim.sh')):
+        bld.add_group()
+        obj = bld.new_task_gen('cmd')
+        obj.fun = waf_utils.create_startSim
 
 ########################################
 # Provide initial configuration
@@ -587,10 +560,7 @@ def distclean():
 
     # Removing compiled python files
     try:
-        sys.path.append( os.path.join('tools','waf') )
-        from waf_utils import find_files
-
-        toRemFiles = find_files(['.'], '*.pyc')
+        toRemFiles = waf_utils.find_files(['.'], '*.pyc')
         for i in toRemFiles:
             try:
                 os.remove(i)
