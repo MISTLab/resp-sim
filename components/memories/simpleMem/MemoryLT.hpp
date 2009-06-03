@@ -49,22 +49,17 @@
 #include <boost/lexical_cast.hpp>
 #include <string>
 
-#include <trap_utils.hpp>
+#include <utils.hpp>
 
-namespace trap{
-
-template<unsigned int N_INITIATORS, unsigned int sockSize> class MemoryLT: public sc_module{
+template<unsigned int sockSize> class MemoryLT: public sc_module{
     public:
-    tlm_utils::simple_target_socket<MemoryLT, sockSize> * socket[N_INITIATORS];
+    tlm_utils::simple_target_socket<MemoryLT, sockSize> socket;
 
     MemoryLT(sc_module_name name, unsigned int size, sc_time latency = SC_ZERO_TIME) :
-                                            sc_module(name), size(size), latency(latency){
-        for(int i = 0; i < N_INITIATORS; i++){
-            this->socket[i] = new tlm_utils::simple_target_socket<MemoryLT, sockSize>(("mem_socket_" + boost::lexical_cast<std::string>(i)).c_str());
-            this->socket[i]->register_b_transport(this, &MemoryLT::b_transport);
-            this->socket[i]->register_get_direct_mem_ptr(this, &MemoryLT::get_direct_mem_ptr);
-            this->socket[i]->register_transport_dbg(this, &MemoryLT::transport_dbg);
-        }
+                                            sc_module(name), socket("mem_socket"), size(size), latency(latency){
+        this->socket.register_b_transport(this, &MemoryLT::b_transport);
+        this->socket.register_get_direct_mem_ptr(this, &MemoryLT::get_direct_mem_ptr);
+        this->socket.register_transport_dbg(this, &MemoryLT::transport_dbg);
 
         // Reset memory
         this->mem = new unsigned char[this->size];
@@ -73,9 +68,7 @@ template<unsigned int N_INITIATORS, unsigned int sockSize> class MemoryLT: publi
     }
 
     ~MemoryLT(){
-        for(int i = 0; i < N_INITIATORS; i++){
-            delete this->socket[i];
-        }
+        delete this->mem;
     }
 
     void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay){
@@ -149,7 +142,7 @@ template<unsigned int N_INITIATORS, unsigned int sockSize> class MemoryLT: publi
     //application program into memory
     void write_byte_dbg(const unsigned int & address, const unsigned char & datum){
         if(address >= this->size){
-            THROW_ERROR("Address " << std::hex << std::showbase << address << " out of memory");
+            THROW_EXCEPTION("Address " << std::hex << std::showbase << address << " out of memory");
         }
         this->mem[address] = datum;
     }
@@ -158,8 +151,6 @@ template<unsigned int N_INITIATORS, unsigned int sockSize> class MemoryLT: publi
     const sc_time latency;
     unsigned int size;
     unsigned char * mem;
-};
-
 };
 
 #endif

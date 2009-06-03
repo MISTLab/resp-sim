@@ -51,24 +51,19 @@
 #include <string>
 #include <cstring>
 
-#include <trap_utils.hpp>
+#include <utils.hpp>
 
 DECLARE_EXTENDED_PHASE(internal_ph);
 
-namespace trap{
-
-template<unsigned int N_INITIATORS, unsigned int sockSize> class MemoryAT: public sc_module{
+template<unsigned int sockSize> class MemoryAT: public sc_module{
     public:
-    tlm_utils::simple_target_socket_tagged<MemoryAT, sockSize> * socket[N_INITIATORS];
+    tlm_utils::simple_target_socket<MemoryAT, sockSize> socket;
 
     MemoryAT(sc_module_name name, unsigned int size, sc_time latency = SC_ZERO_TIME) :
-                                sc_module(name), size(size), latency(latency), transId(0),
+                                sc_module(name), socket("mem_socket"), size(size), latency(latency), transId(0),
                                 transactionInProgress(false), m_peq(this, &MemoryAT::peq_cb){
-        for(int i = 0; i < N_INITIATORS; i++){
-            this->socket[i] = new tlm_utils::simple_target_socket_tagged<MemoryAT, sockSize>(("mem_socket_" + boost::lexical_cast<std::string>(i)).c_str());
-            this->socket[i]->register_nb_transport_fw(this, &MemoryAT::nb_transport_fw, i);
-            this->socket[i]->register_transport_dbg(this, &MemoryAT::transport_dbg, i);
-        }
+        this->socket.register_nb_transport_fw(this, &MemoryAT::nb_transport_fw);
+        this->socket.register_transport_dbg(this, &MemoryAT::transport_dbg);
 
         // Reset memory
         this->mem = new unsigned char[size];
@@ -76,8 +71,12 @@ template<unsigned int N_INITIATORS, unsigned int sockSize> class MemoryAT: publi
         end_module();
     }
 
+    ~MemoryAT(){
+        delete this->mem;
+    }
+
     // TLM-2 non-blocking transport method
-    tlm::tlm_sync_enum nb_transport_fw(int tag, tlm::tlm_generic_payload& trans,
+    tlm::tlm_sync_enum nb_transport_fw(tlm::tlm_generic_payload& trans,
                                                 tlm::tlm_phase& phase, sc_time& delay){
         sc_dt::uint64    adr = trans.get_address();
         unsigned int     len = trans.get_data_length();
@@ -104,7 +103,6 @@ template<unsigned int N_INITIATORS, unsigned int sockSize> class MemoryAT: publi
             //std::cerr << "there are no transactionInProgress" << std::endl;
             this->transactionInProgress = true;
         }
-        this->transId = tag;
         m_peq.notify(trans, phase, delay);
         trans.set_response_status(tlm::TLM_OK_RESPONSE);
         return tlm::TLM_ACCEPTED;
@@ -164,7 +162,7 @@ template<unsigned int N_INITIATORS, unsigned int sockSize> class MemoryAT: publi
         // Queue the acceptance and the response with the appropriate latency
         bw_phase = tlm::END_REQ;
         sc_time zeroDelay = SC_ZERO_TIME;
-        status = (*(this->socket[transId]))->nb_transport_bw(trans, bw_phase, zeroDelay);
+        status = this->socket->nb_transport_bw(trans, bw_phase, zeroDelay);
         if (status == tlm::TLM_COMPLETED){
             // Transaction aborted by the initiator
             // (TLM_UPDATED cannot occur at this point in the base protocol, so need not be checked)
@@ -182,7 +180,7 @@ template<unsigned int N_INITIATORS, unsigned int sockSize> class MemoryAT: publi
 
         bw_phase = tlm::BEGIN_RESP;
         sc_time zeroDelay = SC_ZERO_TIME;
-        status = (*(this->socket[transId]))->nb_transport_bw(trans, bw_phase, zeroDelay);
+        status = this->socket->nb_transport_bw(trans, bw_phase, zeroDelay);
 
         //std::cerr << "response status " << status << std::endl;
         if (status == tlm::TLM_UPDATED){
@@ -196,7 +194,7 @@ template<unsigned int N_INITIATORS, unsigned int sockSize> class MemoryAT: publi
     }
 
     // TLM-2 debug transaction method
-    unsigned int transport_dbg(int tag, tlm::tlm_generic_payload& trans){
+    unsigned int transport_dbg(tlm::tlm_generic_payload& trans){
         tlm::tlm_command cmd = trans.get_command();
         sc_dt::uint64    adr = trans.get_address();
         unsigned char*   ptr = trans.get_data_ptr();
@@ -219,7 +217,7 @@ template<unsigned int N_INITIATORS, unsigned int sockSize> class MemoryAT: publi
     //application program into memory
     void write_byte_dbg(const unsigned int & address, const unsigned char & datum){
         if(address >= this->size){
-            THROW_ERROR("Address " << std::hex << std::showbase << address << " out of memory");
+            THROW_EXCEPTION("Address " << std::hex << std::showbase << address << " out of memory");
         }
         this->mem[address] = datum;
     }
@@ -232,8 +230,6 @@ template<unsigned int N_INITIATORS, unsigned int sockSize> class MemoryAT: publi
     bool  transactionInProgress;
     sc_event transactionCompleted;
     tlm_utils::peq_with_cb_and_phase<MemoryAT> m_peq;
-};
-
 };
 
 #endif

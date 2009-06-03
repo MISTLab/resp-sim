@@ -1,3 +1,4 @@
+# -*- coding: iso-8859-1 -*-
 ##############################################################################
 #      ___           ___           ___           ___
 #     /  /\         /  /\         /  /\         /  /\
@@ -645,7 +646,7 @@ class ComponentManager:
         foundComponents = []
         for module in self.components:
             if '__file__' in dir(module) and '__name__' in dir(module):
-                if module.__file__.find('_build_' + os.sep + 'default' + os.sep + 'component') != -1:
+                if module.__file__.find(os.path.split(blddir)[1] + os.sep + 'default' + os.sep + 'component') != -1:
                     for classes in dir(module):
                         realComp = getattr(module, classes, module)
                         try:

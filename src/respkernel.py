@@ -62,18 +62,26 @@ except:
     sys.exit(0)
 
 # set path in order to import the rest of the modules
-# Is there any better way to do this?
-# TODO: Use waf and the configuration generation!
 curPath = os.path.abspath(os.path.join(os.path.dirname(sys.modules['respkernel'].__file__),'..'))
-sys.path.append(os.path.abspath(os.path.join(curPath, 'src', 'manager')))
-sys.path.append(os.path.abspath(os.path.join(curPath, 'src', 'hci')))
-sys.path.append(os.path.abspath(os.path.join(curPath, 'src', 'injection')))
-sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'controller')))
-sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'mysql')))
-sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'power', 'ecacti')))
-sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'sc_wrapper')))
-sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src')))
-sys.path.append(os.path.abspath(os.path.join(curPath, '_build_', 'default', 'src', 'utils')))
+
+global blddir, srcdir
+lockFile = open(os.path.join(curPath, '.lock-wscript'))
+for line in lockFile.readlines():
+    try:
+        exec line
+    except:
+        pass
+lockFile.close()
+
+sys.path.append(os.path.abspath(os.path.join(srcdir, 'src', 'manager')))
+sys.path.append(os.path.abspath(os.path.join(srcdir, 'src', 'hci')))
+sys.path.append(os.path.abspath(os.path.join(srcdir, 'src', 'power')))
+sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'controller')))
+sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'sc_wrapper')))
+sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src')))
+sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'utils')))
+sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'bfdFrontend')))
+sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'loader')))
 
 from power import *
 
@@ -163,7 +171,7 @@ class RespKernel:
             import warnings
             warnings.simplefilter('ignore', RuntimeWarning)
 
-        global tlmwrapper, scwrapper, sc_controller, compManager, converters
+        global tlmwrapper, scwrapper, sc_controller, compManager, converters, bfdwrapper, loader_wrapper
 
         if self.verbose:
             print "Loading converters"
@@ -182,11 +190,17 @@ class RespKernel:
         if self.verbose:
             print "Loading compManager"
         import compManager
+        if self.verbose:
+            print "Loading bfdwrapper"
+        import bfdwrapper
+        if self.verbose:
+            print "Loading loader_wrapper"
+        import loader_wrapper
 
         # import components storing them into a component list
         self.components = []
         try:
-            self.load_components(os.path.abspath(curPath + os.sep + '_build_' + os.sep + 'default' + os.sep + 'components'),  self.components)
+            self.load_components(os.path.abspath(os.path.join(blddir, 'default', 'components')),  self.components)
         except Exception,  e:
             print >> sys.stderr, 'Error in loading the components in the simulator --> ',  e
             sys.exit(0)
@@ -291,7 +305,7 @@ class RespKernel:
                         item.__name__ = j[len(SC_PREFIX):]
                         item.__module__ = 'scwrapper'
                         setattr(  scwrapper, j[4:], getattr(temp,j)  )
-                        
+
                     componentList.append(temp)
                     globals()[toLoadName] = temp
         [self.load_components(os.path.join(folder, element),  componentList) for element in dirContent if os.path.isdir(os.path.join(folder, element))]
@@ -319,11 +333,6 @@ class RespKernel:
                     print ''
                 print 'In order to be able to load a new architecture, the simulator must be restarted'
                 return False
-        else:
-            #refs 114
-            exec("__ARCHPATH__ = '%s'" %fileName) in globals()
-            curPath = os.path.abspath(os.path.join(os.path.dirname(sys.modules['respkernel'].__file__),'..'))
-            exec open(curPath + '/tools/importexport/import.py') in globals()
 
         global loadedFileName
         self.fileName = loadedFileName = fileName

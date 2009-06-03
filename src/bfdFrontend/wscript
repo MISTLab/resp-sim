@@ -8,8 +8,9 @@ def build(bld):
     obj.source = """
         bfdFrontend.cpp
     """
-    obj.target = 'BFDFrontend'
-    obj.uselib_local = 'binutils'
+    obj.target = 'BFDWrapper'
+    obj.export_incdirs = '.'
+    obj.uselib_local = 'binutils utils'
     obj.uselib = 'BOOST BOOST_REGEX'
 
     obj = bld.new_task_gen('pypp')
@@ -18,8 +19,8 @@ def build(bld):
     """
     obj.target = 'bfdwrapper'
     obj.uselib = 'BOOST BOOST_REGEX PYEXT BOOST_PYTHON'
-    obj.uselib_local = 'BFDFrontend'
-    obj.start_decls = 'BFDFrontend'
+    obj.uselib_local = 'BFDWrapper'
+    obj.start_decls = 'BFDWrapper'
     obj.custom_declaration_code = '''
 #include <string>
 #include <list>
@@ -40,7 +41,9 @@ namespace sandbox { namespace {
     obj.custom_registration_code = '''sandbox::init_module();'''
     obj.custom_code = """
 mb.global_ns.class_('Section').exclude()
-bfd = mb.global_ns.class_('BFDFrontend')
+bfd = mb.global_ns.class_('BFDWrapper')
 bfd.include()
 bfd.member_functions('findFunction').exclude()
+bfd.member_functions('getBFDDescriptor').exclude()
+bfd.member_functions('getInstance').call_policies = call_policies.return_value_policy( call_policies.reference_existing_object )
 """
