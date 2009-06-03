@@ -1,6 +1,5 @@
 -- Code to export SystemC and TLM (and also their start_decls) should be centralized and executed for each pypp task
--- TRAP library should not be used, we should just need the headers
+-- compute pypp task dependences, so that only tasks with the same includes are serialized
 -- Modify Py++ in order to expose also private members (with the #define private protected trick)
 -- Check restaart in 64 bits patch: it explodes at the restart
 -- Check and change the memory analyzer with the one of TRAP
--- Integrate the BFD frontend in the executable loader
