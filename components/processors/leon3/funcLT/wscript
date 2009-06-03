@@ -35,7 +35,7 @@ def build(bld):
         externalPins.hpp
     """
     obj.uselib = 'BOOST BOOST_FILESYSTEM BOOST_THREAD SYSTEMC_H TLM TRAP PYEXT BOOST_PYTHON'
-    obj.uselib_local = 'systemc leon3_funcLT'
+    obj.uselib_local = 'systemc leon3_funcLT binutils'
     obj.includes = '.'
     obj.split = 3
     obj.name = 'leon3_funcLT_wrapper'

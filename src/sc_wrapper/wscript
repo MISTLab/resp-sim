@@ -181,7 +181,6 @@ mb.global_ns.class_('sc_simcontext').member_functions(lambda x: x.name.startswit
     obj.target = 'tlmwrapper';
     #obj.generate_include = True
     obj.start_decls = 'tlm tlm_utils'
-    obj.split = 4
 
     obj.custom_code = """
 # Include Transport Interfaces
@@ -210,6 +209,10 @@ cls = mb.global_ns.classes(lambda decl: decl.name.startswith('simple_') > 0, all
 for i in cls:
     i.include()
     i.alias = 'TLM_'+i.alias
+
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_quantumkeeper') > 0, allow_empty=True)
+for i in cls:
+    i.include()
 
 # Exclude protected members
 cls = mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) , allow_empty=True )
