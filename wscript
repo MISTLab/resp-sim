@@ -234,7 +234,7 @@ def configure(conf):
     # Lets now check that, in case this library is static, it is possible to create
     # a shared library out of it
     if not check_dyn_library(conf, conf.env['staticlib_PATTERN'] % iberty_lib_name, searchPaths):
-        conf.check_message(conf.env['staticlib_PATTERN'] % iberty_lib_name + ' relocabilty', '', False,  'Found position dependent code')
+        conf.check_message_custom(conf.env['staticlib_PATTERN'] % iberty_lib_name + ' relocabilty', '', 'Found position dependent code', color='YELLOW')
         conf.fatal('Library ' + conf.env['staticlib_PATTERN'] % iberty_lib_name + ' contains position dependent code, so a shared library cannot be created out of it. Please recompile binutils generating a shared version (using option --enable-shared) or, in general, using the -fPIC compilation option')
 
     ###########################################################
@@ -280,6 +280,12 @@ def configure(conf):
             searchPaths = staticPaths
 
     conf.check_cc(lib=bfd_lib_name, uselib='IBERTY', uselib_store='BFD', mandatory=1, libpath=searchPaths, errmsg='not found, use --with-bfd option', okmsg='ok ' + bfd_lib_name)
+    # Lets now check that, in case this library is static, it is possible to create
+    # a shared library out of it
+    if not check_dyn_library(conf, conf.env['staticlib_PATTERN'] % bfd_lib_name, searchPaths):
+        conf.check_message_custom(conf.env['staticlib_PATTERN'] % bfd_lib_name + ' relocabilty', '', 'Found position dependent code', color='YELLOW')
+        conf.fatal('Library ' + conf.env['staticlib_PATTERN'] % bfd_lib_name + ' contains position dependent code, so a shared library cannot be created out of it. Please recompile binutils generating a shared version (using option --enable-shared) or, in general, using the -fPIC compilation option')
+
     if Options.options.bfddir:
         conf.check_cc(header_name='bfd.h', uselib='IBERTY BFD', uselib_store='BFD_H', mandatory=1, includes=[os.path.abspath(os.path.expanduser(os.path.expandvars(os.path.join(Options.options.bfddir, 'include'))))])
     else:
@@ -317,6 +323,11 @@ def configure(conf):
     if syscpath:
         sysclib = glob.glob(os.path.join(os.path.abspath(os.path.join(syscpath[0], '..')), 'lib-*'))
     conf.check_cxx(lib='systemc', uselib_store='SYSTEMC_STATIC', mandatory=1, libpath=sysclib, errmsg='not found, use --with-systemc option')
+    # Lets now check that it is possible to create
+    # a shared library out of it
+    if not check_dyn_library(conf, conf.env['staticlib_PATTERN'] % 'systemc', sysclib):
+        conf.check_message_custom(conf.env['staticlib_PATTERN'] % 'systemc' + ' relocabilty', '', 'Found position dependent code', color='YELLOW')
+        conf.fatal('Library ' + conf.env['staticlib_PATTERN'] % 'systemc' + ' contains position dependent code, so a shared library cannot be created out of it. Please recompile systemc using the -fPIC compilation option (ReSP\'s website provides a patched configure.in file for this purpose)')
 
     ######################################################
     # Check if systemc is compiled with quick threads or not

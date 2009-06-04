@@ -338,23 +338,23 @@ def detect(conf):
             #Now I check the version
             version = os.popen(gccxml + ' 2>&1').readline().split()[2]
             if int(version.split('.')[1]) < 9 and int(version.split('.')[0]) == 0:
-                conf.check_message('gccxml version', '', False,  'Version ' + version)
+                conf.check_message_custom('gccxml version', '', 'Version ' + version, color='YELLOW')
                 conf.fatal("Configure Failed, please install at least version 0.9.0 of gccxml as described in the online documentation")
-            conf.check_message('gccxml version', '', True,  'Version ' + version)
+            conf.check_message_custom('gccxml version', '', 'Version ' + version, color='GREEN')
         else:
-            conf.check_message('gccxml version', '', False, 'Not found')
+            conf.check_message_custom('gccxml version', '', 'Not found', color='YELLOW')
             conf.fatal("Configure Failed, please install gccxml as described in the online documentation")
     except Exception,  e:
-        conf.check_message('gccxml version', '', False, 'Error in determining the version --> ' + str(e))
+        conf.check_message_custom('gccxml version', '', 'Error in determining the version --> ' + str(e), color='YELLOW')
         conf.fatal("Configure Failed, please install gccxml as described in the online documentation")
     gccxmlpp = conf.find_program('gccxml_cc1plus', mandatory = 1)
     if gccxmlpp:
         callResult = os.popen("echo \'int temp = 0;\' | " + gccxmlpp + ' 2>&1').read()
         if 'Could not determine GCCXML_EXECUTABLE setting' in callResult:
-            conf.check_message('gccxml_cc1plus', '', False, 'Error in the setup, gccxml_cc1plus program does not run correctly')
+            conf.check_message_custom('gccxml_cc1plus', '', 'Error in the setup, gccxml_cc1plus program does not run correctly', color='YELLOW')
             conf.fatal("Configure Failed, please correctly re-install gccxml")
     else:
-        conf.check_message('gccxml_cc1plus', '', False, 'Not found')
+        conf.check_message_custom('gccxml_cc1plus', '', 'Not found', color='YELLOW')
     os.chdir(curDir)
 
     ##################################################
@@ -385,22 +385,22 @@ def detect(conf):
         if Logs.verbose:
             import traceback
             traceback.print_exc(file=sys.stderr)
-        conf.check_message('module','pygccxml',False)
+        conf.check_message_custom('module', 'pygccxml', 'Not found', color='YELLOW')
         conf.fatal("Configure Failed, please install pygccxml as described in the online documentation")
     else:
-        conf.check_message('module','pygccxml',True)
+        conf.check_message_custom('module','pygccxml', 'ok', color='GREEN')
         try:
             version = pygccxml.__version__.split('.')
             if Logs.verbose:
                 print 'Version ' + str(version)
             if int(version[0]) >= 1:
                 if int(version[1]) >= 5 and int(version[2]) >= 0:
-                    conf.check_message('pygccxml version', '', True,  'Version ' + pygccxml.__version__)
+                    conf.check_message_custom('pygccxml version', '', 'Version ' + pygccxml.__version__, color='GREEN')
                 else:
-                    conf.check_message('pygccxml version', '', False,  'Version ' + pygccxml.__version__ + ' too old')
+                    conf.check_message_custom('pygccxml version', '', 'Version ' + pygccxml.__version__ + ' too old', color='YELLOW')
                     conf.fatal("Configure Failed, pygccxml version too old; please use at least version 1.5.0")
             else:
-                conf.check_message('pygccxml version', '', False,  'Version ' + pygccxml.__version__ + ' too old')
+                conf.check_message_custom('pygccxml version', '', 'Version ' + pygccxml.__version__ + ' too old', color='YELLOW')
                 conf.fatal("Configure Failed, pygccxml version too old; please use at least version 1.5.0")
         except IndexError:
             conf.fatal("Configure Failed, unable to determine pygccxml version. Please check that you have version 1.5.0 correctly installed.")
@@ -416,22 +416,22 @@ def detect(conf):
         if Logs.verbose:
             import traceback
             traceback.print_exc(file=sys.stderr)
-        conf.check_message('module', 'pyplusplus', False)
+        conf.check_message_custom('module', 'pyplusplus', 'Not found', color='YELLOW')
         conf.fatal("Configure Failed, please install pypluplus as described in the online documentation")
     else:
-        conf.check_message('module', 'pyplusplus', True)
+        conf.check_message_custom('module', 'pyplusplus', 'ok', color='GREEN')
         try:
             version = pyplusplus.__version__.split('.')
             if Logs.verbose:
                 print 'Version ' + str(version)
             if int(version[0]) >= 1:
                 if int(version[1]) >= 5 and int(version[2]) >= 0:
-                    conf.check_message('pyplusplus version', '',True,  'Version ' + pyplusplus.__version__)
+                    conf.check_message_custom('pyplusplus version', '', 'Version ' + pyplusplus.__version__, color='GREEN')
                 else:
-                    conf.check_message('pyplusplus version', '',False,  'Version ' + pyplusplus.__version__ + ' too old')
+                    conf.check_message_custom('pyplusplus version', '', 'Version ' + pyplusplus.__version__ + ' too old', color='YELLOW')
                     conf.fatal("Configure Failed, pyplusplus version too old; please use at least version 1.5.0")
             else:
-                conf.check_message('pyplusplus version', '',False,  'Version ' + pyplusplus.__version__ + ' too old')
+                conf.check_message_custom('pyplusplus version', '', 'Version ' + pyplusplus.__version__ + ' too old', color='YELLOW')
                 conf.fatal("Configure Failed, pyplusplus version too old; please use at least version 1.5.0")
         except IndexError:
             conf.fatal("Configure Failed, unable to determine pyplusplus version. Please check that you have version 1.5.0 correctly installed.")
