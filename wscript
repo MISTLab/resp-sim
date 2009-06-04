@@ -522,14 +522,14 @@ def set_options(opt):
     opt.add_option('--with-momh-libs', type='string', help='Specifies the location of the headers for the ', dest='momh_libs')
 
     # Specifies whether to compile the FPU and the directory containing the required libraries
-    opt.add_option('--with-gmp-header', type='string', help='Specifies the location of the headers for GMP', dest='gmp_header')
-    opt.add_option('--with-gmpxx-header', type='string', help='Specifies the location of the headers for GMPXX', dest='gmpxx_header')
-    opt.add_option('--with-mpfr-header', type='string', help='Specifies the location of the headers for MPFR', dest='mpfr_header')
-    opt.add_option('--with-mpfrcpp-header', type='string', help='Specifies the location of the headers for MPFRCPP', dest='mpfrcpp_header')
-    opt.add_option('--with-gmp-libs', type='string', help='Specifies the location of the libraries for GMP', dest='gmp_libs')
-    opt.add_option('--with-gmpxx-libs', type='string', help='Specifies the location of the libraries for GMPXX', dest='gmpxx_libs')
-    opt.add_option('--with-mpfr-libs', type='string', help='Specifies the location of the library for MPFR', dest='mpfr_libs')
-    opt.add_option('--with-mpfrcpp-libs', type='string', help='Specifies the location of the library for MPFRCPP', dest='mpfrcpp_libs')
+    #opt.add_option('--with-gmp-header', type='string', help='Specifies the location of the headers for GMP', dest='gmp_header')
+    #opt.add_option('--with-gmpxx-header', type='string', help='Specifies the location of the headers for GMPXX', dest='gmpxx_header')
+    #opt.add_option('--with-mpfr-header', type='string', help='Specifies the location of the headers for MPFR', dest='mpfr_header')
+    #opt.add_option('--with-mpfrcpp-header', type='string', help='Specifies the location of the headers for MPFRCPP', dest='mpfrcpp_header')
+    #opt.add_option('--with-gmp-libs', type='string', help='Specifies the location of the libraries for GMP', dest='gmp_libs')
+    #opt.add_option('--with-gmpxx-libs', type='string', help='Specifies the location of the libraries for GMPXX', dest='gmpxx_libs')
+    #opt.add_option('--with-mpfr-libs', type='string', help='Specifies the location of the library for MPFR', dest='mpfr_libs')
+    #opt.add_option('--with-mpfrcpp-libs', type='string', help='Specifies the location of the library for MPFRCPP', dest='mpfrcpp_libs')
 
 def shutdown():
     pass
