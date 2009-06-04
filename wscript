@@ -170,7 +170,8 @@ def configure(conf):
 
     result = os.popen(compilerExecutable + ' -print-search-dirs')
     searchDirs = []
-    localLibPath = os.path.join('/', 'usr','local','lib')
+    localLibPath = os.path.join('/', 'usr', 'lib64')
+    localLibPath = os.path.join('/', 'usr', 'local', 'lib')
     if os.path.exists(localLibPath):
         searchDirs.append(localLibPath)
     gccLines = result.readlines()
@@ -200,25 +201,32 @@ def configure(conf):
     if not foundStatic and not foundShared:
         conf.fatal('IBERTY library not found, install binutils development package for your distribution')
     tempLibs = []
+    staticPaths = []
     for ibertylib in foundStatic:
-        tempLibs.append(os.path.basename(ibertylib)[3:os.path.basename(ibertylib).rfind('.')])
+        tempLibs.append(os.path.splitext(os.path.basename(ibertylib))[0][len(conf.env['staticlib_PATTERN'].split('%s')[0]):])
+        staticPaths.append(os.path.split(ibertylib)[0])
     foundStatic = tempLibs
     tempLibs = []
+    sharedPaths = []
     for ibertylib in foundShared:
-        tempLibs.append(os.path.basename(ibertylib)[3:os.path.basename(ibertylib).rfind('.')])
+        tempLibs.append(os.path.splitext(os.path.basename(ibertylib))[0][len(conf.env['shlib_PATTERN'].split('%s')[0]):])
+        sharedPaths.append(os.path.split(ibertylib)[0])
     foundShared = tempLibs
     iberty_lib_name = ''
     for ibertylib in foundStatic:
         if ibertylib in foundShared:
             iberty_lib_name = ibertylib
+            searchPaths = sharedPaths + staticPaths
             break
     if not iberty_lib_name:
         if foundShared:
             iberty_lib_name = foundShared[0]
+            searchPaths = sharedPaths
         else:
             iberty_lib_name = foundStatic[0]
+            searchPaths = staticPaths
 
-    conf.check_cc(lib=iberty_lib_name, uselib_store='BFD', mandatory=1, libpath=searchDirs, errmsg='not found, use --with-bfd option')
+    conf.check_cc(lib=iberty_lib_name, uselib_store='IBERTY', mandatory=1, libpath=searchPaths, errmsg='not found, use --with-bfd option', okmsg='ok ' + iberty_lib_name)
 
     ###########################################################
     # Check for BFD library and header
@@ -234,30 +242,36 @@ def configure(conf):
         foundStatic += glob.glob(os.path.join(directory, conf.env['staticlib_PATTERN'].split('%s')[0] + 'bfd*' + conf.env['staticlib_PATTERN'].split('%s')[1]))
     if not foundStatic and not foundShared:
         conf.fatal('BFD library not found, install binutils development package for your distribution')
+    staticPaths = []
     tempLibs = []
     for bfdlib in foundStatic:
-        tempLibs.append(os.path.basename(bfdlib)[3:os.path.basename(bfdlib).rfind('.')])
+        tempLibs.append(os.path.splitext(os.path.basename(bfdlib))[0][len(conf.env['staticlib_PATTERN'].split('%s')[0]):])
+        staticPaths.append(os.path.split(bfdlib)[0])
     foundStatic = tempLibs
     tempLibs = []
+    sharedPaths = []
     for bfdlib in foundShared:
-        tempLibs.append(os.path.basename(bfdlib)[3:os.path.basename(bfdlib).rfind('.')])
+        tempLibs.append(os.path.splitext(os.path.basename(bfdlib))[0][len(conf.env['shlib_PATTERN'].split('%s')[0]):])
+        sharedPaths.append(os.path.split(bfdlib)[0])
     foundShared = tempLibs
-    bfd_lib_name = ''
     for bfdlib in foundStatic:
         if bfdlib in foundShared:
             bfd_lib_name = bfdlib
+            searchPaths = sharedPaths + staticPaths
             break
     if not bfd_lib_name:
         if foundShared:
             bfd_lib_name = foundShared[0]
+            searchPaths = sharedPaths
         else:
             bfd_lib_name = foundStatic[0]
+            searchPaths = staticPaths
 
-    conf.check_cc(lib=bfd_lib_name, uselib_store='BFD', mandatory=1, libpath=searchDirs, errmsg='not found, use --with-bfd option')
+    conf.check_cc(lib=bfd_lib_name, uselib='IBERTY', uselib_store='BFD', mandatory=1, libpath=searchPaths, errmsg='not found, use --with-bfd option', okmsg='ok ' + bfd_lib_name)
     if Options.options.bfddir:
-        conf.check_cc(header_name='bfd.h', uselib='BFD', uselib_store='BFD', mandatory=1, includes=[os.path.abspath(os.path.expanduser(os.path.expandvars(os.path.join(Options.options.bfddir, 'include'))))])
+        conf.check_cc(header_name='bfd.h', uselib='IBERTY BFD', uselib_store='BFD_H', mandatory=1, includes=[os.path.abspath(os.path.expanduser(os.path.expandvars(os.path.join(Options.options.bfddir, 'include'))))])
     else:
-        conf.check_cc(header_name='bfd.h', uselib='BFD', uselib_store='BFD', mandatory=1)
+        conf.check_cc(header_name='bfd.h', uselib='IBERTY BFD', uselib_store='BFD_H', mandatory=1)
 
     ##################################################
     # Check for pthread library/flag

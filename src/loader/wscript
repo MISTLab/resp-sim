@@ -7,6 +7,7 @@ def build(bld):
         execLoader.cpp
     """
     obj.uselib_local = 'binutils BFDWrapper utils'
+    obj.uselib = 'BOOST BFD_H'
     obj.name = 'loader'
     obj.target = 'loader'
 
@@ -15,7 +16,7 @@ def build(bld):
         execLoader.hpp
     """
     obj.target = 'loader_wrapper'
-    obj.uselib = 'BOOST BOOST_REGEX PYEXT BOOST_PYTHON'
+    obj.uselib = 'BOOST BOOST_REGEX PYEXT BOOST_PYTHON BFD_H'
     obj.uselib_local = 'loader'
     obj.start_decls = 'Loader'
     obj.custom_code = """

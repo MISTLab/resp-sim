@@ -7,9 +7,8 @@ def build(bld):
     """Create a dynamic version of the systemc library"""
 
     obj = bld.new_task_gen('cc', 'cshlib')
-    obj.source = 'BFD empty.c'
+    obj.source = 'IBERTY BFD empty.c'
     if sys.platform == 'darwin':
         obj.env['shlib_SUFFIX'] = obj.env['shlib_ORIG_SUFFIX']
     obj.target = 'binutils'
-    obj.uselib = 'BFD'
     obj.name = 'binutils'

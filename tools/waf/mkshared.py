@@ -55,7 +55,7 @@ def do_unpack_ar(self, node):
 @feature('cc')
 @before('sequence_order')
 def copy_libs(self):
-    # Copy library and update source list
+    # Copy library
     files = self.to_list(self.source)
 
     for filename in files:
@@ -69,12 +69,25 @@ def copy_libs(self):
             for baselibname in self.env['LIB_' + filename]:
                 # I make sure that the library actually exists and I determine its path
                 libname =  self.env['staticlib_PATTERN'] % baselibname
+                sharedlibname =  self.env['shlib_PATTERN'] % baselibname
+                foundStatic = False
+                foundShared = False
                 for path in self.env['LIBPATH_' + filename]:
                     libpath = os.path.join(path, libname)
                     if os.path.exists(libpath):
+                        foundStatic = True
                         break
 
-                if not os.path.exists(libpath):
+                for path in self.env['LIBPATH_' + filename]:
+                    sharedlibpath = os.path.join(path, sharedlibname)
+                    if os.path.exists(sharedlibpath):
+                        foundShared = True
+                        break
+
+                if not foundStatic:
+                    continue
+                if foundShared:
+                    self.uselib += ' ' + filename
                     continue
 
                 # Copy the library if not present in the source tree

@@ -11,14 +11,14 @@ def build(bld):
     obj.target = 'BFDWrapper'
     obj.export_incdirs = '.'
     obj.uselib_local = 'binutils utils'
-    obj.uselib = 'BOOST BOOST_REGEX'
+    obj.uselib = 'BOOST BOOST_REGEX BFD_H'
 
     obj = bld.new_task_gen('pypp')
     obj.source = """
         bfdFrontend.hpp
     """
     obj.target = 'bfdwrapper'
-    obj.uselib = 'BOOST BOOST_REGEX PYEXT BOOST_PYTHON'
+    obj.uselib = 'BOOST BOOST_REGEX PYEXT BOOST_PYTHON BFD_H'
     obj.uselib_local = 'BFDWrapper'
     obj.start_decls = 'BFDWrapper'
     obj.custom_declaration_code = '''

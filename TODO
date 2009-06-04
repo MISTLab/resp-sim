@@ -1,3 +1,5 @@
+-- Correct binutils usage: libiberty is a static library on most systems, and it is compiled without fpic; this means that
+object files extracted on 64 bit systems cannot be used to make a shared library ... and compilation fails
 -- Code to export SystemC and TLM (and also their start_decls) should be centralized and executed for each pypp task
 -- Modify the pypp task, so that if systemc or tlm wrappers change, all the modules including such
 wrapper should also be rebuilt
