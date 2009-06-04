@@ -84,10 +84,11 @@ def copy_libs(self):
                         foundShared = True
                         break
 
-                if not foundStatic:
-                    continue
                 if foundShared:
                     self.uselib += ' ' + filename
+                    continue
+
+                if not foundStatic:
                     continue
 
                 # Copy the library if not present in the source tree
