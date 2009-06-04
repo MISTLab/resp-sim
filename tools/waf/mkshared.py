@@ -180,6 +180,8 @@ def check_dyn_library(conf, libfile, libpaths):
         if os.path.splitext(libfile)[1] == conf.env['staticlib_PATTERN'].split('%s')[1]:
             # Now lets check for the presence of symbols of type R_X86_64_32S:
             # in case we have an error.
+            print libfile
+            print libpaths
             for libpath in libpaths:
                 if os.path.exists(os.path.join(libfile, libpath)):
                     print os.path.join(libfile, libpath)
