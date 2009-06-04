@@ -176,7 +176,7 @@ def check_dyn_library(conf, libfile, libpaths):
     # Are we on 64 bit systems?
     import struct
     if struct.calcsize("P") > 4:
-        # are we actually processing a shared library?
+        # are we actually processing a static library?
         if os.path.splitext(libfile)[1] == conf.env['staticlib_PATTERN'].split('%s')[1]:
             # Now lets check for the presence of symbols of type R_X86_64_32S:
             # in case we have an error.

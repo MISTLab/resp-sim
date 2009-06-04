@@ -233,9 +233,10 @@ def configure(conf):
     conf.check_cc(lib=iberty_lib_name, uselib_store='IBERTY', mandatory=1, libpath=searchPaths, errmsg='not found, use --with-bfd option', okmsg='ok ' + iberty_lib_name)
     # Lets now check that, in case this library is static, it is possible to create
     # a shared library out of it
-    if not check_dyn_library(conf, conf.env['staticlib_PATTERN'] % iberty_lib_name, searchPaths):
-        conf.check_message_custom(conf.env['staticlib_PATTERN'] % iberty_lib_name + ' relocabilty', '', 'Found position dependent code', color='YELLOW')
-        conf.fatal('Library ' + conf.env['staticlib_PATTERN'] % iberty_lib_name + ' contains position dependent code, so a shared library cannot be created out of it. Please recompile binutils generating a shared version (using option --enable-shared) or, in general, using the -fPIC compilation option')
+    if not foundShared:
+        if not check_dyn_library(conf, conf.env['staticlib_PATTERN'] % iberty_lib_name, searchPaths):
+            conf.check_message_custom(conf.env['staticlib_PATTERN'] % iberty_lib_name + ' relocabilty', '', 'Found position dependent code', color='YELLOW')
+            conf.fatal('Library ' + conf.env['staticlib_PATTERN'] % iberty_lib_name + ' contains position dependent code, so a shared library cannot be created out of it. Please recompile binutils generating a shared version (using option --enable-shared) or, in general, using the -fPIC compilation option')
 
     ###########################################################
     # Check for BFD library and header
@@ -282,9 +283,10 @@ def configure(conf):
     conf.check_cc(lib=bfd_lib_name, uselib='IBERTY', uselib_store='BFD', mandatory=1, libpath=searchPaths, errmsg='not found, use --with-bfd option', okmsg='ok ' + bfd_lib_name)
     # Lets now check that, in case this library is static, it is possible to create
     # a shared library out of it
-    if not check_dyn_library(conf, conf.env['staticlib_PATTERN'] % bfd_lib_name, searchPaths):
-        conf.check_message_custom(conf.env['staticlib_PATTERN'] % bfd_lib_name + ' relocabilty', '', 'Found position dependent code', color='YELLOW')
-        conf.fatal('Library ' + conf.env['staticlib_PATTERN'] % bfd_lib_name + ' contains position dependent code, so a shared library cannot be created out of it. Please recompile binutils generating a shared version (using option --enable-shared) or, in general, using the -fPIC compilation option')
+    if not foundShared:
+        if not check_dyn_library(conf, conf.env['staticlib_PATTERN'] % bfd_lib_name, searchPaths):
+            conf.check_message_custom(conf.env['staticlib_PATTERN'] % bfd_lib_name + ' relocabilty', '', 'Found position dependent code', color='YELLOW')
+            conf.fatal('Library ' + conf.env['staticlib_PATTERN'] % bfd_lib_name + ' contains position dependent code, so a shared library cannot be created out of it. Please recompile binutils generating a shared version (using option --enable-shared) or, in general, using the -fPIC compilation option')
 
     if Options.options.bfddir:
         conf.check_cc(header_name='bfd.h', uselib='IBERTY BFD', uselib_store='BFD_H', mandatory=1, includes=[os.path.abspath(os.path.expanduser(os.path.expandvars(os.path.join(Options.options.bfddir, 'include'))))])
