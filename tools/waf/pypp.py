@@ -390,18 +390,18 @@ def detect(conf):
             if Logs.verbose:
                 print 'Version ' + str(version)
             if int(version[0]) >= 1:
-                if int(version[1]) >= 0 and int(version[2]) >= 0:
+                if int(version[1]) >= 5 and int(version[2]) >= 0:
                     conf.check_message('pygccxml version', '', True,  'Version ' + pygccxml.__version__)
                 else:
                     conf.check_message('pygccxml version', '', False,  'Version ' + pygccxml.__version__ + ' too old')
-                    conf.fatal("Configure Failed, pygccxml version too old; please use at least version 1.0.0")
+                    conf.fatal("Configure Failed, pygccxml version too old; please use at least version 1.5.0")
             else:
                 conf.check_message('pygccxml version', '', False,  'Version ' + pygccxml.__version__ + ' too old')
-                conf.fatal("Configure Failed, pygccxml version too old; please use at least version 1.0.0")
+                conf.fatal("Configure Failed, pygccxml version too old; please use at least version 1.5.0")
         except IndexError:
-            conf.fatal("Configure Failed, unable to determine pygccxml version. Please check that you have version 1.0.0 correctly installed.")
+            conf.fatal("Configure Failed, unable to determine pygccxml version. Please check that you have version 1.5.0 correctly installed.")
         except ValueError:
-            conf.fatal("Configure Failed, unable to determine pygccxml version. Please check that you have version 1.0.0 correctly installed.")
+            conf.fatal("Configure Failed, unable to determine pygccxml version. Please check that you have version 1.5.0 correctly installed.")
 
     ##################################################
     # Check for Py++
@@ -421,18 +421,18 @@ def detect(conf):
             if Logs.verbose:
                 print 'Version ' + str(version)
             if int(version[0]) >= 1:
-                if int(version[1]) >= 0 and int(version[2]) >= 0:
+                if int(version[1]) >= 5 and int(version[2]) >= 0:
                     conf.check_message('pyplusplus version', '',True,  'Version ' + pyplusplus.__version__)
                 else:
                     conf.check_message('pyplusplus version', '',False,  'Version ' + pyplusplus.__version__ + ' too old')
-                    conf.fatal("Configure Failed, pyplusplus version too old; please use at least version 1.0.0")
+                    conf.fatal("Configure Failed, pyplusplus version too old; please use at least version 1.5.0")
             else:
-                conf.check_message('pygccxml version', '',False,  'Version ' + pygccxml.__version__ + ' too old')
-                conf.fatal("Configure Failed, pygccxml version too old; please use at least version 1.0.0")
+                conf.check_message('pyplusplus version', '',False,  'Version ' + pyplusplus.__version__ + ' too old')
+                conf.fatal("Configure Failed, pyplusplus version too old; please use at least version 1.5.0")
         except IndexError:
-            conf.fatal("Configure Failed, unable to determine pyplusplus version. Please check that you have version 1.0.0 correctly installed.")
+            conf.fatal("Configure Failed, unable to determine pyplusplus version. Please check that you have version 1.5.0 correctly installed.")
         except ValueError:
-            conf.fatal("Configure Failed, unable to determine pyplusplus version. Please check that you have version 1.0.0 correctly installed.")
+            conf.fatal("Configure Failed, unable to determine pyplusplus version. Please check that you have version 1.5.0 correctly installed.")
 
     conf.check_tool( 'template_builder', './tools/waf'  )
 
