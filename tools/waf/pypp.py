@@ -325,6 +325,9 @@ def process_headers(self):
                 self.compiled_tasks.append(task)
 
 def detect(conf):
+    curDir = conf.curdir
+    if os.path.exists(conf.blddir):
+        newDir = os.chdir(conf.blddir)
     ##################################################
     # Check for gccxml
     ##################################################
@@ -352,6 +355,7 @@ def detect(conf):
             conf.fatal("Configure Failed, please correctly re-install gccxml")
     else:
         conf.check_message('gccxml_cc1plus', '', False, 'Not found')
+    os.chdir(curDir)
 
     ##################################################
     # Determine gxx version, since 4.3 cannot work with

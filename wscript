@@ -150,6 +150,7 @@ def configure(conf):
     ########################################
     conf.check_tool('pypp', os.path.join( '.' , 'tools' , 'waf'))
     conf.check_tool('mkshared ', os.path.join( '.' , 'tools' , 'waf'))
+    from mkshared import check_dyn_library
 
     ##################################################
     # Check for standard libraries
@@ -223,10 +224,18 @@ def configure(conf):
             iberty_lib_name = foundShared[0]
             searchPaths = sharedPaths
         else:
-            iberty_lib_name = foundStatic[0]
+            for ibertylib in foundStatic:
+                iberty_lib_name = ibertylib
+                if 'pic' in ibertylib:
+                    break
             searchPaths = staticPaths
 
     conf.check_cc(lib=iberty_lib_name, uselib_store='IBERTY', mandatory=1, libpath=searchPaths, errmsg='not found, use --with-bfd option', okmsg='ok ' + iberty_lib_name)
+    # Lets now check that, in case this library is static, it is possible to create
+    # a shared library out of it
+    if not check_dyn_library(conf, conf.env['staticlib_PATTERN'] % iberty_lib_name, searchPaths):
+        conf.check_message(conf.env['staticlib_PATTERN'] % iberty_lib_name + ' relocabilty', '', False,  'Found position dependent code')
+        conf.fatal('Library ' + conf, conf.env['staticlib_PATTERN'] % iberty_lib_name + ' contains position dependent code, so a shared library cannot be created out of it. Please recompile binutils generating a shared version (using option --enable-shared) or, in general, using the -fPIC compilation option')
 
     ###########################################################
     # Check for BFD library and header
@@ -264,7 +273,10 @@ def configure(conf):
             bfd_lib_name = foundShared[0]
             searchPaths = sharedPaths
         else:
-            bfd_lib_name = foundStatic[0]
+            for bfdlib in foundStatic:
+                bfd_lib_name = bfdlib
+                if 'pic' in bfdlib:
+                    break
             searchPaths = staticPaths
 
     conf.check_cc(lib=bfd_lib_name, uselib='IBERTY', uselib_store='BFD', mandatory=1, libpath=searchPaths, errmsg='not found, use --with-bfd option', okmsg='ok ' + bfd_lib_name)

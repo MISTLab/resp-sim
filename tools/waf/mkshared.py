@@ -160,3 +160,31 @@ def detect(conf):
     conf.check_tool('cxx')
     conf.check_tool('cc')
     conf.check_tool('ar')
+    conf.find_program('objdump', mandatory=1)
+
+def check_dyn_library(conf, libfile, libpaths):
+    if not conf.env['AR']:
+        conf.fatal('Please configure the mkshared tool before calling the check_dyn_library method')
+
+    # Now I have to check that the object files in the library are compiled with -fPIC option.
+    # actually this only seems to affect 64 bits systems, while compilation on 32 bits only
+    # yields warnings, but perfectly usable libraries. So ... I simply have to check if we are on
+    # 64 bits systems and in case, I issue the objdump -r command: if there are symbols of type
+    # R_X86_64_32S, then the library was compiled without the -fPIC option and it is not possible
+    # to create a shared library out of it.
+
+    # Are we on 64 bit systems?
+    import struct
+    if struct.calcsize("P") > 4:
+        # are we actually processing a shared library?
+        if os.path.splitext(libfile)[1] == conf.env['staticlib_PATTERN'].split('%s')[1]:
+            # Now lets check for the presence of symbols of type R_X86_64_32S:
+            # in case we have an error.
+            for libpath in libpaths:
+                if os.path.exists(os.path.join(libfile, libpaths)):
+                    libDump = os.popen('objdump -r ' + os.path.join(libfile, libpaths)).readlines()
+                    for line in libDump:
+                        if 'R_X86_64_32S' in line:
+                            return False
+                    break
+    return True

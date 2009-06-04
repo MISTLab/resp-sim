@@ -8,7 +8,5 @@ def build(bld):
 
     obj = bld.new_task_gen('cc', 'cshlib')
     obj.source = 'IBERTY BFD empty.c'
-    if sys.platform == 'darwin':
-        obj.env['shlib_SUFFIX'] = obj.env['shlib_ORIG_SUFFIX']
     obj.target = 'binutils'
     obj.name = 'binutils'

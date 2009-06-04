@@ -9,7 +9,5 @@ def build(bld):
     obj = bld.new_task_gen('cxx', 'cshlib')
     obj.env['CPPPATH'] = [ x+'/../src/' for x in obj.env['CPPPATH_SYSTEMC_H'] ]
     obj.source = 'SYSTEMC_STATIC sc_main.cpp sc_simcontext.cpp'
-    if sys.platform == 'darwin':
-        obj.env['shlib_SUFFIX'] = obj.env['shlib_ORIG_SUFFIX']
     obj.target = 'systemc'
     obj.name = 'systemc'
