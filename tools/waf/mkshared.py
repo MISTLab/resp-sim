@@ -182,6 +182,7 @@ def check_dyn_library(conf, libfile, libpaths):
             # in case we have an error.
             for libpath in libpaths:
                 if os.path.exists(os.path.join(libfile, libpath)):
+                    print os.path.join(libfile, libpath)
                     libDump = os.popen('objdump -r ' + os.path.join(libfile, libpath)).readlines()
                     for line in libDump:
                         if 'R_X86_64_32S' in line:
