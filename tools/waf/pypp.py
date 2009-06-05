@@ -41,12 +41,39 @@ import Options,Utils,Task,Logs,Build
 from Logs import error
 import os, sys, imp
 
+def compute_indent(line):
+    indent = 0
+    for i in line:
+        if i != '':
+            break
+        indent += 1
+    return indent
+
+def get_code_blocks(code_string);
+    # this function splits the code contained in the string
+    # into different blocks (the code under and if statement,
+    # a for statement, etc. is a code block)
+    codeBlocks = []
+    code_string.replace('\t', '    ')
+    code_string_lines = code_string.split('\n')
+    baseIndent = compute_indent(code_string_lines[0])
+    curBlock = code_string_lines[0] + '\n'
+    for line in code_string_lines[1:]:
+        newIndent = compute_indent(line)
+        if newIndent > baseIndent:
+            curBlock += line + '\n'
+        elif newIndent = baseIndent and (line.strip().startswith('else') or line.strip().startswith('except') or line.strip().startswith('elif'))
+        else:
+            codeBlocks.append(curBlock)
+            curBlock = line + '\n'
+            if newIndent < baseIndent:
+                baseIndent = newIndent
+    return codeBlocks
 
 CXX_METHS = ['extract_headers', 'init_cxx', 'apply_type_vars', 'apply_incpaths', 'apply_defines_cxx',
 'apply_core', 'apply_lib_vars', 'apply_obj_vars_cxx', 'process_headers']
 
 TaskGen.bind_feature('pypp', CXX_METHS)
-
 
 class pypp_taskgen(cxx.cxx_taskgen):
     """ Class for dealing with header files and generate python wrappers using py++
@@ -151,6 +178,11 @@ def process_headers(self):
         so_ext = self.env['shlib_PATTERN'].split('%s')[1]
     self.env['shlib_PATTERN'] = '%s'+so_ext
 
+    try:
+        self.custom_code = get_code_blocks(self.custom_code)
+    except:
+        self.custom_code = []
+
     targetbase, ext = os.path.splitext(ccroot.get_target_name(self))
     inc_paths = []
     for i in self.to_list(self.uselib):
@@ -228,7 +260,7 @@ def process_headers(self):
         # Create a node for every include
         incl = []
         incl_headers = []
-        includeCustomCode = ''
+        includeCustomCode = []
         includeStartDecls = []
         if include_lst:
             for x in include_lst:
@@ -237,7 +269,7 @@ def process_headers(self):
                     print targetbase + ' --> Warning: Object '+ x +' not found'
                     continue
                 try:
-                    includeCustomCode += '\n' + obj.custom_code
+                    includeCustomCode += obj.custom_code
                 except AttributeError:
                     pass
                 try:
@@ -564,35 +596,23 @@ def dopypp(task):
             members.set_virtuality( declarations.VIRTUALITY_TYPES.NOT_VIRTUAL )
 
     # Execute includes user-specified code
-    nextLine = ''
-    for customCodeLine in task.custom_code_include.split('\n'):
+    for customCodeBlock in task.custom_code_include:
         try:
-            exec nextLine + customCodeLine in locals()
-            nextLine = ''
-        except SyntaxError:
-            nextLine += customCodeLine + '\n'
-            print 'SyntaxError: next line: -->\n' + nextLine + '\n<--'
+            exec customCodeBlock in locals()
         except:
-            nextLine = ''
             if Logs.verbose:
                 import traceback
                 traceback.print_exc()
-                print '\nWhile Processing FILEs: \n' +  str(sources) + '\nLine: ' + customCodeLine + '\n'
+                print '\nWhile Processing FILEs: \n' +  str(sources) + '\nLines: ' + str(customCodeBlock) + '\n'
 
     # Execute user-specified code
-    nextLine = ''
     try:
-        for customCodeLine in task.custom_code.split('\n'):
-            try:
-                exec nextLine + customCodeLine in locals()
-                nextLine = ''
-            except SyntaxError:
-                nextLine += customCodeLine + '\n'
-                print 'SyntaxError: next line: -->\n' + nextLine + '\n<--'
+        for customCodeBlock in task.custom_code:
+            exec customCodeBlock in locals()
     except:
         import traceback
         traceback.print_exc()
-        print '\nWhile Processing FILEs: \n' +  str(sources) + '\nLine: ' + customCodeLine + '\n'
+        print '\nWhile Processing FILEs: \n' +  str(sources) + '\nLines: ' + customCodeBlock + '\n'
         return 1
 
     # Now I protect the virtual member calls so that they behave correctly in a multi-threaded environment
