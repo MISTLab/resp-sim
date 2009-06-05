@@ -1,0 +1,9 @@
+Patch to the SystemC configuration files; this patch applies to SystemC version 2.2.0.
+the patch was created with command "diff -crB"; in order to apply the patch "patch -p0 -i configure.in.patch"
+
+This patch solves the following issues:
+
+-- Adds the -fPIC flags to all targets so that shared libraries can be created out of the compiled object files
+(actually this is necessary only for 64 bits targets)
+-- Adds a i686-apple-macosx target, so that is compiles on intel apple machines
+-- enables the compilation for compilers called g++... (e.g. g++-4.2) and not just for plain g++

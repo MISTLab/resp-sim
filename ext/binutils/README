@@ -1,0 +1,6 @@
+Patch to the binutils configuration files; this patch applies to binutils version 2.19.
+the patch was created with command "diff -crB"; in order to apply the patch "patch -p0 -i Makefile.in.patch".
+The patch have to be applied to Makefile.in file contained in folder libiberty
+
+This patch enables the compilation of libiberty with the -fPIC flag (something which was disabled even if the
+--enable-shared --with-pic flags were specified)
