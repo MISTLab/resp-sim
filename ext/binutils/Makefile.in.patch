@@ -1,0 +1,46 @@
+*** /home/luke/tmp/binutils-2.19/libiberty/Makefile.in	Thu Jul 24 15:51:49 2008
+--- Makefile.in	Fri Jun  5 14:45:57 2009
+***************
+*** 61,66 ****
+--- 61,67 ----
+  PERL = @PERL@
+  
+  PICFLAG = @PICFLAG@
++ LIBCFLAGS = $(LIBCFLAGS) $(PICFLAG)
+  
+  MAKEOVERRIDES =
+  
+***************
+*** 71,77 ****
+  
+  # A configuration can specify extra .o files that should be included,
+  # even if they are in libc. (Perhaps the libc version is buggy.)
+! EXTRA_OFILES = 
+  
+  # Flags to pass to a recursive make.
+  FLAGS_TO_PASS = \
+--- 72,78 ----
+  
+  # A configuration can specify extra .o files that should be included,
+  # even if they are in libc. (Perhaps the libc version is buggy.)
+! EXTRA_OFILES =
+  
+  # Flags to pass to a recursive make.
+  FLAGS_TO_PASS = \
+***************
+*** 268,274 ****
+  
+  NORMAL_INSTALL = :
+  mkdir_p = mkdir -p --
+!  
+  html__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
+  
+  install-html: install-html-recursive  install-html-am
+--- 269,275 ----
+  
+  NORMAL_INSTALL = :
+  mkdir_p = mkdir -p --
+! 
+  html__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
+  
+  install-html: install-html-recursive  install-html-am
