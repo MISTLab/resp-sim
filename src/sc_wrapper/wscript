@@ -190,12 +190,14 @@ mb.global_ns.class_('sc_simcontext').member_functions(lambda x: x.name.startswit
     #i.alias = 'TLM_'+i.alias
 
 # Include simple sockets
+print 'Including simple sockets'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_target_socket') or decl.name.startswith('tlm_target_socket') , allow_empty=True)
 for i in cls:
     i.include()
     i.member_functions(allow_empty=True).exclude()
     i.alias = 'TLM_'+i.alias
 
+print 'Including tlm_base_initiator_socket'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_initiator_socket') or decl.name.startswith('tlm_initiator_socket'), allow_empty=True)
 for i in cls:
     i.include()
@@ -210,6 +212,7 @@ for i in cls:
     i.include()
     i.alias = 'TLM_'+i.alias
 
+print 'Including tlm_quantumkeeper'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_quantumkeeper') > 0, allow_empty=True)
 for i in cls:
     i.include()

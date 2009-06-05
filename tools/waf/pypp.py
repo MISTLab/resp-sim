@@ -228,12 +228,22 @@ def process_headers(self):
         # Create a node for every include
         incl = []
         incl_headers = []
+        includeCustomCode = ''
+        includeStartDecls = []
         if include_lst:
             for x in include_lst:
                 obj = self.name_to_obj(x)
                 if( not  obj ):
                     print targetbase + ' --> Warning: Object '+ x +' not found'
                     continue
+                try:
+                    includeCustomCode += '\n' + obj.custom_code
+                except AttributeError:
+                    pass
+                try:
+                    includeStartDecls += Utils.to_list(obj.start_decls)
+                except AttributeError:
+                    pass
                 incl.append( obj.path.find_or_declare(x+'.generated.py') )
                 if self.extra_headers and (obj.extra_headers or obj.templates):
                     incl_headers.append( obj.path.find_or_declare(x+'_exp.hpp') )
@@ -243,6 +253,11 @@ def process_headers(self):
                         #if depOut.name.find('.py') > 0:
                             #pypptask.set_run_after(dep)
                             #break
+
+        # Now I add the custom code of the includes, so that their elements are also
+        # exported; I also have to add their start declarations
+        pypptask.custom_code_include = includeCustomCode
+        pypptask.start_decls = includeStartDecls + pypptask.start_decls
 
         # Adding dependencies to all already-processed pypp files
         all_tasks = self.bld.task_manager.groups[self.bld.task_manager.current_group].tasks
@@ -535,7 +550,8 @@ def dopypp(task):
     for inc in task.include:
         new_module = os.path.dirname(inc.bldpath(task.env))
         if new_module not in module_list:
-            print "Adding "+os.path.dirname(inc.bldpath(task.env))+" to module dependencies"
+            if Logs.verbose:
+                print "Adding "+os.path.dirname(inc.bldpath(task.env))+" to module dependencies"
             mb.register_module_dependency(new_module)
             module_list.append(new_module)
 
@@ -547,13 +563,36 @@ def dopypp(task):
         if( members ):
             members.set_virtuality( declarations.VIRTUALITY_TYPES.NOT_VIRTUAL )
 
+    # Execute includes user-specified code
+    nextLine = ''
+    for customCodeLine in task.custom_code_include.split('\n'):
+        try:
+            exec nextLine + customCodeLine in locals()
+            nextLine = ''
+        except SyntaxError:
+            nextLine += customCodeLine + '\n'
+            print 'SyntaxError: next line: -->\n' + nextLine + '\n<--'
+        except:
+            nextLine = ''
+            if Logs.verbose:
+                import traceback
+                traceback.print_exc()
+                print '\nWhile Processing FILEs: \n' +  str(sources) + '\nLine: ' + customCodeLine + '\n'
+
     # Execute user-specified code
+    nextLine = ''
     try:
-        exec task.custom_code in locals()
-    except Exception, e:
+        for customCodeLine in task.custom_code.split('\n'):
+            try:
+                exec nextLine + customCodeLine in locals()
+                nextLine = ''
+            except SyntaxError:
+                nextLine += customCodeLine + '\n'
+                print 'SyntaxError: next line: -->\n' + nextLine + '\n<--'
+    except:
         import traceback
         traceback.print_exc()
-        print '\nWhile Processing FILEs: \n' +  str(sources)
+        print '\nWhile Processing FILEs: \n' +  str(sources) + '\nLine: ' + customCodeLine + '\n'
         return 1
 
     # Now I protect the virtual member calls so that they behave correctly in a multi-threaded environment
