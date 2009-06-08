@@ -79,22 +79,37 @@ mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) ).exclu
 
 # Include important stuff
 print "Including classes"
-mb.global_ns.classes(lambda decl: decl.name.startswith('sc_')).ignore = False
-mb.global_ns.enumerations(lambda decl: decl.name.startswith('sc_')).include()
-mb.global_ns.class_('sc_module').include()
-mb.global_ns.class_('sc_module').member_functions().include()
-mb.global_ns.class_('sc_module').member_functions().set_virtuality( declarations.VIRTUALITY_TYPES.VIRTUAL )
-mb.global_ns.class_('sc_module').member_functions('get_child_objects').set_virtuality( declarations.VIRTUALITY_TYPES.NOT_VIRTUAL )
-mb.global_ns.class_('sc_module').member_functions('sc_get_curr_simcontext').call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
-mb.global_ns.class_('sc_module').member_operators().exclude()
+sc_classes = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_'))
+for i in sc_classes:
+    i.ignore = False
+    i.alias = 'SYSC_' + i.alias
+
+sc_enums = mb.global_ns.enumerations(lambda decl: decl.name.startswith('sc_'))
+for i in sc_enums:
+    i.include()
+    i.alias = 'SYSC_' + i.alias
+
+sc_module_decl = mb.global_ns.class_('sc_module')
+sc_module_decl.include()
+sc_module_decl.member_functions().include()
+sc_module_decl.member_functions().set_virtuality( declarations.VIRTUALITY_TYPES.VIRTUAL )
+sc_module_decl.member_functions('get_child_objects').set_virtuality( declarations.VIRTUALITY_TYPES.NOT_VIRTUAL )
+sc_module_decl.member_functions('sc_get_curr_simcontext').call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
+sc_module_decl.member_operators().exclude()
+sc_module_decl.alias = 'SYSC_' + sc_module_decl.alias
 
 print 'including sim_context'
-mb.global_ns.class_('sc_simcontext').include()
-mb.global_ns.class_('sc_simcontext').member_functions().exclude()
-mb.global_ns.class_('sc_simcontext').member_function('reset').include()
+sc_simcontext_decls = mb.global_ns.class_('sc_simcontext')
+sc_simcontext_decls.include()
+sc_simcontext_decls.exclude()
+sc_simcontext_decls.member_function('reset').include()
+sc_simcontext_decls.alias = 'SYSC_' + sc_simcontext_decls.alias
 
 print "Including bind"
-mb.global_ns.member_functions( 'bind' ).include()
+bind_decl = mb.global_ns.member_functions( 'bind' )
+bind_decl.include()
+for i in bind_decl:
+    i.alias = 'SYSC_' + i.alias
 mb.global_ns.member_functions( 'is_reset' ).call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
 
 print "Including Signals"
@@ -102,12 +117,14 @@ signal = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_signal<'))
 signal.include()
 for i in signal:
     i.member_functions().exclude()
+    i.alias = 'SYSC_' + i.alias
 
 print "Including Bit Vectors"
 bvectors = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_bv<'))
 bvectors.include()
 for i in bvectors:
     i.member_operators().exclude()
+    i.alias = 'SYSC_' + i.alias
 
 print "Including clock"
 clock = mb.global_ns.class_('sc_clock')
@@ -121,31 +138,48 @@ clock.member_functions(lambda decl: decl.name.startswith('report_error')).exclud
 clock.member_functions(lambda decl: decl.name.startswith('init')).exclude()
 clock.member_functions(lambda decl: decl.name.startswith('is_clock')).exclude()
 clock.member_functions(lambda decl: decl.name.startswith('signal')).call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
+clock.alias = 'SYSC_' + clock.alias
 
 print "Including time"
 time = mb.global_ns.class_('sc_time')
 time.include()
+time.alias = 'SYSC_' + time.alias
 time.member_functions(lambda decl: decl.name.startswith('print')).exclude()
-mb.global_ns.variable('SC_ZERO_TIME').include()
+SC_ZERO_TIME_decl = mb.global_ns.variable('SC_ZERO_TIME')
+SC_ZERO_TIME_decl.include()
+SC_ZERO_TIME_decl.alias = 'SYSC_' + SC_ZERO_TIME_decl.alias
 
 print "Including sc_object"
 sc_obj = mb.global_ns.class_('sc_object')
 sc_obj.include()
+sc_obj.alias = 'SYSC_' + sc_obj.alias
 sc_obj.member_functions().exclude()
 sc_obj.member_functions(lambda decl: decl.name.endswith('name')).include()
 sc_obj.member_functions(lambda decl: decl.name.startswith('sc_object')).exclude()
 sc_obj.variables(lambda decl: decl.name.startswith('m_name')).exclude()
 
 print "Including free functions"
-mb.global_ns.free_functions('sc_start').include()
-mb.global_ns.free_functions('sc_stop').include()
-mb.global_ns.free_function('my_sc_is_running').include()
+sc_start_decl = mb.global_ns.free_functions('sc_start')
+for i in sc_start_decl:
+    i.alias = 'SYSC_' + i.alias
+    i.include()
+sc_stop_decl = mb.global_ns.free_functions('sc_stop')
+for i in sc_stop_decl:
+    i.include()
+    i.alias = 'SYSC_' + i.alias
+my_sc_is_running_decl = mb.global_ns.free_function('my_sc_is_running')
+my_sc_is_running_decl.include()
+my_sc_is_running_decl.alias = 'SYSC_' + my_sc_is_running_decl.alias
 waitFuns = mb.global_ns.free_functions('wait')
-waitFuns.include()
-waitFuns.use_overload_macro = True
+for i in waitFuns:
+    i.include()
+    i.alias = 'SYSC_' + i.alias
+    i.use_overload_macro = True
 simContFun = mb.global_ns.free_functions('sc_get_curr_simcontext')
-simContFun.include()
-simContFun.call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
+for i in simContFun:
+    i.include()
+    i.alias = 'SYSC_' + i.alias
+    i.call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
 
 mb.global_ns.calldefs( declarations.access_type_matcher_t('protected') ).exclude()
 mb.global_ns.calldefs( declarations.access_type_matcher_t('private') ).exclude()
@@ -190,7 +224,7 @@ mb.global_ns.class_('sc_simcontext').member_functions(lambda x: x.name.startswit
     #i.alias = 'TLM_'+i.alias
 
 # Include simple sockets
-print 'Including simple sockets'
+print 'Including base sockets sockets'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_target_socket') or decl.name.startswith('tlm_target_socket') , allow_empty=True)
 for i in cls:
     i.include()
@@ -207,15 +241,23 @@ for i in cls:
 
     i.alias = 'TLM_'+i.alias
 
-cls = mb.global_ns.classes(lambda decl: decl.name.startswith('simple_') > 0, allow_empty=True)
+print 'Including simple_'
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('simple_'), allow_empty=True)
+for i in cls:
+    i.include()
+    i.alias = 'TLM_'+i.alias
+
+print 'Including tlm_base_protocol_types'
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_protocol_types'), allow_empty=True)
 for i in cls:
     i.include()
     i.alias = 'TLM_'+i.alias
 
 print 'Including tlm_quantumkeeper'
-cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_quantumkeeper') > 0, allow_empty=True)
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_quantumkeeper'), allow_empty=True)
 for i in cls:
     i.include()
+    i.alias = 'TLM_'+i.alias
 
 # Exclude protected members
 cls = mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) , allow_empty=True )
