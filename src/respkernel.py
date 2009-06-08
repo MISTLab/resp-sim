@@ -108,6 +108,22 @@ def print_stats():
     except Exception,  e:
         print 'Error in the print of the statistics --> ' + str(e)
 
+def filterNames(namespaceToFilter):
+    global scwrapper, tlmwrapper
+    for j in filter(lambda x: x.startswith(TLM_PREFIX), dir(namespaceToFilter)):
+        item = getattr(namespaceToFilter, j)
+        item.__name__ = j[len(TLM_PREFIX):]
+        if not j[len(TLM_PREFIX):] in dir(tlmwrapper):
+            item.__module__ = 'tlmwrapper'
+            setattr( tlmwrapper, j[len(TLM_PREFIX):], item )
+    print dir(namespaceToFilter)
+    for j in filter(lambda x: x.startswith(SC_PREFIX), dir(namespaceToFilter)):
+        item = getattr(namespaceToFilter, j)
+        item.__name__ = j[len(SC_PREFIX):]
+        if not j[len(TLM_PREFIX):] in dir(scwrapper):
+            item.__module__ = 'scwrapper'
+            setattr( scwrapper, j[len(SC_PREFIX):], item )
+
 
 class RespKernel:
     """This class represents the core simulator class. This class provides a set of objects and functions to
@@ -179,12 +195,15 @@ class RespKernel:
         if self.verbose:
             print "Loading scwrapper"
         import scwrapper
+        filterNames(scwrapper)
         if self.verbose:
             print "Loading tlmwrapper"
         import tlmwrapper
+        filterNames(tlmwrapper)
         if self.verbose:
             print "Loading sc_controller"
         import sc_controller_wrapper
+        filterNames(sc_controller_wrapper)
 
         # Import Optional components
         if self.verbose:
@@ -292,19 +311,16 @@ class RespKernel:
                         curPathLoaded = True
                         sys.path.append(os.path.abspath(folder))
                     toLoadName = os.path.splitext(element)[0]
+
                     if self.verbose:
                         print "Loading " + toLoadName
                     temp = __import__(toLoadName)
-                    for j in filter(lambda x: x.startswith(TLM_PREFIX), dir(temp)):
-                        item = getattr(temp, j)
-                        item.__name__ = j[len(TLM_PREFIX):]
-                        item.__module__ = 'tlmwrapper'
-                        setattr(  tlmwrapper, j[4:], getattr(temp,j)  )
-                    for j in filter(lambda x: x.startswith(SC_PREFIX), dir(temp)):
-                        item = getattr(temp, j)
-                        item.__name__ = j[len(SC_PREFIX):]
-                        item.__module__ = 'scwrapper'
-                        setattr(  scwrapper, j[4:], getattr(temp,j)  )
+                    try:
+                        filterNames(temp)
+                    except:
+                        print "Error during loading of component " + toLoadName
+                        import traceback
+                        traceback.print_exc()
 
                     componentList.append(temp)
                     globals()[toLoadName] = temp
