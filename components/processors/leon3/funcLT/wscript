@@ -45,9 +45,9 @@ def build(bld):
     obj.custom_code = """
 for i in mb.global_ns.classes():
     for base in i.recursive_bases:
-    	if base.related_class.name == 'Instruction':
+        if base.related_class.name == 'Instruction':
             i.exclude()
-	    break
+            break
 mb.global_ns.class_('Instruction').exclude()
 mb.global_ns.class_('LEON3_ABIIf').constructors().exclude()
 

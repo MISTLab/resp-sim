@@ -20,7 +20,6 @@ def build(bld):
     obj.target = 'converters'
     obj.uselib = 'SYSTEMC_H BOOST PYEXT BOOST_PYTHON'
     obj.uselib_local = 'systemc'
-    obj.include = 'scwrapper'
     obj.start_decls = 'converters'
     obj.custom_declaration_code= """
 #include <systemc.h>

@@ -1,6 +1,8 @@
--- Correct binutils usage: libiberty is a static library on most systems, and it is compiled without fpic; this means that
-object files extracted on 64 bit systems cannot be used to make a shared library ... and compilation fails
--- Code to export SystemC and TLM (and also their start_decls) should be centralized and executed for each pypp task
+-- Clean-up pypp, eliiminating the dead code, the old and useless commented code, etc (e.g. is ext_headers
+dead code?)
+-- Modify pypp so that only a single header file is created in case the task have multiple headers (this header
+file includes all the other headers); this way gccxml is executed only one on that created header file
+and also it should be easier to specify the #define protected private trick
 -- Modify the pypp task, so that if systemc or tlm wrappers change, all the modules including such
 wrapper should also be rebuilt
 -- compute pypp task dependences, so that only tasks with the same includes are serialized

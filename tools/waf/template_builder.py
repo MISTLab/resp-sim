@@ -12,7 +12,9 @@ import Options
 
 def generate_header(task):
     # Set the path for importing additional tools
-    sys.path.append('../tools/waf')
+    curPath = os.path.abspath(os.path.join('..', os.path.dirname(sys.modules['template_builder'].__file__)))
+    if not curPath in sys.path:
+        sys.path.append(curPath)
     from pypp_utils import TemplateBuilder
     from waf_utils import rec_find
 

@@ -44,30 +44,38 @@ import os, sys, imp
 def compute_indent(line):
     indent = 0
     for i in line:
-        if i != '':
+        if i != ' ':
             break
         indent += 1
     return indent
 
-def get_code_blocks(code_string);
+def get_code_blocks(code_string):
     # this function splits the code contained in the string
     # into different blocks (the code under and if statement,
     # a for statement, etc. is a code block)
     codeBlocks = []
-    code_string.replace('\t', '    ')
+    code_string = code_string.replace('\t', '    ')
     code_string_lines = code_string.split('\n')
-    baseIndent = compute_indent(code_string_lines[0])
-    curBlock = code_string_lines[0] + '\n'
-    for line in code_string_lines[1:]:
+    baseIndent = 0
+    curBlock = ''
+    for line in code_string_lines:
+        if line.strip() == '':
+            continue
         newIndent = compute_indent(line)
         if newIndent > baseIndent:
             curBlock += line + '\n'
-        elif newIndent = baseIndent and (line.strip().startswith('else') or line.strip().startswith('except') or line.strip().startswith('elif'))
+        elif newIndent == baseIndent and (line.strip().startswith('else') or line.strip().startswith('except') or line.strip().startswith('elif')):
+            curBlock += line + '\n'
         else:
-            codeBlocks.append(curBlock)
+            if curBlock.strip() != '':
+                codeBlocks.append(curBlock)
             curBlock = line + '\n'
             if newIndent < baseIndent:
                 baseIndent = newIndent
+
+    if curBlock.strip() != '':
+        codeBlocks.append(curBlock)
+
     return codeBlocks
 
 CXX_METHS = ['extract_headers', 'init_cxx', 'apply_type_vars', 'apply_incpaths', 'apply_defines_cxx',
