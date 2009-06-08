@@ -22,12 +22,6 @@ for i in cls:
         mb.global_ns.member_function('get_direct_mem_ptr').exclude()
     except:
         pass
-    funs = i.member_functions(lambda decl : 'transport' in decl.name)
-    for j in funs:
-        try:
-            j.exclude()
-        except:
-            pass
 """
 
     obj = bld.new_task_gen('pypp')
@@ -51,10 +45,4 @@ for i in cls:
         i.member_function('peq_cb').exclude()
     except:
         pass
-    funs = i.member_functions(lambda decl : 'transport' in decl.name)
-    for j in funs:
-        try:
-            j.exclude()
-        except:
-            pass
 """
