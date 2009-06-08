@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+
+import os
+
+def build(bld):
+    obj = bld.new_task_gen('cxx', 'cshlib')
+    obj.source="""
+        instructions.cpp
+        registers.cpp
+        alias.cpp
+        processor.cpp
+        interface.cpp
+        decoder.cpp
+        memory.cpp
+        externalPorts.cpp
+        externalPins.cpp
+    """
+    obj.uselib = 'BOOST BOOST_FILESYSTEM BOOST_THREAD SYSTEMC_H TLM TRAP'
+    obj.uselib_local = 'systemc binutils utils'
+    obj.includes = '.'
+    obj.name = 'leon3_funcLT'
+    obj.target = 'leon3_funcLT'
+
+    obj = bld.new_task_gen('pypp')
+    obj.source="""
+        instructions.hpp
+        registers.hpp
+        alias.hpp
+        processor.hpp
+        interface.hpp
+        decoder.hpp
+        memory.hpp
+        externalPorts.hpp
+        externalPins.hpp
+    """
+    obj.uselib = 'BOOST BOOST_FILESYSTEM BOOST_THREAD SYSTEMC_H TLM TRAP PYEXT BOOST_PYTHON'
+    obj.uselib_local = 'systemc leon3_funcLT binutils'
+    obj.includes = '.'
+    obj.split = 3
+    obj.name = 'leon3_funcLT_wrapper'
+    obj.target = 'leon3_funcLT_wrapper'
+    obj.include = 'scwrapper tlmwrapper'
+    obj.start_decls = 'leon3_funclt_trap trap'
+    obj.custom_code = """
+for i in mb.global_ns.classes():
+    for base in i.recursive_bases:
+        if base.related_class.name == 'Instruction':
+            i.exclude()
+            break
+mb.global_ns.class_('Instruction').exclude()
+mb.global_ns.class_('LEON3_ABIIf').constructors().exclude()
+
+mb.global_ns.class_('Register').exclude()
+mb.global_ns.class_('Register').ignore = False
+mb.global_ns.class_('InnerField').exclude()
+mb.global_ns.class_('InnerField').ignore = False
+mb.global_ns.class_('Processor').member_function('decode').exclude()
+"""

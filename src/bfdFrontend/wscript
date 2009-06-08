@@ -1,0 +1,49 @@
+#!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+
+import os, sys
+
+def build(bld):
+    obj = bld.new_task_gen('cxx', 'cshlib')
+    obj.source = """
+        bfdFrontend.cpp
+    """
+    obj.target = 'BFDWrapper'
+    obj.export_incdirs = '.'
+    obj.uselib_local = 'binutils utils'
+    obj.uselib = 'BOOST BOOST_REGEX BFD_H'
+
+    obj = bld.new_task_gen('pypp')
+    obj.source = """
+        bfdFrontend.hpp
+    """
+    obj.target = 'bfdwrapper'
+    obj.uselib = 'BOOST BOOST_REGEX PYEXT BOOST_PYTHON BFD_H'
+    obj.uselib_local = 'BFDWrapper'
+    obj.start_decls = 'BFDWrapper'
+    obj.custom_declaration_code = '''
+#include <string>
+#include <list>
+#include "python_converters.hpp"
+
+namespace sandbox { namespace {
+
+    void list_string_converter(){
+        resp::tuple_mapping<std::list<std::string>, resp::variable_capacity_policy>();
+    }
+
+    void init_module(){
+        list_string_converter();
+    }
+
+}} // namespace sandbox::<anonymous>
+'''
+    obj.custom_registration_code = '''sandbox::init_module();'''
+    obj.custom_code = """
+mb.global_ns.class_('Section').exclude()
+bfd = mb.global_ns.class_('BFDWrapper')
+bfd.include()
+bfd.member_functions('findFunction').exclude()
+bfd.member_functions('getBFDDescriptor').exclude()
+bfd.member_functions('getInstance').call_policies = call_policies.return_value_policy( call_policies.reference_existing_object )
+"""

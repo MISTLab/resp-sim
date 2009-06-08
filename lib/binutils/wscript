@@ -1,0 +1,12 @@
+#!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+
+import sys, Options, os
+
+def build(bld):
+    """Create a dynamic version of the systemc library"""
+
+    obj = bld.new_task_gen('cc', 'cshlib')
+    obj.source = 'IBERTY BFD empty.c'
+    obj.target = 'binutils'
+    obj.name = 'binutils'

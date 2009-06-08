@@ -1,0 +1,269 @@
+#! /usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+# encoding: utf-8
+
+import Options
+import sys,os
+
+sys.path.append('./tools/waf')
+from waf_utils import rec_find
+
+def build(bld):
+
+    # Build and compile the systemc wrapper extension module
+    obj = bld.new_task_gen('pypp')
+
+    obj.source ='''
+    systemc_export.hpp
+    systemc_export.cpp
+    '''
+    obj.target = 'scwrapper'
+    #obj.generate_include = True
+    obj.start_decls = 'sc_core sc_dt'
+    obj.split = 6
+    obj.custom_declaration_code = '''
+namespace sandbox { namespace {
+
+    struct sc_module_name_to_python_str
+    {
+        static PyObject* convert(sc_module_name const& s)
+    {
+        return boost::python::incref(boost::python::object(std::string(s)).ptr());
+    }
+    };
+
+    struct sc_module_name_from_python_str
+    {
+        sc_module_name_from_python_str()
+    {
+    boost::python::converter::registry::push_back(
+                &convertible,
+                &construct,
+                boost::python::type_id<sc_module_name>());
+    }
+
+    static void* convertible(PyObject* obj_ptr)
+    {
+        if (!PyString_Check(obj_ptr)) return 0;
+        return obj_ptr;
+    }
+
+    static void construct(
+    PyObject* obj_ptr,
+    boost::python::converter::rvalue_from_python_stage1_data* data)
+    {
+        const char* value = PyString_AsString(obj_ptr);
+        if (value == 0) boost::python::throw_error_already_set();
+        void* storage = (
+                        (boost::python::converter::rvalue_from_python_storage<sc_module_name>*)
+                        data)->storage.bytes;
+        new (storage) sc_module_name(value);
+        data->convertible = storage;
+    }
+    };
+
+    void init_module()
+    {
+        using namespace boost::python;
+        sc_module_name_from_python_str();
+    }
+
+}} // namespace sandbox::<anonymous>
+'''
+
+    obj.custom_registration_code = '''sandbox::init_module();'''
+
+    obj.custom_code = """
+# Exclude protected members
+mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) ).exclude()
+
+# Include important stuff
+print "Including classes"
+sc_classes = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_'))
+for i in sc_classes:
+    i.ignore = False
+    i.alias = 'SYSC_' + i.alias
+
+sc_enums = mb.global_ns.enumerations(lambda decl: decl.name.startswith('sc_'))
+for i in sc_enums:
+    i.include()
+    i.alias = 'SYSC_' + i.alias
+
+sc_module_decl = mb.global_ns.class_('sc_module')
+sc_module_decl.include()
+sc_module_decl.member_functions().include()
+sc_module_decl.member_functions().set_virtuality( declarations.VIRTUALITY_TYPES.VIRTUAL )
+sc_module_decl.member_functions('get_child_objects').set_virtuality( declarations.VIRTUALITY_TYPES.NOT_VIRTUAL )
+sc_module_decl.member_functions('sc_get_curr_simcontext').call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
+sc_module_decl.member_operators().exclude()
+sc_module_decl.alias = 'SYSC_' + sc_module_decl.alias
+
+print 'including sim_context'
+sc_simcontext_decls = mb.global_ns.class_('sc_simcontext')
+sc_simcontext_decls.include()
+sc_simcontext_decls.exclude()
+sc_simcontext_decls.member_function('reset').include()
+sc_simcontext_decls.alias = 'SYSC_' + sc_simcontext_decls.alias
+
+print "Including bind"
+bind_decl = mb.global_ns.member_functions( 'bind' )
+bind_decl.include()
+for i in bind_decl:
+    i.alias = 'SYSC_' + i.alias
+mb.global_ns.member_functions( 'is_reset' ).call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
+
+print "Including Signals"
+signal = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_signal<'))
+signal.include()
+for i in signal:
+    i.member_functions().exclude()
+    i.alias = 'SYSC_' + i.alias
+
+print "Including Bit Vectors"
+bvectors = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_bv<'))
+bvectors.include()
+for i in bvectors:
+    i.member_operators().exclude()
+    i.alias = 'SYSC_' + i.alias
+
+print "Including clock"
+clock = mb.global_ns.class_('sc_clock')
+clock.include()
+clock.member_functions(lambda decl: decl.name.startswith('period')).include()
+clock.member_functions(lambda decl: decl.name.startswith('duty_cycle')).include()
+clock.member_functions(lambda decl: decl.name.startswith('before_end_of_elaboration')).exclude()
+clock.member_functions(lambda decl: decl.name.startswith('posedge_action')).exclude()
+clock.member_functions(lambda decl: decl.name.startswith('negedge_action')).exclude()
+clock.member_functions(lambda decl: decl.name.startswith('report_error')).exclude()
+clock.member_functions(lambda decl: decl.name.startswith('init')).exclude()
+clock.member_functions(lambda decl: decl.name.startswith('is_clock')).exclude()
+clock.member_functions(lambda decl: decl.name.startswith('signal')).call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
+clock.alias = 'SYSC_' + clock.alias
+
+print "Including time"
+time = mb.global_ns.class_('sc_time')
+time.include()
+time.alias = 'SYSC_' + time.alias
+time.member_functions(lambda decl: decl.name.startswith('print')).exclude()
+SC_ZERO_TIME_decl = mb.global_ns.variable('SC_ZERO_TIME')
+SC_ZERO_TIME_decl.include()
+SC_ZERO_TIME_decl.alias = 'SYSC_' + SC_ZERO_TIME_decl.alias
+
+print "Including sc_object"
+sc_obj = mb.global_ns.class_('sc_object')
+sc_obj.include()
+sc_obj.alias = 'SYSC_' + sc_obj.alias
+sc_obj.member_functions().exclude()
+sc_obj.member_functions(lambda decl: decl.name.endswith('name')).include()
+sc_obj.member_functions(lambda decl: decl.name.startswith('sc_object')).exclude()
+sc_obj.variables(lambda decl: decl.name.startswith('m_name')).exclude()
+
+print "Including free functions"
+sc_start_decl = mb.global_ns.free_functions('sc_start')
+for i in sc_start_decl:
+    i.alias = 'SYSC_' + i.alias
+    i.include()
+sc_stop_decl = mb.global_ns.free_functions('sc_stop')
+for i in sc_stop_decl:
+    i.include()
+    i.alias = 'SYSC_' + i.alias
+my_sc_is_running_decl = mb.global_ns.free_function('my_sc_is_running')
+my_sc_is_running_decl.include()
+my_sc_is_running_decl.alias = 'SYSC_' + my_sc_is_running_decl.alias
+waitFuns = mb.global_ns.free_functions('wait')
+for i in waitFuns:
+    i.include()
+    i.alias = 'SYSC_' + i.alias
+    i.use_overload_macro = True
+simContFun = mb.global_ns.free_functions('sc_get_curr_simcontext')
+for i in simContFun:
+    i.include()
+    i.alias = 'SYSC_' + i.alias
+    i.call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
+
+mb.global_ns.calldefs( declarations.access_type_matcher_t('protected') ).exclude()
+mb.global_ns.calldefs( declarations.access_type_matcher_t('private') ).exclude()
+
+mb.global_ns.class_('sc_simcontext').member_functions(lambda x: x.name.startswith('clean')).include()
+"""
+    obj.uselib = 'SYSTEMC_H TLM BOOST_PYTHON BOOST PYEXT'
+    obj.uselib_local = 'systemc'
+    obj.includes = '.'
+    obj.templates = [
+        'sc_core::sc_signal<char>'
+        ,'sc_core::sc_signal<unsigned char>'
+        ,'sc_core::sc_signal<int>'
+        ,'sc_core::sc_signal<unsigned int>'
+        ,'sc_core::sc_signal<long>'
+        ,'sc_core::sc_signal<unsigned long>'
+        ,'sc_core::sc_signal<bool>'
+        ,'sc_core::sc_signal<float>'
+        ,'sc_core::sc_signal<double>'
+        ,'sc_dt::sc_bv<8>'
+        ,'sc_dt::sc_bv<16>'
+        ,'sc_dt::sc_bv<32>'
+        ,'sc_dt::sc_bv<64>'
+    ]
+
+    # Build and compile the TLM wrapper extension module
+    obj = bld.new_task_gen('pypp')
+
+    obj.source ='''
+    tlm_export.hpp
+    '''
+
+    obj.target = 'tlmwrapper';
+    #obj.generate_include = True
+    obj.start_decls = 'tlm tlm_utils'
+
+    obj.custom_code = """
+# Include Transport Interfaces
+#cls = mb.global_ns.classes(lambda decl: decl.name.find('transport_if') > 0, allow_empty=True)
+#for i in cls:
+    #i.include()
+    #i.alias = 'TLM_'+i.alias
+
+# Include simple sockets
+print 'Including base sockets sockets'
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_target_socket') or decl.name.startswith('tlm_target_socket') , allow_empty=True)
+for i in cls:
+    i.include()
+    i.member_functions(allow_empty=True).exclude()
+    i.alias = 'TLM_'+i.alias
+
+print 'Including tlm_base_initiator_socket'
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_initiator_socket') or decl.name.startswith('tlm_initiator_socket'), allow_empty=True)
+for i in cls:
+    i.include()
+    i.member_functions(allow_empty=True).exclude()
+    for k in i.member_functions(allow_empty=True):
+        if k.name == 'bind':  k.include()
+
+    i.alias = 'TLM_'+i.alias
+
+print 'Including simple_'
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('simple_'), allow_empty=True)
+for i in cls:
+    i.include()
+    i.alias = 'TLM_'+i.alias
+
+print 'Including tlm_base_protocol_types'
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_protocol_types'), allow_empty=True)
+for i in cls:
+    i.include()
+    i.alias = 'TLM_'+i.alias
+
+print 'Including tlm_quantumkeeper'
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_quantumkeeper'), allow_empty=True)
+for i in cls:
+    i.include()
+    i.alias = 'TLM_'+i.alias
+
+# Exclude protected members
+cls = mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) , allow_empty=True )
+if cls: cls.exclude()
+"""
+    obj.uselib = 'SYSTEMC_H TLM BOOST_PYTHON BOOST PYEXT'
+    obj.uselib_local = 'systemc'
+    obj.includes = '.'
+    obj.include = 'scwrapper'

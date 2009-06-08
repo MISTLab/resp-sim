@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+
+import sys, Options, os
+
+def build(bld):
+    """Create a dynamic version of the systemc library"""
+
+    obj = bld.new_task_gen('cxx', 'cshlib')
+    obj.env['CPPPATH'] = [ x+'/../src/' for x in obj.env['CPPPATH_SYSTEMC_H'] ]
+    obj.source = 'SYSTEMC_STATIC sc_main.cpp sc_simcontext.cpp'
+    obj.target = 'systemc'
+    obj.name = 'systemc'

@@ -1,0 +1,14 @@
+#!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+
+def build(bld):
+    bld.add_subdirs('ecacti')
+
+    obj = bld.new_task_gen('cxx', 'cshlib')
+    obj.target = 'powerframework'
+    obj.name = 'powerframework'
+    obj.source = 'power.cpp cache.cpp processor.cpp memory.cpp'
+    obj.includes = '. ecacti'
+    obj.export_incdirs = '.'
+    obj.uselib_local = 'ecacti'
+    obj.uselib = 'BOOST BOOST_FILESYSTEM MATH'

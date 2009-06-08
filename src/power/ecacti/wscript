@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+
+def build(bld):
+
+    obj = bld.new_task_gen('cc')
+    obj.target = 'ecacti_c'
+    obj.name = 'ecacti_c'
+    obj.source = 'area.c io.c leakage.c time.c'
+
+    obj = bld.new_task_gen('cxx')
+    obj.target = 'ecacti_cpp'
+    obj.name = 'ecacti_cpp'
+    obj.source = 'ecacti_wrapper.cpp'
+
+    obj = bld.new_task_gen('cxx', 'cshlib')
+    obj.target = 'ecacti'
+    obj.name = 'ecacti'
+    obj.add_objects = 'ecacti_cpp ecacti_c'
+
+    obj = bld.new_task_gen('pypp')
+    obj.target = 'ecacti_wrapper'
+    obj.start_decls = 'resp'
+    obj.source = 'ecacti_wrapper.h'
+    obj.uselib_local = 'ecacti'
+    obj.uselib = 'BOOST_PYTHON BOOST PYEXT MATH'
+    obj.custom_code = """
+mb.class_('cache_power_data').include()
+"""

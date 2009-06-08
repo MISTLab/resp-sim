@@ -1,0 +1,8 @@
+#!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+
+# Build
+
+def build(bld):
+    bld.add_subdirs('sc_wrapper controller bfdFrontend loader utils power')
+

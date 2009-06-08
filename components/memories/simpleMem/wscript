@@ -1,0 +1,60 @@
+#!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+
+# Build
+def build(bld):
+    obj = bld.new_task_gen('pypp')
+    obj.source = """
+        MemoryLT.hpp
+    """
+    obj.target = 'MemoryLT32'
+    obj.uselib = 'BOOST PYEXT BOOST_PYTHON TLM SYSTEMC_H'
+    obj.uselib_local = 'systemc utils'
+    obj.include = 'scwrapper tlmwrapper'
+    obj.start_decls = 'MemoryLT'
+    obj.templates = ['MemoryLT<32>']
+    obj.custom_code = """
+cls = mb.global_ns.classes(lambda decl : decl.name.startswith('MemoryLT') )
+for i in cls:
+    i.include()
+    i.alias = 'MemoryLT32'
+    try:
+        mb.global_ns.member_function('get_direct_mem_ptr').exclude()
+    except:
+        pass
+    funs = i.member_functions(lambda decl : 'transport' in decl.name)
+    for j in funs:
+        try:
+            j.exclude()
+        except:
+            pass
+"""
+
+    obj = bld.new_task_gen('pypp')
+    obj.source = """
+        MemoryAT.hpp
+    """
+    obj.target = 'MemoryAT32'
+    obj.uselib = 'BOOST PYEXT BOOST_PYTHON TLM SYSTEMC_H'
+    obj.uselib_local = 'systemc utils'
+    obj.include = 'scwrapper tlmwrapper'
+    obj.start_decls = 'MemoryAT'
+    obj.templates = ['MemoryAT<32>']
+    obj.custom_code = """
+cls = mb.global_ns.classes(lambda decl : decl.name.startswith('MemoryAT') )
+for i in cls:
+    i.include()
+    i.alias = 'MemoryAT32'
+    try:
+        i.member_function('send_response').exclude()
+        i.member_function('send_end_req').exclude()
+        i.member_function('peq_cb').exclude()
+    except:
+        pass
+    funs = i.member_functions(lambda decl : 'transport' in decl.name)
+    for j in funs:
+        try:
+            j.exclude()
+        except:
+            pass
+"""

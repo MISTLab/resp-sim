@@ -1,0 +1,55 @@
+#! /usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+
+import Options
+
+def build(bld):
+    # Generation of the testMaster library
+    obj = bld.new_task_gen('cxx', 'cshlib')
+    obj.source ='''
+        testMaster.cpp
+    '''
+    obj.target = 'testMaster'
+    obj.uselib = 'SYSTEMC_H TLM'
+    obj.uselib_local = 'systemc'
+
+    # Generation of the testMaster wrapper extension
+    obj = bld.new_task_gen('pypp')
+    obj.source ='''
+        testMaster.hpp
+    '''
+    obj.target = 'testMaster_wrapper'
+    obj.uselib = 'SYSTEMC_H TLM BOOST PYEXT BOOST_PYTHON'
+    obj.uselib_local = 'systemc testMaster'
+    obj.include = 'scwrapper tlmwrapper'
+    obj.start_decls = 'testMaster'
+    obj.custom_code = """
+# Exclude protected members
+cls = mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) , allow_empty=True )
+if cls: cls.exclude()
+"""
+
+    # Generation of the testSlave library
+    obj = bld.new_task_gen('cxx', 'cshlib')
+    obj.source ='''
+        testSlave.cpp
+    '''
+    obj.target = 'testSlave'
+    obj.uselib = 'SYSTEMC_H TLM'
+    obj.uselib_local = 'systemc'
+
+    # Generation of the testSlave wrapper extension
+    obj = bld.new_task_gen('pypp')
+    obj.source ='''
+        testSlave.hpp
+    '''
+    obj.target = 'testSlave_wrapper'
+    obj.uselib = 'SYSTEMC_H TLM BOOST PYEXT BOOST_PYTHON'
+    obj.uselib_local = 'systemc testSlave'
+    obj.include = 'scwrapper tlmwrapper'
+    obj.start_decls = 'testSlave'
+    obj.custom_code = """
+# Exclude protected members
+cls = mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) , allow_empty=True )
+if cls: cls.exclude()
+"""

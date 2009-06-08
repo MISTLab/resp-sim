@@ -1,0 +1,7 @@
+#!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+
+def build(bld):
+    bld.add_subdirs('MDP')
+    if bld.env['HAVE_MOMH']:
+        bld.add_subdirs('MOMH')
