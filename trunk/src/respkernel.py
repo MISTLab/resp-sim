@@ -116,13 +116,15 @@ def filterNames(namespaceToFilter):
         if not j[len(TLM_PREFIX):] in dir(tlmwrapper):
             item.__module__ = 'tlmwrapper'
             setattr( tlmwrapper, j[len(TLM_PREFIX):], item )
-    print dir(namespaceToFilter)
     for j in filter(lambda x: x.startswith(SC_PREFIX), dir(namespaceToFilter)):
         item = getattr(namespaceToFilter, j)
-        item.__name__ = j[len(SC_PREFIX):]
-        if not j[len(TLM_PREFIX):] in dir(scwrapper):
-            item.__module__ = 'scwrapper'
-            setattr( scwrapper, j[len(SC_PREFIX):], item )
+        try:
+            item.__name__ = j[len(SC_PREFIX):]
+            if not j[len(SC_PREFIX):] in dir(scwrapper):
+                item.__module__ = 'scwrapper'
+                setattr( scwrapper, j[len(SC_PREFIX):], item )
+        except:
+            print j
 
 
 class RespKernel:
