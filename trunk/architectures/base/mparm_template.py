@@ -5,7 +5,7 @@ PROCESSOR_NUMBER  = 4             #
 
 # Caches
 I_CACHE_SIZE      = 32            # KBytes
-I_SUBST_POLICY    = "LRR"      # Values are LRU, LRR, RANDOM
+I_SUBST_POLICY    = "LRU"      # Values are LRU, LRR, RANDOM
 I_CACHE_ENABLE    = True          # Cache enable, True or False
 
 D_CACHE_SIZE      = 32            # KBytes
@@ -14,7 +14,7 @@ D_SUBST_POLICY    = "LRU"         # Values are LRU, LRR, RANDOM
 D_CACHE_ENABLE    = False         # Cache enable, True or False
 
 # Memory/bus
-MEMORY_SIZE       = 40            # MBytes
+MEMORY_SIZE       = 256           # MBytes
 BUS_LATENCY       = 10            # ns
 MEM_LATENCY       = 10            # ns
 
@@ -23,11 +23,13 @@ try:
     SOFTWARE           =  benchmark
     ARGS               =  None
 except:
-    SOFTWARE           = 'c_fft6' # A full path or a filename to be searched
-    ARGS               = ("pbzip2", "-p"+str(PROCESSOR_NUMBER), "-k", "-f", "-b1", "-v" , "/home/beltrame/Projects/resp/software/benchmarks/data/test.out")
+    SOFTWARE           = 'pigz' # A full path or a filename to be searched
+    ARGS               = ("pigz", "-p" , str(PROCESSOR_NUMBER),"-f" ,"-b", "64",  "-k",  "-v" , "/home/beltrame/Projects/resp/software/benchmarks/data/test.out3")
+    #SOFTWARE           = 'pbzip2' # A full path or a filename to be searched
+    #ARGS               = ("pbzip2", "-p"+str(PROCESSOR_NUMBER), "-k", "-f", "-b10", "-v" , "/home/beltrame/Projects/resp/software/benchmarks/data/test.out2")
 
 OS_EMULATION       = True     # True or False
-THREAD_STACK_SIZE  = 1024*128
+THREAD_STACK_SIZE  = 1024*512
 
 
 ################################################
@@ -38,6 +40,8 @@ THREAD_STACK_SIZE  = 1024*128
 software = SOFTWARE
 if not os.path.isfile(software):
     software = findInFolder(SOFTWARE, '_build_/arm')
+    if not software:
+        raise Exception('Unable to find program ' + SOFTWARE)
     print "loading "+software
 
 # Check if the software is multithreaded and expects OS emulation
@@ -161,7 +165,7 @@ if not OS_EMULATION:
 
 # LEDs (optional)
 #led: it simply writes a message to screen when the led goes on. Mainly used for debugging purposes
-led = led32.led32("led", 8)
+#led = led32.led32("led", 8)
 
 ################################################
 ##### INTERCONNECTIONS #########################
@@ -184,7 +188,7 @@ connectPortsForce(bus, bus.initiator_port, mem, mem.memPort)
 #connectPortsForce(bus, bus.initiator_port, timer1, timer1.timerPort)
 #connectPortsForce(bus, bus.initiator_port, timer2, timer2.timerPort)
 #connectPortsForce(bus, bus.initiator_port, intContr, intContr.intrPort)
-connectPortsForce(bus, bus.initiator_port, led, led.ledPort)
+#connectPortsForce(bus, bus.initiator_port, led, led.ledPort)
 
 if not OS_EMULATION:
     connectPortsForce(bus, bus.initiator_port, uart, uart.uartPort)

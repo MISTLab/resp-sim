@@ -5,7 +5,7 @@ file includes all the other headers); this way gccxml is executed only one on th
 and also it should be easier to specify the #define protected private trick
 -- Modify the pypp task, so that if systemc or tlm wrappers change, all the modules including such
 wrapper should also be rebuilt
--- compute pypp task dependences, so that only tasks with the same includes are serialized
+-- compute pypp task dependences, so that only tasks with the same includes are serialized (line 302 of pypp.py)
 -- Modify Py++ in order to expose also private members (with the #define private protected trick)
 -- Check restaart in 64 bits patch: it explodes at the restart
 -- Check and change the memory analyzer with the one of TRAP

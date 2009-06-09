@@ -591,7 +591,7 @@ def dopypp(task):
         new_module = os.path.dirname(inc.bldpath(task.env))
         if new_module not in module_list:
             if Logs.verbose:
-                print "Adding "+os.path.dirname(inc.bldpath(task.env))+" to module dependencies"
+                print "Adding " + new_module + " to module dependencies"
             mb.register_module_dependency(new_module)
             module_list.append(new_module)
 
