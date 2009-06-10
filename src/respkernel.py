@@ -112,19 +112,28 @@ def filterNames(namespaceToFilter):
     global scwrapper, tlmwrapper
     for j in filter(lambda x: x.startswith(TLM_PREFIX), dir(namespaceToFilter)):
         item = getattr(namespaceToFilter, j)
-        item.__name__ = j[len(TLM_PREFIX):]
+        try:
+            item.__name__ = j[len(TLM_PREFIX):]
+        except:
+            print 'Error in changing the name to --> ' + j
         if not j[len(TLM_PREFIX):] in dir(tlmwrapper):
-            item.__module__ = 'tlmwrapper'
+            try:
+                    item.__module__ = 'tlmwrapper'
+            except:
+                print 'Error in changing the module to --> ' + j
             setattr( tlmwrapper, j[len(TLM_PREFIX):], item )
     for j in filter(lambda x: x.startswith(SC_PREFIX), dir(namespaceToFilter)):
         item = getattr(namespaceToFilter, j)
         try:
             item.__name__ = j[len(SC_PREFIX):]
-            if not j[len(SC_PREFIX):] in dir(scwrapper):
-                item.__module__ = 'scwrapper'
-                setattr( scwrapper, j[len(SC_PREFIX):], item )
         except:
-            print j
+            print 'Error in changing the name to --> ' + j
+        if not j[len(SC_PREFIX):] in dir(scwrapper):
+            try:
+                    item.__module__ = 'scwrapper'
+            except:
+                print 'Error in changing the module to --> ' + j
+            setattr( scwrapper, j[len(SC_PREFIX):], item )
 
 
 class RespKernel:
@@ -220,11 +229,23 @@ class RespKernel:
 
         # import components storing them into a component list
         self.components = []
-        try:
-            self.load_components(os.path.abspath(os.path.join(blddir, 'default', 'components')),  self.components)
-        except Exception,  e:
-            print >> sys.stderr, 'Error in loading the components in the simulator --> ',  e
+        componentListFile = os.path.abspath(os.path.join(blddir, '.wrapper_order.py'))
+        if os.path.exists(componentListFile):
+            try:
+                self.load_components(componentListFile,  self.components)
+            except Exception,  e:
+                print >> sys.stderr, 'Error in loading the components in the simulator --> ',  e
+                sys.exit(0)
+        else:
+            print >> sys.stderr, 'File ' + componentListFile + ' does not exists'
             sys.exit(0)
+
+        # THIS IS THE OLD CODE FOR LOADING THE COMPONENTS
+        #try:
+            #self.load_components(os.path.abspath(os.path.join(blddir, 'default', 'components')),  self.components)
+        #except Exception,  e:
+            #print >> sys.stderr, 'Error in loading the components in the simulator --> ',  e
+            #sys.exit(0)
 
         if not self.verbose:
             warnings.resetwarnings()
@@ -302,32 +323,58 @@ class RespKernel:
     def addSimulationVar(self, name, value):
         globals()[name] = value
 
-    def load_components(self, folder,  componentList):
-        """Loads the wrappers of the components present in curFolder"""
-        curPathLoaded = False
-        dirContent = os.listdir(folder)
-        for element in dirContent:
-            if os.path.isfile(os.path.join(folder, element)):
-                if element.endswith('.so') and not element.startswith('lib'):
-                    if not curPathLoaded:
-                        curPathLoaded = True
-                        sys.path.append(os.path.abspath(folder))
-                    toLoadName = os.path.splitext(element)[0]
+    # Old code for loading components, now we do not examine folder anymore, we have
+    # the list of the components to be loaded and their order created during compilation
+    #def load_components(self, folder,  componentList):
+        #"""Loads the wrappers of the components present in curFolder"""
+        #curPathLoaded = False
+        #dirContent = os.listdir(folder)
+        #for element in dirContent:
+            #if os.path.isfile(os.path.join(folder, element)):
+                #if element.endswith('.so') and not element.startswith('lib'):
+                    #if not curPathLoaded:
+                        #curPathLoaded = True
+                        #sys.path.append(os.path.abspath(folder))
+                    #toLoadName = os.path.splitext(element)[0]
 
+                    #if self.verbose:
+                        #print "Loading " + toLoadName
+                    #temp = __import__(toLoadName)
+                    #try:
+                        #filterNames(temp)
+                    #except:
+                        #print "Error during loading of component " + toLoadName
+                        #import traceback
+                        #traceback.print_exc()
+
+                    #componentList.append(temp)
+                    #globals()[toLoadName] = temp
+        #[self.load_components(os.path.join(folder, element),  componentList) for element in dirContent if os.path.isdir(os.path.join(folder, element))]
+
+    def load_components(self, componentListFile,  components):
+        componentList = open(componentListFile).readlines()
+        for component in componentList:
+            if not os.path.exists(component):
+                if self.verbose:
+                    print 'Component ' + component + ' appears in the compilation list, but it does not exists'
+            else:
+                componentPath, componentFile = os.path.split(component)
+                componentName = os.path.splitext(componentFile)[0]
+                if not componentName in globals():
+                    if not componentPath in sys.path:
+                        sys.path.append(componentPath)
                     if self.verbose:
-                        print "Loading " + toLoadName
-                    temp = __import__(toLoadName)
+                        print componentName
+                    temp = __import__(componentName)
                     try:
                         filterNames(temp)
                     except:
-                        print "Error during loading of component " + toLoadName
+                        print "Error in renaming during loading of component " + componentName
                         import traceback
                         traceback.print_exc()
 
                     componentList.append(temp)
-                    globals()[toLoadName] = temp
-        [self.load_components(os.path.join(folder, element),  componentList) for element in dirContent if os.path.isdir(os.path.join(folder, element))]
-
+                    globals()[componentName] = temp
 
     def load_architecture(self, fileName):
         """Loads the architecture specified in fileName; it can either be an XML file

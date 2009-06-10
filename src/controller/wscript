@@ -24,7 +24,6 @@ def build(bld):
     obj.uselib = 'SYSTEMC_H BOOST PYEXT BOOST_PYTHON BOOST_THREAD'
     obj.uselib_local = 'systemc sc_controller'
     obj.include = 'scwrapper'
-    obj.generate_include = True
     obj.start_decls = 'resp'
     obj.custom_code = """
 # Exclude protected members
