@@ -238,7 +238,7 @@ def configure(conf):
             conf.check_message_custom(conf.env['staticlib_PATTERN'] % iberty_lib_name + ' relocabilty', '', 'Found position dependent code', color='YELLOW')
             conf.fatal('Library ' + conf.env['staticlib_PATTERN'] % iberty_lib_name + ' contains position dependent code, so a shared library cannot be created out of it. Please recompile binutils generating a shared version (using option --enable-shared --disable-static --with-pic) or, in general, using the -fPIC compilation option')
     else:
-        conf.env.append_unique('RPATH', conf.env['LIBPATH_IBERTY'])        
+        conf.env.append_unique('RPATH', conf.env['LIBPATH_IBERTY'])
     ###########################################################
     # Check for BFD library and header
     ###########################################################
@@ -597,6 +597,12 @@ def distclean():
                 os.remove(i)
             except:
                 pass
+    except:
+        pass
+
+    #removing iberty copied library
+    try:
+        os.remove(os.path.abspath(os.path.join(blddir, '.wrapper_order.py')))
     except:
         pass
 
