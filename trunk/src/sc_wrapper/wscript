@@ -256,10 +256,10 @@ cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_quantumkeeper'
 for i in cls:
     i.include()
 
-print 'Including tlm_fw_transport_if'
-cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_fw_transport_if'), allow_empty=True)
-for i in cls:
-    i.include()
+#print 'Including tlm_fw_transport_if'
+#cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_fw_transport_if'), allow_empty=True)
+#for i in cls:
+    #i.include()
 
 # Exclude protected members
 cls = mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) , allow_empty=True )
