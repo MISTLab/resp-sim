@@ -88,6 +88,9 @@ from power import *
 
 # END General Init code ########################################################
 
+def getCppName(pypp_name):
+    return pypp_name.replace('_comma_', ',').replace('_less_', '<').replace('_greater_', '>').replace('_scope_', '::').replace(',_', ', ')
+
 def print_stats():
     """Prints statistics about the simulation; in case the variable statsPrinter is defined
     in the global namespace (a function must be assigned to it) then that function
