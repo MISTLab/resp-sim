@@ -39,8 +39,8 @@
 __version__ = '0.5'
 __revision__ = '$Rev$'
 
-TLM_PREFIX = "TLM_"
-SC_PREFIX = "SYSC_"
+TLM_PREFIX = "TLMW_"
+SC_PREFIX = "SYSCW_"
 
 import sys, os, atexit
 
@@ -119,8 +119,11 @@ def filterNames(namespaceToFilter):
         item = getattr(namespaceToFilter, j)
 
         if not isinstance( item , BuiltinFunctionType ):
-            item.__name__ = j[len(TLM_PREFIX):]
-            item.__module__ = 'tlmwrapper'
+            try:
+                item.__name__ = j[len(TLM_PREFIX):]
+                item.__module__ = 'tlmwrapper'
+            except:
+                print 'Error converting name of ' + j
 
         if not j[len(TLM_PREFIX):] in dir(tlmwrapper):
             setattr( tlmwrapper, j[len(TLM_PREFIX):], item )
@@ -131,8 +134,11 @@ def filterNames(namespaceToFilter):
         item = getattr(namespaceToFilter, j)
 
         if not isinstance( item , BuiltinFunctionType ):
-            item.__name__ = j[len(SC_PREFIX):]
-            item.__module__ = 'scwrapper'
+            try:
+                item.__name__ = j[len(SC_PREFIX):]
+                item.__module__ = 'scwrapper'
+            except:
+                print 'Error converting name of ' + j
 
         if not j[len(SC_PREFIX):] in dir(scwrapper):
             setattr( scwrapper, j[len(SC_PREFIX):], item )

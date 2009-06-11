@@ -173,25 +173,25 @@ sc_names = mb.namespaces(lambda x: x.name in ['sc_core', 'sc_dt'])
 for cur_namespace in sc_names:
     for i in cur_namespace.free_functions(allow_empty=True):
         if not i.alias.startswith('SYSC_'):
-            i.alias = 'SYSC_' + i.alias
+            i.alias = 'SYSCW_' + i.alias
     for i in cur_namespace.casting_operators(allow_empty=True):
         if not i.alias.startswith('SYSC_'):
-            i.alias = 'SYSC_' + i.alias
+            i.alias = 'SYSCW_' + i.alias
     for i in cur_namespace.classes(allow_empty=True):
         if not i.alias.startswith('SYSC_'):
-            i.alias = 'SYSC_' + i.alias
+            i.alias = 'SYSCW_' + i.alias
     for i in cur_namespace.enumerations(allow_empty=True):
         if not i.alias.startswith('SYSC_'):
-            i.alias = 'SYSC_' + i.alias
+            i.alias = 'SYSCW_' + i.alias
     for i in cur_namespace.variables(allow_empty=True):
         if not i.alias.startswith('SYSC_'):
-            i.alias = 'SYSC_' + i.alias
+            i.alias = 'SYSCW_' + i.alias
     for i in cur_namespace.free_operators(allow_empty=True):
         if not i.alias.startswith('SYSC_'):
-            i.alias = 'SYSC_' + i.alias
+            i.alias = 'SYSCW_' + i.alias
     for i in cur_namespace.typedefs(allow_empty=True):
         if not i.alias.startswith('SYSC_'):
-            i.alias = 'SYSC_' + i.alias
+            i.alias = 'SYSCW_' + i.alias
 """
     obj.uselib = 'SYSTEMC_H TLM BOOST_PYTHON BOOST PYEXT'
     obj.uselib_local = 'systemc'
@@ -211,4 +211,3 @@ for cur_namespace in sc_names:
         ,'sc_dt::sc_bv<32>'
         ,'sc_dt::sc_bv<64>'
     ]
-

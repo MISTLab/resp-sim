@@ -21,6 +21,29 @@ def build(bld):
     obj.start_decls = 'tlm tlm_utils'
 
     obj.custom_code = """
+tlm_enums = mb.global_ns.enumerations(lambda decl: decl.name.startswith('tlm_'))
+for i in tlm_enums:
+    i.include()
+
+tlm_dmi = mb.global_ns.class_('tlm_dmi')
+tlm_dmi.include()
+tlm_dmi.member_functions(allow_empty=True).exclude()
+tlm_extension_base = mb.global_ns.class_('tlm_extension_base')
+tlm_extension_base.include()
+tlm_extension_base.member_functions(allow_empty=True).exclude()
+tlm_phase = mb.global_ns.class_('tlm_phase')
+tlm_phase.include()
+tlm_phase.member_functions(allow_empty=True).exclude()
+tlm_endian_context = mb.global_ns.class_('tlm_endian_context')
+tlm_endian_context.include()
+tlm_endian_context.member_functions(allow_empty=True).exclude()
+tlm_mm_interface = mb.global_ns.class_('tlm_mm_interface')
+tlm_mm_interface.include()
+tlm_mm_interface.member_functions(allow_empty=True).exclude()
+tlm_extension_base = mb.global_ns.class_('tlm_extension_base')
+tlm_extension_base.include()
+tlm_extension_base.member_functions(allow_empty=True).exclude()
+
 # Include simple sockets
 print 'Including base sockets sockets'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_target_socket') or decl.name.startswith('tlm_target_socket') , allow_empty=True)
@@ -34,7 +57,8 @@ for i in cls:
     i.include()
     i.member_functions(allow_empty=True).exclude()
     for k in i.member_functions(allow_empty=True):
-        if k.name == 'bind':  k.include()
+        if k.name == 'bind':
+            k.include()
 
 print 'Including simple_'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('simple_'), allow_empty=True)
@@ -51,10 +75,21 @@ cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_quantumkeeper'
 for i in cls:
     i.include()
 
-#print 'Including tlm_fw_transport_if'
-#cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_fw_transport_if'), allow_empty=True)
-#for i in cls:
-    #i.include()
+print 'Including tlm_fw_transport_if'
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_fw_transport_if'), allow_empty=True)
+for i in cls:
+    i.include()
+
+print 'Including tlm_bw_transport_if'
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_bw_transport_if'), allow_empty=True)
+for i in cls:
+    i.include()
+
+print 'Including tlm_generic_payload'
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_generic_payload'), allow_empty=True)
+for i in cls:
+    i.include()
+    i.member_functions(allow_empty=True).exclude()
 
 # Exclude protected members
 cls = mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) , allow_empty=True )
@@ -64,28 +99,33 @@ sc_names = mb.namespaces(lambda x: x.name in ['tlm', 'tlm_utils'])
 for cur_namespace in sc_names:
     for i in cur_namespace.free_functions(allow_empty=True):
         if not i.alias.startswith('TLM_'):
-            i.alias = 'TLM_'+i.alias
+            i.alias = 'TLMW_'+i.alias
     for i in cur_namespace.casting_operators(allow_empty=True):
         if not i.alias.startswith('TLM_'):
-            i.alias = 'TLM_'+i.alias
+            i.alias = 'TLMW_'+i.alias
     for i in cur_namespace.classes(allow_empty=True):
         if not i.alias.startswith('TLM_'):
-            i.alias = 'TLM_'+i.alias
+            i.alias = 'TLMW_'+i.alias
     for i in cur_namespace.enumerations(allow_empty=True):
         if not i.alias.startswith('TLM_'):
-            i.alias = 'TLM_'+i.alias
+            i.alias = 'TLMW_'+i.alias
     for i in cur_namespace.variables(allow_empty=True):
         if not i.alias.startswith('TLM_'):
-            i.alias = 'TLM_'+i.alias
+            i.alias = 'TLMW_'+i.alias
     for i in cur_namespace.free_operators(allow_empty=True):
         if not i.alias.startswith('TLM_'):
-            i.alias = 'TLM_'+i.alias
+            i.alias = 'TLMW_'+i.alias
     for i in cur_namespace.typedefs(allow_empty=True):
         if not i.alias.startswith('TLM_'):
-            i.alias = 'TLM_'+i.alias
+            i.alias = 'TLMW_'+i.alias
 """
     obj.uselib = 'SYSTEMC_H TLM BOOST_PYTHON BOOST PYEXT'
     obj.uselib_local = 'systemc'
     obj.includes = '.'
     obj.include = 'scwrapper'
+    obj.templates = [
+        'tlm::tlm_fw_transport_if<tlm::tlm_base_protocol_types>'
+        ,'tlm::tlm_bw_transport_if<tlm::tlm_base_protocol_types>'
+        ,'tlm::tlm_base_target_socket_b<8, tlm::tlm_fw_transport_if<tlm::tlm_base_protocol_types>, tlm::tlm_bw_transport_if<tlm::tlm_base_protocol_types> >'
+    ]
 
