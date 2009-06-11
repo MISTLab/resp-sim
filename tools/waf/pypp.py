@@ -606,7 +606,7 @@ def dopypp(task):
     if createdLibraries is None:
         if os.path.exists(os.path.join(task.bldpath, '.wrapper_order.py')):
             wrapperOrderFile = open(os.path.join(task.bldpath, '.wrapper_order.py'))
-            createdLibraries = wrapperOrderFile.readlines()
+            createdLibraries = [a.strip() for a in wrapperOrderFile.readlines()]
             wrapperOrderFile.close()
         else:
             createdLibraries = []
