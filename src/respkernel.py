@@ -111,33 +111,30 @@ def print_stats():
 
 def filterNames(namespaceToFilter):
     global scwrapper, tlmwrapper
+    from types import BuiltinFunctionType
     for j in filter(lambda x: x.startswith(TLM_PREFIX), dir(namespaceToFilter)):
         item = getattr(namespaceToFilter, j)
-        try:
+
+        if not isinstance( item , BuiltinFunctionType ):
             item.__name__ = j[len(TLM_PREFIX):]
-        except:
-            print 'Error in changing the name to --> ' + j
+            item.__module__ = 'tlmwrapper'
+
         if not j[len(TLM_PREFIX):] in dir(tlmwrapper):
-            try:
-                    item.__module__ = 'tlmwrapper'
-            except:
-                print 'Error in changing the module to --> ' + j
             setattr( tlmwrapper, j[len(TLM_PREFIX):], item )
+
         delattr(namespaceToFilter, j)
 
     for j in filter(lambda x: x.startswith(SC_PREFIX), dir(namespaceToFilter)):
-            item = getattr(namespaceToFilter, j)
-            try:
-                item.__name__ = j[len(SC_PREFIX):]
-            except:
-                print 'Error in changing the name to --> ' + j
-            if not j[len(SC_PREFIX):] in dir(scwrapper):
-                try:
-                        item.__module__ = 'scwrapper'
-                except:
-                    print 'Error in changing the module to --> ' + j
-                setattr( scwrapper, j[len(SC_PREFIX):], item )
-            delattr( namespaceToFilter, j)
+        item = getattr(namespaceToFilter, j)
+
+        if not isinstance( item , BuiltinFunctionType ):
+            item.__name__ = j[len(SC_PREFIX):]
+            item.__module__ = 'scwrapper'
+
+        if not j[len(SC_PREFIX):] in dir(scwrapper):
+            setattr( scwrapper, j[len(SC_PREFIX):], item )
+
+        delattr( namespaceToFilter, j)
 
     # Now I have again to go over the components and eliminate all those elements which are
     # contained also in scwrapper and in TLM wrapper

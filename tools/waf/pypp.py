@@ -625,20 +625,6 @@ def dopypp(task):
     except:
         pass
 
-    # Register module dependency
-    # ************************+ TODO ****************** Could the reason why some systemc declarations
-    # *********************** are repeated here ????????????????????????????????????
-    module_list = []
-    for inc in task.include:
-    #if len(task.include) > 0:
-        #inc = task.include[-1]
-        new_module = os.path.dirname(inc.bldpath(task.env))
-        if new_module not in module_list:
-            #if Logs.verbose:
-            print "Adding "+os.path.dirname(inc.bldpath(task.env))+" to module dependencies"
-            mb.register_module_dependency(new_module)
-            module_list.append(new_module)
-
     # Disable virtuality unless specifically asked to do otherwise: this should avoid overrides
     # and increase simulation speed
     if( not task.virtuality ):
@@ -691,6 +677,21 @@ def dopypp(task):
     # Add declaration and registration code
     mb.add_registration_code( task.custom_registration_code, False )
     mb.add_declaration_code( task.custom_declaration_code )
+
+    # Register module dependency
+    # ************************+ TODO ****************** Could the reason why some systemc declarations
+    # *********************** are repeated here ????????????????????????????????????
+    module_list = []
+    for inc in task.include:
+    #if len(task.include) > 0:
+        #inc = task.include[-1]
+        new_module = os.path.dirname(inc.bldpath(task.env))
+        if new_module not in module_list:
+            #if Logs.verbose:
+            print "Adding "+os.path.dirname(inc.bldpath(task.env))+" to module dependencies"
+            mb.register_module_dependency(new_module)
+            module_list.append(new_module)
+
 
     # Create code and assign moduyle name
     mb.build_code_creator(os.path.splitext(task.target)[0], doc_extractor=docExtractor)
