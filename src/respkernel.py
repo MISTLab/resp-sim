@@ -234,7 +234,7 @@ class RespKernel:
         componentListFile = os.path.abspath(os.path.join(blddir, '.wrapper_order.py'))
         if os.path.exists(componentListFile):
             try:
-                self.load_components(componentListFile,  self.components)
+                self.load_components(componentListFile)
             except Exception,  e:
                 print >> sys.stderr, 'Error in loading the components in the simulator --> ',  e
                 sys.exit(0)
@@ -353,9 +353,10 @@ class RespKernel:
                     #globals()[toLoadName] = temp
         #[self.load_components(os.path.join(folder, element),  componentList) for element in dirContent if os.path.isdir(os.path.join(folder, element))]
 
-    def load_components(self, componentListFile,  components):
-        componentList = open(componentListFile).readlines()
-        for component in componentList:
+    def load_components(self, componentListFile):
+        componentPathList = [line.strip() for line in open(componentListFile).readlines()]
+        for component in componentPathList:
+            print component
             if not os.path.exists(component):
                 if self.verbose:
                     print 'Component ' + component + ' appears in the compilation list, but it does not exists'
@@ -366,7 +367,7 @@ class RespKernel:
                     if not componentPath in sys.path:
                         sys.path.append(componentPath)
                     if self.verbose:
-                        print componentName
+                        print 'Loading ' + componentName
                     temp = __import__(componentName)
                     try:
                         filterNames(temp)
@@ -375,7 +376,7 @@ class RespKernel:
                         import traceback
                         traceback.print_exc()
 
-                    componentList.append(temp)
+                    self.components.append(temp)
                     globals()[componentName] = temp
 
     def load_architecture(self, fileName):
