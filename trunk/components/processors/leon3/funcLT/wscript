@@ -41,7 +41,7 @@ def build(bld):
     obj.name = 'leon3_funcLT_wrapper'
     obj.target = 'leon3_funcLT_wrapper'
     obj.include = 'scwrapper tlmwrapper'
-    obj.start_decls = 'leon3_funclt_trap trap'
+    obj.start_decls = 'leon3_funclt_trap trap sc_dt'
     obj.custom_code = """
 for i in mb.global_ns.classes():
     for base in i.recursive_bases:
