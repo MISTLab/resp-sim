@@ -123,7 +123,7 @@ def filterNames(namespaceToFilter):
             except:
                 print 'Error in changing the module to --> ' + j
             setattr( tlmwrapper, j[len(TLM_PREFIX):], item )
-        delattr( namespaceToFilter, j)
+        delattr(namespaceToFilter, j)
 
     for j in filter(lambda x: x.startswith(SC_PREFIX), dir(namespaceToFilter)):
             item = getattr(namespaceToFilter, j)
@@ -138,6 +138,14 @@ def filterNames(namespaceToFilter):
                     print 'Error in changing the module to --> ' + j
                 setattr( scwrapper, j[len(SC_PREFIX):], item )
             delattr( namespaceToFilter, j)
+
+    # Now I have again to go over the components and eliminate all those elements which are
+    # contained also in scwrapper and in TLM wrapper
+    if not namespaceToFilter.__name__ in ['tlmwrapper', 'scwrapper']:
+        tlmSysC_names = dir(scwrapper) + dir(tlmwrapper)
+        for j in dir(namespaceToFilter):
+            if j in tlmSysC_names and not j.startswith('_'):
+                delattr( namespaceToFilter, j)
 
 class RespKernel:
     """This class represents the core simulator class. This class provides a set of objects and functions to
