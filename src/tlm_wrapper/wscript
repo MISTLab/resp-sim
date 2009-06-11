@@ -65,9 +65,6 @@ for cur_namespace in sc_names:
     for i in cur_namespace.free_functions(allow_empty=True):
         if not i.alias.startswith('TLM_'):
             i.alias = 'TLM_'+i.alias
-    for i in cur_namespace.calldefs(allow_empty=True):
-        if not i.alias.startswith('TLM_'):
-            i.alias = 'TLM_'+i.alias
     for i in cur_namespace.casting_operators(allow_empty=True):
         if not i.alias.startswith('TLM_'):
             i.alias = 'TLM_'+i.alias

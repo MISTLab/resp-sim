@@ -174,9 +174,6 @@ for cur_namespace in sc_names:
     for i in cur_namespace.free_functions(allow_empty=True):
         if not i.alias.startswith('SYSC_'):
             i.alias = 'SYSC_' + i.alias
-    for i in cur_namespace.calldefs(allow_empty=True):
-        if not i.alias.startswith('SYSC_'):
-            i.alias = 'SYSC_' + i.alias
     for i in cur_namespace.casting_operators(allow_empty=True):
         if not i.alias.startswith('SYSC_'):
             i.alias = 'SYSC_' + i.alias
