@@ -91,6 +91,12 @@ for i in cls:
     i.include()
     i.member_functions(allow_empty=True).exclude()
 
+print 'Including multi_passthrough'
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('multi_passthrough'), allow_empty=True)
+for i in cls:
+    i.include()
+    i.member_functions(allow_empty=True).exclude()
+
 # Exclude protected members
 cls = mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) , allow_empty=True )
 if cls: cls.exclude()
@@ -127,5 +133,6 @@ for cur_namespace in sc_names:
         'tlm::tlm_fw_transport_if<tlm::tlm_base_protocol_types>'
         ,'tlm::tlm_bw_transport_if<tlm::tlm_base_protocol_types>'
         ,'tlm::tlm_base_target_socket_b<8, tlm::tlm_fw_transport_if<tlm::tlm_base_protocol_types>, tlm::tlm_bw_transport_if<tlm::tlm_base_protocol_types> >'
+        ,'tlm::tlm_base_target_socket_b<32, tlm::tlm_fw_transport_if<tlm::tlm_base_protocol_types>, tlm::tlm_bw_transport_if<tlm::tlm_base_protocol_types> >'
     ]
 
