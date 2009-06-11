@@ -78,6 +78,7 @@ sys.path.append(os.path.abspath(os.path.join(srcdir, 'src', 'hci')))
 sys.path.append(os.path.abspath(os.path.join(srcdir, 'src', 'power')))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'controller')))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'sc_wrapper')))
+sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'tlm_wrapper')))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src')))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'utils')))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'bfdFrontend')))
@@ -122,18 +123,19 @@ def filterNames(namespaceToFilter):
             except:
                 print 'Error in changing the module to --> ' + j
             setattr( tlmwrapper, j[len(TLM_PREFIX):], item )
+
     for j in filter(lambda x: x.startswith(SC_PREFIX), dir(namespaceToFilter)):
-        item = getattr(namespaceToFilter, j)
-        try:
-            item.__name__ = j[len(SC_PREFIX):]
-        except:
-            print 'Error in changing the name to --> ' + j
-        if not j[len(SC_PREFIX):] in dir(scwrapper):
+            item = getattr(namespaceToFilter, j)
             try:
-                    item.__module__ = 'scwrapper'
+                item.__name__ = j[len(SC_PREFIX):]
             except:
-                print 'Error in changing the module to --> ' + j
-            setattr( scwrapper, j[len(SC_PREFIX):], item )
+                print 'Error in changing the name to --> ' + j
+            if not j[len(SC_PREFIX):] in dir(scwrapper):
+                try:
+                        item.__module__ = 'scwrapper'
+                except:
+                    print 'Error in changing the module to --> ' + j
+                setattr( scwrapper, j[len(SC_PREFIX):], item )
 
 
 class RespKernel:
