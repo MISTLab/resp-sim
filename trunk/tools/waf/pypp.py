@@ -318,7 +318,7 @@ def process_headers(self):
         dependencies = filter(lambda tsk: isinstance(tsk, Task.TaskBase.classes['pypp']) and (pypptask != tsk) , all_tasks)
         if dependencies:
             pypptask.set_run_after(dependencies[-1])
-            print dependencies[-1]
+            #print dependencies[-1]
         for x in dependencies:
             incl.append( x.outputs[0] )
 
@@ -687,8 +687,8 @@ def dopypp(task):
         #inc = task.include[-1]
         new_module = os.path.dirname(inc.bldpath(task.env))
         if new_module not in module_list:
-            #if Logs.verbose:
-            print "Adding "+os.path.dirname(inc.bldpath(task.env))+" to module dependencies"
+            if Logs.verbose:
+                print "Adding "+os.path.dirname(inc.bldpath(task.env))+" to module dependencies"
             mb.register_module_dependency(new_module)
             module_list.append(new_module)
 

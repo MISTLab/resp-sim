@@ -81,16 +81,18 @@ std::map<std::string, BFDWrapper *> BFDWrapper::bfdInstances;
 
 BFDWrapper & BFDWrapper::getInstance(std::string fileName){
     if(BFDWrapper::bfdInstances.find(fileName) == BFDWrapper::bfdInstances.end()){
-        if(fileName != "")
+        if(fileName != ""){
             BFDWrapper::bfdInstances[fileName] = new BFDWrapper(fileName);
-        else
+        }
+        else{
             THROW_EXCEPTION("An instance of BFDFrontend does not exists yet, so the file name of the binary image must be specified");
+        }
     }
 
     return *(BFDWrapper::bfdInstances.find(fileName)->second);
 }
 
-BFDWrapper::BFDWrapper(std::string binaryName){
+BFDWrapper::BFDWrapper(std::string binaryName) : execImage(NULL){
     char ** matching = NULL;
     this->sy = NULL;
 
@@ -165,14 +167,6 @@ BFDWrapper::BFDWrapper(std::string binaryName){
     }
     this->secList.clear();
     free(this->sy);
-
-    if(this->execImage != NULL){
-        if(!bfd_close_all_done(this->execImage)){
-            //An Error has occurred; lets see what it is
-            THROW_EXCEPTION("Error in closing the binary parser --> " << bfd_errmsg(bfd_get_error()));
-        }
-        this->execImage = NULL;
-    }
 }
 
 BFDWrapper::~BFDWrapper(){
@@ -298,7 +292,7 @@ std::string BFDWrapper::getMatchingFormats (char **p){
 ///Returns the BFD internal descriptor
 bfd & BFDWrapper::getBFDDescriptor(){
     if(this->execImage == NULL){
-        THROW_EXCEPTION("Unable to return an uninitialized BFD descriptor");
+        THROW_EXCEPTION("Unable to return an initialized BFD descriptor");
     }
 
     return *(this->execImage);
