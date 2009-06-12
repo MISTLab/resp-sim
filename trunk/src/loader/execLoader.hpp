@@ -74,6 +74,8 @@ class Loader{
     unsigned int getProgDim();
     ///Returns a pointer to the array contianing the program data
     unsigned char * getProgData();
+    ///Returns the byte of the program data at index idx
+    unsigned char getProgDataValue(unsigned long idx);
 };
 
 #endif

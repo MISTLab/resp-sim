@@ -92,6 +92,16 @@ unsigned char * Loader::getProgData(){
     return this->programData;
 }
 
+unsigned char Loader::getProgDataValue(unsigned long idx) {
+    if(this->execImage == NULL){
+        THROW_EXCEPTION("Binary parser not yet correcly created");
+    }
+    if(this->programData == NULL){
+        THROW_EXCEPTION("The program data was not correcly computed");
+    }
+    return this->programData[idx];
+}
+
 unsigned int Loader::getDataStart(){
     if(this->execImage == NULL){
         THROW_EXCEPTION("Binary parser not yet correcly created");

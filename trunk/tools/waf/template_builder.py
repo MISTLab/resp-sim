@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: iso-8859-1 -*-
 # encoding: utf-8
 # John O'Meara, 2006
 
@@ -18,19 +19,12 @@ def generate_header(task):
     from pypp_utils import TemplateBuilder
     from waf_utils import rec_find
 
-    extra_headers = []
-    for i in  task.extra_headers:
-        d, h = rec_find(Build.bld.srcnode.find_dir(i).srcpath(task.env)
-                    ,  task.exclude_dirs, task.header_ext)
-        extra_headers += h
-
     # Generate templates
     tb = TemplateBuilder()
     templates = Utils.to_list(task.templates)
     for t in templates: tb.Template(t)
     header_content = tb.buildAutogenContents(task.target.upper()+'_EXP_HPP'
-                                , [t.srcpath(task.env) for t in task.inputs]+extra_headers
-                                , task.ext_headers)
+                                , [t.srcpath(task.env) for t in task.inputs])
 
     # Write extra header file
     temp_header_name = os.path.join(os.path.abspath('.'), task.outputs[0].bldpath(task.env))
