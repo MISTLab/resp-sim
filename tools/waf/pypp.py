@@ -291,7 +291,7 @@ def process_headers(self):
             # If there are no templates, the input of py++ are the source files
             pypptask.inputs = self.srclist
 
-        print Build.bld.bdir
+        #print Build.bld.bdir
         pypptask.ext_headers = map(lambda a: os.path.join(Build.bld.bdir, a.srcpath(self.env)) , self.srclist)
 
         pypptask.outputs = tgnodes
@@ -357,7 +357,7 @@ def detect(conf):
 
     if int(conf.env['CC_VERSION'][1]) >= 3:
         for i in ['.2', '.1', '.0']:
-            for j in ['.9', '.8', '.7', '.6', '.5', '.4', '.3', '.2', '.1', '.0', '']:
+            for j in ['.4', '.3', '.2', '.1', '.0', '']:
                 if conf.find_program('g++-4' + i + j):
                     conf.env['CXX_OLD_VERSION'] = ['g++-4' + i + j]
                     break
@@ -458,13 +458,12 @@ def dopypp(task):
     # Disable some annoying messages
     if not Logs.verbose:
         module_builder.set_logger_level(logging.FATAL)
-    #Disable some annoying warnings
-    messages.disable(messages.W1023)
-    messages.disable(messages.W1025)
-    messages.disable(messages.W1026)
-    messages.disable(messages.W1027)
-    messages.disable(messages.W1031)
-    messages.disable(messages.W1043)
+        messages.disable(messages.W1023)
+        messages.disable(messages.W1025)
+        messages.disable(messages.W1026)
+        messages.disable(messages.W1027)
+        messages.disable(messages.W1031)
+        messages.disable(messages.W1043)
 
     ## ????????????????????????????????????? What is this for ?????????????????????????????
     logger_lock.acquire()
