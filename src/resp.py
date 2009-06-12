@@ -45,9 +45,6 @@
 import os,  sys #readline
 from optparse import OptionParser
 
-# Kernel imports
-import respkernel
-from respkernel import RespKernel
 
 def checkOptions(options, parser):
     """Checks that the options passed to the script are consistent with each other"""
@@ -59,6 +56,10 @@ def checkOptions(options, parser):
 
 
 if __name__ == '__main__':
+    # Kernel imports
+    import respkernel
+    from respkernel import RespKernel
+
     ####################### Command Line Options #######################
     usage = "usage: startSim.sh [options]"
     parser = OptionParser(usage=usage, version = 'Reflective Simulation Platform. Version: ' + respkernel.__version__ + ' Revision ' + respkernel.__revision__[6:-2])
@@ -182,7 +183,7 @@ if __name__ == '__main__':
     else:
         # Start HCI interfaces
         try:
-            console = console.Console(resp_kernel, options.verbose,  options.debug, locals=resp_kernel.get_namespace())
+            console = console.Console(resp_kernel, options.verbose,  options.debug)
             console.start_console()
         except SystemExit:
             if options.server:

@@ -1,3 +1,4 @@
+# -*- coding: iso-8859-1 -*-
 ##############################################################################
 #      ___           ___           ___           ___
 #     /  /\         /  /\         /  /\         /  /\
@@ -82,7 +83,7 @@ class Console(code.InteractiveConsole):
         Console class for the ReSP interactive shell
     """
 
-    def __init__(self, resp_kernel,  verbose = False, debug = False, locals=None):
+    def __init__(self, resp_kernel,  verbose = False, debug = False, locals_ns=None):
         self.verbose = verbose
         self.debug = debug
         self.started = False
@@ -90,9 +91,14 @@ class Console(code.InteractiveConsole):
         self.resp_kernel = resp_kernel
 
         self.init_history(os.path.expanduser("~/.resp-history"))
-        if not locals:
-            locals = resp_kernel.get_namespace()
-        code.InteractiveConsole.__init__(self,  locals = locals)
+        if not locals_ns:
+            locals_ns = resp_kernel.get_namespace()
+            for i in ['srcdir', 'SC_PREFIX', 'TLM_PREFIX', 'argv', 'atexit', 'blddir', 'curPath', 'cwd', 'environ', 'files', 'filterNames', 'findInFolder', 'get_namespace', 'hash', 'line', 'lockFile', 'option', 'stats', 'RespKernel', 'RespOutFile']:
+                try:
+                    locals_ns.pop(i)
+                except:
+                    pass
+        code.InteractiveConsole.__init__(self,  locals = locals_ns)
         self.init_console()
 
     def showtraceback(self):
@@ -125,7 +131,7 @@ class Console(code.InteractiveConsole):
         self.locals['show_commands'] = self.show_commands
         self.locals['load_architecture'] = self.load_architecture
         self.locals['generate_fault_list'] = self.generate_fault_list
-        
+
         #refs 114
         self.locals['save_architecture'] = self.save_architecture
         self.locals['generate_fault_list'] = self.generate_fault_list
@@ -198,7 +204,7 @@ class Console(code.InteractiveConsole):
 
         self.resp_kernel.get_namespace()['loadedFileName'] = fileName
         self.resp_kernel.fileName =  fileName
-    
+
     #refs 114
     def save_architecture(self, fileName):
         exec("__ARCHPATH__ = '%s'" %fileName) in self.resp_kernel.get_namespace()
