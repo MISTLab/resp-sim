@@ -56,7 +56,6 @@ extern "C" {
 Loader::Loader(std::string fileName){
     this->execImage = &(BFDWrapper::getInstance(fileName).getBFDDescriptor());
     this->programData = NULL;
-    this->execImage = NULL;
     this->progDim = 0;
     this->dataStart = 0;
 
