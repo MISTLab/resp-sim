@@ -95,7 +95,6 @@ class pypp_taskgen(cxx.cxx_taskgen):
     Parameters:
         start_decls              specifies the declarations (classes) where to start parsing
         include                  a list of all declaration files to be included as already_exposed
-        generate_include         generate a declaration list for includes
         define_symobls           a set of symbols that have to be defined for the GCCXML run
         custom_code              custom py++ to be executed before generating a module
         custom_declaration_code  custom C++ to be added to module declaration
@@ -119,14 +118,7 @@ class pypp_taskgen(cxx.cxx_taskgen):
         self.custom_registration_code = ''
         self.include = ""
 
-        ######################### TODO ###############################
-        ############ Do we still need this??? can they be eliminated ????????????
-        ###########???????????????????????????
-        self.extra_headers = []
-        self.generate_include = False
         self.virtuality = False
-        self.exclude_dirs = []
-
         self.split = 1
         self.templates = []
         self.features.append('pypp')
@@ -156,7 +148,6 @@ def extract_headers(self):
     except AttributeError: self.obj_ext = '.o'
 
     self.srclist = []
-    self.ext_headers = []
     targetbase, ext = os.path.splitext(ccroot.get_target_name(self))
 
     find_resource = self.path.find_resource
@@ -167,14 +158,8 @@ def extract_headers(self):
         if ext in self.header_ext:
             n = find_resource(Utils.split_path(filename))
 
-            # If a header is not found in the source tree it is assumed to be external
-            # and used for wrapping purposes. It is treated separately
-            if not n:
-                self.ext_headers.append(filename)
-            else:
-                self.source += '\n' + filename
-                self.srclist.append(n)
-            continue
+            self.source += '\n' + filename
+            self.srclist.append(n)
         else:
             self.source += '\n' + filename
 
@@ -209,25 +194,6 @@ def process_headers(self):
         # to be *posted* before they can be used
         include_lst = self.to_list(self.include)
 
-        ################# TODO: is this code still useful???????? can it be completely eliminated ????????????????
-        #if len(include_lst) > 0:
-            #include_lst.reverse()
-            #for x in include_lst:
-                ## Does the include object exist?
-                ## TODO this can be cached
-                #obj = self.name_to_obj(x)
-                #if( not  obj ):
-                    #print targetbase + ' --> Warning: Object '+ x +' not found'
-                    #continue
-                #else:
-		    #pass
-                    ## If it does, post it if not posted in the past
-                    #if not getattr(obj , 'posted' , None):
-                        #obj.post()
-                    ## I also have to add the object to the list of libraries used by this compilation process
-                    ##print(self.uselib_local)
-                    ##self.uselib_local += ' ' + x
-
         # Find the target node, i.e. the generated file
         if self.split < 1:
             raise Exception('Error, specified ' + str(self.split) + ' output files for task ' + targetbase + '; a number > 0 should be used')
@@ -243,7 +209,6 @@ def process_headers(self):
         # Create a pypp task with all the input headerfiles and one output module
         pypptask = self.create_task('pypp', self.env)
 
-        ############# ??????????? TODO ?????????????
         # Apply parameters passed by the wscript to the task
         pypptask.bldpath = self.bld.bldnode.abspath()
         pypptask.srcpath = self.bld.srcnode.abspath()
@@ -253,13 +218,9 @@ def process_headers(self):
         pypptask.target = ccroot.get_target_name(self)
         pypptask.split = self.split
         pypptask.start_decls = Utils.to_list(self.start_decls)
-        pypptask.generate_include = self.generate_include
         pypptask.virtuality = self.virtuality
         pypptask.path_lst = self.env['INC_PATHS']
         pypptask.includes = [os.path.join(self.path.abspath(), i) for i in self.to_list(self.includes)]
-
-
-        #pypptask.defines  = self.scanner_defines
         pypptask.templates  = self.templates
 
         # Now I have to parse the CPPFLAGS and CXXFLAGS environment variables and extract the synmbol definitions;
@@ -277,7 +238,6 @@ def process_headers(self):
 
         # Create a node for every include
         incl = []
-        incl_headers = []
         includeCustomCode = []
         includeStartDecls = []
         if include_lst:
@@ -294,16 +254,6 @@ def process_headers(self):
                     includeStartDecls += Utils.to_list(obj.start_decls)
                 except AttributeError:
                     pass
-                # ??????????????????????????? do we still create a *.generated.py file ????????????????????????
-                incl.append( obj.path.find_or_declare(x+'.generated.py') )
-                if self.extra_headers and (obj.extra_headers or obj.templates):
-                    incl_headers.append( obj.path.find_or_declare(x+'_exp.hpp') )
-                    continue
-                #for dep in obj.tasks:
-                    #for depOut in dep.outputs:
-                        #if depOut.name.find('.py') > 0:
-                            #pypptask.set_run_after(dep)
-                            #break
 
         # Now I add the custom code of the includes, so that their elements are also
         # exported; I also have to add their start declarations
@@ -324,43 +274,14 @@ def process_headers(self):
 
         pypptask.include = incl
 
-        # ???????????????????????????????????what is this for?????????????????
-        # ??????????????????????do we still need this?????????????????????????
-        # Headers that are external to the project are treated separately
-        pypptask.ext_headers = self.ext_headers #+ self.extra_headers
-
-        # ???????????????????????????????????what is this for?????????????????
-        # ??????????????????????do we still need this?????????????????????????
-        from waf_utils import rec_find
-        # Compute extra headers
-        self.extra_headers = Utils.to_list(self.extra_headers)
-        pypptask.extra_includes = inc_paths
-        for i in self.extra_headers:
-            if not Build.bld.srcnode.find_dir(i):
-                if Logs.verbose:
-                    print 'Folder ' + str(i) + ' to be searched for extra_headers does not exist'
-                continue
-            i, h = rec_find(os.path.abspath(os.path.join(self.bld.bldnode.abspath()
-                            ,  Build.bld.srcnode.find_dir(i).srcpath(self.env)))
-                            ,  self.exclude_dirs, self.header_ext)
-            pypptask.extra_includes += i
-
         # Generate template task if templates are specified
-        if self.templates or self.extra_headers:
+        if self.templates:
             templatetask = self.create_task('generate_header', self.env)
             templatetask.templates = self.templates
 
             # The source files are augmented with the autogenerated template instantiation
             templatetask.inputs = self.srclist
-            # TODO: Set and env variable for the extension ????????????????????????? is this still a valid TODO?
-            # what does it mean?????????????????????????????????????????????????????
-            # TODO: Again, we do not need all these attributes for the task, do we?
             templatetask.outputs = [self.path.find_or_declare(targetbase+'_exp.hpp')]
-            templatetask.ext_headers = list(self.ext_headers) + [k.abspath(self.env) for k in incl_headers]
-            templatetask.extra_headers = self.extra_headers
-            templatetask.exclude_dirs = self.exclude_dirs
-            templatetask.generate_include = self.generate_include
-            templatetask.header_ext = self.header_ext
             templatetask.target = self.target
 
             # If templates are enabled, py++ will process only the autogenerated header
@@ -370,17 +291,10 @@ def process_headers(self):
             # If there are no templates, the input of py++ are the source files
             pypptask.inputs = self.srclist
 
-        # Specifiy the headers to be included in the .generated.cpp
-        # This is done to avoid including the autogenerater _exp.hpp file
-        pypptask.ext_headers += map(lambda a: os.path.abspath(os.path.join(self.bld.bldnode.abspath(), a.srcpath(self.env))) , self.srclist)
+        print Build.bld.bdir
+        pypptask.ext_headers = map(lambda a: os.path.join(Build.bld.bdir, a.srcpath(self.env)) , self.srclist)
 
         pypptask.outputs = tgnodes
-
-        ####################### TODO::: we do not need this anymore, do we???????????
-        # If an include has to be generated, create the node and the output dependencies
-        if self.generate_include:
-            # Get the node for the include file
-            pypptask.outputs.append(self.path.find_or_declare('exposed_decl.pypp.txt'))
 
         # Compile the autogenerated C++ files
         if self.split == 1:
@@ -577,7 +491,6 @@ def dopypp(task):
     global_includes = task.includes
     global_includes += task.env['CPPPATH']
     global_includes += [os.path.abspath(os.path.join(task.bldpath, i.srcpath(task.env))) for i in task.path_lst]
-    global_includes += task.extra_includes
 
     try:
         if int(task.env['CC_VERSION'][1]) >= 3:
@@ -679,12 +592,8 @@ def dopypp(task):
     mb.add_declaration_code( task.custom_declaration_code )
 
     # Register module dependency
-    # ************************+ TODO ****************** Could the reason why some systemc declarations
-    # *********************** are repeated here ????????????????????????????????????
     module_list = []
     for inc in task.include:
-    #if len(task.include) > 0:
-        #inc = task.include[-1]
         new_module = os.path.dirname(inc.bldpath(task.env))
         if new_module not in module_list:
             if Logs.verbose:
@@ -696,13 +605,13 @@ def dopypp(task):
     # Create code and assign moduyle name
     mb.build_code_creator(os.path.splitext(task.target)[0], doc_extractor=docExtractor)
 
-    # Replace headers to avoid the inclusion of autogenerated template instantiation files
-    # TODO: Discover the files where special sc_* or tlm_* templates are declared
-    mb.code_creator.replace_included_headers(task.ext_headers)
-
     # Write the module to the target file(s)
     #print "Writing file %s:"  % (os.path.join( os.path.abspath('.'), task.m_outputs[k].bldpath(task.m_env) ) )
     #from pyplusplus import file_writers
+
+    # Replace headers to avoid the inclusion of autogenerated template instantiation files
+    # TODO: Discover the files where special sc_* or tlm_* templates are declared
+    mb.code_creator.replace_included_headers(task.ext_headers)
 
     try:
         if task.split == 1:

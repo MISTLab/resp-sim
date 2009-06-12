@@ -1,3 +1,4 @@
+# -*- coding: iso-8859-1 -*-
 # Copyright 2004 Roman Yakovenko.
 # Distributed under the Boost Software License, Version 1.0. (See
 # accompanying file LICENSE_1_0.txt or copy at
@@ -255,7 +256,7 @@ class TemplateBuilder:
          t.process(self)
 
 
-   def buildAutogenContents(self, define, headers, ext_headers):
+   def buildAutogenContents(self, define, headers):
       """ Build up the contents of a file to instantiate the needed templates. """
       #if len(self.mTemplates) == 0:
          #return None
@@ -267,12 +268,6 @@ class TemplateBuilder:
       for inc in headers:
         content += '#include "'+inc+'"\n'
       #content += '#endif /* PYPP_EXTRA_HEADERS */\n'
-
-      #content += '#ifndef PYPP_EXT_HEADERS\n'
-      #content += '#define PYPP_EXT_HEADERS\n'
-      for inc in ext_headers:
-        content += '#include "'+inc+'"\n'
-      #content += '#endif /* PYPP_EXT_HEADERS */\n'
 
       content += '\nnamespace pyimpl {\n'
       for t in self.mTemplates:
