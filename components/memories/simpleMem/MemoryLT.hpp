@@ -45,7 +45,7 @@
 
 #include <systemc.h>
 #include <tlm.h>
-#include <tlm_utils/simple_target_socket.h>
+#include <tlm_utils/multi_passthrough_target_socket.h>
 #include <boost/lexical_cast.hpp>
 #include <string>
 
@@ -53,7 +53,7 @@
 
 template<unsigned int sockSize> class MemoryLT: public sc_module{
     public:
-    tlm_utils::simple_target_socket<MemoryLT, sockSize> socket;
+    tlm_utils::multi_passthrough_target_socket<MemoryLT, sockSize> socket;
 
     MemoryLT(sc_module_name name, unsigned int size, sc_time latency = SC_ZERO_TIME) :
                                             sc_module(name), socket("mem_socket"), size(size), latency(latency){
@@ -71,7 +71,7 @@ template<unsigned int sockSize> class MemoryLT: public sc_module{
         delete this->mem;
     }
 
-    void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay){
+    void b_transport(int tag, tlm::tlm_generic_payload& trans, sc_time& delay){
         tlm::tlm_command cmd = trans.get_command();
         sc_dt::uint64    adr = trans.get_address();
         unsigned char*   ptr = trans.get_data_ptr();
@@ -105,7 +105,7 @@ template<unsigned int sockSize> class MemoryLT: public sc_module{
 
 
     // TLM-2 DMI method
-    bool get_direct_mem_ptr(tlm::tlm_generic_payload& trans, tlm::tlm_dmi& dmi_data){
+    bool get_direct_mem_ptr(int tag, tlm::tlm_generic_payload& trans, tlm::tlm_dmi& dmi_data){
         // Permit read and write access
         dmi_data.allow_read_write();
 
@@ -121,7 +121,7 @@ template<unsigned int sockSize> class MemoryLT: public sc_module{
 
 
     // TLM-2 debug transaction method
-    unsigned int transport_dbg(tlm::tlm_generic_payload& trans){
+    unsigned int transport_dbg(int tag, tlm::tlm_generic_payload& trans){
         tlm::tlm_command cmd = trans.get_command();
         sc_dt::uint64    adr = trans.get_address();
         unsigned char*   ptr = trans.get_data_ptr();
