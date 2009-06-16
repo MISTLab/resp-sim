@@ -73,7 +73,7 @@ namespace sandbox { namespace {
 mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) ).exclude()
 
 # Include important stuff
-print "Including classes"
+#print "Including classes"
 sc_classes = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_') and not 'sc_controller' in decl.name)
 for i in sc_classes:
     i.ignore = False
@@ -90,30 +90,30 @@ sc_module_decl.member_functions('get_child_objects').set_virtuality( declaration
 sc_module_decl.member_functions('sc_get_curr_simcontext').call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
 sc_module_decl.member_operators().exclude()
 
-print 'including sim_context'
+#print 'including sim_context'
 sc_simcontext_decls = mb.global_ns.class_('sc_simcontext')
 sc_simcontext_decls.exclude()
 sc_simcontext_decls.ignore = False
 sc_simcontext_decls.member_function('reset').include()
 
-print "Including bind"
+#print "Including bind"
 bind_decl = mb.global_ns.member_functions( 'bind' )
 bind_decl.include()
 mb.global_ns.member_functions( 'is_reset' ).call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
 
-print "Including Signals"
+#print "Including Signals"
 signal = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_signal<'))
 signal.include()
 for i in signal:
     i.member_functions().exclude()
 
-print "Including Bit Vectors"
+#print "Including Bit Vectors"
 bvectors = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_bv<'))
 bvectors.include()
 for i in bvectors:
     i.member_operators().exclude()
 
-print "Including clock"
+#print "Including clock"
 clock = mb.global_ns.class_('sc_clock')
 clock.include()
 clock.member_functions(lambda decl: decl.name.startswith('period')).include()
@@ -126,14 +126,14 @@ clock.member_functions(lambda decl: decl.name.startswith('init')).exclude()
 clock.member_functions(lambda decl: decl.name.startswith('is_clock')).exclude()
 clock.member_functions(lambda decl: decl.name.startswith('signal')).call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
 
-print "Including time"
+#print "Including time"
 time = mb.global_ns.class_('sc_time')
 time.include()
 time.member_functions(lambda decl: decl.name.startswith('print')).exclude()
 SC_ZERO_TIME_decl = mb.global_ns.variable('SC_ZERO_TIME')
 SC_ZERO_TIME_decl.include()
 
-print "Including sc_object"
+#print "Including sc_object"
 sc_obj = mb.global_ns.class_('sc_object')
 sc_obj.include()
 sc_obj.member_functions().exclude()
@@ -141,7 +141,7 @@ sc_obj.member_functions(lambda decl: decl.name.endswith('name')).include()
 sc_obj.member_functions(lambda decl: decl.name.startswith('sc_object')).exclude()
 sc_obj.variables(lambda decl: decl.name.startswith('m_name')).exclude()
 
-print "Including free functions"
+#print "Including free functions"
 sc_start_decl = mb.global_ns.free_functions('sc_start')
 for i in sc_start_decl:
     i.include()

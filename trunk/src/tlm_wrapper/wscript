@@ -5,9 +5,6 @@
 import Options
 import sys,os
 
-sys.path.append('./tools/waf')
-from waf_utils import rec_find
-
 def build(bld):
 
     # Build and compile the TLM wrapper extension module
@@ -45,13 +42,13 @@ tlm_extension_base.include()
 tlm_extension_base.member_functions(allow_empty=True).exclude()
 
 # Include simple sockets
-print 'Including base sockets sockets'
+#print 'Including base sockets sockets'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_target_socket') or decl.name.startswith('tlm_target_socket') , allow_empty=True)
 for i in cls:
     i.include()
     i.member_functions(allow_empty=True).exclude()
 
-print 'Including tlm_base_initiator_socket'
+#print 'Including tlm_base_initiator_socket'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_initiator_socket') or decl.name.startswith('tlm_initiator_socket'), allow_empty=True)
 for i in cls:
     i.include()
@@ -60,43 +57,43 @@ for i in cls:
         if k.name == 'bind':
             k.include()
 
-print 'Including simple_'
+#print 'Including simple_'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('simple_'), allow_empty=True)
 for i in cls:
     i.include()
 
-print 'Including multi_'
+#print 'Including multi_'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('multi_'), allow_empty=True)
 for i in cls:
     i.ignore = False
 
-print 'Including tlm_base_protocol_types'
+#print 'Including tlm_base_protocol_types'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_protocol_types'), allow_empty=True)
 for i in cls:
     i.include()
 
-print 'Including tlm_quantumkeeper'
+#print 'Including tlm_quantumkeeper'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_quantumkeeper'), allow_empty=True)
 for i in cls:
     i.include()
 
-print 'Including tlm_fw_transport_if'
+#print 'Including tlm_fw_transport_if'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_fw_transport_if'), allow_empty=True)
 for i in cls:
     i.include()
 
-print 'Including tlm_bw_transport_if'
+#print 'Including tlm_bw_transport_if'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_bw_transport_if'), allow_empty=True)
 for i in cls:
     i.include()
 
-print 'Including tlm_generic_payload'
+#print 'Including tlm_generic_payload'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_generic_payload'), allow_empty=True)
 for i in cls:
     i.include()
     i.member_functions(allow_empty=True).exclude()
 
-print 'Including multi_passthrough'
+#print 'Including multi_passthrough'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('multi_passthrough'), allow_empty=True)
 for i in cls:
     i.include()
