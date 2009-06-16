@@ -24,15 +24,8 @@ def build(bld):
 
     obj = bld.new_task_gen('pypp')
     obj.source="""
-        instructions.hpp
-        registers.hpp
-        alias.hpp
         processor.hpp
-        interface.hpp
-        decoder.hpp
         memory.hpp
-        externalPorts.hpp
-        externalPins.hpp
     """
     obj.uselib = 'BOOST BOOST_FILESYSTEM BOOST_THREAD SYSTEMC_H TLM TRAP PYEXT BOOST_PYTHON'
     obj.uselib_local = 'systemc leon3_funcLT binutils'
@@ -58,4 +51,7 @@ mb.global_ns.class_('Alias').ignore = False
 mb.global_ns.class_('InnerField').exclude()
 mb.global_ns.class_('InnerField').ignore = False
 mb.global_ns.class_('Processor').member_function('decode').exclude()
+
+mb.global_ns.classes(lambda decl: decl.name.startswith('ToolsManager'), allow_empty=True).ignore = False
+mb.global_ns.classes(lambda decl: decl.name.startswith('MemoryToolsIf'), allow_empty=True).ignore = False
 """

@@ -1,12 +1,8 @@
 #! /usr/bin/env python
 # -*- coding: iso-8859-1 -*-
-# encoding: utf-8
 
 import Options
 import sys,os
-
-sys.path.append('./tools/waf')
-from waf_utils import rec_find
 
 def build(bld):
 
@@ -96,8 +92,8 @@ sc_module_decl.member_operators().exclude()
 
 print 'including sim_context'
 sc_simcontext_decls = mb.global_ns.class_('sc_simcontext')
-sc_simcontext_decls.include()
 sc_simcontext_decls.exclude()
+sc_simcontext_decls.ignore = False
 sc_simcontext_decls.member_function('reset').include()
 
 print "Including bind"

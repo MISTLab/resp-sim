@@ -65,6 +65,11 @@ cls = mb.global_ns.classes(lambda decl: decl.name.startswith('simple_'), allow_e
 for i in cls:
     i.include()
 
+print 'Including multi_'
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('multi_'), allow_empty=True)
+for i in cls:
+    i.ignore = False
+
 print 'Including tlm_base_protocol_types'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_protocol_types'), allow_empty=True)
 for i in cls:
@@ -133,6 +138,7 @@ for cur_namespace in sc_names:
         'tlm::tlm_fw_transport_if<tlm::tlm_base_protocol_types>'
         ,'tlm::tlm_bw_transport_if<tlm::tlm_base_protocol_types>'
         ,'tlm::tlm_base_target_socket_b<8, tlm::tlm_fw_transport_if<tlm::tlm_base_protocol_types>, tlm::tlm_bw_transport_if<tlm::tlm_base_protocol_types> >'
+        ,'tlm::tlm_base_initiator_socket_b<8, tlm::tlm_fw_transport_if<tlm::tlm_base_protocol_types>, tlm::tlm_bw_transport_if<tlm::tlm_base_protocol_types> >'
         ,'tlm::tlm_base_target_socket_b<32, tlm::tlm_fw_transport_if<tlm::tlm_base_protocol_types>, tlm::tlm_bw_transport_if<tlm::tlm_base_protocol_types> >'
+        ,'tlm::tlm_base_initiator_socket_b<32, tlm::tlm_fw_transport_if<tlm::tlm_base_protocol_types>, tlm::tlm_bw_transport_if<tlm::tlm_base_protocol_types> >'
     ]
-
