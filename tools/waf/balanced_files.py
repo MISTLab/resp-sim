@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# Copyright 2004 Giovanni Beltrame
+# Copyright 2004 Giovanni Beltrame, Luca Fossati
 # Distributed under the Boost Software License, Version 1.0. (See
 # accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
@@ -56,9 +56,9 @@ class resp_files_t(balanced_files.balanced_files_t):
         else:
             numBuckets = 1
         buckets = split_sequence(class_creators, numBuckets)
-        if len(buckets) > self.number_of_buckets:
-            buckets[len(buckets)-2] += buckets[len(buckets)-1]
-            buckets = buckets[:len(buckets)-1]
+        for outBuckets in range(self.number_of_buckets, len(buckets)):
+            buckets[self.number_of_buckets -1] += buckets[outBuckets]
+        buckets = buckets[:self.number_of_buckets]
 
         for index, bucket in enumerate( buckets ):
             self.split_creators( bucket
