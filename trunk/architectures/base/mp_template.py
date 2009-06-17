@@ -31,7 +31,7 @@ OS_EMULATION = True     # True or False
 ################################################
 
 # Find the specified software in the _build_ directory if not an absolute path
-if not os.path.isfile(SOFTWARE):
+if not SOFTWARE or not os.path.isfile(SOFTWARE):
     SOFTWARE = findInFolder(SOFTWARE, '_build_/arm')
     if not SOFTWARE:
         raise Exception('Unable to find program ' + SOFTWARE)
