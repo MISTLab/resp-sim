@@ -30,7 +30,7 @@ def build(bld):
     obj.uselib = 'BOOST BOOST_FILESYSTEM BOOST_THREAD SYSTEMC_H TLM TRAP PYEXT BOOST_PYTHON'
     obj.uselib_local = 'systemc leon3_funcLT binutils'
     obj.includes = '.'
-    obj.split = 8
+    obj.split = 10
     obj.name = 'leon3_funcLT_wrapper'
     obj.target = 'leon3_funcLT_wrapper'
     obj.include = 'scwrapper tlmwrapper'
