@@ -364,7 +364,9 @@ int main(int argc, char ** argv){
           solutionPSA->SetParameters(preferences.sa_start_temperature, preferences.sa_final_temperature,
               preferences.sa_temperature_decrease_coefficient, preferences.sa_weights_change_coefficient,
               preferences.sa_moves_on_temperature_level, preferences.sa_generating_population_size);
-          solutionPSA->Run();
+          try {
+            solutionPSA->Run();
+          } catch( haltException e) {}
           solutionPSA->pNondominatedSet->Save((char *)vm["solution-file"].as<std::string>().c_str());
           nonDomSol = solutionPSA->pNondominatedSet;
           nonDominatedSize = solutionPSA->pNondominatedSet->iSetSize;
@@ -374,7 +376,9 @@ int main(int argc, char ** argv){
           solutionMOSA->SetParameters(preferences.sa_start_temperature, preferences.sa_final_temperature,
               preferences.sa_temperature_decrease_coefficient, preferences.sa_moves_on_temperature_level,
               preferences.sa_generating_population_size);
-          solutionMOSA->Run();
+          try {
+            solutionMOSA->Run();
+          } catch( haltException e) {}
           solutionMOSA->pNondominatedSet->Save((char *)vm["solution-file"].as<std::string>().c_str());
           nonDomSol = solutionMOSA->pNondominatedSet;
           nonDominatedSize = solutionMOSA->pNondominatedSet->iSetSize;
@@ -383,7 +387,9 @@ int main(int argc, char ** argv){
           solutionSMOSA = new TSMOSA < TDSESolution >;
           solutionSMOSA->SetParameters(preferences.sa_start_temperature, preferences.sa_final_temperature,
               preferences.sa_temperature_decrease_coefficient, preferences.sa_moves_on_temperature_level);
-          solutionSMOSA->Run();
+          try {
+            solutionSMOSA->Run();
+          } catch( haltException e) {}
           solutionSMOSA->pNondominatedSet->Save((char *)vm["solution-file"].as<std::string>().c_str());
           nonDomSol = solutionSMOSA->pNondominatedSet;
           nonDominatedSize = solutionSMOSA->pNondominatedSet->iSetSize;
@@ -393,7 +399,9 @@ int main(int argc, char ** argv){
           solutionMOGLS->SetParameters(preferences.hga_temporary_population_size,
               preferences.hga_initial_population_size, preferences.hga_number_of_iterations,
               preferences.hga_scalarizing_function_type);
-          solutionMOGLS->Run();
+          try {
+            solutionMOGLS->Run();
+          } catch( haltException e) {}
           solutionMOGLS->pNondominatedSet->Save((char *)vm["solution-file"].as<std::string>().c_str());
           nonDomSol = solutionMOGLS->pNondominatedSet;
           nonDominatedSize = solutionMOGLS->pNondominatedSet->iSetSize;
@@ -403,7 +411,9 @@ int main(int argc, char ** argv){
           solutionIMMOGLS->SetParameters(preferences.hga_population_size,
               preferences.hga_number_of_iterations, preferences.hga_ellite_size,
               preferences.hga_scalarizing_function_type);
-          solutionIMMOGLS->Run();
+          try {
+            solutionIMMOGLS->Run();
+          } catch( haltException e) {}
           solutionIMMOGLS->pNondominatedSet->Save((char *)vm["solution-file"].as<std::string>().c_str());
           nonDomSol = solutionIMMOGLS->pNondominatedSet;
           nonDominatedSize = solutionIMMOGLS->pNondominatedSet->iSetSize;
@@ -413,7 +423,9 @@ int main(int argc, char ** argv){
           solutionPMA->SetParameters(preferences.hga_temporary_population_size,
               preferences.hga_initial_population_size, preferences.hga_number_of_iterations,
               preferences.hga_scalarizing_function_type);
-          solutionPMA->Run();
+          try {
+            solutionPMA->Run();
+          } catch( haltException e) {}
           solutionPMA->pNondominatedSet->Save((char *)vm["solution-file"].as<std::string>().c_str());
           nonDomSol = solutionPMA->pNondominatedSet;
           nonDominatedSize = solutionPMA->pNondominatedSet->iSetSize;
@@ -422,7 +434,9 @@ int main(int argc, char ** argv){
           solutionMOMSLS = new TMOMSLS < TDSESolution >;
           solutionMOMSLS->SetParameters(preferences.momsls_number_of_iterations,
               preferences.momsls_scalarizing_function_type);
-          solutionMOMSLS->Run();
+          try {
+            solutionMOMSLS->Run();
+          } catch( haltException e) {}
           solutionMOMSLS->pNondominatedSet->Save((char *)vm["solution-file"].as<std::string>().c_str());
           nonDomSol = solutionMOMSLS->pNondominatedSet;
           nonDominatedSize = solutionMOMSLS->pNondominatedSet->iSetSize;
@@ -431,7 +445,9 @@ int main(int argc, char ** argv){
           solutionSPEA->SetParameters(preferences.pareto_population_size, preferences.pareto_number_of_generations,
               preferences.pareto_mutation_probability, preferences.pareto_nondominated_population_size,
               preferences.pareto_clustering_level, preferences.pareto_scalarize);
-          solutionSPEA->Run();
+          try {
+            solutionSPEA->Run();
+          } catch( haltException e) {}
           solutionSPEA->pNondominatedSet->Save((char *)vm["solution-file"].as<std::string>().c_str());
           nonDomSol = solutionSPEA->pNondominatedSet;
           nonDominatedSize = solutionSPEA->pNondominatedSet->iSetSize;
@@ -441,7 +457,9 @@ int main(int argc, char ** argv){
           solutionNSGAII->SetParameters(preferences.pareto_population_size,
               preferences.pareto_number_of_generations, preferences.pareto_mutation_probability,
               preferences.pareto_scalarize);
-          solutionNSGAII->Run();
+          try {
+            solutionNSGAII->Run();
+          } catch( haltException e) {}
           solutionNSGAII->pNondominatedSet->Save((char *)vm["solution-file"].as<std::string>().c_str());
           nonDomSol = solutionNSGAII->pNondominatedSet;
           nonDominatedSize = solutionNSGAII->pNondominatedSet->iSetSize;
@@ -451,7 +469,9 @@ int main(int argc, char ** argv){
           solutionNSGA->SetParameters(preferences.pareto_population_size,
               preferences.pareto_number_of_generations, preferences.pareto_mutation_probability,
               preferences.pareto_neighbour_distance, preferences.pareto_scalarize);
-          solutionNSGA->Run();
+          try {
+            solutionNSGA->Run();
+          } catch( haltException e) {}
           solutionNSGA->pNondominatedSet->Save((char *)vm["solution-file"].as<std::string>().c_str());
           nonDomSol = solutionNSGA->pNondominatedSet;
           nonDominatedSize = solutionNSGA->pNondominatedSet->iSetSize;

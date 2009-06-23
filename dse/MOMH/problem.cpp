@@ -224,6 +224,9 @@ bool TDSEProblem::ParseReSP(std::ifstream &stream){
                 this->graphic = boost::lexical_cast<bool>(optionValue);
                 foundOptions++;
             }
+            else if(TDSEProblem::ToLower(option) == "simulations_max"){
+                this->simulations_max = boost::lexical_cast<unsigned int>(optionValue);
+            }
             else{
                 std::cerr << "Unknown option " << option << std::endl;
                 return false;
@@ -292,4 +295,4 @@ std::string& TDSEProblem::TrimSpaces( std::string& str){
 
 TDSEProblem::~TDSEProblem(){}
 
-TDSEProblem::TDSEProblem() : graphic(true), generator(static_cast<unsigned int>(std::time(0))), verbose(false), simulations_num(0){}
+TDSEProblem::TDSEProblem() : graphic(true), generator(static_cast<unsigned int>(std::time(0))), verbose(false), simulations_num(0), simulations_max(0){}

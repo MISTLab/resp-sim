@@ -87,6 +87,8 @@ class TDSEProblem: public TProblem{
     bool verbose;
     // The number of simulations that were performed for the solution of this problem
     unsigned int simulations_num;
+    // The maximum number of simulations to be performed
+    unsigned int simulations_max;
     /** Loads the instance data from a file with the given name
     *
     *    Returns true if the instance is read successfully */
