@@ -33,6 +33,15 @@
 #include <string>
 #include "RespClient.hpp"
 
+#include <cstdlib>
+#include <string>
+#include <exception>
+#include <stdexcept>
+#include <iostream>
+
+class haltException: public std::exception{
+};
+
 class RespClient;
 
 /// A solution for the design exploration problem simply consists of

@@ -56,6 +56,9 @@ RespClient* TDSESolution::client = NULL;
 void TDSESolution::updateObjectives(){
     Problem.simulations_num++;
 
+    if( Problem.simulations_max != 0 && Problem.simulations_num >= Problem.simulations_max )
+        throw std::exception();
+
     // Here I determine if the current configuration has already been cached on file;
     // in case I do not execute simulation, but I simply get it; otherwise I need to simulated
     // it and I add it to the cached simulations
@@ -101,7 +104,7 @@ void TDSESolution::updateObjectives(){
         THROW_EXCEPTION("Error during call of SetUp method - " << respMex);
     }
     if(!TDSESolution::client->run_simulation()){
-        std::string respMex = TDSESolution::client->getResponseMessage();
+        respMex = TDSESolution::client->getResponseMessage();
         TDSESolution::client->quit();
         THROW_EXCEPTION("Error during simulation start - " << respMex);
     }
