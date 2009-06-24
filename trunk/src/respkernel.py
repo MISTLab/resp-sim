@@ -332,7 +332,7 @@ class RespKernel:
 
         global connectPortsForce, connectPorts, connectSyscPorts, connectSyscSignal, listComponents,  printComponents, getCompInstance, areConnected, \
                 getSources,  getTargets, getConnected, getComponents, getAttrInstance,  getInstance, getBase, run_simulation, \
-                pause_simulation, stop_simulation,  get_simulated_time, get_real_time_ms, run_up_to, reload_architecture, \
+                pause_simulation, stop_simulation,  get_simulated_time, get_real_time, run_up_to, reload_architecture, \
                 enable_fault_injection, showArchitecture
 
         # Assign scripting commands to manager, helper and controller methods
@@ -361,7 +361,7 @@ class RespKernel:
         pause_simulation = self.controller.pause_simulation
         stop_simulation = self.controller.stop_simulation
         get_simulated_time = self.controller.get_simulated_time
-        get_real_time_ms = self.controller.get_real_time_ms
+        get_real_time = self.controller.get_real_time
 
         enable_fault_injection  = self.enable_fault_injection
 
@@ -369,7 +369,7 @@ class RespKernel:
         self.scripting_commands = [connectPortsForce, connectPorts, connectSyscPorts, connectSyscSignal, listComponents,  printComponents, \
                                    getCompInstance, areConnected, getSources,  getTargets, getConnected, getComponents, \
                                    getAttrInstance,  getInstance, getBase, run_simulation, pause_simulation, \
-                                   stop_simulation, get_simulated_time, get_real_time_ms, run_up_to, enable_fault_injection, showArchitecture]
+                                   stop_simulation, get_simulated_time, get_real_time, run_up_to, enable_fault_injection, showArchitecture]
 
 
     def end_signal_handler(self, signum, frame):

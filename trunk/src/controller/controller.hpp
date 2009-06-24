@@ -36,6 +36,8 @@
 #include "callback.hpp"
 #include "simulation_engine.hpp"
 
+#include <boost/timer.hpp>
+
 extern bool interactiveSimulation;
 
 namespace resp{
@@ -58,8 +60,8 @@ class sc_controller;
  */
 struct caller {
     ///Variables used to keep track of the duration of the simulation in real time (not systemc time)
-    unsigned long *now;
-    unsigned long *accumulatedTime;
+    boost::timer *timeTracker;
+    double *accumulatedTime;
     ///being set when the current simulation slot has ended
     bool *ended;
     ///being set just before the current simulation slot starts
@@ -125,8 +127,8 @@ public:
     ///True if the simulation slot has ended
     bool ended;
     ///Variables used to keep track of the duration of the simulation in real time (not systemc time)
-    unsigned long now;
-    unsigned long accumulatedTime;
+    boost::timer timeTracker;
+    double accumulatedTime;
     bool interactive;
     ///True if simulation is in a paused state
 
@@ -163,8 +165,8 @@ public:
 
     std::string print_real_time();
 
-    // Gests SystemC real time
-    unsigned long get_real_time_ms();
+    /// Gets elapsed cpu time
+    double get_real_time();
 
     /// Setuo the controller and its callbacks for stuff that can't be handled in the constructor
     void setup_callbacks();

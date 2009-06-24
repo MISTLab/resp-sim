@@ -50,7 +50,7 @@
 #include <exception>
 #include <stdexcept>
 
-#include "cpu_time.hpp"
+#include <boost/timer.hpp>
 
 extern void (*delta_callback)(void);
 
@@ -128,9 +128,7 @@ void my_terminate_handler(){
     #endif
 
     sc_controller::error = true;
-    unsigned long temp = cpu_time();
-    controllerInstance->accumulatedTime += temp - controllerInstance->now;
-    controllerInstance->now = temp;
+    controllerInstance->accumulatedTime += controllerInstance->timeTracker.elapsed();
     controllerInstance->ended = true;
     controllerInstance->stop_simulation();
     try{
@@ -192,8 +190,8 @@ void sc_controller::reset() {
     this->hasToContinue = false;
     this->simTime = 0;
     this->ended = false;
-    this->now = 0;
     this->accumulatedTime = 0;
+    this->timeTracker.restart();
 }
 
 /// Static method for the creation of the controller class; note that this is the only way
@@ -208,7 +206,7 @@ sc_controller & sc_controller::createController(int pid, bool interactive){
 /// Controller class constructor
 sc_controller::sc_controller(int pid, bool interactive) : residualSimTime(0), requestedSimLength(0),  curState(NONE),
         started(false), paused(false), pid(pid), hasToContinue(false), simTime(0), ended(false),
-                                                now(0), accumulatedTime(0), interactive(interactive) {
+                                                accumulatedTime(0), interactive(interactive) {
     se = new simulation_engine("se", pid, interactive, paused);
     interactiveSimulation = interactive;
     #ifndef STATIC_PLATFORM
@@ -241,7 +239,6 @@ void sc_controller::run_simulation(double simTime){
         std::cerr << __PRETTY_FUNCTION__ << " An error occurred during simulation, so it can't be restarted" << std::endl;
         return;
     }
-    this->now = cpu_time();
     this->hasToContinue = false;
     sc_controller::disableLatency = false;
     if(this->curState == NONE || (this->curState == TIMED && this->ended)){
@@ -252,7 +249,7 @@ void sc_controller::run_simulation(double simTime){
         #endif
         caller c;
         c.accumulatedTime = &this->accumulatedTime;
-        c.now = &this->now;
+        c.timeTracker = &this->timeTracker;
         c.ended = &this->ended;
         c.started = &this->started;
         c.hasToContinue = &this->hasToContinue;
@@ -315,6 +312,7 @@ void sc_controller::run_simulation(double simTime){
          #ifndef NDEBUG
          std::cerr << __PRETTY_FUNCTION__ << " Notified stop condition" << std::endl;
          #endif
+        this->timeTracker.restart();
         if(!this->interactive && !this->ended){
           #ifndef NDEBUG
           std::cerr << __PRETTY_FUNCTION__ << " waiting for simulation to end - 284" << std::endl;
@@ -385,6 +383,7 @@ bool sc_controller::is_paused(){
 
 /// Pauses the simulation, waiting for external control
 void sc_controller::pause_simulation(bool notify){
+    this->accumulatedTime += this->timeTracker.elapsed();
     if(sc_controller::error){
         std::cerr << __PRETTY_FUNCTION__ << " An error occurred during simulation, so it is already stopped" << std::endl;
         return;
@@ -411,9 +410,6 @@ void sc_controller::pause_simulation(bool notify){
         std::cerr << "Warning: before pausing simulation you should try to start it :-)" << std::endl;
         return;
     }
-    unsigned long temp = cpu_time();
-    this->accumulatedTime += temp - this->now;
-    this->now = temp;
     bool retry = false;
     se->goingToPause = true;
     do{
@@ -455,10 +451,10 @@ double sc_controller::get_simulated_time(){
 }
 
 std::string sc_controller::print_real_time(){
-    return print_cpu_time(this->accumulatedTime);
+    return boost::lexical_cast<std::string>(this->accumulatedTime) + "s";
 }
 
-unsigned long sc_controller::get_real_time_ms(){
+double sc_controller::get_real_time(){
     return this->accumulatedTime;
 }
 
@@ -503,19 +499,19 @@ void caller::operator()(){
                #ifndef NDEBUG
                std::cerr << __PRETTY_FUNCTION__ << " Starting to run undefinitely" << std::endl;
                #endif
+               this->timeTracker->restart();
                sc_start();
                #ifndef NDEBUG
                std::cerr << __PRETTY_FUNCTION__ << " I'm done" << std::endl;
                #endif
            } else {
                 sc_time t(*this->simTime, SC_NS);
-                sc_start(t);
+                this->timeTracker->restart();
                 manual = true;
+                sc_start(t);
             }
 
-            unsigned long temp = cpu_time();
-            *this->accumulatedTime += temp - *this->now;
-            *this->now = temp;
+            *this->accumulatedTime += this->timeTracker->elapsed();
             *this->ended = true;
         }
         if(manual){
