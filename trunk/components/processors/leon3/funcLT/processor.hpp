@@ -44,9 +44,9 @@
 #ifndef PROCESSOR_HPP
 #define PROCESSOR_HPP
 
+#include <instructions.hpp>
 #include <systemc.h>
 #include <customExceptions.hpp>
-#include <instructions.hpp>
 #include <decoder.hpp>
 #include <interface.hpp>
 #include <ToolsIf.hpp>
@@ -77,9 +77,23 @@
 #endif
 #endif
 
+#include <irqPorts.hpp>
 #include <externalPins.hpp>
 
 using namespace trap;
+namespace leon3_funclt_trap{
+
+    class CacheElem{
+
+        public:
+        CacheElem();
+        CacheElem( Instruction * instr, unsigned int count );
+        Instruction * instr;
+        unsigned int count;
+    };
+
+};
+
 namespace leon3_funclt_trap{
 
     class Processor : public sc_module{
@@ -87,8 +101,9 @@ namespace leon3_funclt_trap{
         Decoder decoder;
         tlm_utils::tlm_quantumkeeper quantKeeper;
         static Instruction * * INSTRUCTIONS;
-        static template_map< unsigned int, Instruction * > instrCache;
+        template_map< unsigned int, CacheElem > instrCache;
         static int numInstances;
+        unsigned int IRQ;
 
         public:
         SC_HAS_PROCESS( Processor );
@@ -98,6 +113,7 @@ namespace leon3_funclt_trap{
         Instruction * decode( unsigned int bitString );
         void end_of_elaboration();
         LEON3_ABIIf * abiIf;
+        LEON3_ABIIf & getInterface();
         ToolsManager< unsigned int > toolManager;
         Reg32_0_delay_3 PSR;
         Reg32_1_delay_3 WIM;
@@ -123,6 +139,7 @@ namespace leon3_funclt_trap{
         unsigned int ENTRY_POINT;
         unsigned int PROGRAM_LIMIT;
         unsigned int PROGRAM_START;
+        IntrTLMPort_32 IRQ_port;
         PinTLM_out_32 irqAck;
         ~Processor();
     };

@@ -83,3 +83,9 @@ for i in range(0, PROCESSOR_NUMBER):
     processors[i].ENTRY_POINT = loader.getProgStart()
     processors[i].PROGRAM_LIMIT = loader.getProgDim() + loader.getDataStart()
     processors[i].PROGRAM_START = loader.getDataStart()
+
+# Now I initialize the OS emulator
+if OS_EMULATION:
+    for i in range(0, PROCESSOR_NUMBER):
+        curEmu = trapwrapper.OSEmulator32_0(processors[i].getInterface(), 0)
+        processors[i].toolManager.addTool(curEmu)

@@ -43,9 +43,9 @@
 
 
 #include <processor.hpp>
+#include <instructions.hpp>
 #include <systemc.h>
 #include <customExceptions.hpp>
-#include <instructions.hpp>
 #include <decoder.hpp>
 #include <interface.hpp>
 #include <ToolsIf.hpp>
@@ -76,72 +76,119 @@
 #endif
 #endif
 
+#include <irqPorts.hpp>
 #include <externalPins.hpp>
 
 using namespace leon3_funclt_trap;
 using namespace trap;
+leon3_funclt_trap::CacheElem::CacheElem( Instruction * instr, unsigned int count \
+    ) : instr(instr), count(count){
+
+}
+
+leon3_funclt_trap::CacheElem::CacheElem() : instr(NULL), count(1){
+
+}
+
 void leon3_funclt_trap::Processor::mainLoop(){
-    template_map< unsigned int, Instruction * >::iterator instrCacheEnd = Processor::instrCache.end();
-    template_map< unsigned int, unsigned int > freqInstrMap;
-    template_map< unsigned int, unsigned int >::iterator freqInstrMapEnd = freqInstrMap.end();
+    template_map< unsigned int, CacheElem >::iterator instrCacheEnd = this->instrCache.end();
     while(true){
         unsigned int numCycles = 0;
-        unsigned int bitString = this->instrMem.read_word(this->PC-4);
-        template_map< unsigned int, Instruction * >::iterator cachedInstr = Processor::instrCache.find(bitString);
-        if(cachedInstr != instrCacheEnd){
-            // I can call the instruction, I have found it
-            try{
-                #ifndef DISABLE_TOOLS
-                if(!(this->toolManager.newIssue(this->PC-4, cachedInstr->second))){
-                    #endif
-                    numCycles = cachedInstr->second->behavior();
+        if(IRQ != -1){
+            //Basically, what I have to do when
+            //an interrupt arrives is very simple: we check that interrupts
+            //are enabled and that the the processor can take this interrupt
+            //(valid interrupt level). The we simply raise an exception and
+            //acknowledge the IRQ on the irqAck port.
+            if(PSR[key_ET]){
+                if(IRQ == 15 || IRQ > PSR[key_PIL]){
+                    // First of all I have to move to a new register window
+                    unsigned int newCwp = ((unsigned int)(PSR[key_CWP] - 1)) % 8;
+                    PSRbp = (PSR & 0xFFFFFFE0) | newCwp;
+                    PSR.immediateWrite(PSRbp);
+                    for(int i = 8; i < 32; i++){
+                        REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (128)]);
+                    }
 
-                    #ifndef DISABLE_TOOLS
+                    // Now I set the TBR
+                    TBR[key_TT] = 0x10 + IRQ;
+                    // I have to jump to the address contained in the TBR register
+                    PC = TBR;
+                    NPC = TBR + 4;
+                    // finally I acknowledge the interrupt on the external pin port
+                    irqAck.send_pin_req(IRQ, 0);
                 }
-
-                #endif
             }
-            catch(annull_exception &etc){
 
-                numCycles = 0;
-            }
         }
         else{
-            // The current instruction is not present in the cache:
-            // I have to perform the normal decoding phase ...
-            int instrId = this->decoder.decode(bitString);
-            Instruction * instr = Processor::INSTRUCTIONS[instrId];
-            instr->setParams(bitString);
-            try{
-                #ifndef DISABLE_TOOLS
-                if(!(this->toolManager.newIssue(this->PC-4, instr))){
-                    #endif
-                    numCycles = instr->behavior();
-
-                    #ifndef DISABLE_TOOLS
-                }
-
-                #endif
-            }
-            catch(annull_exception &etc){
-
-                numCycles = 0;
-            }
-            template_map< unsigned int, unsigned int >::iterator freqInstrMapIter = freqInstrMap.find(bitString);
-            if(freqInstrMapIter == freqInstrMapEnd){
-                freqInstrMap.insert(std::pair< unsigned int, unsigned int >(bitString, 1));
-                freqInstrMapEnd = freqInstrMap.end();
-            }
-            else{
-                if(freqInstrMapIter->second > 40){
-                    // ... and then add the instruction to the cache
-                    instrCache.insert(std::pair< unsigned int, Instruction * >(bitString, instr));
-                    instrCacheEnd = Processor::instrCache.end();
-                    Processor::INSTRUCTIONS[instrId] = instr->replicate();
+            unsigned int curPC = this->PC-4;
+            unsigned int bitString = this->instrMem.read_word(curPC);
+            template_map< unsigned int, CacheElem >::iterator cachedInstr = this->instrCache.find(bitString);
+            if(cachedInstr != instrCacheEnd){
+                Instruction * &curInstrPtr = cachedInstr->second.instr;
+                // I can call the instruction, I have found it
+                if(curInstrPtr != NULL){
+                    try{
+                        #ifndef DISABLE_TOOLS
+                        if(!(this->toolManager.newIssue(curPC, curInstrPtr))){
+                            #endif
+                            numCycles = curInstrPtr->behavior();
+                            #ifndef DISABLE_TOOLS
+                        }
+                        #endif
+                    }
+                    catch(annull_exception &etc){
+                        numCycles = 0;
+                    }
                 }
                 else{
-                    freqInstrMapIter->second = freqInstrMapIter->second + 1;
+                    int instrId = this->decoder.decode(bitString);
+                    Instruction * instr = Processor::INSTRUCTIONS[instrId];
+                    instr->setParams(bitString);
+                    try{
+                        #ifndef DISABLE_TOOLS
+                        if(!(this->toolManager.newIssue(curPC, instr))){
+                            #endif
+                            numCycles = instr->behavior();
+                            #ifndef DISABLE_TOOLS
+                        }
+                        #endif
+                    }
+                    catch(annull_exception &etc){
+                        numCycles = 0;
+                    }
+                    unsigned int & curCount = cachedInstr->second.count;
+                    if(curCount < 40){
+                        curCount++;
+                    }
+                    else{
+                        // ... and then add the instruction to the cache
+                        curInstrPtr = instr;
+                        Processor::INSTRUCTIONS[instrId] = instr->replicate();
+                    }
                 }
+            }
+            else{
+                // The current instruction is not present in the cache:
+                // I have to perform the normal decoding phase ...
+                int instrId = this->decoder.decode(bitString);
+                Instruction * instr = Processor::INSTRUCTIONS[instrId];
+                instr->setParams(bitString);
+                try{
+                    #ifndef DISABLE_TOOLS
+                    if(!(this->toolManager.newIssue(curPC, instr))){
+                        #endif
+                        numCycles = instr->behavior();
+                        #ifndef DISABLE_TOOLS
+                    }
+                    #endif
+                }
+                catch(annull_exception &etc){
+                    numCycles = 0;
+                }
+                this->instrCache.insert(std::pair< unsigned int, CacheElem >(bitString, CacheElem()));
+                instrCacheEnd = this->instrCache.end();
             }
         }
         this->quantKeeper.inc((numCycles + 1)*this->latency);
@@ -379,13 +426,17 @@ void leon3_funclt_trap::Processor::end_of_elaboration(){
     this->resetOp();
 }
 
+LEON3_ABIIf & leon3_funclt_trap::Processor::getInterface(){
+    return *this->abiIf;
+}
+
 Instruction * * leon3_funclt_trap::Processor::INSTRUCTIONS = NULL;
-template_map< unsigned int, Instruction * > leon3_funclt_trap::Processor::instrCache;
 int leon3_funclt_trap::Processor::numInstances = 0;
 leon3_funclt_trap::Processor::Processor( sc_module_name name, sc_time latency ) : \
     sc_module(name), latency(latency), PSR("PSR"), WIM("WIM"), TBR("TBR"), Y("Y"), PC("PC"), \
     NPC("NPC"), PSRbp("PSRbp"), Ybp("Ybp"), ASR18bp("ASR18bp"), instrMem("instrMem", \
-    this->quantKeeper), dataMem("dataMem", this->quantKeeper), irqAck("irqAck_PIN"){
+    this->quantKeeper), dataMem("dataMem", this->quantKeeper), IRQ_port("IRQ_IRQ", IRQ), \
+    irqAck("irqAck_PIN"){
     Processor::numInstances++;
     if(Processor::INSTRUCTIONS == NULL){
         // Initialization of the array holding the initial instance of the instructions
@@ -728,8 +779,8 @@ leon3_funclt_trap::Processor::Processor( sc_module_name name, sc_time latency ) 
     this->REGS[30].updateAlias(this->WINREGS[22]);
     this->REGS[31].updateAlias(this->WINREGS[23]);
     this->FP.updateAlias(this->REGS[30], 0);
-    this->PCR.updateAlias(this->ASR[17], 0);
     this->SP.updateAlias(this->REGS[14], 0);
+    this->PCR.updateAlias(this->ASR[17], 0);
     this->LR.updateAlias(this->REGS[31], 0);
     this->numInstructions = 0;
     this->ENTRY_POINT = 0;
@@ -750,10 +801,10 @@ leon3_funclt_trap::Processor::~Processor(){
         }
         delete [] Processor::INSTRUCTIONS;
         Processor::INSTRUCTIONS = NULL;
-        template_map< unsigned int, Instruction * >::const_iterator cacheIter, cacheEnd;
-        for(cacheIter = Processor::instrCache.begin(), cacheEnd = Processor::instrCache.end(); \
-            cacheIter != cacheEnd; cacheIter++){
-            delete cacheIter->second;
+        template_map< unsigned int, CacheElem >::const_iterator cacheIter, cacheEnd;
+        for(cacheIter = this->instrCache.begin(), cacheEnd = this->instrCache.end(); cacheIter \
+            != cacheEnd; cacheIter++){
+            delete cacheIter->second.instr;
         }
         delete this->abiIf;
     }
