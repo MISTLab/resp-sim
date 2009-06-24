@@ -20,15 +20,18 @@ def build(bld):
     obj.custom_code = """
 OSEmulatorBase = mb.global_ns.class_('OSEmulatorBase')
 OSEmulatorBase.include()
-cls = mb.global_ns.classes(lambda decl: decl.name.startswith('ToolsIf'))
-for i in cls:
+tcls = mb.global_ns.classes(lambda decl: decl.name.startswith('ToolsIf'), allow_empty=True)
+for i in tcls:
     i.include()
-cls = mb.global_ns.classes(lambda decl: decl.name.startswith('OSEmulator'))
-for i in cls:
+ocls = mb.global_ns.classes(lambda decl: decl.name.startswith('OSEmulator'), allow_empty=True)
+for i in ocls:
     i.include()
     if i.name == 'OSEmulator<unsigned int, 0>':
         i.alias = 'OSEmulator32_0'
 mb.global_ns.class_('ABIIf<unsigned int>').include()
+
+mb.global_ns.classes(lambda decl: decl.name.startswith('ToolsManager'), allow_empty=True).include()
+mb.global_ns.classes(lambda decl: decl.name.startswith('MemoryToolsIf'), allow_empty=True).ignore = False
 
 trap_names = mb.namespaces(lambda x: x.name == 'trap')
 for cur_namespace in trap_names:

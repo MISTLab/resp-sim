@@ -74,11 +74,11 @@ mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) ).exclu
 
 # Include important stuff
 #print "Including classes"
-sc_classes = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_') and not 'sc_controller' in decl.name)
+sc_classes = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_') and not 'sc_controller' in decl.name, allow_empty=True)
 for i in sc_classes:
     i.ignore = False
 
-sc_enums = mb.global_ns.enumerations(lambda decl: decl.name.startswith('sc_'))
+sc_enums = mb.global_ns.enumerations(lambda decl: decl.name.startswith('sc_'), allow_empty=True)
 for i in sc_enums:
     i.include()
 
@@ -102,13 +102,13 @@ bind_decl.include()
 mb.global_ns.member_functions( 'is_reset' ).call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
 
 #print "Including Signals"
-signal = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_signal<'))
+signal = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_signal<'), allow_empty=True)
 signal.include()
 for i in signal:
     i.member_functions().exclude()
 
 #print "Including Bit Vectors"
-bvectors = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_bv<'))
+bvectors = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_bv<'), allow_empty=True)
 bvectors.include()
 for i in bvectors:
     i.member_operators().exclude()
@@ -116,15 +116,15 @@ for i in bvectors:
 #print "Including clock"
 clock = mb.global_ns.class_('sc_clock')
 clock.include()
-clock.member_functions(lambda decl: decl.name.startswith('period')).include()
-clock.member_functions(lambda decl: decl.name.startswith('duty_cycle')).include()
-clock.member_functions(lambda decl: decl.name.startswith('before_end_of_elaboration')).exclude()
-clock.member_functions(lambda decl: decl.name.startswith('posedge_action')).exclude()
-clock.member_functions(lambda decl: decl.name.startswith('negedge_action')).exclude()
-clock.member_functions(lambda decl: decl.name.startswith('report_error')).exclude()
-clock.member_functions(lambda decl: decl.name.startswith('init')).exclude()
-clock.member_functions(lambda decl: decl.name.startswith('is_clock')).exclude()
-clock.member_functions(lambda decl: decl.name.startswith('signal')).call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
+clock.member_functions(lambda decl: decl.name.startswith('period'), allow_empty=True).include()
+clock.member_functions(lambda decl: decl.name.startswith('duty_cycle'), allow_empty=True).include()
+clock.member_functions(lambda decl: decl.name.startswith('before_end_of_elaboration'), allow_empty=True).exclude()
+clock.member_functions(lambda decl: decl.name.startswith('posedge_action'), allow_empty=True).exclude()
+clock.member_functions(lambda decl: decl.name.startswith('negedge_action'), allow_empty=True).exclude()
+clock.member_functions(lambda decl: decl.name.startswith('report_error'), allow_empty=True).exclude()
+clock.member_functions(lambda decl: decl.name.startswith('init'), allow_empty=True).exclude()
+clock.member_functions(lambda decl: decl.name.startswith('is_clock'), allow_empty=True).exclude()
+clock.member_functions(lambda decl: decl.name.startswith('signal'), allow_empty=True).call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
 
 #print "Including time"
 time = mb.global_ns.class_('sc_time')
@@ -142,10 +142,10 @@ sc_obj.member_functions(lambda decl: decl.name.startswith('sc_object')).exclude(
 sc_obj.variables(lambda decl: decl.name.startswith('m_name')).exclude()
 
 #print "Including free functions"
-sc_start_decl = mb.global_ns.free_functions('sc_start')
+sc_start_decl = mb.global_ns.free_functions('sc_start', allow_empty=True)
 for i in sc_start_decl:
     i.include()
-sc_stop_decl = mb.global_ns.free_functions('sc_stop')
+sc_stop_decl = mb.global_ns.free_functions('sc_stop', allow_empty=True)
 for i in sc_stop_decl:
     i.include()
 my_sc_is_running_decl = mb.global_ns.free_function('my_sc_is_running')
@@ -155,7 +155,7 @@ waitFuns = mb.global_ns.free_functions('wait')
 for i in waitFuns:
     i.include()
     i.use_overload_macro = True
-simContFun = mb.global_ns.free_functions('sc_get_curr_simcontext')
+simContFun = mb.global_ns.free_functions('sc_get_curr_simcontext', allow_empty=True)
 for i in simContFun:
     i.include()
     i.call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
@@ -163,7 +163,7 @@ for i in simContFun:
 mb.global_ns.calldefs( declarations.access_type_matcher_t('protected') ).exclude()
 mb.global_ns.calldefs( declarations.access_type_matcher_t('private') ).exclude()
 
-mb.global_ns.class_('sc_simcontext').member_functions(lambda x: x.name.startswith('clean')).include()
+mb.global_ns.class_('sc_simcontext').member_functions(lambda x: x.name.startswith('clean'), allow_empty=True).include()
 
 sc_names = mb.namespaces(lambda x: x.name in ['sc_core', 'sc_dt'])
 for cur_namespace in sc_names:
