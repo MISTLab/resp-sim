@@ -34,8 +34,8 @@ def build(bld):
     obj.split = 10
     obj.name = 'leon3_funcLT_wrapper'
     obj.target = 'leon3_funcLT_wrapper'
-    obj.include = 'scwrapper tlmwrapper'
-    obj.start_decls = 'leon3_funclt_trap trap'
+    obj.include = 'scwrapper tlmwrapper trapwrapper'
+    obj.start_decls = 'leon3_funclt_trap'
     obj.custom_code = """
 for i in mb.global_ns.classes():
     for base in i.recursive_bases:
@@ -43,12 +43,6 @@ for i in mb.global_ns.classes():
             i.exclude()
             break
 mb.global_ns.class_('Instruction').exclude()
-#cls = mb.global_ns.classes(lambda decl: 'ABIIf' in decl.name)
-#for i in cls:
-    #i.include()
-    #if i.name.startswith('ABIIf<'):
-        #i.member_functions().exclude()
-mb.global_ns.class_('ABIIf<unsigned int>').include()
 mb.global_ns.class_('LEON3_ABIIf').constructors().exclude()
 
 mb.global_ns.class_('Register').exclude()

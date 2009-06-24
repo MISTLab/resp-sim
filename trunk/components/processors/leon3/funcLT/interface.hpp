@@ -102,10 +102,9 @@ namespace leon3_funclt_trap{
         unsigned int readGDBReg( const unsigned int & gdbId ) const throw();
         unsigned int nGDBRegs() const throw();
         void setGDBReg( const unsigned int & newValue, const unsigned int & gdbId ) throw();
-        unsigned int readMem( const unsigned int & address, int length = sizeof(unsigned int) );
+        unsigned int readMem( const unsigned int & address );
         unsigned char readCharMem( const unsigned int & address );
-        void writeMem( const unsigned int & address, unsigned int datum, int length = sizeof(unsigned \
-            int) );
+        void writeMem( const unsigned int & address, unsigned int datum );
         void writeCharMem( const unsigned int & address, unsigned char datum );
         virtual ~LEON3_ABIIf();
     };
