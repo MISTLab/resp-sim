@@ -79,6 +79,7 @@ sys.path.append(os.path.abspath(os.path.join(srcdir, 'src', 'power')))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'controller')))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'sc_wrapper')))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'tlm_wrapper')))
+sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'trap_wrapper')))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src')))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'utils')))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'bfdFrontend')))
@@ -228,6 +229,10 @@ class RespKernel:
             print "Loading tlmwrapper"
         import tlmwrapper
         filterNames(tlmwrapper)
+        if self.verbose:
+            print "Loading trapwrapper"
+        import trapwrapper
+        filterNames(trapwrapper)
         if self.verbose:
             print "Loading sc_controller"
         import sc_controller_wrapper

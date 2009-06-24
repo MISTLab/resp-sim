@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 # -*- coding: iso-8859-1 -*-
-# encoding: utf-8
 
 import Options
 import sys,os
@@ -14,7 +13,7 @@ def build(bld):
     tlm_export.hpp
     '''
 
-    obj.target = 'tlmwrapper';
+    obj.target = 'tlmwrapper'
     obj.start_decls = 'tlm tlm_utils'
 
     obj.custom_code = """

@@ -15,6 +15,7 @@ def build(bld):
         memory.cpp
         externalPorts.cpp
         externalPins.cpp
+        irqPorts.cpp
     """
     obj.uselib = 'BOOST BOOST_FILESYSTEM BOOST_THREAD SYSTEMC_H TLM TRAP'
     obj.uselib_local = 'systemc binutils utils'
@@ -42,6 +43,12 @@ for i in mb.global_ns.classes():
             i.exclude()
             break
 mb.global_ns.class_('Instruction').exclude()
+#cls = mb.global_ns.classes(lambda decl: 'ABIIf' in decl.name)
+#for i in cls:
+    #i.include()
+    #if i.name.startswith('ABIIf<'):
+        #i.member_functions().exclude()
+mb.global_ns.class_('ABIIf<unsigned int>').include()
 mb.global_ns.class_('LEON3_ABIIf').constructors().exclude()
 
 mb.global_ns.class_('Register').exclude()
@@ -51,6 +58,7 @@ mb.global_ns.class_('Alias').ignore = False
 mb.global_ns.class_('InnerField').exclude()
 mb.global_ns.class_('InnerField').ignore = False
 mb.global_ns.class_('Processor').member_function('decode').exclude()
+mb.global_ns.class_('Processor').member_function('getInterface').call_policies = call_policies.return_value_policy( call_policies.reference_existing_object )
 
 mb.global_ns.classes(lambda decl: decl.name.startswith('ToolsManager'), allow_empty=True).ignore = False
 mb.global_ns.classes(lambda decl: decl.name.startswith('MemoryToolsIf'), allow_empty=True).ignore = False
