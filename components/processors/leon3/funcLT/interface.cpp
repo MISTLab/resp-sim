@@ -419,8 +419,7 @@ void leon3_funclt_trap::LEON3_ABIIf::setGDBReg( const unsigned int & newValue, c
     }
 }
 
-unsigned int leon3_funclt_trap::LEON3_ABIIf::readMem( const unsigned int & address, \
-    int length ){
+unsigned int leon3_funclt_trap::LEON3_ABIIf::readMem( const unsigned int & address ){
     return this->dataMem.read_word_dbg(address);
 }
 
@@ -430,7 +429,7 @@ unsigned char leon3_funclt_trap::LEON3_ABIIf::readCharMem( const unsigned int & 
 }
 
 void leon3_funclt_trap::LEON3_ABIIf::writeMem( const unsigned int & address, unsigned \
-    int datum, int length ){
+    int datum ){
     this->dataMem.write_word_dbg(address, datum);
 }
 

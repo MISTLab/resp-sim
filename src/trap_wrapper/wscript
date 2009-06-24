@@ -28,10 +28,29 @@ for i in cls:
     i.include()
     if i.name == 'OSEmulator<unsigned int, 0>':
         i.alias = 'OSEmulator32_0'
+mb.global_ns.class_('ABIIf<unsigned int>').include()
+
+trap_names = mb.namespaces(lambda x: x.name == 'trap')
+for cur_namespace in trap_names:
+    for i in cur_namespace.free_functions(allow_empty=True):
+        i.alias = 'TRAPW_'+i.alias
+    for i in cur_namespace.casting_operators(allow_empty=True):
+        i.alias = 'TRAPW_'+i.alias
+    for i in cur_namespace.classes(allow_empty=True):
+        i.alias = 'TRAPW_'+i.alias
+    for i in cur_namespace.enumerations(allow_empty=True):
+        i.alias = 'TRAPW_'+i.alias
+    for i in cur_namespace.variables(allow_empty=True):
+        i.alias = 'TRAPW_'+i.alias
+    for i in cur_namespace.free_operators(allow_empty=True):
+        i.alias = 'TRAPW_'+i.alias
+    for i in cur_namespace.typedefs(allow_empty=True):
+        i.alias = 'TRAPW_'+i.alias
 """
     obj.uselib = 'SYSTEMC_H TLM TRAP BOOST_PYTHON BOOST_THREAD BOOST_SYSTEM BOOST PYEXT'
     obj.uselib_local = 'systemc binutils'
     obj.include = 'scwrapper tlmwrapper'
     obj.templates = [
         'trap::OSEmulator< unsigned int, 0 >'
+        ,'trap::ABIIf< unsigned int >'
     ]

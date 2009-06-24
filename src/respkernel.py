@@ -39,6 +39,7 @@
 __version__ = '0.5'
 __revision__ = '$Rev$'
 
+TRAP_PREFIX = "TRAPW_"
 TLM_PREFIX = "TLMW_"
 SC_PREFIX = "SYSCW_"
 
@@ -114,8 +115,26 @@ def print_stats():
         print 'Error in the print of the statistics --> ' + str(e)
 
 def filterNames(namespaceToFilter):
-    global scwrapper, tlmwrapper
+    global scwrapper, tlmwrapper, trapwrapper
     from types import BuiltinFunctionType
+
+    # Filtering for TRAP
+    for j in filter(lambda x: x.startswith(TRAP_PREFIX), dir(namespaceToFilter)):
+        item = getattr(namespaceToFilter, j)
+
+        if not isinstance( item , BuiltinFunctionType ):
+            try:
+                item.__name__ = j[len(TRAP_PREFIX):]
+                item.__module__ = 'trapwrapper'
+            except:
+                print 'Error converting name of ' + j
+
+        if not j[len(TRAP_PREFIX):] in dir(trapwrapper):
+            setattr( trapwrapper, j[len(TRAP_PREFIX):], item )
+
+        delattr(namespaceToFilter, j)
+
+    # Filtering for TLM
     for j in filter(lambda x: x.startswith(TLM_PREFIX), dir(namespaceToFilter)):
         item = getattr(namespaceToFilter, j)
 
@@ -131,6 +150,7 @@ def filterNames(namespaceToFilter):
 
         delattr(namespaceToFilter, j)
 
+    # Filtering for SYSTEMC
     for j in filter(lambda x: x.startswith(SC_PREFIX), dir(namespaceToFilter)):
         item = getattr(namespaceToFilter, j)
 
@@ -147,12 +167,27 @@ def filterNames(namespaceToFilter):
         delattr( namespaceToFilter, j)
 
     # Now I have again to go over the components and eliminate all those elements which are
-    # contained also in scwrapper and in TLM wrapper
-    if not namespaceToFilter.__name__ in ['tlmwrapper', 'scwrapper']:
-        tlmSysC_names = dir(scwrapper) + dir(tlmwrapper)
-        for j in dir(namespaceToFilter):
-            if j in tlmSysC_names and not j.startswith('_'):
-                delattr( namespaceToFilter, j)
+    # contained also in scwrapper, in TLM wrapper, and in TRAP wrapper
+    toFilterNames_names = []
+    if namespaceToFilter.__name__ != 'scwrapper':
+        try:
+            toFilterNames_names += dir(scwrapper)
+        except:
+            pass
+    if namespaceToFilter.__name__ != 'tlmwrapper':
+        try:
+            toFilterNames_names += dir(tlmwrapper)
+        except:
+            pass
+    if namespaceToFilter.__name__ != 'trapwrapper':
+        try:
+            toFilterNames_names += dir(trapwrapper)
+        except:
+            pass
+
+    for j in dir(namespaceToFilter):
+        if j in toFilterNames_names and not j.startswith('_'):
+            delattr( namespaceToFilter, j)
 
 class RespKernel:
     """This class represents the core simulator class. This class provides a set of objects and functions to
@@ -216,7 +251,7 @@ class RespKernel:
             import warnings
             warnings.simplefilter('ignore', RuntimeWarning)
 
-        global tlmwrapper, scwrapper, sc_controller, compManager, converters, bfdwrapper, loader_wrapper
+        global tlmwrapper, scwrapper, trapwrapper, sc_controller, compManager, converters, bfdwrapper, loader_wrapper
 
         if self.verbose:
             print "Loading converters"

@@ -17,6 +17,11 @@ def build(bld):
     obj.start_decls = 'tlm tlm_utils'
 
     obj.custom_code = """
+# Exclude protected members
+cls = mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) , allow_empty=True )
+for i in cls:
+    i.exclude()
+
 tlm_enums = mb.global_ns.enumerations(lambda decl: decl.name.startswith('tlm_'))
 for i in tlm_enums:
     i.include()
@@ -45,13 +50,18 @@ tlm_extension_base.member_functions(allow_empty=True).exclude()
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_target_socket') or decl.name.startswith('tlm_target_socket') , allow_empty=True)
 for i in cls:
     i.include()
-    i.member_functions(allow_empty=True).exclude()
+    for k in i.member_functions(allow_empty=True):
+        k.exclude()
+    for k in i.member_operators(allow_empty=True):
+        k.exclude()
 
 #print 'Including tlm_base_initiator_socket'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_base_initiator_socket') or decl.name.startswith('tlm_initiator_socket'), allow_empty=True)
 for i in cls:
     i.include()
     i.member_functions(allow_empty=True).exclude()
+    for k in i.member_operators(allow_empty=True):
+        k.exclude()
     for k in i.member_functions(allow_empty=True):
         if k.name == 'bind':
             k.include()
@@ -80,30 +90,32 @@ for i in cls:
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_fw_transport_if'), allow_empty=True)
 for i in cls:
     i.include()
+    for k in i.member_operators(allow_empty=True):
+        k.exclude()
 
 #print 'Including tlm_bw_transport_if'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_bw_transport_if'), allow_empty=True)
 for i in cls:
     i.include()
+    for k in i.member_operators(allow_empty=True):
+        k.exclude()
 
 #print 'Including tlm_generic_payload'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('tlm_generic_payload'), allow_empty=True)
 for i in cls:
     i.include()
-    i.member_functions(allow_empty=True).exclude()
+    for k in i.member_functions(allow_empty=True):
+        k.exclude()
 
 #print 'Including multi_passthrough'
 cls = mb.global_ns.classes(lambda decl: decl.name.startswith('multi_passthrough'), allow_empty=True)
 for i in cls:
     i.include()
-    i.member_functions(allow_empty=True).exclude()
+    for k in i.member_functions(allow_empty=True):
+        k.exclude()
 
-# Exclude protected members
-cls = mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) , allow_empty=True )
-if cls: cls.exclude()
-
-sc_names = mb.namespaces(lambda x: x.name in ['tlm', 'tlm_utils'])
-for cur_namespace in sc_names:
+tlm_names = mb.namespaces(lambda x: x.name in ['tlm', 'tlm_utils'])
+for cur_namespace in tlm_names:
     for i in cur_namespace.free_functions(allow_empty=True):
         if not i.alias.startswith('TLM_'):
             i.alias = 'TLMW_'+i.alias
