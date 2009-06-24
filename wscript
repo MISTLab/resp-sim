@@ -77,28 +77,37 @@ def configure(conf):
     if type(conf.env['RPATH']) == type(''):
         conf.env['RPATH'] = conf.env['RPATH'].split(' ')
 
-    ########################################
-    # Set and Check for special gcc flags
-    ########################################
-    if not '-g' in conf.env['CCFLAGS'] and not '-g3' in conf.env['CCFLAGS']:
-        conf.env.append_unique('CCFLAGS', '-O2')
-        conf.env.append_unique('CPPFLAGS', '-DNDEBUG')
-    if not '-g' in conf.env['CXXFLAGS'] and not '-g3' in conf.env['CXXFLAGS']:
-        conf.env.append_unique('CXXFLAGS', '-O2')
-        conf.env.append_unique('CPPFLAGS', '-DNDEBUG')
+    #########################################################
+    # Set and Check for special and optimization gcc flags
+    ########################################################
+    if not conf.env['CXXFLAGS'] and not conf.env['CCFLAGS']:
+        testFlags = ['-O2', '-march=native', '-pipe', '-finline-functions', '-ftracer', '-fomit-frame-pointer']
+        if conf.check_cxx(cxxflags=testFlags, msg='Checking for optimization flags') and conf.check_cc(cflags=testFlags, msg='Checking for optimization flags'):
+            conf.env.append_unique('CXXFLAGS', testFlags)
+            conf.env.append_unique('CCFLAGS', testFlags)
+            conf.env.append_unique('CPPFLAGS', '-DNDEBUG')
+        else:
+            testFlags = ['-O2', '-pipe', '-finline-functions', '-fomit-frame-pointer']
+            if conf.check_cxx(cxxflags=testFlags, msg='Checking for optimization flags') and conf.check_cc(cflags=testFlags, msg='Checking for optimization flags'):
+                conf.env.append_unique('CXXFLAGS', testFlags)
+                conf.env.append_unique('CCFLAGS', testFlags)
+                conf.env.append_unique('CPPFLAGS', '-DNDEBUG')
 
-    defaultFlags = ['-fstrict-aliasing','-fPIC']
+    defaultFlags = ['-fstrict-aliasing', '-fPIC']
+    conf.check_cxx(cxxflags=defaultFlags, madatory=1, msg='Checking for dynamic library flags')
     conf.env.append_unique('LINKFLAGS','-fPIC' )
+    conf.check_cxx(linkflags='-fPIC', mandatory=1)
     if sys.platform != 'darwin':
         conf.env.append_unique('LINKFLAGS','-Wl,-E')
+        conf.check_cxx(linkflags='-Wl,-E', mandatory=1)
 
     conf.env.append_unique('CXXFLAGS', defaultFlags)
-    conf.env.append_unique('CFLAGS', defaultFlags)
     conf.env.append_unique('CCFLAGS', defaultFlags)
     conf.env.append_unique('CPPFLAGS', '-DPIC')
 
     if sys.platform == 'darwin':
         conf.env.append_unique('shlib_LINKFLAGS', ['-undefined suppress', '-flat_namespace'] )
+        conf.check_cxx(linkflags=['-undefined suppress', '-flat_namespace'], mandatory=1)
 
     if not Options.options.enable_tools:
         conf.env.append_unique('CPPFLAGS','-DDISABLE_TOOLS')
@@ -109,17 +118,6 @@ def configure(conf):
     else:
         conf.env.append_unique('CPPFLAGS','-DBIG_ENDIAN_BO')
         conf.check_message_custom('endianness', '', 'big')
-
-    for flag in conf.env['CPPFLAGS']:
-        conf.check_cc(cflags=flag, mandatory=1)
-    for flag in conf.env['CCFLAGS']:
-        conf.check_cc(cflags=flag, mandatory=1)
-    for flag in conf.env['CXXFLAGS']:
-        conf.check_cxx(cxxflags=flag, mandatory=1)
-    for flag in conf.env['LINKFLAGS']:
-        conf.check_cxx(linkflags=flag, mandatory=1)
-    for flag in conf.env['STLINKFLAGS']:
-        conf.check_cxx(linkflags=flag, mandatory=1)
 
     ##################################################
     # Check for boost libraries
