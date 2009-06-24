@@ -53,7 +53,4 @@ mb.global_ns.class_('InnerField').exclude()
 mb.global_ns.class_('InnerField').ignore = False
 mb.global_ns.class_('Processor').member_function('decode').exclude()
 mb.global_ns.class_('Processor').member_function('getInterface').call_policies = call_policies.return_value_policy( call_policies.reference_existing_object )
-
-mb.global_ns.classes(lambda decl: decl.name.startswith('ToolsManager'), allow_empty=True).ignore = False
-mb.global_ns.classes(lambda decl: decl.name.startswith('MemoryToolsIf'), allow_empty=True).ignore = False
 """
