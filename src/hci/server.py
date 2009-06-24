@@ -129,7 +129,7 @@ class RespRequestHandler(SocketServer.StreamRequestHandler):
         self.wfile.write(encode_string('OK'+'S'+str(resp_kernel.controller.get_simulated_time()))+')')
 
     def get_real_time(self, arguments):
-        self.wfile.write(encode_string('OK'+'S'+str(resp_kernel.controller.get_real_time_ms()))+')')
+        self.wfile.write(encode_string('OK'+'S'+str(resp_kernel.controller.get_real_time()))+')')
 
     def connect_tlm(self, arguments):
         #name = arguments[1]
