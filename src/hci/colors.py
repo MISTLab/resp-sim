@@ -1,33 +1,46 @@
+# -*- coding: iso-8859-1 -*-
 ##############################################################################
-#      ___           ___           ___           ___   
-#     /  /\         /  /\         /  /\         /  /\  
-#    /  /::\       /  /:/_       /  /:/_       /  /::\ 
-#   /  /:/\:\     /  /:/ /\     /  /:/ /\     /  /:/\:\
-#  /  /:/~/:/    /  /:/ /:/_   /  /:/ /::\   /  /:/~/:/
-# /__/:/ /:/___ /__/:/ /:/ /\ /__/:/ /:/\:\ /__/:/ /:/ 
-# \  \:\/:::::/ \  \:\/:/ /:/ \  \:\/:/~/:/ \  \:\/:/  
-#  \  \::/~~~~   \  \::/ /:/   \  \::/ /:/   \  \::/   
-#   \  \:\        \  \:\/:/     \__\/ /:/     \  \:\   
-#    \  \:\        \  \::/        /__/:/       \  \:\  
-#     \__\/         \__\/         \__\/         \__\/  
-#     
 #
-#   This program is free software; you can redistribute it and/or modify
-#   it under the terms of the GNU General Public License as published by
+#
+#         ___           ___           ___           ___
+#        /  /\         /  /\         /  /\         /  /\
+#       /  /::\       /  /:/_       /  /:/_       /  /::\
+#      /  /:/\:\     /  /:/ /\     /  /:/ /\     /  /:/\:\
+#     /  /:/~/:/    /  /:/ /:/_   /  /:/ /::\   /  /:/~/:/
+#    /__/:/ /:/___ /__/:/ /:/ /\ /__/:/ /:/\:\ /__/:/ /:/
+#    \  \:\/:::::/ \  \:\/:/ /:/ \  \:\/:/~/:/ \  \:\/:/
+#     \  \::/~~~~   \  \::/ /:/   \  \::/ /:/   \  \::/
+#      \  \:\        \  \:\/:/     \__\/ /:/     \  \:\
+#       \  \:\        \  \::/        /__/:/       \  \:\
+#        \__\/         \__\/         \__\/         \__\/
+#
+#
+#
+#
+#   This file is part of ReSP.
+#
+#   TRAP is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU Lesser General Public License as published by
 #   the Free Software Foundation; either version 2 of the License, or
 #   (at your option) any later version.
 #
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU General Public License for more details.
+#   GNU Lesser General Public License for more details.
 #
-#   You should have received a copy of the GNU General Public License
+#   You should have received a copy of the GNU Lesser General Public License
 #   along with this program; if not, write to the
 #   Free Software Foundation, Inc.,
-#   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA.
+#   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+#   or see <http://www.gnu.org/licenses/>.
 #
-###############################################################################
+#
+#
+#   (c) Giovanni Beltrame, Luca Fossati
+#       Giovanni.Beltrame@esa.int fossati@elet.polimi.it
+#
+##############################################################################
 
 class ColorDict(dict):
     def __init__(self):
@@ -46,7 +59,7 @@ def is_color_enabled():
 
 def set_colors(enable=True):
     """ It enables/disables colors in console printing"""
-    
+
     if enable:
         colorMap['black'] = """\x1b[30m"""
         colorMap['blue'] = """\x1b[34m"""
@@ -65,7 +78,7 @@ def set_colors(enable=True):
         colorMap['purple'] = """\x1b[35;1m"""
         colorMap['red'] = """\x1b[31m"""
         colorMap['white'] = """\x1b[37;1m"""
-        colorMap['yellow'] = """\x1b[33;1m""" 
+        colorMap['yellow'] = """\x1b[33;1m"""
     else:
         colorMap.clear()
 
