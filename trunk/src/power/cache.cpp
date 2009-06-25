@@ -1,3 +1,46 @@
+/***************************************************************************\
+ *
+ *
+ *         ___           ___           ___           ___
+ *        /  /\         /  /\         /  /\         /  /\
+ *       /  /::\       /  /:/_       /  /:/_       /  /::\
+ *      /  /:/\:\     /  /:/ /\     /  /:/ /\     /  /:/\:\
+ *     /  /:/~/:/    /  /:/ /:/_   /  /:/ /::\   /  /:/~/:/
+ *    /__/:/ /:/___ /__/:/ /:/ /\ /__/:/ /:/\:\ /__/:/ /:/
+ *    \  \:\/:::::/ \  \:\/:/ /:/ \  \:\/:/~/:/ \  \:\/:/
+ *     \  \::/~~~~   \  \::/ /:/   \  \::/ /:/   \  \::/
+ *      \  \:\        \  \:\/:/     \__\/ /:/     \  \:\
+ *       \  \:\        \  \::/        /__/:/       \  \:\
+ *        \__\/         \__\/         \__\/         \__\/
+ *
+ *
+ *
+ *
+ *   This file is part of ReSP.
+ *
+ *   TRAP is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU Lesser General Public License as published by
+ *   the Free Software Foundation; either version 2 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU Lesser General Public License for more details.
+ *
+ *   You should have received a copy of the GNU Lesser General Public License
+ *   along with this program; if not, write to the
+ *   Free Software Foundation, Inc.,
+ *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *   or see <http://www.gnu.org/licenses/>.
+ *
+ *
+ *
+ *   (c) Giovanni Beltrame, Luca Fossati
+ *       Giovanni.Beltrame@esa.int fossati@elet.polimi.it
+ *
+\***************************************************************************/
+
 
 #include <cache.hpp>
 #include <ecacti_wrapper.h>
@@ -22,13 +65,13 @@ ECacti::ECacti() : ecacti_cache() {
     this->probes["readMissNum"] = 0.0;
     this->probes["writeMissNum"] = 0.0;
     this->probes["execution_time"] = 0.0;
-    
+
     this->rhitenergy = 1.5260595272768383e-10;
     this->whitenergy = 1.2664516868313481e-10;
     this->rmissenergy = 3.2881930812357897e-10;
     this->wmissenergy = 1.5498319357070943e-10;
     this->leakage = 0.01638873861267354;
- 
+
     this->load_cache();
 }
 
@@ -40,9 +83,9 @@ void ECacti::update_parameters() {
                      % parameters["associativity"]
                      % parameters["technology"]
                      % parameters["subbanks"]
-                     % parameters["read_ports"] 
-                     % parameters["write_ports"] 
-                     % parameters["rw_ports"]); 
+                     % parameters["read_ports"]
+                     % parameters["write_ports"]
+                     % parameters["rw_ports"]);
 
     std::map<std::string, std::vector<double> >::iterator item = ecacti_cache.find(key);
     if( item != ecacti_cache.end() ) {
@@ -54,7 +97,7 @@ void ECacti::update_parameters() {
     } else {
 /*        for( std::map<std::string, std::vector<double> >::iterator it = ecacti_cache.begin(); it != ecacti_cache.end() ; it++ )
             std::cout << "##" << it->first << "##" << std::endl;*/
-        
+
         resp::cache_power_data data;
         data = resp::get_power_data( parameters["size"]
                                             , parameters["block_size"]
@@ -64,7 +107,7 @@ void ECacti::update_parameters() {
                                             , parameters["read_ports"]
                                             , parameters["write_ports"]
                                             , parameters["rw_ports"] );
-                                          
+
         this->rhitenergy = data.read_hit;
         this->whitenergy = data.write_hit;
         this->rmissenergy = data.read_miss;
@@ -77,9 +120,9 @@ void ECacti::update_parameters() {
         vec.push_back(data.read_miss);
         vec.push_back(data.write_miss);
         vec.push_back(data.leakage);
-        
+
         ecacti_cache[key] = vec;
-        
+
         //this->save_cache();
     }
 
@@ -98,7 +141,7 @@ void ECacti::load_cache(std::string filename) {
     std::string line;
     // Clear the cache
     ecacti_cache.clear();
-    
+
     // Get a cache line
     while( std::getline( cacheReader, line ) ) {
         // Vector for values

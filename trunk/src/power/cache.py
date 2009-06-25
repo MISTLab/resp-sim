@@ -1,34 +1,46 @@
 # -*- coding: iso-8859-1 -*-
 ##############################################################################
-#      ___           ___           ___           ___
-#     /  /\         /  /\         /  /\         /  /\
-#    /  /::\       /  /:/_       /  /:/_       /  /::\
-#   /  /:/\:\     /  /:/ /\     /  /:/ /\     /  /:/\:\
-#  /  /:/~/:/    /  /:/ /:/_   /  /:/ /::\   /  /:/~/:/
-# /__/:/ /:/___ /__/:/ /:/ /\ /__/:/ /:/\:\ /__/:/ /:/
-# \  \:\/:::::/ \  \:\/:/ /:/ \  \:\/:/~/:/ \  \:\/:/
-#  \  \::/~~~~   \  \::/ /:/   \  \::/ /:/   \  \::/
-#   \  \:\        \  \:\/:/     \__\/ /:/     \  \:\
-#    \  \:\        \  \::/        /__/:/       \  \:\
-#     \__\/         \__\/         \__\/         \__\/
 #
 #
-#   This program is free software; you can redistribute it and/or modify
-#   it under the terms of the GNU General Public License as published by
+#         ___           ___           ___           ___
+#        /  /\         /  /\         /  /\         /  /\
+#       /  /::\       /  /:/_       /  /:/_       /  /::\
+#      /  /:/\:\     /  /:/ /\     /  /:/ /\     /  /:/\:\
+#     /  /:/~/:/    /  /:/ /:/_   /  /:/ /::\   /  /:/~/:/
+#    /__/:/ /:/___ /__/:/ /:/ /\ /__/:/ /:/\:\ /__/:/ /:/
+#    \  \:\/:::::/ \  \:\/:/ /:/ \  \:\/:/~/:/ \  \:\/:/
+#     \  \::/~~~~   \  \::/ /:/   \  \::/ /:/   \  \::/
+#      \  \:\        \  \:\/:/     \__\/ /:/     \  \:\
+#       \  \:\        \  \::/        /__/:/       \  \:\
+#        \__\/         \__\/         \__\/         \__\/
+#
+#
+#
+#
+#   This file is part of ReSP.
+#
+#   TRAP is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU Lesser General Public License as published by
 #   the Free Software Foundation; either version 2 of the License, or
 #   (at your option) any later version.
 #
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU General Public License for more details.
+#   GNU Lesser General Public License for more details.
 #
-#   You should have received a copy of the GNU General Public License
+#   You should have received a copy of the GNU Lesser General Public License
 #   along with this program; if not, write to the
 #   Free Software Foundation, Inc.,
-#   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA.
+#   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+#   or see <http://www.gnu.org/licenses/>.
 #
-###############################################################################
+#
+#
+#   (c) Giovanni Beltrame, Luca Fossati
+#       Giovanni.Beltrame@esa.int fossati@elet.polimi.it
+#
+##############################################################################
 
 from generic import model
 import csv
@@ -82,7 +94,7 @@ class ecacti(model):
 
     def load_cache(self):
         self.ecacti_cache = dict()
-    
+
         try:
             cacheReader = csv.reader(open('/tmp/ecacti_cache'))
         except IOError:
@@ -97,14 +109,14 @@ class ecacti(model):
         cacheWriter = csv.writer(open('/tmp/ecacti_cache', 'w'))
         # size block associativity subbanks technology readp writep rwp || rhite white rmisse wmiss leak
         for k,v in self.ecacti_cache.items():
-            cacheWriter.writerow( k.split() + v ) 
+            cacheWriter.writerow( k.split() + v )
 
     def update_parameters(self):
         """ Update the model parameters using eCACTI """
         import ecacti_wrapper
         key = "%d %d %d %f %d %d %d %d" % (self.size , self.block_size , self.associativity, self.technology , self.subbanks, self.read_ports, self.write_ports, self.rw_ports)
         try:
-            
+
             config = self.ecacti_cache[key]
             self.rhitenergy = float(config[0])
             self.whitenergy = float(config[1])

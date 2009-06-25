@@ -1,33 +1,46 @@
+# -*- coding: iso-8859-1 -*-
 ##############################################################################
-#      ___           ___           ___           ___   
-#     /  /\         /  /\         /  /\         /  /\  
-#    /  /::\       /  /:/_       /  /:/_       /  /::\ 
-#   /  /:/\:\     /  /:/ /\     /  /:/ /\     /  /:/\:\
-#  /  /:/~/:/    /  /:/ /:/_   /  /:/ /::\   /  /:/~/:/
-# /__/:/ /:/___ /__/:/ /:/ /\ /__/:/ /:/\:\ /__/:/ /:/ 
-# \  \:\/:::::/ \  \:\/:/ /:/ \  \:\/:/~/:/ \  \:\/:/  
-#  \  \::/~~~~   \  \::/ /:/   \  \::/ /:/   \  \::/   
-#   \  \:\        \  \:\/:/     \__\/ /:/     \  \:\   
-#    \  \:\        \  \::/        /__/:/       \  \:\  
-#     \__\/         \__\/         \__\/         \__\/  
-#     
 #
-#   This program is free software; you can redistribute it and/or modify
-#   it under the terms of the GNU General Public License as published by
+#
+#         ___           ___           ___           ___
+#        /  /\         /  /\         /  /\         /  /\
+#       /  /::\       /  /:/_       /  /:/_       /  /::\
+#      /  /:/\:\     /  /:/ /\     /  /:/ /\     /  /:/\:\
+#     /  /:/~/:/    /  /:/ /:/_   /  /:/ /::\   /  /:/~/:/
+#    /__/:/ /:/___ /__/:/ /:/ /\ /__/:/ /:/\:\ /__/:/ /:/
+#    \  \:\/:::::/ \  \:\/:/ /:/ \  \:\/:/~/:/ \  \:\/:/
+#     \  \::/~~~~   \  \::/ /:/   \  \::/ /:/   \  \::/
+#      \  \:\        \  \:\/:/     \__\/ /:/     \  \:\
+#       \  \:\        \  \::/        /__/:/       \  \:\
+#        \__\/         \__\/         \__\/         \__\/
+#
+#
+#
+#
+#   This file is part of ReSP.
+#
+#   TRAP is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU Lesser General Public License as published by
 #   the Free Software Foundation; either version 2 of the License, or
 #   (at your option) any later version.
 #
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU General Public License for more details.
+#   GNU Lesser General Public License for more details.
 #
-#   You should have received a copy of the GNU General Public License
+#   You should have received a copy of the GNU Lesser General Public License
 #   along with this program; if not, write to the
 #   Free Software Foundation, Inc.,
-#   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA.
+#   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+#   or see <http://www.gnu.org/licenses/>.
 #
-###############################################################################
+#
+#
+#   (c) Giovanni Beltrame, Luca Fossati
+#       Giovanni.Beltrame@esa.int fossati@elet.polimi.it
+#
+##############################################################################
 
 """ Module containing some generic helper methods used in the manager classes"""
 
@@ -58,7 +71,7 @@ def getAttrInstance(path, env):
         sys.exit()
     splitPath = path.split('.')
     attributeName = splitPath.pop()
-    
+
     try:
         objInstance = env[splitPath.pop(0)]
         for pathElem in splitPath:
@@ -66,11 +79,11 @@ def getAttrInstance(path, env):
     except Exception, e:
         print 'Unable to get attribute ' + path + ' --> ' + str(e)
         sys.exit()
-        
+
     return [objInstance, attributeName]
 
 def getAttrInstance2(component, attribute):
-    """Given a component instance reference and a string representing the path of 
+    """Given a component instance reference and a string representing the path of
     the attribute in the object, it return the reference of the attribute"""
     if type(attribute) is not str:
         raise exceptions.Exception(str(attribute) + 'is not a valid name of an attribute')
@@ -105,7 +118,7 @@ def getInstance(name, params, components):
                 curModule = comp
                 found = True
                 break
-    
+
     # Now I have to go up in the namespace of the object until
     # I get to the object itself: then I can create the necessary
     # instance
@@ -133,15 +146,15 @@ def getBase(startingName, classToCheck):
         foundBases = []
         for base in baseClasses:
             foundBases.append(getBaseRecusrive(startingName, base))
-        
+
         for curBase in foundBases:
             if curBase != '':
                 return curBase
-        
+
         raise BaseNotFound('No classes in the inheritance chain of ' +
                            classToCheck.__name__ + ' starts with ' + startingName)
 
-        
+
 def getBaseRecusrive(startingName, classToCheck):
     """given an object, it checks if in its inheritance chain there
     is a class whose name is starting with startingName; in case it
@@ -154,11 +167,11 @@ def getBaseRecusrive(startingName, classToCheck):
         foundBases = []
         for base in baseClasses:
             foundBases.append(getBaseRecusrive(startingName, base))
-        
+
         for curBase in foundBases:
             if curBase != '':
                 return curBase
-        
+
         return ''
 
 def getTLMInPort(object):
@@ -174,7 +187,7 @@ def getTLMInPort(object):
                 subports = getTLMInPort(curr)
                 for sp in subports:
                     ports.append(sp)
-    return ports        
+    return ports
 
 def getTLMOutPort(object):
     ports = []
@@ -189,7 +202,7 @@ def getTLMOutPort(object):
                     subports = getTLMOutPort(curr)
                     for sp in subports:
                         ports.append(sp)
-    return ports        
+    return ports
 
 def isTLMInPort(portClass):
     """Given a class it returns true if this can be a TLM port,
@@ -208,7 +221,7 @@ def isTLMOutPort(portClass):
         return True
     except:
         return False
-    
+
 def isSystemCInPort(portClass):
     """Given a class it returns true if this can be a SystemC port,
     false otherwise"""
@@ -359,7 +372,7 @@ def extractClassNames(classs):
     for i in baseCl:
         namesList += extractClassNames(i)
     return namesList
-    
+
 def extractConstrSig(constructor):
     """Given an attribute it extracts a string representing its C++ type"""
     #In order to determine the attribute type, I use the docstring
@@ -395,7 +408,7 @@ def extractConstrSig(constructor):
         if equal != -1:
             params.append((param[:equal].lstrip().rstrip(), param[equal + 1:].lstrip().rstrip()))
     return params
-    
+
 def getTLMPortType(portName, type = None):
     """it parses the name of the port to extract the type of the
     data communicated over the port; the name of the type is returned
@@ -424,7 +437,7 @@ def getTLMPortType(portName, type = None):
         return templTypes[0]
     else:
         raise NotAPort(portName + 'doesn\'t represent a TLM port')
-    
+
 def getSysCPortType(portName):
     """it parses the name of the port to extract the type of the
     data communicated over the port; the name of the type is returned"""

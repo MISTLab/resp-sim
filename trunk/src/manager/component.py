@@ -1,33 +1,46 @@
+# -*- coding: iso-8859-1 -*-
 ##############################################################################
-#      ___           ___           ___           ___   
-#     /  /\         /  /\         /  /\         /  /\  
-#    /  /::\       /  /:/_       /  /:/_       /  /::\ 
-#   /  /:/\:\     /  /:/ /\     /  /:/ /\     /  /:/\:\
-#  /  /:/~/:/    /  /:/ /:/_   /  /:/ /::\   /  /:/~/:/
-# /__/:/ /:/___ /__/:/ /:/ /\ /__/:/ /:/\:\ /__/:/ /:/ 
-# \  \:\/:::::/ \  \:\/:/ /:/ \  \:\/:/~/:/ \  \:\/:/  
-#  \  \::/~~~~   \  \::/ /:/   \  \::/ /:/   \  \::/   
-#   \  \:\        \  \:\/:/     \__\/ /:/     \  \:\   
-#    \  \:\        \  \::/        /__/:/       \  \:\  
-#     \__\/         \__\/         \__\/         \__\/  
-#     
 #
-#   This program is free software; you can redistribute it and/or modify
-#   it under the terms of the GNU General Public License as published by
+#
+#         ___           ___           ___           ___
+#        /  /\         /  /\         /  /\         /  /\
+#       /  /::\       /  /:/_       /  /:/_       /  /::\
+#      /  /:/\:\     /  /:/ /\     /  /:/ /\     /  /:/\:\
+#     /  /:/~/:/    /  /:/ /:/_   /  /:/ /::\   /  /:/~/:/
+#    /__/:/ /:/___ /__/:/ /:/ /\ /__/:/ /:/\:\ /__/:/ /:/
+#    \  \:\/:::::/ \  \:\/:/ /:/ \  \:\/:/~/:/ \  \:\/:/
+#     \  \::/~~~~   \  \::/ /:/   \  \::/ /:/   \  \::/
+#      \  \:\        \  \:\/:/     \__\/ /:/     \  \:\
+#       \  \:\        \  \::/        /__/:/       \  \:\
+#        \__\/         \__\/         \__\/         \__\/
+#
+#
+#
+#
+#   This file is part of ReSP.
+#
+#   TRAP is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU Lesser General Public License as published by
 #   the Free Software Foundation; either version 2 of the License, or
 #   (at your option) any later version.
 #
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU General Public License for more details.
+#   GNU Lesser General Public License for more details.
 #
-#   You should have received a copy of the GNU General Public License
+#   You should have received a copy of the GNU Lesser General Public License
 #   along with this program; if not, write to the
 #   Free Software Foundation, Inc.,
-#   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA.
+#   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+#   or see <http://www.gnu.org/licenses/>.
 #
-###############################################################################
+#
+#
+#   (c) Giovanni Beltrame, Luca Fossati
+#       Giovanni.Beltrame@esa.int fossati@elet.polimi.it
+#
+##############################################################################
 
 class ClassAttr:
     def __init__(self):
@@ -36,13 +49,13 @@ class ClassAttr:
         self.typeName = ''
         self.pyAttrType = None
         self.path = []
-        
+
     def __repr__(self):
         representation = 'Name:@' + self.name + '@'
         representation += 'Type:@' + str(self.typeName) + '@'
         representation += 'Path:@' + str(self.path) + '@'
         return representation
-    
+
     def __str__(self):
         from hci import console
         from hci import colors
@@ -63,13 +76,13 @@ class ClassMethod:
         self.retTypeName = ''
         self.pyRetType = None
         self.path = []
-        
+
     def __repr__(self):
         representation = 'Name:@' + self.name + '@'
         representation += 'RetVal:@' + str(self.retTypeName) + '@'
         representation += 'Path:@' + str(self.path) + '@'
         return representation
-    
+
     def __str__(self):
         from hci import console
         from hci import colors
@@ -86,33 +99,33 @@ class Component:
     def __init__(self):
         self.module = None
         self.classs = None
-        
+
         #Lists the types of the parameters of the constructor; in case one parameters has a default value,
         #then a tuple is used and the second element is the default value
         self.constructor = []
-        
+
         self.in_tlm_ports = []
         self.out_tlm_ports = []
         self.out_sysc_ports = []
         self.in_sysc_ports = []
         self.inout_sysc_ports = []
         self.sysc_signals = []
-        
+
         self.in_tlm_port_gens = []
         self.out_tlm_port_gens = []
         self.out_sysc_port_gens = []
         self.in_sysc_port_gens = []
         self.inout_sysc_port_gens = []
         self.sysc_signal_gens = []
-    
+
     def getName(self):
         return self.module.__name__.lower()
-    
+
     def __repr__(self):
         """Returns a formal representation of this class"""
         if self.module and self.classs:
             representation = 'Component:@' + self.module.__name__ + '@Class:@' + self.classs.__name__ + '@\n'
-            
+
             representation += 'Constructor:' + repr(self.constructor).replace('[', '\\[').replace(']', '\\]') + '\n'
             representation += 'In_TLM_ports:@' + str(len(self.in_tlm_ports)) + '@' + repr(self.in_tlm_ports).replace('[', '\\[').replace(']', '\\]') + '\n'
             representation += 'Out_TLM_ports:@' + str(len(self.out_tlm_ports)) + '@' + repr(self.out_tlm_ports).replace('[', '\\[').replace(']', '\\]') + '\n'
@@ -120,7 +133,7 @@ class Component:
             representation += 'Out_SystemC_ports:@' + str(len(self.out_sysc_ports)) + '@' + repr(self.out_sysc_ports).replace('[', '\\[').replace(']', '\\]') + '\n'
             representation += 'InOut_SystemC_ports:@' + str(len(self.inout_sysc_ports)) + '@' + repr(self.inout_sysc_ports).replace('[', '\\[').replace(']', '\\]') + '\n'
             representation += 'SystemC_signals:@' + str(len(self.sysc_signals)) + '@' + repr(self.sysc_signals).replace('[', '\\[').replace(']', '\\]') + '\n'
-            
+
             representation += 'In_TLM_port_gen:@' + str(len(self.in_tlm_port_gens)) + '@' + repr(self.in_tlm_port_gens).replace('[', '\\[').replace(']', '\\]') + '\n'
             representation += 'Out_TLM_port_gen:@' + str(len(self.out_tlm_port_gens)) + '@' + repr(self.out_tlm_port_gens).replace('[', '\\[').replace(']', '\\]') + '\n'
             representation += 'In_SystemC_port_gen:@' + str(len(self.in_sysc_port_gens)) + '@' + repr(self.in_sysc_port_gens).replace('[', '\\[').replace(']', '\\]') + '\n'
@@ -131,7 +144,7 @@ class Component:
             return representation
         else:
             return ''
-    
+
     def __str__(self):
         """Returns an informal string representation of this class"""
         from hci import console
@@ -190,7 +203,7 @@ class Component:
             for i in self.sysc_signal_gens:
                 sysc_signal_gensStr += '\n\t\t\t' + str(i)
             representation += 'SystemC signals generators: ' + sysc_signal_gensStr
-            
+
             return representation
         else:
             return ''

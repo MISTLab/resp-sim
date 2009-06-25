@@ -1,3 +1,46 @@
+/***************************************************************************\
+ *
+ *
+ *         ___           ___           ___           ___
+ *        /  /\         /  /\         /  /\         /  /\
+ *       /  /::\       /  /:/_       /  /:/_       /  /::\
+ *      /  /:/\:\     /  /:/ /\     /  /:/ /\     /  /:/\:\
+ *     /  /:/~/:/    /  /:/ /:/_   /  /:/ /::\   /  /:/~/:/
+ *    /__/:/ /:/___ /__/:/ /:/ /\ /__/:/ /:/\:\ /__/:/ /:/
+ *    \  \:\/:::::/ \  \:\/:/ /:/ \  \:\/:/~/:/ \  \:\/:/
+ *     \  \::/~~~~   \  \::/ /:/   \  \::/ /:/   \  \::/
+ *      \  \:\        \  \:\/:/     \__\/ /:/     \  \:\
+ *       \  \:\        \  \::/        /__/:/       \  \:\
+ *        \__\/         \__\/         \__\/         \__\/
+ *
+ *
+ *
+ *
+ *   This file is part of ReSP.
+ *
+ *   TRAP is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU Lesser General Public License as published by
+ *   the Free Software Foundation; either version 2 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU Lesser General Public License for more details.
+ *
+ *   You should have received a copy of the GNU Lesser General Public License
+ *   along with this program; if not, write to the
+ *   Free Software Foundation, Inc.,
+ *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *   or see <http://www.gnu.org/licenses/>.
+ *
+ *
+ *
+ *   (c) Giovanni Beltrame, Luca Fossati
+ *       Giovanni.Beltrame@esa.int fossati@elet.polimi.it
+ *
+\***************************************************************************/
+
 
 #include <math.h>
 #include <memory.hpp>
@@ -14,7 +57,7 @@ InterpolatedMemory::InterpolatedMemory()  {
     this->renergy = 23.21;
     this->wenergy = 27.34;
     this->leakage = 2001.07;
- 
+
     this->c_read[0] =  -1.09167887e-05; this->c_read[1] = 6.05436716e-01; this->c_read[2] = 2.04028667e-02 ; this->c_read[3] =  2.76256799e-06 ; this->c_read[4] =  3.49943207e+00;
     this->c_write[0] =  -1.79541119e-05 ; this->c_write[1] = 7.16287132e-01 ; this->c_write[2] =  3.25601331e-02 ; this->c_write[3] = 3.91476756e-06 ; this->c_write[4] = 3.94571979e+00;
     this->c_leakage[0] = 2.92556486e-02 ; this->c_leakage[1] =  1.05218644e+01 ; this->c_leakage[2] =  2.02997888e+00 ; this->c_leakage[3] =  1.86243641e-03 ; this->c_leakage[4] =  1.27200413e+03;
