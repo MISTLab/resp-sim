@@ -1,0 +1,36 @@
+#summary This page contains the instruction on how to configure and compile the ReSP's sources
+
+= Building and Installation Instruction =
+
+ReSP uses waf ([http://code.google.com/p/waf]) as build system; from a user point of view it is similar to the usual autotools
+based project: first there is a configuration step, then the compilation and, finally, the installation.
+
+== Required Libraries and Tools ==
+
+  * BFD: part of the binutils, it is used to read and parse the application software which is going to be executed on the processors. The development version of this package is needed. Note that on 64 bits architectures you might need to manually download binutils sources and patch them according to the instructions in _ext/binutils_ (you should see if you need to patch them if you get an error during the configuration process)
+  * SystemC: downloadable from [http://www.systemc.org], it is used to manage simulated time and the communication among the hardware modules. Note that on 64 bits architectures you might need to patch the sources; instructions on how to patch is are in _ext/systemc_ (you should see if you need to patch them if you get an error during the configuration process)
+  * TLM 2.0: downloadable from [http://www.systemc.org], it is used to manage connections among the hardware modules.
+  * Boost: Boost libraries, downloadable from [http://www.boost.org].
+  * Python version 2.4 - 2.6
+  * gccxml:
+  * pyplusplus and pygccxml:
+  * TRAP:
+
+There are also optional library which, if present, enhance ReSP's capabilities:
+
+  * sigc++2.0:
+  * MOMH:
+
+=== Configuration and Compilation ===
+
+Once the processor implementation files are created, they need to be compiled; do do this the _waf_ build system is again used.
+
+The configuration options which can be passed to the _./ waf configure_ command are:
+  # _--with-systemc=SYSC_FOLDER_ specifies the location of the SystemC 2.2 library. It is compulsory to specify such option
+  # _--with-tlm=TLM_FOLDER_ specifies the location of the TLM 2.0 library. It is compulsory to specify such option
+  # _--with-trap=TRAP_FOLDER_ specifies the location of the TRAP runtime libraries and headers. It must be specified if TRAP was installed in a custom folder
+  # _--boost-includes=BOOSTINCLUDES_ specifies the location of the include files of the boost lbraries; it has to be specified in case the libraries are not installed in a standard path.
+  # _--boost-libs=BOOSTLIBS_ specifies the location of the library files of the boost lbraries; it has to be specified in case the libraries are not installed in a standard path.
+  # _--with-bfd=BFD_FOLDER_ specifies the location of the BFD library; if this option is not specified ReSP will look for libbfd in the standard library search path.
+
+After the configuration successfully ends, compilation can be started with the usual _./waf_ command; after compilation, run the ./startSim.sh script to start the simulator.
