@@ -1,4 +1,5 @@
 #summary This page contains the instruction on how to configure and compile the ReSP's sources
+#labels Featured,Phase-Deploy
 
 = Building and Installation Instruction =
 
