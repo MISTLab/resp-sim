@@ -70,11 +70,6 @@ using namespace resp;
  + to pause simulation
  */
 void controllerThread_ninteractive::operator()(){
-    //first of all, for correct synchronization with
-    //the run_simulation method I have to acquire the
-    //lock on the mutex
-    boost::mutex::scoped_lock end_of_sim_lock(this->end_of_sim_mutex);
-
     // I have to check the timeSlice variable,
     // if equal to 0 I run undefinitely,
     // otherwise I go on for the specified amount
@@ -85,10 +80,6 @@ void controllerThread_ninteractive::operator()(){
     else{
         sc_start(this->timeSlice);
     }
-    // Finally simulation has ended: I can notify the condition
-    // on which the run_smiulation method is blocked so that
-    // I can go on...
-    this->end_of_sim_cond.notify_all();
 }
 
 void my_terminate_handler(){
@@ -180,7 +171,7 @@ void sc_controller::run_simulation(sc_time simTime){
     //I directly start a new thread for the specified amount of
     //time.
     if(this->interactive){
-        if(simTime >= 0){
+        if(simTime > SC_ZERO_TIME){
             this->controllerMachine.process_event( EvRun_t(simTime) );
         }
         else{
@@ -189,18 +180,15 @@ void sc_controller::run_simulation(sc_time simTime){
     }
     else{
         controllerThread_ninteractive c;
-        if(simTime >= 0)
+        if(simTime > SC_ZERO_TIME)
             c.timeSlice = simTime;
         else
             c.timeSlice = SC_ZERO_TIME;
-        //now I acquire the mutex, so that thread c cannot start before I have
-        //completed all the necessary initialization
-        boost::mutex::scoped_lock end_of_sim_lock(c.end_of_sim_mutex)
         //finally I start the thread and wait for its end
-        this->timeKeeper.reset();
+        this->timeTracker.restart();
         boost::thread thrd (c);
-        c.end_of_sim_cond.wait(end_of_sim_lock);
-        this->accumulatedTime += this->timeKeeper.elapsed();
+        thrd.join();
+        this->accumulatedTime += this->timeTracker.elapsed();
     }
 }
 
@@ -210,7 +198,7 @@ void sc_controller::run_up_to(double simTime, sc_time_unit time_unit){
     // I actually can directly call the same run_simulation method
     // with the correct time
     sc_time difference = sc_time(simTime, time_unit) - sc_time_stamp();
-    if(difference > 0)
+    if(difference > SC_ZERO_TIME)
         this->run_simulation(difference);
     else
         std::cerr << "Error, simulation time specified for method run_up_to must be greater than the current time" << std::endl;
@@ -225,7 +213,7 @@ void sc_controller::pause_simulation(bool notify){
         this->controllerMachine.process_event( EvPause() );
     }
     else{
-        std:.cerr << "Unable to pause simulation in non-interactive mode" << std::endl;
+        std::cerr << "Unable to pause simulation in non-interactive mode" << std::endl;
     }
 }
 
@@ -236,7 +224,7 @@ void sc_controller::stop_simulation(){
         this->controllerMachine.process_event( EvStop() );
     }
     else{
-        std:.cerr << "Unable to stop simulation in non-interactive mode" << std::endl;
+        std::cerr << "Unable to stop simulation in non-interactive mode" << std::endl;
     }
 }
 

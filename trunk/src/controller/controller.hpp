@@ -66,8 +66,6 @@
  */
 struct controllerThread_ninteractive{
     sc_time timeSlice;
-    boost::mutex end_of_sim_mutex;
-    boost::condition end_of_sim_cond;
 
     void operator()();
 };
@@ -113,7 +111,7 @@ public:
     void reset_controller();
 
     /// Runs the simulation for a specified amount of time
-    void run_simulation(double simTime = -1, sc_time_unit time_unit = SC_NS);
+    void run_simulation(double simTime = 0, sc_time_unit time_unit = SC_NS);
     void run_simulation(sc_time simTime);
     /// Runs the simulation up to the specified simulation time
     void run_up_to(double simTime = 0, sc_time_unit time_unit = SC_NS);
