@@ -67,7 +67,7 @@ void simulation_engine::end_of_simulation(){
 simulation_engine::simulation_engine(sc_module_name name, ControllerMachine &controllerMachine) :
                                             sc_module(name), controllerMachine(controllerMachine){
     SC_METHOD(pause);
-    sensitive << this->stopEvent;
+    sensitive << this->controllerMachine.stopEvent;
     dont_initialize();
     end_module();
 }
@@ -80,6 +80,6 @@ void simulation_engine::pause(){
     // is being paused
     notifyPauseCallback();
     // finally I pause by waiting on the condition
-    boost::mutex::scoped_lock lk(this->pause_mutex);
-    this->pause_condition.wait(lk);
+    boost::mutex::scoped_lock lk(this->controllerMachine.pause_mutex);
+    this->controllerMachine.pause_condition.wait(lk);
 }

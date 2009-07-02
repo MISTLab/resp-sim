@@ -148,6 +148,7 @@ sc_controller::sc_controller(bool interactive) : interactive(interactive),
             controllerMachine(timeTracker, accumulatedTime), se("sim_engine", controllerMachine){
     this->error = false;
     this->accumulatedTime = 0;
+    this->controllerMachine.initiate();
 }
 
 /// Static method for the creation of the controller class; note that this is the only way
@@ -228,32 +229,37 @@ void sc_controller::stop_simulation(){
     }
 }
 
-/// True is simulation has ended, i.e. sc_stop has been called
-/// or there are no more events in SystemC's queue and it
-/// has already been started
+/// True is simulation is not running, i.e. if it has ended (sc_stop
+/// called or there are no more events) or simulation is paused
 bool sc_controller::is_finished(){
+    return this->is_ended() || this->is_paused();
 }
 
 /// True if simulation is running, i.e. if there are still events and
 /// simulation has been started
 bool sc_controller::is_running(){
+    return this->has_started() && !this->is_finished();
 }
 
-/// True if simulation has ended, i.e.. there are no events and
-/// and simulation has been started before
-bool sc_controller::isEnded(){
+/// True if simulation has ended, i.e.. there are no events or
+/// sc_stop has been called
+bool sc_controller::is_ended(){
+    return sc_end_of_simulation_invoked();
 }
 
 /// True if simulation has already been started
-bool sc_controller::hasStarted(){
+bool sc_controller::has_started(){
+    return sc_start_of_simulation_invoked();
 }
 
 /// Returns true if simulation is in the paused state
 bool sc_controller::is_paused(){
+    return this->interactive && (this->controllerMachine.state_cast< const Paused_st * >() != 0);
 }
 
 /// Gets SystemC time using the specified time unit, ns are the default one
 double sc_controller::get_simulated_time(sc_time_unit time_unit){
+    return ((sc_time_stamp().to_default_time_units())/(sc_time(1, time_unit).to_default_time_units()));
 }
 
 /// Print elapsed cpu time in seconds
