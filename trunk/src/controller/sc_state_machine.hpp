@@ -99,14 +99,14 @@ struct EvStop : boost::statechart::event< EvStop > {};
 
 // Now I have to define the state machine itself, specifying
 // the initial state
-struct Stopped_st;
-struct ControllerMachine : boost::statechart::state_machine<ControllerMachine, Stopped_st> {
+struct Reset_st;
+struct ControllerMachine : boost::statechart::state_machine<ControllerMachine, Reset_st> {
     // The state machine shall contain a reference to the
     // boost.timer object used to track elapsed time.
     boost::timer & timeTracker;
     double & accumulatedTime;
     // Event triggered to pause systemc simulation
-    sc_event stopEvent;
+    sc_event pauseEvent;
     // Mutex and condition used to pause simulation
     boost::mutex pause_mutex;
     boost::condition pause_condition;
@@ -185,8 +185,7 @@ struct Running_st : boost::statechart::state<Running_st, ControllerMachine>{
         boost::statechart::custom_reaction<EvStop>
     > reactions;
 
-    /// Reaction to the pause event: I have to cancel pending
-    /// stop notifications and explicitly notify the pause condition
+    /// Reaction to the pause event.
     /// This transitions can be called both because the used explicitly requests
     /// to pause or because the current time quantum expired
     boost::statechart::result react(const EvPause &);

@@ -105,7 +105,7 @@ boost::statechart::result Reset_st::react(const EvRun_t & event){
     controllerThread_interactive c(start_of_sim_mutex, start_of_sim_cond);
     boost::mutex::scoped_lock start_of_sim_lock(start_of_sim_mutex);
     boost::thread thrd (c);
-    this->outermost_context().stopEvent.notify(event.timeStep);
+    this->outermost_context().pauseEvent.notify(event.timeStep);
     start_of_sim_cond.wait(start_of_sim_lock);
 
     return transit< Running_st >();
@@ -114,12 +114,12 @@ boost::statechart::result Reset_st::react(const EvRun_t & event){
 /// used to print warnings to the user: simulation hasn't been
 ///started yet, of course it cannot be stopped or paused!!
 boost::statechart::result Reset_st::react(const EvPause &){
-    std::cerr << "Simulation is stopped, it cannot be paused" << std::endl;
+    std::cerr << "Simulation hasn't been started yet, it cannot be paused" << std::endl;
 
     return discard_event();
 }
 boost::statechart::result Reset_st::react(const EvStop &){
-    std::cerr << "Simulation is stopped, it cannot be stopped" << std::endl;
+    std::cerr << "Simulation hasn't been started yet, it cannot be stopped" << std::endl;
 
     return discard_event();
 }
@@ -129,8 +129,14 @@ boost::statechart::result Reset_st::react(const EvStop &){
 ///warning to the user: simulation is stopped, it cannot be
 ///restarted
 boost::statechart::result Stopped_st::react(const EvRun &){
+    std::cerr << "Simulation is stopped, it cannot be run; plese reset the simulator to restart" << std::endl;
+
+    return discard_event();
 }
 boost::statechart::result Stopped_st::react(const EvRun_t &){
+    std::cerr << "Simulation is stopped, it cannot be run; plese reset the simulator to restart" << std::endl;
+
+    return discard_event();
 }
 /// Constructor, called every time the
 /// status is entered. It mainly stops the timer and
@@ -140,17 +146,21 @@ Stopped_st::Stopped_st(my_context ctx) : boost::statechart::state<Stopped_st, Co
 }
 
 /// *** Run state: the simiulaton is running ***
-/// Reaction to the pause event: I have to cancel pending
-/// stop notifications and explicitly notify the pause condition
+/// Reaction to the pause event.
 /// This transitions can be called both because the used explicitly requests
 /// to pause or because the current time quantum expired
 boost::statechart::result Running_st::react(const EvPause &){
+    this->outermost_context().pauseEvent.cancel();
+    this->outermost_context().pauseEvent.notify();
+
+    return transit< Paused_st >();
 }
 /// Reaction to the stop timed event. This event can be called
 /// because the user explicitly requests to stop simulation,
 /// sc_stop is implicitly called in the code or the queue
 /// of events is empty
 boost::statechart::result Running_st::react(const EvStop &){
+    return transit< Stopped_st >();
 }
 /// Constructor, called every time the
 /// status is entered. It mainly resets and
@@ -163,18 +173,27 @@ Running_st::Running_st(my_context ctx) : boost::statechart::state<Running_st, Co
 /// Reaction to the run undefinitely event; I have to actually
 /// resume simulation by notifying the boost condition
 boost::statechart::result Paused_st::react(const EvRun &){
+    this->outermost_context().pauseEvent.cancel();
+    this->outermost_context().pause_condition.notify_all();
+
+    return transit< Running_st >();
 }
 /// Reaction to the run timed event; I have to actually
 /// resume simulation by notifying the boost condition.
 /// Before that, I notify the stopped event at time t.
 boost::statechart::result Paused_st::react(const EvRun_t & event){
+    this->outermost_context().pauseEvent.cancel();
+    this->outermost_context().pauseEvent.notify(event.timeStep);
+    this->outermost_context().pause_condition.notify_all();
+
+    return transit< Running_st >();
 }
 /// Reaction to the stop timed event. This event can be called
 /// only because the user explicitly requests to stop simulation.
-/// I call sc_stop, and, immediately after, I notify the boost
-/// condition, so that also the simulation engine thread can
-/// correctly end.
 boost::statechart::result Paused_st::react(const EvStop &){
+    this->outermost_context().pause_condition.notify_all();
+
+    return transit< Stopped_st >();
 }
 /// Constructor, called every time the
 /// status is entered. It mainly stops the timer and
