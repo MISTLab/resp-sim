@@ -71,8 +71,10 @@
  * of interactive simulation
  */
 struct controllerThread_interactive{
-    boost::mutex start_of_sim_mutex;
-    boost::condition start_of_sim_cond;
+    boost::mutex & start_of_sim_mutex;
+    boost::condition & start_of_sim_cond;
+
+    controllerThread_interactive(boost::mutex & start_of_sim_mutex, boost::condition & start_of_sim_cond);
 
     void operator()();
 };
