@@ -48,23 +48,22 @@ def build(bld):
     # Generation of the controller library
     obj = bld.new_task_gen('cxx', 'cshlib')
     obj.source ='''
-        simulation_engine.cpp controller.cpp
+        simulation_engine.cpp controller.cpp callback.cpp sc_state_machine.cpp
     '''
 
     obj.target = 'sc_controller'
-    obj.uselib = 'SYSTEMC_H BOOST BOOST_THREAD PYEXT'
+    obj.uselib = 'SYSTEMC_H BOOST BOOST_THREAD'
     obj.uselib_local = 'systemc'
 
     # Generation of the controller wrapper extension
     obj = bld.new_task_gen('pypp')
     obj.source ='''
-        controller.hpp
+        controller.hpp callback.hpp
     '''
 
     obj.target = 'sc_controller_wrapper'
     obj.uselib = 'SYSTEMC_H BOOST PYEXT BOOST_PYTHON BOOST_THREAD'
     obj.uselib_local = 'systemc sc_controller'
-    obj.include = 'scwrapper'
     obj.start_decls = 'resp'
     obj.custom_code = """
 # Exclude protected members
@@ -74,21 +73,16 @@ mb.calldefs( declarations.access_type_matcher_t( 'protected' ) ).exclude()
 simulation_engine = mb.class_('simulation_engine')
 simulation_engine.exclude()
 
-callback = mb.class_('EOScallback')
-callback.include()
-mb.global_ns.free_functions('register_EOS_callback').include()
+# Exclude the state machine
+controller_machine = mb.class_('ControllerMachine')
+controller_machine.exclude()
 
 controller = mb.class_('sc_controller')
 controller.include()
-controller.variable('stopped_condition').exclude()
-controller.variable('global_mutex').exclude()
-controller.variable('se').exclude()
-controller.variable('stop').exclude()
-controller.variable('ended').exclude()
+controller.variable('error').exclude()
+controller.variable('errorMessage').exclude()
+controller.variable('timeTracker').exclude()
 controller.variable('accumulatedTime').exclude()
-controller.member_function('createController').call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
-virtuality = True
-
-mb.class_('caller').exclude()
-mb.variable('controllerInstance').exclude()
+controller.variable('interactive').exclude()
+controller.member_function('getController').call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
 """

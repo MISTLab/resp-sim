@@ -18,17 +18,17 @@
  *
  *   This file is part of ReSP.
  *
- *   TRAP is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Lesser General Public License as published by
+ *   ReSP is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
  *   the Free Software Foundation; either version 2 of the License, or
  *   (at your option) any later version.
  *
  *   This program is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU Lesser General Public License for more details.
+ *   GNU General Public License for more details.
  *
- *   You should have received a copy of the GNU Lesser General Public License
+ *   You should have received a copy of the GNU General Public License
  *   along with this program; if not, write to the
  *   Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -42,47 +42,41 @@
 \***************************************************************************/
 
 
-#ifndef SIMULATION_ENGINE_H
-#define SIMULATION_ENGINE_H
+#ifndef SIMULATION_ENGINE_HPP
+#define SIMULATION_ENGINE_HPP
 
-/*
- *   The simulation engine
- *
- *   It implements the simulation start and stop mechanism
- *
- */
+#include <boost/thread/condition.hpp>
+#include <boost/thread/mutex.hpp>
 
 #include <systemc.h>
-#include "callback.hpp"
+
+#include "sc_state_machine.hpp"
 
 namespace resp{
 
-void register_EOS_callback(EOScallback &callBack);
-
 class simulation_engine : public sc_module{
-    friend class sc_simcontext;
-  private:
-    int pid;
-    bool interactive;
-    bool &controlPaused;
   public:
-    bool isKilled;
-    bool goingToPause;
-    // Blocks the SystemC execution
-    void pause();
-
-    /// Executes the simulation cycle for a specified amount of time
-//     void simulate( sc_time& duration );
+    /// Event triggered to pause systemc simulation
+    sc_event stopEvent;
+    /// Mutex and condition used to pause simulation
+    boost::mutex pause_mutex;
+    boost::condition pause_condition;
+    /// State machine implementing the controller. It is
+    /// inside the simulation engine to trigger the pause and
+    /// stopped transitions.
+    ControllerMachine &controllerMachine;
 
     SC_HAS_PROCESS(simulation_engine);
-
     /// Simulation engine constructor
-    simulation_engine(sc_module_name name, int pid,  bool interactive, bool &controlPaused);
+    simulation_engine(sc_module_name name, ControllerMachine &controllerMachine);
     ///Overloading of the end_of_simulation method; it can be used to execute methods
     ///at the end of the simulation
     void end_of_simulation();
+    /// Pauses systemc execution by locking a boost thread condition; systemc
+    /// simulation resumes when the condition is notified.
+    void pause();
 };
 
-}
+};
 
-#endif /* SIMULATION_ENGINE_H */
+#endif
