@@ -223,9 +223,6 @@ class RespKernel:
         # Other options
         self.verbose = False
 
-        # End handlers
-        self.methods = [ print_stats ]
-
         try:
             import configuration
             if configuration.STATIC_PLATFORM:
@@ -323,10 +320,10 @@ class RespKernel:
         self.manager = manager = ComponentManager(self.components, scwrapper)
         global loadedFileName
         self.fileName = loadedFileName = ''
-        # end, at then end I can instantiate the signal handler and the controller
+        # and, at then end, I can instantiate controller and register the
+        # callback for the end of simulation
         global controller
-
-        self.controller = sc_controller_wrapper.sc_controller.createController(os.getpid(), interaction)
+        self.controller = sc_controller_wrapper.sc_controller.getController(interaction)
         controller = self.controller
         signal.signal(10, self.end_signal_handler)
 

@@ -41,45 +41,48 @@
  *
 \***************************************************************************/
 
-#include <boost/thread/condition.hpp>
-#include <boost/thread/mutex.hpp>
-
-#include <systemc.h>
-
-#include "sc_state_machine.hpp"
-#include "simulation_engine.hpp"
 #include "callback.hpp"
 
-using namespace resp;
+#include <vector>
 
-///Overloading of the end_of_simulation method; it can be used to execute methods
-///at the end of the simulation
-void simulation_engine::end_of_simulation(){
-    // Simulation is being terminated: this method is automatically called by
-    // the systemc kernel
-    // First of all I have to signal it to the state machine
-    this->controllerMachine.process_event( EvStop() );
-    // Finally I signal to everyone that simulation has ended
-    notifyEosCallback();
+std::vector<resp::EOScallback *> resp::end_of_sim_callbacks;
+
+void resp::registerEosCallback(resp::EOScallback &cb){
+    end_of_sim_callbacks.push_back(&cb);
 }
 
-/// Simulation engine constructor
-simulation_engine::simulation_engine(sc_module_name name, ControllerMachine &controllerMachine) :
-                                            sc_module(name), controllerMachine(controllerMachine){
-    SC_METHOD(pause);
-    sensitive << this->stopEvent;
-    dont_initialize();
-    end_module();
+void resp::notifyEosCallback(){
+    std::vector<EOScallback *>::iterator cbIter, cbIterEnd;
+    for(cbIter = end_of_sim_callbacks.begin(), cbIterEnd = end_of_sim_callbacks.end();
+                                                    cbIter != cbIterEnd; cbIter++){
+        (*(*cbIter))();
+    }
 }
 
-/// Blocks the SystemC execution by waiting on a boost::thread condition
-void simulation_engine::pause(){
-    // First of all I make the transitions in the state machine:
-    this->controllerMachine.process_event( EvPause() );
-    // I signal to all who registered that simulation
-    // is being paused
-    notifyPauseCallback();
-    // finally I pause by waiting on the condition
-    boost::mutex::scoped_lock lk(this->pause_mutex);
-    this->pause_condition.wait(lk);
+std::vector<resp::PauseCallback *> resp::pause_callbacks;
+
+void resp::registerPauseCallback(resp::PauseCallback &cb){
+    pause_callbacks.push_back(&cb);
+}
+
+void resp::notifyPauseCallback(){
+    std::vector<PauseCallback *>::iterator cbIter, cbIterEnd;
+    for(cbIter = pause_callbacks.begin(), cbIterEnd = pause_callbacks.end();
+                                                    cbIter != cbIterEnd; cbIter++){
+        (*(*cbIter))();
+    }
+}
+
+std::vector<resp::ErrorCallback *> resp::error_callbacks;
+
+void resp::registerErrorCallback(resp::ErrorCallback &cb){
+    error_callbacks.push_back(&cb);
+}
+
+void resp::notifyErrorCallback(){
+    std::vector<ErrorCallback *>::iterator cbIter, cbIterEnd;
+    for(cbIter = error_callbacks.begin(), cbIterEnd = error_callbacks.end();
+                                                    cbIter != cbIterEnd; cbIter++){
+        (*(*cbIter))();
+    }
 }
