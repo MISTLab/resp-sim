@@ -110,6 +110,8 @@ struct ControllerMachine : boost::statechart::state_machine<ControllerMachine, R
     // Mutex and condition used to pause simulation
     boost::mutex pause_mutex;
     boost::condition pause_condition;
+    // mutex controlling the exit from the reset status
+    boost::mutex reset_mutex;
 
     ControllerMachine(boost::timer & timeTracker, double & accumulatedTime);
 };
@@ -119,7 +121,7 @@ struct ControllerMachine : boost::statechart::state_machine<ControllerMachine, R
 
 /// Reset state: the simiulaton is reset because we
 /// haven't started it yet.
-struct Reset_st : boost::statechart::simple_state<Reset_st, ControllerMachine>{
+struct Reset_st : boost::statechart::state<Reset_st, ControllerMachine>{
     // Now I specify the reactions: from the stopped state I can only
     // start simulation; the start can be performed in two ways:
     // undefinitely or for a specified time t.
@@ -147,6 +149,9 @@ struct Reset_st : boost::statechart::simple_state<Reset_st, ControllerMachine>{
     ///started yet, of course it cannot be stopped or paused!!
     boost::statechart::result react(const EvPause &);
     boost::statechart::result react(const EvStop &);
+
+    Reset_st(my_context ctx);
+    ~Reset_st();
 };
 
 /// Stopped state: the simiulaton is stopped because
