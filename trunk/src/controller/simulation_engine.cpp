@@ -57,7 +57,13 @@ using namespace resp;
 void simulation_engine::end_of_simulation(){
     // Simulation is being terminated: this method is automatically called by
     // the systemc kernel
-    // First of all I have to signal it to the state machine
+    // First of all I have to signal it to the state machine; note that
+    // there is a potential race condition: simulation ends while we
+    // are still in the reset state (it can happen if simulation
+    // is very fast and the state machine transition is very slow).
+    // in order to prevent this I use the reset mutex: it is acquired while
+    // are are in the reset status, and freed immediately after we go out:
+    boost::mutex::scoped_lock lk(this->controllerMachine.reset_mutex);
     this->controllerMachine.process_event( EvStop() );
     // Finally I signal to everyone that simulation has ended
     notifyEosCallback();

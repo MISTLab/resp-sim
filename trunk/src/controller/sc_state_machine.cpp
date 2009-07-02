@@ -70,8 +70,10 @@ void controllerThread_interactive::operator()(){
     // In addition to starting simulation in a new thread, I also
     // use a condition variable so that I can make sure that simulation
     // is really started before returning control to ReSP
-    boost::mutex::scoped_lock start_of_sim_lock(this->start_of_sim_mutex);
-    this->start_of_sim_cond.notify_all();
+    {
+        boost::mutex::scoped_lock start_of_sim_lock(this->start_of_sim_mutex);
+        this->start_of_sim_cond.notify_all();
+    }
     sc_start();
 }
 
@@ -119,10 +121,23 @@ boost::statechart::result Reset_st::react(const EvPause &){
     return discard_event();
 }
 boost::statechart::result Reset_st::react(const EvStop &){
+    std::cerr << __PRETTY_FUNCTION__ << std::endl;
     std::cerr << "Simulation hasn't been started yet, it cannot be stopped" << std::endl;
 
     return discard_event();
 }
+Reset_st::Reset_st(my_context ctx) : boost::statechart::state<Reset_st, ControllerMachine>(ctx){
+    // I acquire the lock on the reset_mutex, so that
+    // it is not possible to stop simulation before being
+    // out of tis state
+    this->outermost_context().reset_mutex.lock();
+}
+Reset_st::~Reset_st(){
+    // I'm going out of this state, I can release the lock
+    // on the reset_mutex.
+    this->outermost_context().reset_mutex.unlock();
+}
+
 
 /// *** Stopped state: ***
 ///These events do not do anything; simply they are used to print
@@ -134,6 +149,7 @@ boost::statechart::result Stopped_st::react(const EvRun &){
     return discard_event();
 }
 boost::statechart::result Stopped_st::react(const EvRun_t &){
+    std::cerr << __PRETTY_FUNCTION__ << std::endl;
     std::cerr << "Simulation is stopped, it cannot be run; plese reset the simulator to restart" << std::endl;
 
     return discard_event();
