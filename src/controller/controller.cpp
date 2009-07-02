@@ -210,7 +210,7 @@ void sc_controller::run_up_to(double simTime, sc_time_unit time_unit){
 /// callbacks should be notified of the pausing event or not
 void sc_controller::pause_simulation(bool notify){
     if(this->interactive){
-        // I simply have to perform the transition in the state machine
+        // I simply have to call the transition in the state machine
         this->controllerMachine.process_event( EvPause() );
     }
     else{
@@ -221,8 +221,8 @@ void sc_controller::pause_simulation(bool notify){
 ///Stops simulation (through a call to sc_stop)
 void sc_controller::stop_simulation(){
     if(this->interactive){
-        // I simply have to perform the transition in the state machine
-        this->controllerMachine.process_event( EvStop() );
+        // I simply have stop simulation calling sc_stop
+        sc_stop();
     }
     else{
         std::cerr << "Unable to stop simulation in non-interactive mode" << std::endl;

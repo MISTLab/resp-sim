@@ -67,15 +67,13 @@ void simulation_engine::end_of_simulation(){
 simulation_engine::simulation_engine(sc_module_name name, ControllerMachine &controllerMachine) :
                                             sc_module(name), controllerMachine(controllerMachine){
     SC_METHOD(pause);
-    sensitive << this->controllerMachine.stopEvent;
+    sensitive << this->controllerMachine.pauseEvent;
     dont_initialize();
     end_module();
 }
 
 /// Blocks the SystemC execution by waiting on a boost::thread condition
 void simulation_engine::pause(){
-    // First of all I make the transitions in the state machine:
-    this->controllerMachine.process_event( EvPause() );
     // I signal to all who registered that simulation
     // is being paused
     notifyPauseCallback();
