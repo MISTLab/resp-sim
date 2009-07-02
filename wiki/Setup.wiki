@@ -13,14 +13,14 @@ based project: first there is a configuration step, then the compilation and, fi
   * TLM 2.0: downloadable from [http://www.systemc.org], it is used to manage connections among the hardware modules.
   * Boost: Boost libraries, downloadable from [http://www.boost.org].
   * Python version 2.4 - 2.6
-  * gccxml:
-  * pyplusplus and pygccxml:
-  * TRAP:
+  * gccxml: at least version 0.9. Since there are different 0.9 releases, we suggest you go to website [http://www.gccxml.org/HTML/Download.html] and get the latest version from the CVS repository
+  * pyplusplus and pygccxml: at least version 1.5 is required. Such version has not been released yet as a separate download, but it is available on the development SVN repository. Instructions on how to install it can be found at [http://www.language-binding.net/pyplusplus/download.html].
+  * TRAP: library for the description of instruction set simulators, dowloadable from the SVN repository of [http://code.google.com/p/trap-gen/]. Do not use the archive in the downloads since it is usually not updated.
 
 There are also optional library which, if present, enhance ReSP's capabilities:
 
-  * sigc++2.0:
-  * MOMH:
+  * sigc++2.0: available in the packet manager of your distribution whatever you are using, it is necessary in case you also need to install the MOMH library
+  * MOMH: necessary to enable the framework for automatic design space exploration. Instructions on how to download it are available at [http://home.gna.org/momh/]
 
 === Configuration and Compilation ===
 
