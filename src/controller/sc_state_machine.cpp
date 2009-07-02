@@ -48,6 +48,7 @@
 #include <boost/statechart/custom_reaction.hpp>
 #include <boost/mpl/list.hpp>
 #include <boost/timer.hpp>
+#include <boost/thread/thread.hpp>
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/timer.hpp>
@@ -69,7 +70,7 @@ void controllerThread_interactive::operator()(){
     // In addition to starting simulation in a new thread, I also
     // use a condition variable so that I can make sure that simulation
     // is really started before returning control to ReSP
-    boost::mutex::scoped_lock end_of_sim_lock(this->start_of_sim_mutex);
+    boost::mutex::scoped_lock start_of_sim_lock(this->start_of_sim_mutex);
     this->start_of_sim_cond.notify_all();
     sc_start();
 }
@@ -79,19 +80,48 @@ void controllerThread_interactive::operator()(){
 /// start simulation using the sc_start call inside the
 /// controllerThread_interactive
 boost::statechart::result Reset_st::react(const EvRun &){
+    boost::mutex start_of_sim_mutex;
+    boost::condition start_of_sim_cond;
+
+    // I have to start the thread. In order to be sure that when I finish the transition
+    // simulation has really started, I use the start_of_sim_cond condition variable
+    controllerThread_interactive c(start_of_sim_mutex, start_of_sim_cond);
+    boost::mutex::scoped_lock start_of_sim_lock(start_of_sim_mutex);
+    boost::thread thrd (c);
+    start_of_sim_cond.wait(start_of_sim_lock);
+
+    return transit< Running_st >();
 }
 /// Reaction to the run timed event; I have to actually
 /// start simulation using the sc_start call inside the
 /// controllerThread_interactive. Before starting the simulation
 /// I notify the stopped event at time t.
 boost::statechart::result Reset_st::react(const EvRun_t & event){
+    boost::mutex start_of_sim_mutex;
+    boost::condition start_of_sim_cond;
+
+    // I have to start the thread. In order to be sure that when I finish the transition
+    // simulation has really started, I use the start_of_sim_cond condition variable
+    controllerThread_interactive c(start_of_sim_mutex, start_of_sim_cond);
+    boost::mutex::scoped_lock start_of_sim_lock(start_of_sim_mutex);
+    boost::thread thrd (c);
+    this->outermost_context().stopEvent.notify(event.timeStep);
+    start_of_sim_cond.wait(start_of_sim_lock);
+
+    return transit< Running_st >();
 }
 ///These two events do not cause a transition, but they are simply
 /// used to print warnings to the user: simulation hasn't been
 ///started yet, of course it cannot be stopped or paused!!
 boost::statechart::result Reset_st::react(const EvPause &){
+    std::cerr << "Simulation is stopped, it cannot be paused" << std::endl;
+
+    return discard_event();
 }
 boost::statechart::result Reset_st::react(const EvStop &){
+    std::cerr << "Simulation is stopped, it cannot be stopped" << std::endl;
+
+    return discard_event();
 }
 
 /// *** Stopped state: ***
@@ -105,7 +135,9 @@ boost::statechart::result Stopped_st::react(const EvRun_t &){
 /// Constructor, called every time the
 /// status is entered. It mainly stops the timer and
 /// it records elapsed time
-Stopped_st::Stopped_st(){}
+Stopped_st::Stopped_st(my_context ctx) : boost::statechart::state<Stopped_st, ControllerMachine>(ctx){
+    this->outermost_context().accumulatedTime += this->outermost_context().timeTracker.elapsed();
+}
 
 /// *** Run state: the simiulaton is running ***
 /// Reaction to the pause event: I have to cancel pending
@@ -123,7 +155,8 @@ boost::statechart::result Running_st::react(const EvStop &){
 /// Constructor, called every time the
 /// status is entered. It mainly resets and
 /// re-starts the timer
-Running_st::Running_st(){
+Running_st::Running_st(my_context ctx) : boost::statechart::state<Running_st, ControllerMachine>(ctx){
+    this->outermost_context().timeTracker.restart();
 }
 
 /// *** Paused state: the simulation is paused, it is not running ***
@@ -146,5 +179,6 @@ boost::statechart::result Paused_st::react(const EvStop &){
 /// Constructor, called every time the
 /// status is entered. It mainly stops the timer and
 /// it records elapsed time
-Paused_st::Paused_st(){
+Paused_st::Paused_st(my_context ctx) : boost::statechart::state<Paused_st, ControllerMachine>(ctx){
+    this->outermost_context().accumulatedTime += this->outermost_context().timeTracker.elapsed();
 }

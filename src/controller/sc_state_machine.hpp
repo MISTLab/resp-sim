@@ -53,6 +53,7 @@
 
 #include <boost/statechart/state_machine.hpp>
 #include <boost/statechart/simple_state.hpp>
+#include <boost/statechart/state.hpp>
 #include <boost/statechart/event.hpp>
 #include <boost/statechart/transition.hpp>
 #include <boost/statechart/custom_reaction.hpp>
@@ -104,6 +105,11 @@ struct ControllerMachine : boost::statechart::state_machine<ControllerMachine, S
     // boost.timer object used to track elapsed time.
     boost::timer & timeTracker;
     double & accumulatedTime;
+    // Event triggered to pause systemc simulation
+    sc_event stopEvent;
+    // Mutex and condition used to pause simulation
+    boost::mutex pause_mutex;
+    boost::condition pause_condition;
 
     ControllerMachine(boost::timer & timeTracker, double & accumulatedTime);
 };
@@ -146,7 +152,7 @@ struct Reset_st : boost::statechart::simple_state<Reset_st, ControllerMachine>{
 /// Stopped state: the simiulaton is stopped because
 /// sc_stop has been called or
 /// the queue of events is empty
-struct Stopped_st : boost::statechart::simple_state<Stopped_st, ControllerMachine>{
+struct Stopped_st : boost::statechart::state<Stopped_st, ControllerMachine>{
     // Now I specify the reactions: actually from the stopped
     // state I cannot do anything, I cannot go into any other state,
     // these reactions are just used to print warning messages
@@ -162,11 +168,11 @@ struct Stopped_st : boost::statechart::simple_state<Stopped_st, ControllerMachin
     /// Constructor, called every time the
     /// status is entered. It mainly stops the timer and
     /// it records elapsed time
-    Stopped_st();
+    Stopped_st(my_context ctx);
 };
 
 /// Run state: the simiulaton is running
-struct Running_st : boost::statechart::simple_state<Running_st, ControllerMachine>{
+struct Running_st : boost::statechart::state<Running_st, ControllerMachine>{
     // Now I specify the reactions: from the running state I can
     // either stop or pause simulation. Both these transitions can be
     // implicit (stop because the code called sc_stop or there are no
@@ -193,14 +199,14 @@ struct Running_st : boost::statechart::simple_state<Running_st, ControllerMachin
     /// Constructor, called every time the
     /// status is entered. It mainly resets and
     /// re-starts the timer
-    Running_st();
+    Running_st(my_context ctx);
 };
 
 /// Paused state: the simulation is paused, it is not running, no
 /// delta cycles are being executed, still it is not stoppped,
 /// there are still events in the event queue and sc_stop
 /// hasn't been called yet.
-struct Paused_st : boost::statechart::simple_state<Paused_st, ControllerMachine>{
+struct Paused_st : boost::statechart::state<Paused_st, ControllerMachine>{
     // Now I specify the reactions: from the paused state I can
     // either re-start simulation or stop it.
     typedef boost::mpl::list<
@@ -226,7 +232,7 @@ struct Paused_st : boost::statechart::simple_state<Paused_st, ControllerMachine>
     /// Constructor, called every time the
     /// status is entered. It mainly stops the timer and
     /// it records elapsed time
-    Paused_st();
+    Paused_st(my_context ctx);
 };
 
 #endif

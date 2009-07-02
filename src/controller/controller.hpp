@@ -135,10 +135,10 @@ public:
 
     /// True if simulation has ended, i.e.. there are no events and
     /// and simulation has been started before
-    bool isEnded();
+    bool is_ended();
 
     /// True if simulation has already been started
-    bool hasStarted();
+    bool has_started();
 
     /// Gets SystemC time using the specified time unit, ns are the default one
     double get_simulated_time(sc_time_unit time_unit = SC_NS);

@@ -56,11 +56,6 @@ namespace resp{
 
 class simulation_engine : public sc_module{
   public:
-    /// Event triggered to pause systemc simulation
-    sc_event stopEvent;
-    /// Mutex and condition used to pause simulation
-    boost::mutex pause_mutex;
-    boost::condition pause_condition;
     /// State machine implementing the controller. It is
     /// inside the simulation engine to trigger the pause and
     /// stopped transitions.
