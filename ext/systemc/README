@@ -13,7 +13,7 @@ You should then be able to succesfully compile SystemC.
 
 On Mac-OSX targets you also need to specify the build type since the system is not able to determine it automatically:
 pass the --build=i686-apple-macosx option to the configure command. You also need to patch file 
-src/sysc/kernel/sc_cor_qt.h by adding the instruction typedef char* caddr t; at line 85.
+src/sysc/kernel/sc_cor_qt.h by adding the instruction typedef char* caddr_t; at line 85.
 
 One final note: current version of SystemC does not compile with g++ version 4.3 and greater. In order to correct this
 go in folder systemc-2.2.0/src/sysc/utils and modify file sc_utils_ids.cpp adding #include <cstdlib> at the among the
