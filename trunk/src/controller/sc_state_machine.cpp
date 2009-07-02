@@ -58,6 +58,9 @@
 ControllerMachine::ControllerMachine(boost::timer & timeTracker, double & accumulatedTime) :
                                 timeTracker(timeTracker), accumulatedTime(accumulatedTime) {}
 
+controllerThread_interactive::controllerThread_interactive(boost::mutex & start_of_sim_mutex, boost::condition & start_of_sim_cond) :
+                            start_of_sim_mutex(start_of_sim_mutex), start_of_sim_cond(start_of_sim_cond) {}
+
 /// Starts the simulation in a new boost thread; simulation is
 /// always started with sc_start() without parameters, so
 /// that simulation runs undefinitely. For pausing it,
