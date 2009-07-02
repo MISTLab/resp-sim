@@ -163,8 +163,7 @@ def configure(conf):
     ##################################################
     # Check for boost libraries
     ##################################################
-    boostlibs = 'thread regex date_time program_options filesystem system'
-    boostlibs += ' python unit_test_framework'
+    boostlibs = 'thread regex date_time program_options filesystem system python'
 
     conf.check_tool('boost')
     conf.check_boost(lib=boostlibs, static='both', min_version='1.35.0', mandatory = 1, errmsg = 'Unable to find ' + boostlibs + ' boost libraries of at least version 1.35, please install them and specify their location with the --boost-includes and --boost-libs configuration options')
