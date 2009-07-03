@@ -45,6 +45,9 @@
 import sc_controller_wrapper
 
 class print_stats_cb(sc_controller_wrapper.EOScallback):
+    def __init__(self, controller):
+        sc_controller_wrapper.EOScallback.__init__(self)
+        self.controller = controller
     def __call__(self):
         """Prints statistics about the simulation; in case the variable statsPrinter is defined
         in the global namespace (a function must be assigned to it) then that function
@@ -52,7 +55,7 @@ class print_stats_cb(sc_controller_wrapper.EOScallback):
         times are printed; note that before printing statistics, I wait for simulation termination
         (if not otherwise specified)"""
         import time
-        while not controller.isEnded():
+        while not self.controller.is_ended():
             time.sleep(0.1)
         try:
             # Call a custom statsprinter if registered
@@ -60,8 +63,8 @@ class print_stats_cb(sc_controller_wrapper.EOScallback):
         except NameError:
             # Print
             print 'Real Elapsed Time (seconds):'
-            print controller.print_real_time()
+            print self.controller.print_real_time()
             print 'Simulated Elapsed Time (nano-seconds):'
-            print str(controller.get_simulated_time()) + '\n'
+            print str(self.controller.get_simulated_time()) + '\n'
         except Exception,  e:
             print 'Error in the print of the statistics --> ' + str(e)

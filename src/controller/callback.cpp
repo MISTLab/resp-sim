@@ -44,6 +44,7 @@
 #include "callback.hpp"
 
 #include <vector>
+#include <iostream>
 
 std::vector<resp::EOScallback *> resp::end_of_sim_callbacks;
 

@@ -127,7 +127,7 @@ class Completer:
         """
         #The completion is performed onl;y when the simulation is stopped
         if 'controller' in self.namespace.keys():
-            if (not self.namespace['controller'].is_paused()) and (not self.namespace['controller'].isEnded()) and (self.namespace['controller'].is_running()):
+            if (not self.namespace['controller'].is_paused()) and (not self.namespace['controller'].is_ended()) and (self.namespace['controller'].is_running()):
                 return None
         if self.use_main_ns:
             self.namespace = __main__.__dict__

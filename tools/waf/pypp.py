@@ -154,8 +154,12 @@ def extract_headers(self):
     self.source = ''
     find_resource = self.path.find_resource
 
-    try: obj_ext = self.obj_ext
-    except AttributeError: self.obj_ext = '.o'
+    self.uselib_local += ' sc_controller'
+
+    try:
+        obj_ext = self.obj_ext
+    except AttributeError:
+        self.obj_ext = '.o'
 
     self.srclist = []
     targetbase, ext = os.path.splitext(ccroot.get_target_name(self))
@@ -573,9 +577,12 @@ def dopypp(task):
     if( members ):
         for member in members:
             try:
-                member.add_override_precall_code('extern bool interactiveSimulation;\npyplusplus::threading::gil_guard_t gil_guard( interactiveSimulation );')
+                member.add_override_precall_code('\npyplusplus::threading::gil_guard_t gil_guard( resp::sc_controller::getController().interactive );')
                 if not code_repository.gil_guard.file_name in task.ext_headers:
                     task.ext_headers.append(code_repository.gil_guard.file_name)
+                controller_path = os.path.join(task.srcpath, 'src', 'controller', 'controller.hpp')
+                if not controller_path in task.ext_headers:
+                    task.ext_headers.append(controller_path)
                 if not os.path.exists(os.path.abspath(os.path.join( task.bldpath, os.path.dirname(task.outputs[0].bldpath(task.env)),  code_repository.gil_guard.file_name) )):
                     guard = open(os.path.abspath(os.path.join( task.bldpath, os.path.dirname(task.outputs[0].bldpath(task.env)),  code_repository.gil_guard.file_name) ), 'w')
                     guard.write(code_repository.gil_guard.code)

@@ -78,17 +78,17 @@ controller_machine = mb.class_('ControllerMachine')
 controller_machine.exclude()
 
 # Exclude the callback variables
-mb.variable('end_of_sim_callbacks').eclude()
-mb.variable('pause_callbacks').eclude()
-mb.variable('error_callbacks').eclude()
+mb.variable('end_of_sim_callbacks').exclude()
+mb.variable('pause_callbacks').exclude()
+mb.variable('error_callbacks').exclude()
 
 # Manage the controller class
 controller = mb.class_('sc_controller')
 controller.include()
-controller.variable('error').exclude()
-controller.variable('errorMessage').exclude()
+controller.variable('error').include()
+controller.variable('errorMessage').include()
 controller.variable('timeTracker').exclude()
 controller.variable('accumulatedTime').exclude()
-controller.variable('interactive').exclude()
+controller.variable('interactive').include()
 controller.member_function('getController').call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
 """

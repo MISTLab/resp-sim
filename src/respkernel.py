@@ -306,7 +306,7 @@ class RespKernel:
         controller = self.controller
         from print_stats import print_stats_cb
         global eosCb
-        eosCb = print_stats_cb()
+        eosCb = print_stats_cb(self.controller)
         sc_controller_wrapper.registerEosCallback(eosCb)
 
         if globals().has_key('__warningregistry__'):
