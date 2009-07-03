@@ -244,7 +244,7 @@ bool sc_controller::is_running(){
 /// True if simulation has ended, i.e.. there are no events or
 /// sc_stop has been called
 bool sc_controller::is_ended(){
-    return sc_end_of_simulation_invoked();
+    return this->controllerMachine.state_cast< const Stopped_st * >() != 0;
 }
 
 /// True if simulation has already been started
