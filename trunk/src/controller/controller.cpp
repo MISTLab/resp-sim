@@ -60,6 +60,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/timer.hpp>
 
+#include "Python.h"
+
 using namespace resp;
 
 /**
@@ -146,11 +148,18 @@ sc_controller * sc_controller::controllerInstance = NULL;
 /// the only way of creating a new controller instance
 sc_controller::sc_controller(bool interactive) : interactive(interactive),
             controllerMachine(timeTracker, accumulatedTime){
-    if(this->interactive)
+    sc_set_stop_mode(SC_STOP_IMMEDIATE);
+
+    if(this->interactive){
+        PyEval_InitThreads();
         this->se = new simulation_engine("sim_engine", controllerMachine);
+    }
+
     this->error = false;
     this->accumulatedTime = 0;
     this->controllerMachine.initiate();
+
+    std::set_terminate(my_terminate_handler);
 }
 
 sc_controller::~sc_controller(){
