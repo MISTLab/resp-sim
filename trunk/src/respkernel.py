@@ -103,27 +103,6 @@ from power import *
 def getCppName(pypp_name):
     return pypp_name.replace('_comma_', ',').replace('_less_', '<').replace('_greater_', '>').replace('_scope_', '::').replace(',_', ', ')
 
-def print_stats():
-    """Prints statistics about the simulation; in case the variable statsPrinter is defined
-    in the global namespace (a function must be assigned to it) then that function
-    is called passing the globals namespace to it. Otherwise simply the real and simulated
-    times are printed; note that before printing statistics, I wait for simulation termination
-    (if not otherwise specified)"""
-    import time
-    while not controller.isEnded():
-        time.sleep(0.1)
-    try:
-        # Call a custom statsprinter if registered
-        statsPrinter()
-    except NameError:
-        # Print
-        print 'Real Elapsed Time (seconds):'
-        print controller.print_real_time()
-        print 'Simulated Elapsed Time (nano-seconds):'
-        print str(controller.get_simulated_time()/1000) + '\n'
-    except Exception,  e:
-        print 'Error in the print of the statistics --> ' + str(e)
-
 def filterNames(namespaceToFilter):
     global scwrapper, tlmwrapper, trapwrapper
     from types import BuiltinFunctionType
@@ -276,7 +255,7 @@ class RespKernel:
         import trapwrapper
         filterNames(trapwrapper)
         if self.verbose:
-            print "Loading sc_controller"
+            print "Loading sc_controller_wrapper"
         import sc_controller_wrapper
         filterNames(sc_controller_wrapper)
 
@@ -325,7 +304,10 @@ class RespKernel:
         global controller
         self.controller = sc_controller_wrapper.sc_controller.getController(interaction)
         controller = self.controller
-        signal.signal(10, self.end_signal_handler)
+        from print_stats import print_stats_cb
+        global eosCb
+        eosCb = print_stats_cb()
+        sc_controller_wrapper.registerEosCallback(eosCb)
 
         if globals().has_key('__warningregistry__'):
             globals().pop('__warningregistry__')
@@ -378,11 +360,6 @@ class RespKernel:
                                    getAttrInstance,  getInstance, getBase, run_simulation, pause_simulation, \
                                    stop_simulation, get_simulated_time, get_real_time, run_up_to, enable_fault_injection, showArchitecture]
 
-
-    def end_signal_handler(self, signum, frame):
-        """If the kernel is terminated, it will print some general usage statistics"""
-        for m in self.methods:
-            m()
 
     def addSimulationVar(self, name, value):
         globals()[name] = value
