@@ -80,7 +80,7 @@ namespace resp{
 class sc_controller{
   private:
     /// Simulation engine used to pause simulation in interactive mode
-    simulation_engine se;
+    simulation_engine * se;
     /// State machine helping in the management of simulation, it keeps track of
     /// the current simulation status
     ControllerMachine controllerMachine;
@@ -102,6 +102,8 @@ public:
     ///ReSP's console
     const bool interactive;
 
+    ~sc_controller();
+
     /// Static method for the creation of the controller class; note that this is the only way
     ///of creating a controller since the real constructor is private
     static sc_controller & getController(bool interactive = true);
@@ -119,7 +121,7 @@ public:
     /// Pauses the simulation; this is done with the help of
     /// the simulation engine. Notify specifies whether registered
     /// callbacks should be notified of the pausing event or not
-    void pause_simulation(bool notify = true);
+    void pause_simulation();
 
     ///Stops simulation (through a call to sc_stop)
     void stop_simulation();
