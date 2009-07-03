@@ -42,53 +42,26 @@
 #
 ##############################################################################
 
-import Options
+import sc_controller_wrapper
 
-def build(bld):
-    # Generation of the controller library
-    obj = bld.new_task_gen('cxx', 'cshlib')
-    obj.source ='''
-        simulation_engine.cpp controller.cpp callback.cpp sc_state_machine.cpp
-    '''
-
-    obj.target = 'sc_controller'
-    obj.uselib = 'SYSTEMC_H BOOST BOOST_THREAD'
-    obj.uselib_local = 'systemc'
-
-    # Generation of the controller wrapper extension
-    obj = bld.new_task_gen('pypp')
-    obj.source ='''
-        controller.hpp callback.hpp
-    '''
-
-    obj.target = 'sc_controller_wrapper'
-    obj.uselib = 'SYSTEMC_H BOOST PYEXT BOOST_PYTHON BOOST_THREAD'
-    obj.uselib_local = 'systemc sc_controller'
-    obj.start_decls = 'resp'
-    obj.custom_code = """
-# Exclude protected members
-mb.calldefs( declarations.access_type_matcher_t( 'protected' ) ).exclude()
-
-# Exclude simulation_engine
-simulation_engine = mb.class_('simulation_engine')
-simulation_engine.exclude()
-
-# Exclude the state machine
-controller_machine = mb.class_('ControllerMachine')
-controller_machine.exclude()
-
-# Exclude the callback variables
-mb.variable('end_of_sim_callbacks').eclude()
-mb.variable('pause_callbacks').eclude()
-mb.variable('error_callbacks').eclude()
-
-# Manage the controller class
-controller = mb.class_('sc_controller')
-controller.include()
-controller.variable('error').exclude()
-controller.variable('errorMessage').exclude()
-controller.variable('timeTracker').exclude()
-controller.variable('accumulatedTime').exclude()
-controller.variable('interactive').exclude()
-controller.member_function('getController').call_policies = call_policies.return_value_policy(call_policies.reference_existing_object)
-"""
+class print_stats_cb(sc_controller_wrapper.EOScallback):
+    def __call__(self):
+        """Prints statistics about the simulation; in case the variable statsPrinter is defined
+        in the global namespace (a function must be assigned to it) then that function
+        is called passing the globals namespace to it. Otherwise simply the real and simulated
+        times are printed; note that before printing statistics, I wait for simulation termination
+        (if not otherwise specified)"""
+        import time
+        while not controller.isEnded():
+            time.sleep(0.1)
+        try:
+            # Call a custom statsprinter if registered
+            statsPrinter()
+        except NameError:
+            # Print
+            print 'Real Elapsed Time (seconds):'
+            print controller.print_real_time()
+            print 'Simulated Elapsed Time (nano-seconds):'
+            print str(controller.get_simulated_time()) + '\n'
+        except Exception,  e:
+            print 'Error in the print of the statistics --> ' + str(e)
