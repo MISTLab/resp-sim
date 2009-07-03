@@ -463,10 +463,10 @@ class RespKernel:
         """Delete all the object instances in namespaces whose base type is
         Boost.Python.instance; note that in case the simulation is still
         running, the first thing I do is stopping it"""
-        if not self.controller.is_finished() and self.controller.is_running() and not self.controller.error:
+        if (not self.controller.is_finished()) and self.controller.is_running() and (not self.controller.error):
             if self.verbose:
                 print 'killing the simulation'
-            self.controller.kill()
+            self.controller.stop_simulation()
         for name in globals().keys():
             if name == 'controller':
                 continue

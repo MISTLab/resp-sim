@@ -80,6 +80,12 @@ simulation_engine::simulation_engine(sc_module_name name, ControllerMachine &con
 
 /// Blocks the SystemC execution by waiting on a boost::thread condition
 void simulation_engine::pause(){
+    // in order to prevent very fast paused events (i.e. simulation is paused soon
+    // after it is started), so fast the the machine hasn't moved to the running state
+    // yet, I use this mutex
+    boost::mutex::scoped_lock lk_reset(this->controllerMachine.reset_mutex);
+    // First of all I perform the transition to pause the state machine
+    this->controllerMachine.process_event( EvPause() );
     // I signal to all who registered that simulation
     // is being paused
     notifyPauseCallback();

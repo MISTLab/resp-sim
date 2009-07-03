@@ -145,10 +145,17 @@ sc_controller * sc_controller::controllerInstance = NULL;
 /// createController should be
 /// the only way of creating a new controller instance
 sc_controller::sc_controller(bool interactive) : interactive(interactive),
-            controllerMachine(timeTracker, accumulatedTime), se("sim_engine", controllerMachine){
+            controllerMachine(timeTracker, accumulatedTime){
+    if(this->interactive)
+        this->se = new simulation_engine("sim_engine", controllerMachine);
     this->error = false;
     this->accumulatedTime = 0;
     this->controllerMachine.initiate();
+}
+
+sc_controller::~sc_controller(){
+    if(this->interactive)
+        delete this->se;
 }
 
 /// Static method for the creation of the controller class; note that this is the only way
@@ -208,10 +215,15 @@ void sc_controller::run_up_to(double simTime, sc_time_unit time_unit){
 /// Pauses the simulation; this is done with the help of
 /// the simulation engine. Notify specifies whether registered
 /// callbacks should be notified of the pausing event or not
-void sc_controller::pause_simulation(bool notify){
+void sc_controller::pause_simulation(){
     if(this->interactive){
-        // I simply have to call the transition in the state machine
-        this->controllerMachine.process_event( EvPause() );
+        // I simply have to pause simulation, the transition will be
+        // implicitly performed. Note that I can pause only if
+        // I am in the running state
+        if(this->controllerMachine.state_cast< const Running_st * >() != 0){
+            this->controllerMachine.pauseEvent.cancel();
+            this->controllerMachine.pauseEvent.notify();
+        }
     }
     else{
         std::cerr << "Unable to pause simulation in non-interactive mode" << std::endl;

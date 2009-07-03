@@ -106,8 +106,8 @@ boost::statechart::result Reset_st::react(const EvRun_t & event){
     // simulation has really started, I use the start_of_sim_cond condition variable
     controllerThread_interactive c(start_of_sim_mutex, start_of_sim_cond);
     boost::mutex::scoped_lock start_of_sim_lock(start_of_sim_mutex);
-    boost::thread thrd (c);
     this->outermost_context().pauseEvent.notify(event.timeStep);
+    boost::thread thrd (c);
     start_of_sim_cond.wait(start_of_sim_lock);
 
     return transit< Running_st >();
@@ -121,7 +121,6 @@ boost::statechart::result Reset_st::react(const EvPause &){
     return discard_event();
 }
 boost::statechart::result Reset_st::react(const EvStop &){
-    std::cerr << __PRETTY_FUNCTION__ << std::endl;
     std::cerr << "Simulation hasn't been started yet, it cannot be stopped" << std::endl;
 
     return discard_event();
@@ -149,7 +148,6 @@ boost::statechart::result Stopped_st::react(const EvRun &){
     return discard_event();
 }
 boost::statechart::result Stopped_st::react(const EvRun_t &){
-    std::cerr << __PRETTY_FUNCTION__ << std::endl;
     std::cerr << "Simulation is stopped, it cannot be run; plese reset the simulator to restart" << std::endl;
 
     return discard_event();
@@ -166,9 +164,6 @@ Stopped_st::Stopped_st(my_context ctx) : boost::statechart::state<Stopped_st, Co
 /// This transitions can be called both because the used explicitly requests
 /// to pause or because the current time quantum expired
 boost::statechart::result Running_st::react(const EvPause &){
-    this->outermost_context().pauseEvent.cancel();
-    this->outermost_context().pauseEvent.notify();
-
     return transit< Paused_st >();
 }
 /// Reaction to the stop timed event. This event can be called
