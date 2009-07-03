@@ -136,7 +136,7 @@ def configure(conf):
 
     defaultFlags = ['-fstrict-aliasing', '-fPIC']
     conf.check_cxx(cxxflags=defaultFlags, madatory=1, msg='Checking for dynamic library flags')
-    conf.env.append_unique('LINKFLAGS','-fPIC' )
+    conf.env.append_unique('shlib_LINKFLAGS','-fPIC' )
     conf.check_cxx(linkflags='-fPIC', mandatory=1)
     if sys.platform != 'darwin':
         conf.env.append_unique('LINKFLAGS','-Wl,-E')
@@ -147,8 +147,8 @@ def configure(conf):
     conf.env.append_unique('CPPFLAGS', '-DPIC')
 
     if sys.platform == 'darwin':
-        conf.env.append_unique('shlib_LINKFLAGS', ['-undefined suppress', '-flat_namespace'] )
-        conf.check_cxx(linkflags=['-undefined suppress', '-flat_namespace'], mandatory=1)
+        conf.env.append_unique('shlib_LINKFLAGS', ['-flat_namespace', '-undefined', 'suppress'] )
+        conf.check_cxx(linkflags=['-flat_namespace', '-undefined', 'suppress'], mandatory=1)
 
     if not Options.options.enable_tools:
         conf.env.append_unique('CPPFLAGS','-DDISABLE_TOOLS')
@@ -164,7 +164,6 @@ def configure(conf):
     # Check for boost libraries
     ##################################################
     boostlibs = 'thread regex date_time program_options filesystem system python'
-
     conf.check_tool('boost')
     conf.check_boost(lib=boostlibs, static='both', min_version='1.35.0', mandatory = 1, errmsg = 'Unable to find ' + boostlibs + ' boost libraries of at least version 1.35, please install them and specify their location with the --boost-includes and --boost-libs configuration options')
 
