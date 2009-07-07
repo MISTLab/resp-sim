@@ -4,3 +4,5 @@ The patch have to be applied to Makefile.in file contained in folder libiberty
 
 This patch enables the compilation of libiberty with the -fPIC flag (something which was disabled even if the
 --enable-shared --with-pic flags were specified)
+
+The binutils "configure" command should be run with the following options: --enable-shared --disable-static --with-pic
