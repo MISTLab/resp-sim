@@ -44,13 +44,14 @@
 #ifndef INSTRUCTIONS_HPP
 #define INSTRUCTIONS_HPP
 
-#include <string>
+#include <instructionBase.hpp>
 #include <customExceptions.hpp>
 #include <trap_utils.hpp>
 #include <registers.hpp>
 #include <alias.hpp>
 #include <externalPorts.hpp>
 #include <externalPins.hpp>
+#include <string>
 #include <sstream>
 #include <systemc.h>
 
@@ -99,7 +100,7 @@
 
 namespace leon3_funclt_trap{
 
-    class Instruction{
+    class Instruction : public InstructionBase{
 
         protected:
         Reg32_0_delay_3 & PSR;
@@ -133,8 +134,6 @@ namespace leon3_funclt_trap{
         virtual unsigned int behavior() = 0;
         virtual Instruction * replicate() const throw() = 0;
         virtual void setParams( const unsigned int & bitString ) throw() = 0;
-        virtual std::string getInstructionName() = 0;
-        virtual std::string getMnemonic() = 0;
         inline void annull(){
             throw annull_exception();
         }
@@ -537,8 +536,8 @@ namespace leon3_funclt_trap{
         unsigned int behavior();
         Instruction * replicate() const throw();
         void setParams( const unsigned int & bitString ) throw();
-        std::string getInstructionName();
-        std::string getMnemonic();
+        std::string getInstructionName() const;
+        std::string getMnemonic() const;
         virtual ~InvalidInstr();
     };
 
@@ -563,9 +562,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~READasr();
     };
 
@@ -591,9 +590,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~WRITEY_reg();
     };
 
@@ -623,9 +622,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~XNOR_reg();
     };
 
@@ -655,9 +654,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ANDNcc_reg();
     };
 
@@ -685,9 +684,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LDSB_imm();
     };
 
@@ -715,9 +714,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~WRITEpsr_imm();
     };
 
@@ -741,9 +740,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~READy();
     };
 
@@ -773,9 +772,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~XNORcc_reg();
     };
 
@@ -801,9 +800,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~READpsr();
     };
 
@@ -831,9 +830,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ANDN_imm();
     };
 
@@ -863,9 +862,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ANDcc_reg();
     };
 
@@ -895,9 +894,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~TSUBcc_imm();
     };
 
@@ -928,9 +927,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LDSBA_reg();
     };
 
@@ -959,9 +958,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LDUH_imm();
     };
 
@@ -993,9 +992,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~STA_reg();
     };
 
@@ -1025,9 +1024,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ORN_reg();
     };
 
@@ -1059,9 +1058,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LDSHA_reg();
     };
 
@@ -1092,9 +1091,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~STBA_reg();
     };
 
@@ -1123,9 +1122,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ST_imm();
     };
 
@@ -1151,9 +1150,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~READtbr();
     };
 
@@ -1184,9 +1183,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~UDIVcc_imm();
     };
 
@@ -1219,9 +1218,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SWAPA_reg();
     };
 
@@ -1250,9 +1249,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ADDXcc_imm();
     };
 
@@ -1280,9 +1279,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~STB_imm();
     };
 
@@ -1311,9 +1310,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SUBXcc_imm();
     };
 
@@ -1344,9 +1343,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~STH_reg();
     };
 
@@ -1374,9 +1373,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SRL_imm();
     };
 
@@ -1402,9 +1401,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~WRITEasr_imm();
     };
 
@@ -1434,9 +1433,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~UMULcc_reg();
     };
 
@@ -1466,9 +1465,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LDSTUB_reg();
     };
 
@@ -1496,9 +1495,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~XOR_imm();
     };
 
@@ -1528,9 +1527,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SMAC_reg();
     };
 
@@ -1557,9 +1556,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~WRITEasr_reg();
     };
 
@@ -1590,9 +1589,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LD_reg();
     };
 
@@ -1623,9 +1622,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ST_reg();
     };
 
@@ -1655,9 +1654,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SUBcc_reg();
     };
 
@@ -1688,9 +1687,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LDD_reg();
     };
 
@@ -1719,9 +1718,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ADDcc_imm();
     };
 
@@ -1752,9 +1751,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LDUH_reg();
     };
 
@@ -1784,9 +1783,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SRL_reg();
     };
 
@@ -1816,9 +1815,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SAVE_imm();
     };
 
@@ -1848,9 +1847,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~MULScc_reg();
     };
 
@@ -1878,9 +1877,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~OR_imm();
     };
 
@@ -1909,9 +1908,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~STD_imm();
     };
 
@@ -1941,9 +1940,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SUBXcc_reg();
     };
 
@@ -1972,9 +1971,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ADDX_imm();
     };
 
@@ -2004,9 +2003,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SWAP_imm();
     };
 
@@ -2036,9 +2035,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~UMUL_reg();
     };
 
@@ -2063,9 +2062,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~WRITEY_imm();
     };
 
@@ -2095,9 +2094,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~AND_reg();
     };
 
@@ -2121,9 +2120,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~FLUSH_imm();
     };
 
@@ -2153,9 +2152,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SRA_reg();
     };
 
@@ -2184,9 +2183,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~STH_imm();
     };
 
@@ -2213,9 +2212,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~WRITEwim_imm();
     };
 
@@ -2244,9 +2243,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LDD_imm();
     };
 
@@ -2274,9 +2273,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SLL_imm();
     };
 
@@ -2308,9 +2307,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LDUHA_reg();
     };
 
@@ -2341,9 +2340,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~TADDcc_reg();
     };
 
@@ -2373,9 +2372,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~TADDcc_imm();
     };
 
@@ -2406,9 +2405,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SDIV_imm();
     };
 
@@ -2438,9 +2437,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~TSUBccTV_imm();
     };
 
@@ -2465,9 +2464,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~FLUSH_reg();
     };
 
@@ -2497,9 +2496,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ORNcc_reg();
     };
 
@@ -2531,9 +2530,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~RETT_imm();
     };
 
@@ -2565,9 +2564,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SDIVcc_reg();
     };
 
@@ -2597,9 +2596,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ADD_reg();
     };
 
@@ -2627,9 +2626,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~TRAP_imm();
     };
 
@@ -2656,9 +2655,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~WRITEtbr_imm();
     };
 
@@ -2688,9 +2687,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LDUB_reg();
     };
 
@@ -2721,9 +2720,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~RESTORE_reg();
     };
 
@@ -2753,9 +2752,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ADDXcc_reg();
     };
 
@@ -2785,9 +2784,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~STB_reg();
     };
 
@@ -2815,9 +2814,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~AND_imm();
     };
 
@@ -2846,9 +2845,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SMUL_imm();
     };
 
@@ -2877,9 +2876,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ADD_imm();
     };
 
@@ -2908,9 +2907,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~UMUL_imm();
     };
 
@@ -2936,9 +2935,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~READwim();
     };
 
@@ -2966,9 +2965,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LDSTUB_imm();
     };
 
@@ -2997,9 +2996,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SMAC_imm();
     };
 
@@ -3029,9 +3028,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LDSB_reg();
     };
 
@@ -3061,9 +3060,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ANDN_reg();
     };
 
@@ -3094,9 +3093,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~TSUBccTV_reg();
     };
 
@@ -3121,9 +3120,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SETHI();
     };
 
@@ -3151,9 +3150,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SRA_imm();
     };
 
@@ -3184,9 +3183,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LDSH_reg();
     };
 
@@ -3218,9 +3217,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~UDIVcc_reg();
     };
 
@@ -3248,9 +3247,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ORN_imm();
     };
 
@@ -3281,9 +3280,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~STD_reg();
     };
 
@@ -3311,9 +3310,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ANDNcc_imm();
     };
 
@@ -3343,9 +3342,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~TADDccTV_imm();
     };
 
@@ -3373,9 +3372,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~WRITEtbr_reg();
     };
 
@@ -3405,9 +3404,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SUBX_reg();
     };
 
@@ -3435,9 +3434,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~XNOR_imm();
     };
 
@@ -3468,9 +3467,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~UDIV_imm();
     };
 
@@ -3499,9 +3498,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LDSH_imm();
     };
 
@@ -3523,9 +3522,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~UNIMP();
     };
 
@@ -3556,9 +3555,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LDSTUBA_reg();
     };
 
@@ -3587,9 +3586,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~UMULcc_imm();
     };
 
@@ -3619,9 +3618,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ORcc_reg();
     };
 
@@ -3650,9 +3649,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~MULScc_imm();
     };
 
@@ -3682,9 +3681,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~XORcc_reg();
     };
 
@@ -3714,9 +3713,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SUB_reg();
     };
 
@@ -3744,9 +3743,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~WRITEwim_reg();
     };
 
@@ -3775,9 +3774,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~UMAC_imm();
     };
 
@@ -3808,9 +3807,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~TSUBcc_reg();
     };
 
@@ -3832,9 +3831,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~BRANCH();
     };
 
@@ -3864,9 +3863,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SMULcc_reg();
     };
 
@@ -3895,9 +3894,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SUB_imm();
     };
 
@@ -3927,9 +3926,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ADDcc_reg();
     };
 
@@ -3959,9 +3958,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~XOR_reg();
     };
 
@@ -3990,9 +3989,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SUBcc_imm();
     };
 
@@ -4023,9 +4022,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~TADDccTV_reg();
     };
 
@@ -4057,9 +4056,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SDIV_reg();
     };
 
@@ -4088,9 +4087,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SMULcc_imm();
     };
 
@@ -4122,9 +4121,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SWAP_reg();
     };
 
@@ -4153,9 +4152,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SUBX_imm();
     };
 
@@ -4187,9 +4186,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~STDA_reg();
     };
 
@@ -4219,9 +4218,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~UMAC_reg();
     };
 
@@ -4249,9 +4248,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~JUMP_imm();
     };
 
@@ -4281,9 +4280,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SMUL_reg();
     };
 
@@ -4311,9 +4310,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~XORcc_imm();
     };
 
@@ -4341,9 +4340,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ORNcc_imm();
     };
 
@@ -4374,9 +4373,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LDUBA_reg();
     };
 
@@ -4405,9 +4404,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~JUMP_reg();
     };
 
@@ -4437,9 +4436,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ADDX_reg();
     };
 
@@ -4471,9 +4470,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~UDIV_reg();
     };
 
@@ -4501,9 +4500,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~XNORcc_imm();
     };
 
@@ -4521,9 +4520,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~STBAR();
     };
 
@@ -4555,9 +4554,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LDA_reg();
     };
 
@@ -4589,9 +4588,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~STHA_reg();
     };
 
@@ -4623,9 +4622,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LDDA_reg();
     };
 
@@ -4655,9 +4654,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SLL_reg();
     };
 
@@ -4687,9 +4686,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~RESTORE_imm();
     };
 
@@ -4718,9 +4717,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LD_imm();
     };
 
@@ -4749,9 +4748,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~TRAP_reg();
     };
 
@@ -4779,9 +4778,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~LDUB_imm();
     };
 
@@ -4814,9 +4813,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~RETT_reg();
     };
 
@@ -4847,9 +4846,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SDIVcc_imm();
     };
 
@@ -4880,9 +4879,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~SAVE_reg();
     };
 
@@ -4912,9 +4911,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~OR_reg();
     };
 
@@ -4942,9 +4941,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ORcc_imm();
     };
 
@@ -4967,9 +4966,9 @@ namespace leon3_funclt_trap{
             & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~CALL();
     };
 
@@ -4998,9 +4997,9 @@ namespace leon3_funclt_trap{
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~WRITEpsr_reg();
     };
 
@@ -5028,9 +5027,9 @@ namespace leon3_funclt_trap{
             dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
-        std::string getInstructionName();
+        std::string getInstructionName() const;
         void setParams( const unsigned int & bitString ) throw();
-        std::string getMnemonic();
+        std::string getMnemonic() const;
         virtual ~ANDcc_imm();
     };
 

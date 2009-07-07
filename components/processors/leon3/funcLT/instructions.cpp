@@ -42,7 +42,7 @@
 
 
 
-#include <string>
+#include <instructionBase.hpp>
 #include <customExceptions.hpp>
 #include <trap_utils.hpp>
 #include <registers.hpp>
@@ -50,6 +50,7 @@
 #include <externalPorts.hpp>
 #include <externalPins.hpp>
 #include <instructions.hpp>
+#include <string>
 #include <sstream>
 #include <systemc.h>
 
@@ -486,11 +487,11 @@ void leon3_funclt_trap::InvalidInstr::setParams( const unsigned int & bitString 
 
 }
 
-std::string leon3_funclt_trap::InvalidInstr::getInstructionName(){
+std::string leon3_funclt_trap::InvalidInstr::getInstructionName() const{
     return "InvalidInstruction";
 }
 
-std::string leon3_funclt_trap::InvalidInstr::getMnemonic(){
+std::string leon3_funclt_trap::InvalidInstr::getMnemonic() const{
     return "invalid";
 }
 
@@ -522,7 +523,7 @@ Instruction * leon3_funclt_trap::READasr::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::READasr::getInstructionName(){
+std::string leon3_funclt_trap::READasr::getInstructionName() const{
     return "READasr";
 }
 
@@ -532,7 +533,7 @@ void leon3_funclt_trap::READasr::setParams( const unsigned int & bitString ) thr
     this->asr = (bitString & 0x7c000) >> 14;
 }
 
-std::string leon3_funclt_trap::READasr::getMnemonic(){
+std::string leon3_funclt_trap::READasr::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "rd asr ";
     oss << this->asr;
@@ -572,7 +573,7 @@ Instruction * leon3_funclt_trap::WRITEY_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::WRITEY_reg::getInstructionName(){
+std::string leon3_funclt_trap::WRITEY_reg::getInstructionName() const{
     return "WRITEY_reg";
 }
 
@@ -583,7 +584,7 @@ void leon3_funclt_trap::WRITEY_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::WRITEY_reg::getMnemonic(){
+std::string leon3_funclt_trap::WRITEY_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -624,7 +625,7 @@ Instruction * leon3_funclt_trap::XNOR_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::XNOR_reg::getInstructionName(){
+std::string leon3_funclt_trap::XNOR_reg::getInstructionName() const{
     return "XNOR_reg";
 }
 
@@ -637,7 +638,7 @@ void leon3_funclt_trap::XNOR_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::XNOR_reg::getMnemonic(){
+std::string leon3_funclt_trap::XNOR_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "xnor r";
     oss << this->rs1_bit;
@@ -682,7 +683,7 @@ Instruction * leon3_funclt_trap::ANDNcc_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ANDNcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::ANDNcc_reg::getInstructionName() const{
     return "ANDNcc_reg";
 }
 
@@ -695,7 +696,7 @@ void leon3_funclt_trap::ANDNcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::ANDNcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::ANDNcc_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "andncc r";
     oss << this->rs1_bit;
@@ -741,7 +742,7 @@ Instruction * leon3_funclt_trap::LDSB_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LDSB_imm::getInstructionName(){
+std::string leon3_funclt_trap::LDSB_imm::getInstructionName() const{
     return "LDSB_imm";
 }
 
@@ -753,7 +754,7 @@ void leon3_funclt_trap::LDSB_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::LDSB_imm::getMnemonic(){
+std::string leon3_funclt_trap::LDSB_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldsb r";
     oss << this->rs1_bit;
@@ -808,7 +809,7 @@ Instruction * leon3_funclt_trap::WRITEpsr_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::WRITEpsr_imm::getInstructionName(){
+std::string leon3_funclt_trap::WRITEpsr_imm::getInstructionName() const{
     return "WRITEpsr_imm";
 }
 
@@ -820,7 +821,7 @@ void leon3_funclt_trap::WRITEpsr_imm::setParams( const unsigned int & bitString 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::WRITEpsr_imm::getMnemonic(){
+std::string leon3_funclt_trap::WRITEpsr_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -859,7 +860,7 @@ Instruction * leon3_funclt_trap::READy::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::READy::getInstructionName(){
+std::string leon3_funclt_trap::READy::getInstructionName() const{
     return "READy";
 }
 
@@ -868,7 +869,7 @@ void leon3_funclt_trap::READy::setParams( const unsigned int & bitString ) throw
     this->rd.directSetAlias(this->REGS[this->rd_bit]);
 }
 
-std::string leon3_funclt_trap::READy::getMnemonic(){
+std::string leon3_funclt_trap::READy::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "rd ";
     oss << "y";
@@ -909,7 +910,7 @@ Instruction * leon3_funclt_trap::XNORcc_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::XNORcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::XNORcc_reg::getInstructionName() const{
     return "XNORcc_reg";
 }
 
@@ -922,7 +923,7 @@ void leon3_funclt_trap::XNORcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::XNORcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::XNORcc_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "xnorcc r";
     oss << this->rs1_bit;
@@ -971,7 +972,7 @@ Instruction * leon3_funclt_trap::READpsr::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::READpsr::getInstructionName(){
+std::string leon3_funclt_trap::READpsr::getInstructionName() const{
     return "READpsr";
 }
 
@@ -981,7 +982,7 @@ void leon3_funclt_trap::READpsr::setParams( const unsigned int & bitString ) thr
     this->asr = (bitString & 0x7c000) >> 14;
 }
 
-std::string leon3_funclt_trap::READpsr::getMnemonic(){
+std::string leon3_funclt_trap::READpsr::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "rd ";
     oss << "psr r";
@@ -1019,7 +1020,7 @@ Instruction * leon3_funclt_trap::ANDN_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ANDN_imm::getInstructionName(){
+std::string leon3_funclt_trap::ANDN_imm::getInstructionName() const{
     return "ANDN_imm";
 }
 
@@ -1031,7 +1032,7 @@ void leon3_funclt_trap::ANDN_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::ANDN_imm::getMnemonic(){
+std::string leon3_funclt_trap::ANDN_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "andn r";
     oss << this->rs1_bit;
@@ -1076,7 +1077,7 @@ Instruction * leon3_funclt_trap::ANDcc_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ANDcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::ANDcc_reg::getInstructionName() const{
     return "ANDcc_reg";
 }
 
@@ -1089,7 +1090,7 @@ void leon3_funclt_trap::ANDcc_reg::setParams( const unsigned int & bitString ) t
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::ANDcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::ANDcc_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "andcc r";
     oss << this->rs1_bit;
@@ -1141,7 +1142,7 @@ Instruction * leon3_funclt_trap::TSUBcc_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::TSUBcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::TSUBcc_imm::getInstructionName() const{
     return "TSUBcc_imm";
 }
 
@@ -1153,7 +1154,7 @@ void leon3_funclt_trap::TSUBcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::TSUBcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::TSUBcc_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "tsubcc r";
     oss << this->rs1_bit;
@@ -1213,7 +1214,7 @@ Instruction * leon3_funclt_trap::LDSBA_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LDSBA_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDSBA_reg::getInstructionName() const{
     return "LDSBA_reg";
 }
 
@@ -1227,7 +1228,7 @@ void leon3_funclt_trap::LDSBA_reg::setParams( const unsigned int & bitString ) t
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::LDSBA_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDSBA_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldba r";
     oss << this->rs1_bit;
@@ -1280,7 +1281,7 @@ Instruction * leon3_funclt_trap::LDUH_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LDUH_imm::getInstructionName(){
+std::string leon3_funclt_trap::LDUH_imm::getInstructionName() const{
     return "LDUH_imm";
 }
 
@@ -1292,7 +1293,7 @@ void leon3_funclt_trap::LDUH_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::LDUH_imm::getMnemonic(){
+std::string leon3_funclt_trap::LDUH_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "lduh r";
     oss << this->rs1_bit;
@@ -1351,7 +1352,7 @@ Instruction * leon3_funclt_trap::STA_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::STA_reg::getInstructionName(){
+std::string leon3_funclt_trap::STA_reg::getInstructionName() const{
     return "STA_reg";
 }
 
@@ -1365,7 +1366,7 @@ void leon3_funclt_trap::STA_reg::setParams( const unsigned int & bitString ) thr
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::STA_reg::getMnemonic(){
+std::string leon3_funclt_trap::STA_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "sta r";
     oss << this->rd_bit;
@@ -1409,7 +1410,7 @@ Instruction * leon3_funclt_trap::ORN_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ORN_reg::getInstructionName(){
+std::string leon3_funclt_trap::ORN_reg::getInstructionName() const{
     return "ORN_reg";
 }
 
@@ -1422,7 +1423,7 @@ void leon3_funclt_trap::ORN_reg::setParams( const unsigned int & bitString ) thr
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::ORN_reg::getMnemonic(){
+std::string leon3_funclt_trap::ORN_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "orn r";
     oss << this->rs1_bit;
@@ -1484,7 +1485,7 @@ Instruction * leon3_funclt_trap::LDSHA_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LDSHA_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDSHA_reg::getInstructionName() const{
     return "LDSHA_reg";
 }
 
@@ -1498,7 +1499,7 @@ void leon3_funclt_trap::LDSHA_reg::setParams( const unsigned int & bitString ) t
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::LDSHA_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDSHA_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldsha r";
     oss << this->rs1_bit;
@@ -1555,7 +1556,7 @@ Instruction * leon3_funclt_trap::STBA_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::STBA_reg::getInstructionName(){
+std::string leon3_funclt_trap::STBA_reg::getInstructionName() const{
     return "STBA_reg";
 }
 
@@ -1569,7 +1570,7 @@ void leon3_funclt_trap::STBA_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::STBA_reg::getMnemonic(){
+std::string leon3_funclt_trap::STBA_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "stba r";
     oss << this->rd_bit;
@@ -1626,7 +1627,7 @@ Instruction * leon3_funclt_trap::ST_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ST_imm::getInstructionName(){
+std::string leon3_funclt_trap::ST_imm::getInstructionName() const{
     return "ST_imm";
 }
 
@@ -1638,7 +1639,7 @@ void leon3_funclt_trap::ST_imm::setParams( const unsigned int & bitString ) thro
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::ST_imm::getMnemonic(){
+std::string leon3_funclt_trap::ST_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "st r";
     oss << this->rd_bit;
@@ -1683,7 +1684,7 @@ Instruction * leon3_funclt_trap::READtbr::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::READtbr::getInstructionName(){
+std::string leon3_funclt_trap::READtbr::getInstructionName() const{
     return "READtbr";
 }
 
@@ -1693,7 +1694,7 @@ void leon3_funclt_trap::READtbr::setParams( const unsigned int & bitString ) thr
     this->asr = (bitString & 0x7c000) >> 14;
 }
 
-std::string leon3_funclt_trap::READtbr::getMnemonic(){
+std::string leon3_funclt_trap::READtbr::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "rd ";
     oss << "tbr r";
@@ -1748,7 +1749,7 @@ Instruction * leon3_funclt_trap::UDIVcc_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::UDIVcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::UDIVcc_imm::getInstructionName() const{
     return "UDIVcc_imm";
 }
 
@@ -1760,7 +1761,7 @@ void leon3_funclt_trap::UDIVcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::UDIVcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::UDIVcc_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "udivcc";
     oss << " r";
@@ -1826,7 +1827,7 @@ Instruction * leon3_funclt_trap::SWAPA_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SWAPA_reg::getInstructionName(){
+std::string leon3_funclt_trap::SWAPA_reg::getInstructionName() const{
     return "SWAPA_reg";
 }
 
@@ -1840,7 +1841,7 @@ void leon3_funclt_trap::SWAPA_reg::setParams( const unsigned int & bitString ) t
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::SWAPA_reg::getMnemonic(){
+std::string leon3_funclt_trap::SWAPA_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "swapa r";
     oss << this->rs1_bit;
@@ -1885,7 +1886,7 @@ Instruction * leon3_funclt_trap::ADDXcc_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ADDXcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::ADDXcc_imm::getInstructionName() const{
     return "ADDXcc_imm";
 }
 
@@ -1897,7 +1898,7 @@ void leon3_funclt_trap::ADDXcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::ADDXcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::ADDXcc_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "addxcc r";
     oss << this->rs1_bit;
@@ -1942,7 +1943,7 @@ Instruction * leon3_funclt_trap::STB_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::STB_imm::getInstructionName(){
+std::string leon3_funclt_trap::STB_imm::getInstructionName() const{
     return "STB_imm";
 }
 
@@ -1954,7 +1955,7 @@ void leon3_funclt_trap::STB_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::STB_imm::getMnemonic(){
+std::string leon3_funclt_trap::STB_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "stb r";
     oss << this->rd_bit;
@@ -1997,7 +1998,7 @@ Instruction * leon3_funclt_trap::SUBXcc_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SUBXcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::SUBXcc_imm::getInstructionName() const{
     return "SUBXcc_imm";
 }
 
@@ -2009,7 +2010,7 @@ void leon3_funclt_trap::SUBXcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::SUBXcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::SUBXcc_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "subxcc r";
     oss << this->rs1_bit;
@@ -2068,7 +2069,7 @@ Instruction * leon3_funclt_trap::STH_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::STH_reg::getInstructionName(){
+std::string leon3_funclt_trap::STH_reg::getInstructionName() const{
     return "STH_reg";
 }
 
@@ -2082,7 +2083,7 @@ void leon3_funclt_trap::STH_reg::setParams( const unsigned int & bitString ) thr
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::STH_reg::getMnemonic(){
+std::string leon3_funclt_trap::STH_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "sth r";
     oss << this->rd_bit;
@@ -2123,7 +2124,7 @@ Instruction * leon3_funclt_trap::SRL_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SRL_imm::getInstructionName(){
+std::string leon3_funclt_trap::SRL_imm::getInstructionName() const{
     return "SRL_imm";
 }
 
@@ -2135,7 +2136,7 @@ void leon3_funclt_trap::SRL_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::SRL_imm::getMnemonic(){
+std::string leon3_funclt_trap::SRL_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "srl r";
     oss << this->rs1_bit;
@@ -2181,7 +2182,7 @@ Instruction * leon3_funclt_trap::WRITEasr_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::WRITEasr_imm::getInstructionName(){
+std::string leon3_funclt_trap::WRITEasr_imm::getInstructionName() const{
     return "WRITEasr_imm";
 }
 
@@ -2193,7 +2194,7 @@ void leon3_funclt_trap::WRITEasr_imm::setParams( const unsigned int & bitString 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::WRITEasr_imm::getMnemonic(){
+std::string leon3_funclt_trap::WRITEasr_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -2239,7 +2240,7 @@ Instruction * leon3_funclt_trap::UMULcc_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::UMULcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::UMULcc_reg::getInstructionName() const{
     return "UMULcc_reg";
 }
 
@@ -2252,7 +2253,7 @@ void leon3_funclt_trap::UMULcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::UMULcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::UMULcc_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "umulcc r";
     oss << this->rs1_bit;
@@ -2299,7 +2300,7 @@ Instruction * leon3_funclt_trap::LDSTUB_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LDSTUB_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDSTUB_reg::getInstructionName() const{
     return "LDSTUB_reg";
 }
 
@@ -2313,7 +2314,7 @@ void leon3_funclt_trap::LDSTUB_reg::setParams( const unsigned int & bitString ) 
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::LDSTUB_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDSTUB_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldastub r";
     oss << this->rs1_bit;
@@ -2354,7 +2355,7 @@ Instruction * leon3_funclt_trap::XOR_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::XOR_imm::getInstructionName(){
+std::string leon3_funclt_trap::XOR_imm::getInstructionName() const{
     return "XOR_imm";
 }
 
@@ -2366,7 +2367,7 @@ void leon3_funclt_trap::XOR_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::XOR_imm::getMnemonic(){
+std::string leon3_funclt_trap::XOR_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "xor r";
     oss << this->rs1_bit;
@@ -2416,7 +2417,7 @@ Instruction * leon3_funclt_trap::SMAC_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SMAC_reg::getInstructionName(){
+std::string leon3_funclt_trap::SMAC_reg::getInstructionName() const{
     return "SMAC_reg";
 }
 
@@ -2429,7 +2430,7 @@ void leon3_funclt_trap::SMAC_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::SMAC_reg::getMnemonic(){
+std::string leon3_funclt_trap::SMAC_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "smac r";
     oss << this->rs1_bit;
@@ -2475,7 +2476,7 @@ Instruction * leon3_funclt_trap::WRITEasr_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::WRITEasr_reg::getInstructionName(){
+std::string leon3_funclt_trap::WRITEasr_reg::getInstructionName() const{
     return "WRITEasr_reg";
 }
 
@@ -2488,7 +2489,7 @@ void leon3_funclt_trap::WRITEasr_reg::setParams( const unsigned int & bitString 
     this->rd = (bitString & 0x3e000000) >> 25;
 }
 
-std::string leon3_funclt_trap::WRITEasr_reg::getMnemonic(){
+std::string leon3_funclt_trap::WRITEasr_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -2539,7 +2540,7 @@ Instruction * leon3_funclt_trap::LD_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LD_reg::getInstructionName(){
+std::string leon3_funclt_trap::LD_reg::getInstructionName() const{
     return "LD_reg";
 }
 
@@ -2553,7 +2554,7 @@ void leon3_funclt_trap::LD_reg::setParams( const unsigned int & bitString ) thro
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::LD_reg::getMnemonic(){
+std::string leon3_funclt_trap::LD_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "ld r";
     oss << this->rs1_bit;
@@ -2608,7 +2609,7 @@ Instruction * leon3_funclt_trap::ST_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ST_reg::getInstructionName(){
+std::string leon3_funclt_trap::ST_reg::getInstructionName() const{
     return "ST_reg";
 }
 
@@ -2622,7 +2623,7 @@ void leon3_funclt_trap::ST_reg::setParams( const unsigned int & bitString ) thro
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::ST_reg::getMnemonic(){
+std::string leon3_funclt_trap::ST_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "st r";
     oss << this->rd_bit;
@@ -2665,7 +2666,7 @@ Instruction * leon3_funclt_trap::SUBcc_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SUBcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::SUBcc_reg::getInstructionName() const{
     return "SUBcc_reg";
 }
 
@@ -2678,7 +2679,7 @@ void leon3_funclt_trap::SUBcc_reg::setParams( const unsigned int & bitString ) t
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::SUBcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::SUBcc_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "subcc r";
     oss << this->rs1_bit;
@@ -2753,7 +2754,7 @@ Instruction * leon3_funclt_trap::LDD_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LDD_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDD_reg::getInstructionName() const{
     return "LDD_reg";
 }
 
@@ -2767,7 +2768,7 @@ void leon3_funclt_trap::LDD_reg::setParams( const unsigned int & bitString ) thr
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::LDD_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDD_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldd r";
     oss << this->rs1_bit;
@@ -2810,7 +2811,7 @@ Instruction * leon3_funclt_trap::ADDcc_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ADDcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::ADDcc_imm::getInstructionName() const{
     return "ADDcc_imm";
 }
 
@@ -2822,7 +2823,7 @@ void leon3_funclt_trap::ADDcc_imm::setParams( const unsigned int & bitString ) t
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::ADDcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::ADDcc_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "addcc r";
     oss << this->rs1_bit;
@@ -2877,7 +2878,7 @@ Instruction * leon3_funclt_trap::LDUH_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LDUH_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDUH_reg::getInstructionName() const{
     return "LDUH_reg";
 }
 
@@ -2891,7 +2892,7 @@ void leon3_funclt_trap::LDUH_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::LDUH_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDUH_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "lduh r";
     oss << this->rs1_bit;
@@ -2933,7 +2934,7 @@ Instruction * leon3_funclt_trap::SRL_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SRL_reg::getInstructionName(){
+std::string leon3_funclt_trap::SRL_reg::getInstructionName() const{
     return "SRL_reg";
 }
 
@@ -2946,7 +2947,7 @@ void leon3_funclt_trap::SRL_reg::setParams( const unsigned int & bitString ) thr
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::SRL_reg::getMnemonic(){
+std::string leon3_funclt_trap::SRL_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "srl r";
     oss << this->rs1_bit;
@@ -2998,7 +2999,7 @@ Instruction * leon3_funclt_trap::SAVE_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SAVE_imm::getInstructionName(){
+std::string leon3_funclt_trap::SAVE_imm::getInstructionName() const{
     return "SAVE_imm";
 }
 
@@ -3010,7 +3011,7 @@ void leon3_funclt_trap::SAVE_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::SAVE_imm::getMnemonic(){
+std::string leon3_funclt_trap::SAVE_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "save";
     oss << " r";
@@ -3063,7 +3064,7 @@ Instruction * leon3_funclt_trap::MULScc_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::MULScc_reg::getInstructionName(){
+std::string leon3_funclt_trap::MULScc_reg::getInstructionName() const{
     return "MULScc_reg";
 }
 
@@ -3076,7 +3077,7 @@ void leon3_funclt_trap::MULScc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::MULScc_reg::getMnemonic(){
+std::string leon3_funclt_trap::MULScc_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "mulscc r";
     oss << this->rs1_bit;
@@ -3121,7 +3122,7 @@ Instruction * leon3_funclt_trap::OR_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::OR_imm::getInstructionName(){
+std::string leon3_funclt_trap::OR_imm::getInstructionName() const{
     return "OR_imm";
 }
 
@@ -3133,7 +3134,7 @@ void leon3_funclt_trap::OR_imm::setParams( const unsigned int & bitString ) thro
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::OR_imm::getMnemonic(){
+std::string leon3_funclt_trap::OR_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "or r";
     oss << this->rs1_bit;
@@ -3195,7 +3196,7 @@ Instruction * leon3_funclt_trap::STD_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::STD_imm::getInstructionName(){
+std::string leon3_funclt_trap::STD_imm::getInstructionName() const{
     return "STD_imm";
 }
 
@@ -3207,7 +3208,7 @@ void leon3_funclt_trap::STD_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::STD_imm::getMnemonic(){
+std::string leon3_funclt_trap::STD_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "std r";
     oss << this->rd_bit;
@@ -3250,7 +3251,7 @@ Instruction * leon3_funclt_trap::SUBXcc_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SUBXcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::SUBXcc_reg::getInstructionName() const{
     return "SUBXcc_reg";
 }
 
@@ -3263,7 +3264,7 @@ void leon3_funclt_trap::SUBXcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::SUBXcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::SUBXcc_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "subxcc r";
     oss << this->rs1_bit;
@@ -3309,7 +3310,7 @@ Instruction * leon3_funclt_trap::ADDX_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ADDX_imm::getInstructionName(){
+std::string leon3_funclt_trap::ADDX_imm::getInstructionName() const{
     return "ADDX_imm";
 }
 
@@ -3321,7 +3322,7 @@ void leon3_funclt_trap::ADDX_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::ADDX_imm::getMnemonic(){
+std::string leon3_funclt_trap::ADDX_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "addx r";
     oss << this->rs1_bit;
@@ -3381,7 +3382,7 @@ Instruction * leon3_funclt_trap::SWAP_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SWAP_imm::getInstructionName(){
+std::string leon3_funclt_trap::SWAP_imm::getInstructionName() const{
     return "SWAP_imm";
 }
 
@@ -3393,7 +3394,7 @@ void leon3_funclt_trap::SWAP_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::SWAP_imm::getMnemonic(){
+std::string leon3_funclt_trap::SWAP_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "swap r";
     oss << this->rs1_bit;
@@ -3438,7 +3439,7 @@ Instruction * leon3_funclt_trap::UMUL_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::UMUL_reg::getInstructionName(){
+std::string leon3_funclt_trap::UMUL_reg::getInstructionName() const{
     return "UMUL_reg";
 }
 
@@ -3451,7 +3452,7 @@ void leon3_funclt_trap::UMUL_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::UMUL_reg::getMnemonic(){
+std::string leon3_funclt_trap::UMUL_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "umul r";
     oss << this->rs1_bit;
@@ -3495,7 +3496,7 @@ Instruction * leon3_funclt_trap::WRITEY_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::WRITEY_imm::getInstructionName(){
+std::string leon3_funclt_trap::WRITEY_imm::getInstructionName() const{
     return "WRITEY_imm";
 }
 
@@ -3505,7 +3506,7 @@ void leon3_funclt_trap::WRITEY_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::WRITEY_imm::getMnemonic(){
+std::string leon3_funclt_trap::WRITEY_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -3546,7 +3547,7 @@ Instruction * leon3_funclt_trap::AND_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::AND_reg::getInstructionName(){
+std::string leon3_funclt_trap::AND_reg::getInstructionName() const{
     return "AND_reg";
 }
 
@@ -3559,7 +3560,7 @@ void leon3_funclt_trap::AND_reg::setParams( const unsigned int & bitString ) thr
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::AND_reg::getMnemonic(){
+std::string leon3_funclt_trap::AND_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "and r";
     oss << this->rs1_bit;
@@ -3598,7 +3599,7 @@ Instruction * leon3_funclt_trap::FLUSH_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::FLUSH_imm::getInstructionName(){
+std::string leon3_funclt_trap::FLUSH_imm::getInstructionName() const{
     return "FLUSH_imm";
 }
 
@@ -3610,7 +3611,7 @@ void leon3_funclt_trap::FLUSH_imm::setParams( const unsigned int & bitString ) t
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::FLUSH_imm::getMnemonic(){
+std::string leon3_funclt_trap::FLUSH_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "flush r";
     oss << this->rs1_bit;
@@ -3650,7 +3651,7 @@ Instruction * leon3_funclt_trap::SRA_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SRA_reg::getInstructionName(){
+std::string leon3_funclt_trap::SRA_reg::getInstructionName() const{
     return "SRA_reg";
 }
 
@@ -3663,7 +3664,7 @@ void leon3_funclt_trap::SRA_reg::setParams( const unsigned int & bitString ) thr
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::SRA_reg::getMnemonic(){
+std::string leon3_funclt_trap::SRA_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "sra r";
     oss << this->rs1_bit;
@@ -3720,7 +3721,7 @@ Instruction * leon3_funclt_trap::STH_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::STH_imm::getInstructionName(){
+std::string leon3_funclt_trap::STH_imm::getInstructionName() const{
     return "STH_imm";
 }
 
@@ -3732,7 +3733,7 @@ void leon3_funclt_trap::STH_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::STH_imm::getMnemonic(){
+std::string leon3_funclt_trap::STH_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "sth r";
     oss << this->rd_bit;
@@ -3779,7 +3780,7 @@ Instruction * leon3_funclt_trap::WRITEwim_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::WRITEwim_imm::getInstructionName(){
+std::string leon3_funclt_trap::WRITEwim_imm::getInstructionName() const{
     return "WRITEwim_imm";
 }
 
@@ -3791,7 +3792,7 @@ void leon3_funclt_trap::WRITEwim_imm::setParams( const unsigned int & bitString 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::WRITEwim_imm::getMnemonic(){
+std::string leon3_funclt_trap::WRITEwim_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -3861,7 +3862,7 @@ Instruction * leon3_funclt_trap::LDD_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LDD_imm::getInstructionName(){
+std::string leon3_funclt_trap::LDD_imm::getInstructionName() const{
     return "LDD_imm";
 }
 
@@ -3873,7 +3874,7 @@ void leon3_funclt_trap::LDD_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::LDD_imm::getMnemonic(){
+std::string leon3_funclt_trap::LDD_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldd r";
     oss << this->rs1_bit;
@@ -3914,7 +3915,7 @@ Instruction * leon3_funclt_trap::SLL_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SLL_imm::getInstructionName(){
+std::string leon3_funclt_trap::SLL_imm::getInstructionName() const{
     return "SLL_imm";
 }
 
@@ -3926,7 +3927,7 @@ void leon3_funclt_trap::SLL_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::SLL_imm::getMnemonic(){
+std::string leon3_funclt_trap::SLL_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "sll r";
     oss << this->rs1_bit;
@@ -3988,7 +3989,7 @@ Instruction * leon3_funclt_trap::LDUHA_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LDUHA_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDUHA_reg::getInstructionName() const{
     return "LDUHA_reg";
 }
 
@@ -4002,7 +4003,7 @@ void leon3_funclt_trap::LDUHA_reg::setParams( const unsigned int & bitString ) t
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::LDUHA_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDUHA_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "lduha r";
     oss << this->rs1_bit;
@@ -4052,7 +4053,7 @@ Instruction * leon3_funclt_trap::TADDcc_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::TADDcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::TADDcc_reg::getInstructionName() const{
     return "TADDcc_reg";
 }
 
@@ -4065,7 +4066,7 @@ void leon3_funclt_trap::TADDcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::TADDcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::TADDcc_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "taddcc r";
     oss << this->rs1_bit;
@@ -4117,7 +4118,7 @@ Instruction * leon3_funclt_trap::TADDcc_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::TADDcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::TADDcc_imm::getInstructionName() const{
     return "TADDcc_imm";
 }
 
@@ -4129,7 +4130,7 @@ void leon3_funclt_trap::TADDcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::TADDcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::TADDcc_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "taddcc r";
     oss << this->rs1_bit;
@@ -4196,7 +4197,7 @@ Instruction * leon3_funclt_trap::SDIV_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SDIV_imm::getInstructionName(){
+std::string leon3_funclt_trap::SDIV_imm::getInstructionName() const{
     return "SDIV_imm";
 }
 
@@ -4208,7 +4209,7 @@ void leon3_funclt_trap::SDIV_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::SDIV_imm::getMnemonic(){
+std::string leon3_funclt_trap::SDIV_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "sdiv";
     oss << " r";
@@ -4262,7 +4263,7 @@ Instruction * leon3_funclt_trap::TSUBccTV_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::TSUBccTV_imm::getInstructionName(){
+std::string leon3_funclt_trap::TSUBccTV_imm::getInstructionName() const{
     return "TSUBccTV_imm";
 }
 
@@ -4275,7 +4276,7 @@ void leon3_funclt_trap::TSUBccTV_imm::setParams( const unsigned int & bitString 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::TSUBccTV_imm::getMnemonic(){
+std::string leon3_funclt_trap::TSUBccTV_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "tsubcctv r";
     oss << this->rs1_bit;
@@ -4316,7 +4317,7 @@ Instruction * leon3_funclt_trap::FLUSH_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::FLUSH_reg::getInstructionName(){
+std::string leon3_funclt_trap::FLUSH_reg::getInstructionName() const{
     return "FLUSH_reg";
 }
 
@@ -4329,7 +4330,7 @@ void leon3_funclt_trap::FLUSH_reg::setParams( const unsigned int & bitString ) t
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::FLUSH_reg::getMnemonic(){
+std::string leon3_funclt_trap::FLUSH_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "flush r";
     oss << this->rs1_bit;
@@ -4370,7 +4371,7 @@ Instruction * leon3_funclt_trap::ORNcc_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ORNcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::ORNcc_reg::getInstructionName() const{
     return "ORNcc_reg";
 }
 
@@ -4383,7 +4384,7 @@ void leon3_funclt_trap::ORNcc_reg::setParams( const unsigned int & bitString ) t
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::ORNcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::ORNcc_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "orncc r";
     oss << this->rs1_bit;
@@ -4454,7 +4455,7 @@ Instruction * leon3_funclt_trap::RETT_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::RETT_imm::getInstructionName(){
+std::string leon3_funclt_trap::RETT_imm::getInstructionName() const{
     return "RETT_imm";
 }
 
@@ -4466,7 +4467,7 @@ void leon3_funclt_trap::RETT_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::RETT_imm::getMnemonic(){
+std::string leon3_funclt_trap::RETT_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "rett r";
     oss << this->rs1_bit;
@@ -4528,7 +4529,7 @@ Instruction * leon3_funclt_trap::SDIVcc_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SDIVcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::SDIVcc_reg::getInstructionName() const{
     return "SDIVcc_reg";
 }
 
@@ -4541,7 +4542,7 @@ void leon3_funclt_trap::SDIVcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::SDIVcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::SDIVcc_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "sdivcc";
     oss << " r";
@@ -4587,7 +4588,7 @@ Instruction * leon3_funclt_trap::ADD_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ADD_reg::getInstructionName(){
+std::string leon3_funclt_trap::ADD_reg::getInstructionName() const{
     return "ADD_reg";
 }
 
@@ -4600,7 +4601,7 @@ void leon3_funclt_trap::ADD_reg::setParams( const unsigned int & bitString ) thr
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::ADD_reg::getMnemonic(){
+std::string leon3_funclt_trap::ADD_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "add r";
     oss << this->rs1_bit;
@@ -4664,7 +4665,7 @@ Instruction * leon3_funclt_trap::TRAP_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::TRAP_imm::getInstructionName(){
+std::string leon3_funclt_trap::TRAP_imm::getInstructionName() const{
     return "TRAP_imm";
 }
 
@@ -4677,7 +4678,7 @@ void leon3_funclt_trap::TRAP_imm::setParams( const unsigned int & bitString ) th
     this->imm7 = (bitString & 0x7f);
 }
 
-std::string leon3_funclt_trap::TRAP_imm::getMnemonic(){
+std::string leon3_funclt_trap::TRAP_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "t";
     switch(this->cond){
@@ -4771,7 +4772,7 @@ Instruction * leon3_funclt_trap::WRITEtbr_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::WRITEtbr_imm::getInstructionName(){
+std::string leon3_funclt_trap::WRITEtbr_imm::getInstructionName() const{
     return "WRITEtbr_imm";
 }
 
@@ -4783,7 +4784,7 @@ void leon3_funclt_trap::WRITEtbr_imm::setParams( const unsigned int & bitString 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::WRITEtbr_imm::getMnemonic(){
+std::string leon3_funclt_trap::WRITEtbr_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -4824,7 +4825,7 @@ Instruction * leon3_funclt_trap::LDUB_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LDUB_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDUB_reg::getInstructionName() const{
     return "LDUB_reg";
 }
 
@@ -4838,7 +4839,7 @@ void leon3_funclt_trap::LDUB_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::LDUB_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDUB_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldub r";
     oss << this->rs1_bit;
@@ -4888,7 +4889,7 @@ Instruction * leon3_funclt_trap::RESTORE_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::RESTORE_reg::getInstructionName(){
+std::string leon3_funclt_trap::RESTORE_reg::getInstructionName() const{
     return "RESTORE_reg";
 }
 
@@ -4901,7 +4902,7 @@ void leon3_funclt_trap::RESTORE_reg::setParams( const unsigned int & bitString )
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::RESTORE_reg::getMnemonic(){
+std::string leon3_funclt_trap::RESTORE_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "restore";
     oss << " r";
@@ -4945,7 +4946,7 @@ Instruction * leon3_funclt_trap::ADDXcc_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ADDXcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::ADDXcc_reg::getInstructionName() const{
     return "ADDXcc_reg";
 }
 
@@ -4958,7 +4959,7 @@ void leon3_funclt_trap::ADDXcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::ADDXcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::ADDXcc_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "addxcc r";
     oss << this->rs1_bit;
@@ -5003,7 +5004,7 @@ Instruction * leon3_funclt_trap::STB_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::STB_reg::getInstructionName(){
+std::string leon3_funclt_trap::STB_reg::getInstructionName() const{
     return "STB_reg";
 }
 
@@ -5017,7 +5018,7 @@ void leon3_funclt_trap::STB_reg::setParams( const unsigned int & bitString ) thr
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::STB_reg::getMnemonic(){
+std::string leon3_funclt_trap::STB_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "stb r";
     oss << this->rd_bit;
@@ -5058,7 +5059,7 @@ Instruction * leon3_funclt_trap::AND_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::AND_imm::getInstructionName(){
+std::string leon3_funclt_trap::AND_imm::getInstructionName() const{
     return "AND_imm";
 }
 
@@ -5070,7 +5071,7 @@ void leon3_funclt_trap::AND_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::AND_imm::getMnemonic(){
+std::string leon3_funclt_trap::AND_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "and r";
     oss << this->rs1_bit;
@@ -5116,7 +5117,7 @@ Instruction * leon3_funclt_trap::SMUL_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SMUL_imm::getInstructionName(){
+std::string leon3_funclt_trap::SMUL_imm::getInstructionName() const{
     return "SMUL_imm";
 }
 
@@ -5128,7 +5129,7 @@ void leon3_funclt_trap::SMUL_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::SMUL_imm::getMnemonic(){
+std::string leon3_funclt_trap::SMUL_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "smul r";
     oss << this->rs1_bit;
@@ -5172,7 +5173,7 @@ Instruction * leon3_funclt_trap::ADD_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ADD_imm::getInstructionName(){
+std::string leon3_funclt_trap::ADD_imm::getInstructionName() const{
     return "ADD_imm";
 }
 
@@ -5184,7 +5185,7 @@ void leon3_funclt_trap::ADD_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::ADD_imm::getMnemonic(){
+std::string leon3_funclt_trap::ADD_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "add r";
     oss << this->rs1_bit;
@@ -5231,7 +5232,7 @@ Instruction * leon3_funclt_trap::UMUL_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::UMUL_imm::getInstructionName(){
+std::string leon3_funclt_trap::UMUL_imm::getInstructionName() const{
     return "UMUL_imm";
 }
 
@@ -5243,7 +5244,7 @@ void leon3_funclt_trap::UMUL_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::UMUL_imm::getMnemonic(){
+std::string leon3_funclt_trap::UMUL_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "umul r";
     oss << this->rs1_bit;
@@ -5290,7 +5291,7 @@ Instruction * leon3_funclt_trap::READwim::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::READwim::getInstructionName(){
+std::string leon3_funclt_trap::READwim::getInstructionName() const{
     return "READwim";
 }
 
@@ -5300,7 +5301,7 @@ void leon3_funclt_trap::READwim::setParams( const unsigned int & bitString ) thr
     this->asr = (bitString & 0x7c000) >> 14;
 }
 
-std::string leon3_funclt_trap::READwim::getMnemonic(){
+std::string leon3_funclt_trap::READwim::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "rd ";
     oss << "wim r";
@@ -5340,7 +5341,7 @@ Instruction * leon3_funclt_trap::LDSTUB_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LDSTUB_imm::getInstructionName(){
+std::string leon3_funclt_trap::LDSTUB_imm::getInstructionName() const{
     return "LDSTUB_imm";
 }
 
@@ -5352,7 +5353,7 @@ void leon3_funclt_trap::LDSTUB_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::LDSTUB_imm::getMnemonic(){
+std::string leon3_funclt_trap::LDSTUB_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldastub r";
     oss << this->rs1_bit;
@@ -5400,7 +5401,7 @@ Instruction * leon3_funclt_trap::SMAC_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SMAC_imm::getInstructionName(){
+std::string leon3_funclt_trap::SMAC_imm::getInstructionName() const{
     return "SMAC_imm";
 }
 
@@ -5412,7 +5413,7 @@ void leon3_funclt_trap::SMAC_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::SMAC_imm::getMnemonic(){
+std::string leon3_funclt_trap::SMAC_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "smac r";
     oss << this->rs1_bit;
@@ -5456,7 +5457,7 @@ Instruction * leon3_funclt_trap::LDSB_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LDSB_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDSB_reg::getInstructionName() const{
     return "LDSB_reg";
 }
 
@@ -5470,7 +5471,7 @@ void leon3_funclt_trap::LDSB_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::LDSB_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDSB_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldsb r";
     oss << this->rs1_bit;
@@ -5512,7 +5513,7 @@ Instruction * leon3_funclt_trap::ANDN_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ANDN_reg::getInstructionName(){
+std::string leon3_funclt_trap::ANDN_reg::getInstructionName() const{
     return "ANDN_reg";
 }
 
@@ -5525,7 +5526,7 @@ void leon3_funclt_trap::ANDN_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::ANDN_reg::getMnemonic(){
+std::string leon3_funclt_trap::ANDN_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "andn r";
     oss << this->rs1_bit;
@@ -5579,7 +5580,7 @@ Instruction * leon3_funclt_trap::TSUBccTV_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::TSUBccTV_reg::getInstructionName(){
+std::string leon3_funclt_trap::TSUBccTV_reg::getInstructionName() const{
     return "TSUBccTV_reg";
 }
 
@@ -5593,7 +5594,7 @@ void leon3_funclt_trap::TSUBccTV_reg::setParams( const unsigned int & bitString 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::TSUBccTV_reg::getMnemonic(){
+std::string leon3_funclt_trap::TSUBccTV_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "tsubcctv r";
     oss << this->rs1_bit;
@@ -5636,7 +5637,7 @@ Instruction * leon3_funclt_trap::SETHI::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SETHI::getInstructionName(){
+std::string leon3_funclt_trap::SETHI::getInstructionName() const{
     return "SETHI";
 }
 
@@ -5646,7 +5647,7 @@ void leon3_funclt_trap::SETHI::setParams( const unsigned int & bitString ) throw
     this->imm22 = (bitString & 0x3fffff);
 }
 
-std::string leon3_funclt_trap::SETHI::getMnemonic(){
+std::string leon3_funclt_trap::SETHI::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "sethi ";
     oss << this->imm22;
@@ -5687,7 +5688,7 @@ Instruction * leon3_funclt_trap::SRA_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SRA_imm::getInstructionName(){
+std::string leon3_funclt_trap::SRA_imm::getInstructionName() const{
     return "SRA_imm";
 }
 
@@ -5699,7 +5700,7 @@ void leon3_funclt_trap::SRA_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::SRA_imm::getMnemonic(){
+std::string leon3_funclt_trap::SRA_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "sra r";
     oss << this->rs1_bit;
@@ -5757,7 +5758,7 @@ Instruction * leon3_funclt_trap::LDSH_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LDSH_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDSH_reg::getInstructionName() const{
     return "LDSH_reg";
 }
 
@@ -5771,7 +5772,7 @@ void leon3_funclt_trap::LDSH_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::LDSH_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDSH_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldsh r";
     oss << this->rs1_bit;
@@ -5829,7 +5830,7 @@ Instruction * leon3_funclt_trap::UDIVcc_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::UDIVcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::UDIVcc_reg::getInstructionName() const{
     return "UDIVcc_reg";
 }
 
@@ -5842,7 +5843,7 @@ void leon3_funclt_trap::UDIVcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::UDIVcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::UDIVcc_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "udivcc";
     oss << " r";
@@ -5887,7 +5888,7 @@ Instruction * leon3_funclt_trap::ORN_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ORN_imm::getInstructionName(){
+std::string leon3_funclt_trap::ORN_imm::getInstructionName() const{
     return "ORN_imm";
 }
 
@@ -5899,7 +5900,7 @@ void leon3_funclt_trap::ORN_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::ORN_imm::getMnemonic(){
+std::string leon3_funclt_trap::ORN_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "orn r";
     oss << this->rs1_bit;
@@ -5961,7 +5962,7 @@ Instruction * leon3_funclt_trap::STD_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::STD_reg::getInstructionName(){
+std::string leon3_funclt_trap::STD_reg::getInstructionName() const{
     return "STD_reg";
 }
 
@@ -5975,7 +5976,7 @@ void leon3_funclt_trap::STD_reg::setParams( const unsigned int & bitString ) thr
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::STD_reg::getMnemonic(){
+std::string leon3_funclt_trap::STD_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "std r";
     oss << this->rd_bit;
@@ -6017,7 +6018,7 @@ Instruction * leon3_funclt_trap::ANDNcc_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ANDNcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::ANDNcc_imm::getInstructionName() const{
     return "ANDNcc_imm";
 }
 
@@ -6029,7 +6030,7 @@ void leon3_funclt_trap::ANDNcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::ANDNcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::ANDNcc_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "andncc r";
     oss << this->rs1_bit;
@@ -6085,7 +6086,7 @@ Instruction * leon3_funclt_trap::TADDccTV_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::TADDccTV_imm::getInstructionName(){
+std::string leon3_funclt_trap::TADDccTV_imm::getInstructionName() const{
     return "TADDccTV_imm";
 }
 
@@ -6098,7 +6099,7 @@ void leon3_funclt_trap::TADDccTV_imm::setParams( const unsigned int & bitString 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::TADDccTV_imm::getMnemonic(){
+std::string leon3_funclt_trap::TADDccTV_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "taddcctv r";
     oss << this->rs1_bit;
@@ -6149,7 +6150,7 @@ Instruction * leon3_funclt_trap::WRITEtbr_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::WRITEtbr_reg::getInstructionName(){
+std::string leon3_funclt_trap::WRITEtbr_reg::getInstructionName() const{
     return "WRITEtbr_reg";
 }
 
@@ -6162,7 +6163,7 @@ void leon3_funclt_trap::WRITEtbr_reg::setParams( const unsigned int & bitString 
     this->rd = (bitString & 0x3e000000) >> 25;
 }
 
-std::string leon3_funclt_trap::WRITEtbr_reg::getMnemonic(){
+std::string leon3_funclt_trap::WRITEtbr_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -6203,7 +6204,7 @@ Instruction * leon3_funclt_trap::SUBX_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SUBX_reg::getInstructionName(){
+std::string leon3_funclt_trap::SUBX_reg::getInstructionName() const{
     return "SUBX_reg";
 }
 
@@ -6216,7 +6217,7 @@ void leon3_funclt_trap::SUBX_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::SUBX_reg::getMnemonic(){
+std::string leon3_funclt_trap::SUBX_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "subx r";
     oss << this->rs1_bit;
@@ -6259,7 +6260,7 @@ Instruction * leon3_funclt_trap::XNOR_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::XNOR_imm::getInstructionName(){
+std::string leon3_funclt_trap::XNOR_imm::getInstructionName() const{
     return "XNOR_imm";
 }
 
@@ -6271,7 +6272,7 @@ void leon3_funclt_trap::XNOR_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::XNOR_imm::getMnemonic(){
+std::string leon3_funclt_trap::XNOR_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "xnor r";
     oss << this->rs1_bit;
@@ -6330,7 +6331,7 @@ Instruction * leon3_funclt_trap::UDIV_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::UDIV_imm::getInstructionName(){
+std::string leon3_funclt_trap::UDIV_imm::getInstructionName() const{
     return "UDIV_imm";
 }
 
@@ -6342,7 +6343,7 @@ void leon3_funclt_trap::UDIV_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::UDIV_imm::getMnemonic(){
+std::string leon3_funclt_trap::UDIV_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "udiv";
     oss << " r";
@@ -6401,7 +6402,7 @@ Instruction * leon3_funclt_trap::LDSH_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LDSH_imm::getInstructionName(){
+std::string leon3_funclt_trap::LDSH_imm::getInstructionName() const{
     return "LDSH_imm";
 }
 
@@ -6413,7 +6414,7 @@ void leon3_funclt_trap::LDSH_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::LDSH_imm::getMnemonic(){
+std::string leon3_funclt_trap::LDSH_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldsh r";
     oss << this->rs1_bit;
@@ -6451,7 +6452,7 @@ Instruction * leon3_funclt_trap::UNIMP::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::UNIMP::getInstructionName(){
+std::string leon3_funclt_trap::UNIMP::getInstructionName() const{
     return "UNIMP";
 }
 
@@ -6461,7 +6462,7 @@ void leon3_funclt_trap::UNIMP::setParams( const unsigned int & bitString ) throw
     this->imm22 = (bitString & 0x3fffff);
 }
 
-std::string leon3_funclt_trap::UNIMP::getMnemonic(){
+std::string leon3_funclt_trap::UNIMP::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "unimp ";
     oss << this->imm22;
@@ -6514,7 +6515,7 @@ Instruction * leon3_funclt_trap::LDSTUBA_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LDSTUBA_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDSTUBA_reg::getInstructionName() const{
     return "LDSTUBA_reg";
 }
 
@@ -6528,7 +6529,7 @@ void leon3_funclt_trap::LDSTUBA_reg::setParams( const unsigned int & bitString )
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::LDSTUBA_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDSTUBA_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldastub r";
     oss << this->rs1_bit;
@@ -6576,7 +6577,7 @@ Instruction * leon3_funclt_trap::UMULcc_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::UMULcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::UMULcc_imm::getInstructionName() const{
     return "UMULcc_imm";
 }
 
@@ -6588,7 +6589,7 @@ void leon3_funclt_trap::UMULcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::UMULcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::UMULcc_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "umulcc r";
     oss << this->rs1_bit;
@@ -6635,7 +6636,7 @@ Instruction * leon3_funclt_trap::ORcc_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ORcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::ORcc_reg::getInstructionName() const{
     return "ORcc_reg";
 }
 
@@ -6648,7 +6649,7 @@ void leon3_funclt_trap::ORcc_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::ORcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::ORcc_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "orcc r";
     oss << this->rs1_bit;
@@ -6704,7 +6705,7 @@ Instruction * leon3_funclt_trap::MULScc_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::MULScc_imm::getInstructionName(){
+std::string leon3_funclt_trap::MULScc_imm::getInstructionName() const{
     return "MULScc_imm";
 }
 
@@ -6716,7 +6717,7 @@ void leon3_funclt_trap::MULScc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::MULScc_imm::getMnemonic(){
+std::string leon3_funclt_trap::MULScc_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "mulscc r";
     oss << this->rs1_bit;
@@ -6763,7 +6764,7 @@ Instruction * leon3_funclt_trap::XORcc_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::XORcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::XORcc_reg::getInstructionName() const{
     return "XORcc_reg";
 }
 
@@ -6776,7 +6777,7 @@ void leon3_funclt_trap::XORcc_reg::setParams( const unsigned int & bitString ) t
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::XORcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::XORcc_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "xorcc r";
     oss << this->rs1_bit;
@@ -6822,7 +6823,7 @@ Instruction * leon3_funclt_trap::SUB_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SUB_reg::getInstructionName(){
+std::string leon3_funclt_trap::SUB_reg::getInstructionName() const{
     return "SUB_reg";
 }
 
@@ -6835,7 +6836,7 @@ void leon3_funclt_trap::SUB_reg::setParams( const unsigned int & bitString ) thr
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::SUB_reg::getMnemonic(){
+std::string leon3_funclt_trap::SUB_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "sub r";
     oss << this->rs1_bit;
@@ -6884,7 +6885,7 @@ Instruction * leon3_funclt_trap::WRITEwim_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::WRITEwim_reg::getInstructionName(){
+std::string leon3_funclt_trap::WRITEwim_reg::getInstructionName() const{
     return "WRITEwim_reg";
 }
 
@@ -6897,7 +6898,7 @@ void leon3_funclt_trap::WRITEwim_reg::setParams( const unsigned int & bitString 
     this->rd = (bitString & 0x3e000000) >> 25;
 }
 
-std::string leon3_funclt_trap::WRITEwim_reg::getMnemonic(){
+std::string leon3_funclt_trap::WRITEwim_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -6944,7 +6945,7 @@ Instruction * leon3_funclt_trap::UMAC_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::UMAC_imm::getInstructionName(){
+std::string leon3_funclt_trap::UMAC_imm::getInstructionName() const{
     return "UMAC_imm";
 }
 
@@ -6956,7 +6957,7 @@ void leon3_funclt_trap::UMAC_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::UMAC_imm::getMnemonic(){
+std::string leon3_funclt_trap::UMAC_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "umac r";
     oss << this->rs1_bit;
@@ -7006,7 +7007,7 @@ Instruction * leon3_funclt_trap::TSUBcc_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::TSUBcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::TSUBcc_reg::getInstructionName() const{
     return "TSUBcc_reg";
 }
 
@@ -7019,7 +7020,7 @@ void leon3_funclt_trap::TSUBcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::TSUBcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::TSUBcc_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "tsubcc r";
     oss << this->rs1_bit;
@@ -7145,7 +7146,7 @@ Instruction * leon3_funclt_trap::BRANCH::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::BRANCH::getInstructionName(){
+std::string leon3_funclt_trap::BRANCH::getInstructionName() const{
     return "BRANCH";
 }
 
@@ -7155,7 +7156,7 @@ void leon3_funclt_trap::BRANCH::setParams( const unsigned int & bitString ) thro
     this->disp22 = (bitString & 0x3fffff);
 }
 
-std::string leon3_funclt_trap::BRANCH::getMnemonic(){
+std::string leon3_funclt_trap::BRANCH::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "b";
     switch(this->cond){
@@ -7252,7 +7253,7 @@ Instruction * leon3_funclt_trap::SMULcc_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SMULcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::SMULcc_reg::getInstructionName() const{
     return "SMULcc_reg";
 }
 
@@ -7265,7 +7266,7 @@ void leon3_funclt_trap::SMULcc_reg::setParams( const unsigned int & bitString ) 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::SMULcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::SMULcc_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "smulcc r";
     oss << this->rs1_bit;
@@ -7311,7 +7312,7 @@ Instruction * leon3_funclt_trap::SUB_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SUB_imm::getInstructionName(){
+std::string leon3_funclt_trap::SUB_imm::getInstructionName() const{
     return "SUB_imm";
 }
 
@@ -7323,7 +7324,7 @@ void leon3_funclt_trap::SUB_imm::setParams( const unsigned int & bitString ) thr
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::SUB_imm::getMnemonic(){
+std::string leon3_funclt_trap::SUB_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "sub r";
     oss << this->rs1_bit;
@@ -7368,7 +7369,7 @@ Instruction * leon3_funclt_trap::ADDcc_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ADDcc_reg::getInstructionName(){
+std::string leon3_funclt_trap::ADDcc_reg::getInstructionName() const{
     return "ADDcc_reg";
 }
 
@@ -7381,7 +7382,7 @@ void leon3_funclt_trap::ADDcc_reg::setParams( const unsigned int & bitString ) t
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::ADDcc_reg::getMnemonic(){
+std::string leon3_funclt_trap::ADDcc_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "addcc r";
     oss << this->rs1_bit;
@@ -7427,7 +7428,7 @@ Instruction * leon3_funclt_trap::XOR_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::XOR_reg::getInstructionName(){
+std::string leon3_funclt_trap::XOR_reg::getInstructionName() const{
     return "XOR_reg";
 }
 
@@ -7440,7 +7441,7 @@ void leon3_funclt_trap::XOR_reg::setParams( const unsigned int & bitString ) thr
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::XOR_reg::getMnemonic(){
+std::string leon3_funclt_trap::XOR_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "xor r";
     oss << this->rs1_bit;
@@ -7485,7 +7486,7 @@ Instruction * leon3_funclt_trap::SUBcc_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SUBcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::SUBcc_imm::getInstructionName() const{
     return "SUBcc_imm";
 }
 
@@ -7497,7 +7498,7 @@ void leon3_funclt_trap::SUBcc_imm::setParams( const unsigned int & bitString ) t
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::SUBcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::SUBcc_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "subcc r";
     oss << this->rs1_bit;
@@ -7553,7 +7554,7 @@ Instruction * leon3_funclt_trap::TADDccTV_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::TADDccTV_reg::getInstructionName(){
+std::string leon3_funclt_trap::TADDccTV_reg::getInstructionName() const{
     return "TADDccTV_reg";
 }
 
@@ -7567,7 +7568,7 @@ void leon3_funclt_trap::TADDccTV_reg::setParams( const unsigned int & bitString 
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::TADDccTV_reg::getMnemonic(){
+std::string leon3_funclt_trap::TADDccTV_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "taddcctv r";
     oss << this->rs1_bit;
@@ -7634,7 +7635,7 @@ Instruction * leon3_funclt_trap::SDIV_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SDIV_reg::getInstructionName(){
+std::string leon3_funclt_trap::SDIV_reg::getInstructionName() const{
     return "SDIV_reg";
 }
 
@@ -7647,7 +7648,7 @@ void leon3_funclt_trap::SDIV_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::SDIV_reg::getMnemonic(){
+std::string leon3_funclt_trap::SDIV_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "sdiv";
     oss << " r";
@@ -7694,7 +7695,7 @@ Instruction * leon3_funclt_trap::SMULcc_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SMULcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::SMULcc_imm::getInstructionName() const{
     return "SMULcc_imm";
 }
 
@@ -7706,7 +7707,7 @@ void leon3_funclt_trap::SMULcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::SMULcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::SMULcc_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "smulcc r";
     oss << this->rs1_bit;
@@ -7768,7 +7769,7 @@ Instruction * leon3_funclt_trap::SWAP_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SWAP_reg::getInstructionName(){
+std::string leon3_funclt_trap::SWAP_reg::getInstructionName() const{
     return "SWAP_reg";
 }
 
@@ -7782,7 +7783,7 @@ void leon3_funclt_trap::SWAP_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::SWAP_reg::getMnemonic(){
+std::string leon3_funclt_trap::SWAP_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "swap r";
     oss << this->rs1_bit;
@@ -7824,7 +7825,7 @@ Instruction * leon3_funclt_trap::SUBX_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SUBX_imm::getInstructionName(){
+std::string leon3_funclt_trap::SUBX_imm::getInstructionName() const{
     return "SUBX_imm";
 }
 
@@ -7836,7 +7837,7 @@ void leon3_funclt_trap::SUBX_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::SUBX_imm::getMnemonic(){
+std::string leon3_funclt_trap::SUBX_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "subx r";
     oss << this->rs1_bit;
@@ -7902,7 +7903,7 @@ Instruction * leon3_funclt_trap::STDA_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::STDA_reg::getInstructionName(){
+std::string leon3_funclt_trap::STDA_reg::getInstructionName() const{
     return "STDA_reg";
 }
 
@@ -7916,7 +7917,7 @@ void leon3_funclt_trap::STDA_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::STDA_reg::getMnemonic(){
+std::string leon3_funclt_trap::STDA_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "stda r";
     oss << this->rd_bit;
@@ -7966,7 +7967,7 @@ Instruction * leon3_funclt_trap::UMAC_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::UMAC_reg::getInstructionName(){
+std::string leon3_funclt_trap::UMAC_reg::getInstructionName() const{
     return "UMAC_reg";
 }
 
@@ -7979,7 +7980,7 @@ void leon3_funclt_trap::UMAC_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::UMAC_reg::getMnemonic(){
+std::string leon3_funclt_trap::UMAC_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "umac r";
     oss << this->rs1_bit;
@@ -8040,7 +8041,7 @@ Instruction * leon3_funclt_trap::JUMP_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::JUMP_imm::getInstructionName(){
+std::string leon3_funclt_trap::JUMP_imm::getInstructionName() const{
     return "JUMP_imm";
 }
 
@@ -8052,7 +8053,7 @@ void leon3_funclt_trap::JUMP_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::JUMP_imm::getMnemonic(){
+std::string leon3_funclt_trap::JUMP_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "jmpl";
     oss << " r";
@@ -8096,7 +8097,7 @@ Instruction * leon3_funclt_trap::SMUL_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SMUL_reg::getInstructionName(){
+std::string leon3_funclt_trap::SMUL_reg::getInstructionName() const{
     return "SMUL_reg";
 }
 
@@ -8109,7 +8110,7 @@ void leon3_funclt_trap::SMUL_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::SMUL_reg::getMnemonic(){
+std::string leon3_funclt_trap::SMUL_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "smul r";
     oss << this->rs1_bit;
@@ -8153,7 +8154,7 @@ Instruction * leon3_funclt_trap::XORcc_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::XORcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::XORcc_imm::getInstructionName() const{
     return "XORcc_imm";
 }
 
@@ -8165,7 +8166,7 @@ void leon3_funclt_trap::XORcc_imm::setParams( const unsigned int & bitString ) t
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::XORcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::XORcc_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "xorcc r";
     oss << this->rs1_bit;
@@ -8211,7 +8212,7 @@ Instruction * leon3_funclt_trap::ORNcc_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ORNcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::ORNcc_imm::getInstructionName() const{
     return "ORNcc_imm";
 }
 
@@ -8223,7 +8224,7 @@ void leon3_funclt_trap::ORNcc_imm::setParams( const unsigned int & bitString ) t
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::ORNcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::ORNcc_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "orncc r";
     oss << this->rs1_bit;
@@ -8283,7 +8284,7 @@ Instruction * leon3_funclt_trap::LDUBA_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LDUBA_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDUBA_reg::getInstructionName() const{
     return "LDUBA_reg";
 }
 
@@ -8297,7 +8298,7 @@ void leon3_funclt_trap::LDUBA_reg::setParams( const unsigned int & bitString ) t
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::LDUBA_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDUBA_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "lduba r";
     oss << this->rs1_bit;
@@ -8358,7 +8359,7 @@ Instruction * leon3_funclt_trap::JUMP_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::JUMP_reg::getInstructionName(){
+std::string leon3_funclt_trap::JUMP_reg::getInstructionName() const{
     return "JUMP_reg";
 }
 
@@ -8371,7 +8372,7 @@ void leon3_funclt_trap::JUMP_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::JUMP_reg::getMnemonic(){
+std::string leon3_funclt_trap::JUMP_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "jmpl";
     oss << " r";
@@ -8413,7 +8414,7 @@ Instruction * leon3_funclt_trap::ADDX_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ADDX_reg::getInstructionName(){
+std::string leon3_funclt_trap::ADDX_reg::getInstructionName() const{
     return "ADDX_reg";
 }
 
@@ -8426,7 +8427,7 @@ void leon3_funclt_trap::ADDX_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::ADDX_reg::getMnemonic(){
+std::string leon3_funclt_trap::ADDX_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "addx r";
     oss << this->rs1_bit;
@@ -8485,7 +8486,7 @@ Instruction * leon3_funclt_trap::UDIV_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::UDIV_reg::getInstructionName(){
+std::string leon3_funclt_trap::UDIV_reg::getInstructionName() const{
     return "UDIV_reg";
 }
 
@@ -8498,7 +8499,7 @@ void leon3_funclt_trap::UDIV_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::UDIV_reg::getMnemonic(){
+std::string leon3_funclt_trap::UDIV_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "udiv";
     oss << " r";
@@ -8543,7 +8544,7 @@ Instruction * leon3_funclt_trap::XNORcc_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::XNORcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::XNORcc_imm::getInstructionName() const{
     return "XNORcc_imm";
 }
 
@@ -8555,7 +8556,7 @@ void leon3_funclt_trap::XNORcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::XNORcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::XNORcc_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "xnorcc r";
     oss << this->rs1_bit;
@@ -8595,7 +8596,7 @@ Instruction * leon3_funclt_trap::STBAR::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::STBAR::getInstructionName(){
+std::string leon3_funclt_trap::STBAR::getInstructionName() const{
     return "STBAR";
 }
 
@@ -8603,7 +8604,7 @@ void leon3_funclt_trap::STBAR::setParams( const unsigned int & bitString ) throw
 
 }
 
-std::string leon3_funclt_trap::STBAR::getMnemonic(){
+std::string leon3_funclt_trap::STBAR::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "s";
     oss << "t";
@@ -8661,7 +8662,7 @@ Instruction * leon3_funclt_trap::LDA_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LDA_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDA_reg::getInstructionName() const{
     return "LDA_reg";
 }
 
@@ -8675,7 +8676,7 @@ void leon3_funclt_trap::LDA_reg::setParams( const unsigned int & bitString ) thr
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::LDA_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDA_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "lda r";
     oss << this->rs1_bit;
@@ -8736,7 +8737,7 @@ Instruction * leon3_funclt_trap::STHA_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::STHA_reg::getInstructionName(){
+std::string leon3_funclt_trap::STHA_reg::getInstructionName() const{
     return "STHA_reg";
 }
 
@@ -8750,7 +8751,7 @@ void leon3_funclt_trap::STHA_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::STHA_reg::getMnemonic(){
+std::string leon3_funclt_trap::STHA_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "stha r";
     oss << this->rd_bit;
@@ -8832,7 +8833,7 @@ Instruction * leon3_funclt_trap::LDDA_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LDDA_reg::getInstructionName(){
+std::string leon3_funclt_trap::LDDA_reg::getInstructionName() const{
     return "LDDA_reg";
 }
 
@@ -8846,7 +8847,7 @@ void leon3_funclt_trap::LDDA_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::LDDA_reg::getMnemonic(){
+std::string leon3_funclt_trap::LDDA_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldda r";
     oss << this->rs1_bit;
@@ -8890,7 +8891,7 @@ Instruction * leon3_funclt_trap::SLL_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SLL_reg::getInstructionName(){
+std::string leon3_funclt_trap::SLL_reg::getInstructionName() const{
     return "SLL_reg";
 }
 
@@ -8903,7 +8904,7 @@ void leon3_funclt_trap::SLL_reg::setParams( const unsigned int & bitString ) thr
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::SLL_reg::getMnemonic(){
+std::string leon3_funclt_trap::SLL_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "sll r";
     oss << this->rs1_bit;
@@ -8955,7 +8956,7 @@ Instruction * leon3_funclt_trap::RESTORE_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::RESTORE_imm::getInstructionName(){
+std::string leon3_funclt_trap::RESTORE_imm::getInstructionName() const{
     return "RESTORE_imm";
 }
 
@@ -8967,7 +8968,7 @@ void leon3_funclt_trap::RESTORE_imm::setParams( const unsigned int & bitString )
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::RESTORE_imm::getMnemonic(){
+std::string leon3_funclt_trap::RESTORE_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "restore";
     oss << " r";
@@ -9019,7 +9020,7 @@ Instruction * leon3_funclt_trap::LD_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LD_imm::getInstructionName(){
+std::string leon3_funclt_trap::LD_imm::getInstructionName() const{
     return "LD_imm";
 }
 
@@ -9031,7 +9032,7 @@ void leon3_funclt_trap::LD_imm::setParams( const unsigned int & bitString ) thro
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::LD_imm::getMnemonic(){
+std::string leon3_funclt_trap::LD_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "ld r";
     oss << this->rs1_bit;
@@ -9093,7 +9094,7 @@ Instruction * leon3_funclt_trap::TRAP_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::TRAP_reg::getInstructionName(){
+std::string leon3_funclt_trap::TRAP_reg::getInstructionName() const{
     return "TRAP_reg";
 }
 
@@ -9107,7 +9108,7 @@ void leon3_funclt_trap::TRAP_reg::setParams( const unsigned int & bitString ) th
     this->asi = (bitString & 0x1fe0) >> 5;
 }
 
-std::string leon3_funclt_trap::TRAP_reg::getMnemonic(){
+std::string leon3_funclt_trap::TRAP_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "t";
     switch(this->cond){
@@ -9196,7 +9197,7 @@ Instruction * leon3_funclt_trap::LDUB_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::LDUB_imm::getInstructionName(){
+std::string leon3_funclt_trap::LDUB_imm::getInstructionName() const{
     return "LDUB_imm";
 }
 
@@ -9208,7 +9209,7 @@ void leon3_funclt_trap::LDUB_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::LDUB_imm::getMnemonic(){
+std::string leon3_funclt_trap::LDUB_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "ldub r";
     oss << this->rs1_bit;
@@ -9275,7 +9276,7 @@ Instruction * leon3_funclt_trap::RETT_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::RETT_reg::getInstructionName(){
+std::string leon3_funclt_trap::RETT_reg::getInstructionName() const{
     return "RETT_reg";
 }
 
@@ -9288,7 +9289,7 @@ void leon3_funclt_trap::RETT_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::RETT_reg::getMnemonic(){
+std::string leon3_funclt_trap::RETT_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "rett r";
     oss << this->rs1_bit;
@@ -9350,7 +9351,7 @@ Instruction * leon3_funclt_trap::SDIVcc_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SDIVcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::SDIVcc_imm::getInstructionName() const{
     return "SDIVcc_imm";
 }
 
@@ -9362,7 +9363,7 @@ void leon3_funclt_trap::SDIVcc_imm::setParams( const unsigned int & bitString ) 
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::SDIVcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::SDIVcc_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "sdivcc";
     oss << " r";
@@ -9416,7 +9417,7 @@ Instruction * leon3_funclt_trap::SAVE_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::SAVE_reg::getInstructionName(){
+std::string leon3_funclt_trap::SAVE_reg::getInstructionName() const{
     return "SAVE_reg";
 }
 
@@ -9429,7 +9430,7 @@ void leon3_funclt_trap::SAVE_reg::setParams( const unsigned int & bitString ) th
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::SAVE_reg::getMnemonic(){
+std::string leon3_funclt_trap::SAVE_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "save";
     oss << " r";
@@ -9472,7 +9473,7 @@ Instruction * leon3_funclt_trap::OR_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::OR_reg::getInstructionName(){
+std::string leon3_funclt_trap::OR_reg::getInstructionName() const{
     return "OR_reg";
 }
 
@@ -9485,7 +9486,7 @@ void leon3_funclt_trap::OR_reg::setParams( const unsigned int & bitString ) thro
     this->rs2.directSetAlias(this->REGS[this->rs2_bit]);
 }
 
-std::string leon3_funclt_trap::OR_reg::getMnemonic(){
+std::string leon3_funclt_trap::OR_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "or r";
     oss << this->rs1_bit;
@@ -9529,7 +9530,7 @@ Instruction * leon3_funclt_trap::ORcc_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ORcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::ORcc_imm::getInstructionName() const{
     return "ORcc_imm";
 }
 
@@ -9541,7 +9542,7 @@ void leon3_funclt_trap::ORcc_imm::setParams( const unsigned int & bitString ) th
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::ORcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::ORcc_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "orcc r";
     oss << this->rs1_bit;
@@ -9593,7 +9594,7 @@ Instruction * leon3_funclt_trap::CALL::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::CALL::getInstructionName(){
+std::string leon3_funclt_trap::CALL::getInstructionName() const{
     return "CALL";
 }
 
@@ -9601,7 +9602,7 @@ void leon3_funclt_trap::CALL::setParams( const unsigned int & bitString ) throw(
     this->disp30 = (bitString & 0x3fffffff);
 }
 
-std::string leon3_funclt_trap::CALL::getMnemonic(){
+std::string leon3_funclt_trap::CALL::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "call ";
     oss << this->disp30;
@@ -9651,7 +9652,7 @@ Instruction * leon3_funclt_trap::WRITEpsr_reg::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::WRITEpsr_reg::getInstructionName(){
+std::string leon3_funclt_trap::WRITEpsr_reg::getInstructionName() const{
     return "WRITEpsr_reg";
 }
 
@@ -9664,7 +9665,7 @@ void leon3_funclt_trap::WRITEpsr_reg::setParams( const unsigned int & bitString 
     this->rd = (bitString & 0x3e000000) >> 25;
 }
 
-std::string leon3_funclt_trap::WRITEpsr_reg::getMnemonic(){
+std::string leon3_funclt_trap::WRITEpsr_reg::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "wr r";
     oss << this->rs1_bit;
@@ -9705,7 +9706,7 @@ Instruction * leon3_funclt_trap::ANDcc_imm::replicate() const throw(){
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
-std::string leon3_funclt_trap::ANDcc_imm::getInstructionName(){
+std::string leon3_funclt_trap::ANDcc_imm::getInstructionName() const{
     return "ANDcc_imm";
 }
 
@@ -9717,7 +9718,7 @@ void leon3_funclt_trap::ANDcc_imm::setParams( const unsigned int & bitString ) t
     this->simm13 = (bitString & 0x1fff);
 }
 
-std::string leon3_funclt_trap::ANDcc_imm::getMnemonic(){
+std::string leon3_funclt_trap::ANDcc_imm::getMnemonic() const{
     std::ostringstream oss (std::ostringstream::out);
     oss << "andcc r";
     oss << this->rs1_bit;
