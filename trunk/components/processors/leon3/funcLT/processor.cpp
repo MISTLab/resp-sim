@@ -1,6 +1,6 @@
 /***************************************************************************\
  *
- *
+ *   
  *            ___        ___           ___           ___
  *           /  /\      /  /\         /  /\         /  /\
  *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -12,28 +12,28 @@
  *           \  \:\   \  \:\        \  \:\        \  \:\
  *            \  \ \   \  \:\        \  \:\        \  \:\
  *             \__\/    \__\/         \__\/         \__\/
+ *   
  *
  *
- *
- *
+ *   
  *   This file is part of TRAP.
- *
+ *   
  *   TRAP is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU Lesser General Public License as published by
  *   the Free Software Foundation; either version 2 of the License, or
  *   (at your option) any later version.
- *
+ *   
  *   This program is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Lesser General Public License for more details.
- *
+ *   
  *   You should have received a copy of the GNU Lesser General Public License
  *   along with this program; if not, write to the
  *   Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *   or see <http://www.gnu.org/licenses/>.
- *
+ *   
  *
  *
  *   (c) Luca Fossati, fossati@elet.polimi.it
@@ -410,6 +410,7 @@ void leon3_funclt_trap::Processor::resetOp(){
     Ybp.immediateWrite(0x0);
     ASR18bp.immediateWrite(0x0);
     PCR.immediateWrite(0x307);
+    this->IRQ = -1;
 }
 
 Instruction * leon3_funclt_trap::Processor::decode( unsigned int bitString ){
@@ -437,7 +438,6 @@ leon3_funclt_trap::Processor::Processor( sc_module_name name, sc_time latency ) 
     NPC("NPC"), PSRbp("PSRbp"), Ybp("Ybp"), ASR18bp("ASR18bp"), instrMem("instrMem", \
     this->quantKeeper), dataMem("dataMem", this->quantKeeper), IRQ_port("IRQ_IRQ", IRQ), \
     irqAck("irqAck_PIN"){
-    IRQ = -1;
     Processor::numInstances++;
     if(Processor::INSTRUCTIONS == NULL){
         // Initialization of the array holding the initial instance of the instructions
@@ -746,6 +746,7 @@ leon3_funclt_trap::Processor::Processor( sc_module_name name, sc_time latency ) 
     this->GLOBAL.setNewRegister(7, new Reg32_3());
     this->WINREGS = new Reg32_3[128];
     this->ASR = new Reg32_3[32];
+    this->PCR.updateAlias(this->ASR[17], 0);
     this->REGS = new Alias[32];
     this->REGS[0].updateAlias(this->GLOBAL[0]);
     this->REGS[1].updateAlias(this->GLOBAL[1]);
@@ -779,10 +780,9 @@ leon3_funclt_trap::Processor::Processor( sc_module_name name, sc_time latency ) 
     this->REGS[29].updateAlias(this->WINREGS[21]);
     this->REGS[30].updateAlias(this->WINREGS[22]);
     this->REGS[31].updateAlias(this->WINREGS[23]);
-    this->FP.updateAlias(this->REGS[30], 0);
-    this->SP.updateAlias(this->REGS[14], 0);
-    this->PCR.updateAlias(this->ASR[17], 0);
     this->LR.updateAlias(this->REGS[31], 0);
+    this->SP.updateAlias(this->REGS[14], 0);
+    this->FP.updateAlias(this->REGS[30], 0);
     this->numInstructions = 0;
     this->ENTRY_POINT = 0;
     this->PROGRAM_LIMIT = 0;

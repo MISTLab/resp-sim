@@ -53,9 +53,9 @@ def build(bld):
     obj.source ='''
     trap_wrapper.hpp
     '''
-
     obj.target = 'trapwrapper'
     obj.start_decls = 'trap'
+    obj.split = 3
 
     obj.custom_code = """
 OSEmulatorBase = mb.global_ns.class_('OSEmulatorBase')
@@ -72,6 +72,9 @@ mb.global_ns.class_('ABIIf<unsigned int>').include()
 
 mb.global_ns.classes(lambda decl: decl.name.startswith('ToolsManager'), allow_empty=True).include()
 mb.global_ns.classes(lambda decl: decl.name.startswith('MemoryToolsIf'), allow_empty=True).ignore = False
+abiIfDecl = mb.global_ns.classes(lambda decl: 'ABIIf' in decl.name, allow_empty=True)
+for i in abiIfDecl:
+    i.member_function('getState').call_policies = call_policies.return_value_policy( call_policies.return_addressof )
 
 trap_names = mb.namespaces(lambda x: x.name == 'trap')
 for cur_namespace in trap_names:

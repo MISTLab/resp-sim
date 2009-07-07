@@ -49,6 +49,8 @@
 #include <registers.hpp>
 #include <alias.hpp>
 #include <vector>
+#include <string>
+#include <instructionBase.hpp>
 #include <trap_utils.hpp>
 
 using namespace trap;
@@ -75,6 +77,10 @@ namespace leon3_funclt_trap{
         Alias & SP;
         Alias & PCR;
         Alias * & REGS;
+        int routineEntryState;
+        int routineExitState;
+        std::vector< std::vector< std::string > > routineEntrySequence;
+        std::vector< std::vector< std::string > > routineExitSequence;
 
         public:
         LEON3_ABIIf( unsigned int & PROGRAM_LIMIT, MemoryInterface & dataMem, Reg32_0_delay_3 \
@@ -86,6 +92,10 @@ namespace leon3_funclt_trap{
         void preCall() throw();
         void postCall() throw();
         void returnFromCall() throw();
+        bool isRoutineEntry( const InstructionBase * instr ) throw();
+        bool isRoutineExit( const InstructionBase * instr ) throw();
+        unsigned char * getState() const throw();
+        void setState( unsigned char * state ) throw();
         unsigned int getCodeLimit();
         unsigned int readLR() const throw();
         void setLR( const unsigned int & newValue ) throw();
