@@ -53,7 +53,7 @@ def build(bld):
         testSlave.cpp
     '''
     obj.target = 'testSlave'
-    obj.uselib = 'SYSTEMC_H TLM'
+    obj.uselib = 'SYSTEMC_H TLM BOOST'
     obj.uselib_local = 'systemc'
 
     # Generation of the testSlave wrapper extension
@@ -79,7 +79,7 @@ if cls: cls.exclude()
         testMaster.cpp
     '''
     obj.target = 'testMaster'
-    obj.uselib = 'SYSTEMC_H TLM'
+    obj.uselib = 'SYSTEMC_H TLM BOOST'
     obj.uselib_local = 'systemc'
 
     # Generation of the testMaster wrapper extension

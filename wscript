@@ -452,10 +452,10 @@ def configure(conf):
         trapDirLib = os.path.abspath(os.path.expandvars(os.path.expanduser(os.path.join(Options.options.trapdir, 'lib'))))
         trapDirInc = os.path.abspath(os.path.expandvars(os.path.expanduser(os.path.join(Options.options.trapdir, 'include'))))
         conf.check_cxx(lib='trap', uselib='BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', uselib_store='TRAP', mandatory=1, libpath=trapDirLib)
-        if os.path.exists(os.path.join(Options.options.trapdir, 'lib', conf.env['staticlib_PATTERN'] % 'trap')):
-            conf.env['CXXDEPS_TRAP'] = Utils.h_file(os.path.join(Options.options.trapdir, 'lib', conf.env['staticlib_PATTERN'] % 'trap'))
+        if os.path.exists(os.path.join(trapDirLib, conf.env['staticlib_PATTERN'] % 'trap')):
+            conf.env['CXXDEPS_TRAP'] = Utils.h_file(os.path.join(trapDirLib, conf.env['staticlib_PATTERN'] % 'trap'))
         else:
-            conf.env['CXXDEPS_TRAP'] = Utils.h_file(os.path.join(Options.options.trapdir, 'lib', conf.env['shlib_PATTERN'] % 'trap'))
+            conf.env['CXXDEPS_TRAP'] = Utils.h_file(os.path.join(trapDirLib, conf.env['shlib_PATTERN'] % 'trap'))
         conf.check_cxx(header_name='trap.hpp', uselib='TRAP BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', uselib_store='TRAP', mandatory=1, includes=trapDirInc)
         conf.check_cxx(fragment='''
             #include "trap.hpp"
