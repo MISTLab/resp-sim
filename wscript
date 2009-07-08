@@ -209,7 +209,12 @@ def configure(conf):
     result = os.popen(compilerExecutable + ' -print-search-dirs')
     searchDirs = []
     localLibPath = os.path.join('/', 'usr', 'lib64')
+    if os.path.exists(localLibPath):
+        searchDirs.append(localLibPath)
     localLibPath = os.path.join('/', 'usr', 'local', 'lib')
+    if os.path.exists(localLibPath):
+        searchDirs.append(localLibPath)
+    localLibPath = os.path.join('/', 'sw', 'lib')
     if os.path.exists(localLibPath):
         searchDirs.append(localLibPath)
     gccLines = result.readlines()
