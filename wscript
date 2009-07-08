@@ -123,13 +123,13 @@ def configure(conf):
     ########################################################
     if not conf.env['CXXFLAGS'] and not conf.env['CCFLAGS']:
         testFlags = ['-O2', '-march=native', '-pipe', '-finline-functions', '-ftracer', '-fomit-frame-pointer']
-        if conf.check_cxx(cxxflags=testFlags, msg='Checking for optimization flags') and conf.check_cc(cflags=testFlags, msg='Checking for optimization flags'):
+        if conf.check_cxx(cxxflags=testFlags, msg='Checking for g++ optimization flags') and conf.check_cc(cflags=testFlags, msg='Checking for gcc optimization flags'):
             conf.env.append_unique('CXXFLAGS', testFlags)
             conf.env.append_unique('CCFLAGS', testFlags)
             conf.env.append_unique('CPPFLAGS', '-DNDEBUG')
         else:
             testFlags = ['-O2', '-pipe', '-finline-functions', '-fomit-frame-pointer']
-            if conf.check_cxx(cxxflags=testFlags, msg='Checking for optimization flags') and conf.check_cc(cflags=testFlags, msg='Checking for optimization flags'):
+            if conf.check_cxx(cxxflags=testFlags, msg='Checking for g++ optimization flags') and conf.check_cc(cflags=testFlags, msg='Checking for gcc optimization flags'):
                 conf.env.append_unique('CXXFLAGS', testFlags)
                 conf.env.append_unique('CCFLAGS', testFlags)
                 conf.env.append_unique('CPPFLAGS', '-DNDEBUG')
@@ -148,7 +148,7 @@ def configure(conf):
 
     if sys.platform == 'darwin':
         conf.env.append_unique('shlib_LINKFLAGS', ['-flat_namespace', '-undefined', 'suppress'] )
-        conf.check_cxx(linkflags=['-flat_namespace', '-undefined', 'suppress'], mandatory=1)
+        conf.check_cxx(linkflags=['-flat_namespace', '-undefined', 'suppress'], mandatory=1, msg='Checking for special linker flags')
 
     if not Options.options.enable_tools:
         conf.env.append_unique('CPPFLAGS','-DDISABLE_TOOLS')
