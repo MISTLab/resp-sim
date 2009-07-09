@@ -46,8 +46,6 @@
 import os, types, sys, glob,  stat, Options, Logs, ccroot
 from TaskGen import taskgen, feature, before, after, extension
 
-global_rpath = []
-
 # Automatically add rpath for local dynamic uselib_local
 @after('add_extra_flags')
 @before('apply_obj_vars')
@@ -64,16 +62,12 @@ def add_rpaths(self):
     while names:
         x = names.pop(0)
         y = self.name_to_obj(x)
-        if os.path.splitext(ccroot.get_target_name(y))[1] != self.env['shlib_PATTERN'].split('%s')[1]:
+
+        if os.path.splitext(ccroot.get_target_name(y))[1] != y.env['shlib_PATTERN'].split('%s')[1]:
             continue
         y.post()
+
         newPath = os.path.split(y.link_task.outputs[0].abspath(self.env))[0]
-
-        if sys.platform == 'darwin':
-            global global_rpath
-            if not newPath in global_rpath:
-                global_rpath.append(newPath)
-
         if not newPath in self.env[ccroot.c_attrs['rpath']]:
             self.env[ccroot.c_attrs['rpath']].append(newPath)
         for k in self.to_list(y.env[ccroot.c_attrs['rpath']]):
@@ -121,11 +115,10 @@ def create_startSim(task):
     print >> startFile,  '\n\n\n'
 
     if sys.platform == 'darwin':
-        global global_rpath
         # In case we are under the mac-osx operating system we need
         # to add the dynamic link paths since they are not automatically
         # determined thorugh the rpath compiler directive
-        for path in global_rpath + task.env['RPATH']:
+        for path in task.env['RPATH']:
             print >> startFile,  'CUR_LIB_PATH=$CUR_LIB_PATH:' + path
         print >> startFile,  'export DYLD_LIBRARY_PATH=$CUR_LIB_PATH:$DYLD_LIBRARY_PATH'
 

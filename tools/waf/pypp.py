@@ -134,6 +134,7 @@ class pypp_taskgen(cxx.cxx_taskgen):
         self.features.append('pypp')
         self.features.append('cxx')
         self.features.append('cshlib')
+        self.features.append('pyext')
 
 
 def setup(env):
@@ -186,11 +187,11 @@ def process_headers(self):
     """ This function separates header files from .cpp files, and
         treats them separately.
     """
-    if sys.platform == 'darwin':
-        so_ext = '.so'
-    else:
-        so_ext = self.env['shlib_PATTERN'].split('%s')[1]
-    self.env['shlib_PATTERN'] = '%s'+so_ext
+    #if sys.platform == 'darwin':
+        #so_ext = '.so'
+    #else:
+        #so_ext = self.env['shlib_PATTERN'].split('%s')[1]
+    #self.env['shlib_PATTERN'] = '%s'+so_ext
 
     try:
         self.custom_code = get_code_blocks(self.custom_code)
@@ -320,7 +321,7 @@ def process_headers(self):
             self.compiled_tasks.append(task)
         else:
             for i in range (0, self.split):
-                task = self.create_task('cxx',self.env)
+                task = self.create_task('cxx', self.env)
 
                 task.inputs = [tgnodes[i]]
                 task.outputs = [pypptask.outputs[i].change_ext(self.obj_ext)]
