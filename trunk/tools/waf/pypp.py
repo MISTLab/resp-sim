@@ -503,14 +503,25 @@ def dopypp(task):
             compilerExec = task.env['CXX_OLD_VERSION'][0]
         else:
             compilerExec = task.env['CXX'][0]
-        mb = module_builder.module_builder_t(
-                                files=sources
-                                , start_with_declarations = task.start_decls
-                                , define_symbols = task.define_symbols
-                                , working_directory = task.bldpath
-                                , include_paths = global_includes
-                                , compiler = compilerExec
-                                , cache=parser.file_cache_t(os.path.abspath(os.path.join(task.bldpath, task.outputs[0].bldpath(task.env)+'_cache' ))))
+
+        # No cache can be used on mac-osx systems, otherwise pygccxml segfaults
+        if sys.platform != 'darwin':
+            mb = module_builder.module_builder_t(
+                                    files=sources
+                                    , start_with_declarations = task.start_decls
+                                    , define_symbols = task.define_symbols
+                                    , working_directory = task.bldpath
+                                    , include_paths = global_includes
+                                    , compiler = compilerExec
+                                    , cache=parser.file_cache_t(os.path.abspath(os.path.join(task.bldpath, task.outputs[0].bldpath(task.env)+'_cache' ))))
+        else:
+            mb = module_builder.module_builder_t(
+                                    files=sources
+                                    , start_with_declarations = task.start_decls
+                                    , define_symbols = task.define_symbols
+                                    , working_directory = task.bldpath
+                                    , include_paths = global_includes
+                                    , compiler = compilerExec)
     except Exception, e:
         print e
         if temp_handler:
