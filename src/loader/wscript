@@ -57,7 +57,7 @@ def build(bld):
         execLoader.hpp
     """
     obj.target = 'loader_wrapper'
-    obj.uselib = 'BOOST BOOST_REGEX PYEXT BOOST_PYTHON BFD_H'
+    obj.uselib = 'BOOST BOOST_REGEX BOOST_PYTHON BFD_H'
     obj.uselib_local = 'loader'
     obj.start_decls = 'Loader'
     obj.custom_code = """

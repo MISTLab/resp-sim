@@ -62,7 +62,7 @@ def build(bld):
         testSlave.hpp
     '''
     obj.target = 'testSlave_wrapper'
-    obj.uselib = 'SYSTEMC_H TLM BOOST PYEXT BOOST_PYTHON'
+    obj.uselib = 'SYSTEMC_H TLM BOOST BOOST_PYTHON'
     obj.uselib_local = 'systemc testSlave'
     obj.include = 'scwrapper tlmwrapper'
     obj.start_decls = 'testSlave'

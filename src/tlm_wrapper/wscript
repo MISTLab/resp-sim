@@ -179,7 +179,7 @@ for cur_namespace in tlm_names:
         if not i.alias.startswith('TLM_'):
             i.alias = 'TLMW_'+i.alias
 """
-    obj.uselib = 'SYSTEMC_H TLM BOOST_PYTHON BOOST PYEXT'
+    obj.uselib = 'SYSTEMC_H TLM BOOST_PYTHON BOOST'
     obj.uselib_local = 'systemc'
     obj.includes = '.'
     obj.include = 'scwrapper'

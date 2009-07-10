@@ -64,7 +64,7 @@ def build(bld):
     obj.start_decls = 'resp'
     obj.source = 'ecacti_wrapper.h'
     obj.uselib_local = 'ecacti'
-    obj.uselib = 'BOOST_PYTHON BOOST PYEXT MATH'
+    obj.uselib = 'BOOST_PYTHON BOOST MATH'
     obj.custom_code = """
 mb.class_('cache_power_data').include()
 """
