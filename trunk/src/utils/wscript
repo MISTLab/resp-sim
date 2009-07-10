@@ -59,7 +59,7 @@ def build(bld):
         to_convert.hpp
     """
     obj.target = 'converters'
-    obj.uselib = 'SYSTEMC_H BOOST PYEXT BOOST_PYTHON'
+    obj.uselib = 'SYSTEMC_H BOOST BOOST_PYTHON'
     obj.uselib_local = 'systemc'
     obj.start_decls = 'converters'
     obj.custom_declaration_code= """

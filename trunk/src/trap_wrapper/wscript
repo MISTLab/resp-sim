@@ -93,7 +93,7 @@ for cur_namespace in trap_names:
     for i in cur_namespace.typedefs(allow_empty=True):
         i.alias = 'TRAPW_'+i.alias
 """
-    obj.uselib = 'SYSTEMC_H TLM TRAP BOOST_PYTHON BOOST_THREAD BOOST_SYSTEM BOOST PYEXT'
+    obj.uselib = 'SYSTEMC_H TLM TRAP BOOST_PYTHON BOOST_THREAD BOOST_SYSTEM BOOST'
     obj.uselib_local = 'systemc binutils'
     obj.include = 'scwrapper tlmwrapper'
     obj.templates = [

@@ -46,13 +46,13 @@ import Options
 
 def build(bld):
     # Generation of the controller library
-    obj = bld.new_task_gen('cxx', 'cshlib')
+    obj = bld.new_task_gen('cxx', 'cshlib', 'pyembed')
     obj.source ='''
         simulation_engine.cpp controller.cpp callback.cpp sc_state_machine.cpp
     '''
 
     obj.target = 'sc_controller'
-    obj.uselib = 'SYSTEMC_H BOOST BOOST_THREAD PYEXT'
+    obj.uselib = 'SYSTEMC_H BOOST BOOST_THREAD'
     obj.uselib_local = 'systemc'
 
     # Generation of the controller wrapper extension
@@ -62,7 +62,7 @@ def build(bld):
     '''
 
     obj.target = 'sc_controller_wrapper'
-    obj.uselib = 'SYSTEMC_H BOOST PYEXT BOOST_PYTHON BOOST_THREAD'
+    obj.uselib = 'SYSTEMC_H BOOST BOOST_PYTHON BOOST_THREAD'
     obj.uselib_local = 'systemc sc_controller'
     obj.start_decls = 'resp'
     obj.custom_code = """

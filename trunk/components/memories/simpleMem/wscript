@@ -49,7 +49,7 @@ def build(bld):
         MemoryLT.hpp
     """
     obj.target = 'MemoryLT32'
-    obj.uselib = 'BOOST PYEXT BOOST_PYTHON TLM SYSTEMC_H'
+    obj.uselib = 'BOOST BOOST_PYTHON TLM SYSTEMC_H'
     obj.uselib_local = 'systemc utils'
     obj.include = 'scwrapper tlmwrapper'
     obj.start_decls = 'MemoryLT'
@@ -70,7 +70,7 @@ for i in cls:
         MemoryAT.hpp
     """
     obj.target = 'MemoryAT32'
-    obj.uselib = 'BOOST PYEXT BOOST_PYTHON TLM SYSTEMC_H'
+    obj.uselib = 'BOOST BOOST_PYTHON TLM SYSTEMC_H'
     obj.uselib_local = 'systemc utils'
     obj.include = 'scwrapper tlmwrapper'
     obj.start_decls = 'MemoryAT'
