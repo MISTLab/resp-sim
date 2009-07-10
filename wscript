@@ -166,6 +166,8 @@ def configure(conf):
     boostlibs = 'thread regex date_time program_options filesystem system python'
     conf.check_tool('boost')
     conf.check_boost(lib=boostlibs, static='both', min_version='1.35.0', mandatory = 1, errmsg = 'Unable to find ' + boostlibs + ' boost libraries of at least version 1.35, please install them and specify their location with the --boost-includes and --boost-libs configuration options')
+    if int(conf.env['BOOST_VERSION'].split('_')[1]) == 36:
+        conf.fatal('boost libraries version 1.36 not supported, please use version 1.35 or >= 1.37')
 
     ########################################
     # Now I permanently save some compilation options specified at configure time
