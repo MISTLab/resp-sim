@@ -172,7 +172,7 @@ def configure(conf):
     ########################################
     # Now I permanently save some compilation options specified at configure time
     ########################################
-    if Options.options.boostlibs:
+    if Options.options.boostlibs or sys.platform == 'darwin'::
         conf.env.append_unique('RPATH', conf.env['LIBPATH_BOOST_THREAD'])
 
     ########################################
