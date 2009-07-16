@@ -78,6 +78,7 @@ class BFDWrapper{
     std::map<unsigned int, std::list<std::string> > addrToSym;
     std::map<unsigned int, std::string> addrToFunction;
     std::map<std::string, unsigned int> symToAddr;
+    std::map<unsigned int, std::pair<std::string, unsigned int> > addrToSrc;
 
     ///end address and start address (not necessarily the entry point) of the loadable part of the binary file
     std::pair<unsigned int, unsigned int> codeSize;
@@ -99,12 +100,16 @@ class BFDWrapper{
     BFDWrapper(std::string binaryName);
     ~BFDWrapper();
     static BFDWrapper & getInstance(std::string fileName = "");
-    ///Given an address, it returns the symbol found there,
+    ///Given an address, it returns the symbols found there,(more than one
+    ///symbol can be mapped to an address). Note
+    ///That if address is in the middle of a function, the symbol
+    ///returned refers to the function itself
+    std::list<std::string> symbolsAt(unsigned int address);
+    ///Given an address, it returns the first symbol found there
     ///"" if no symbol is found at the specified address; note
     ///That if address is in the middle of a function, the symbol
-    ///returned refers to the function itself (but this only if
-    ///the object was created with parameter readSrc = true)
-    std::list<std::string> symbolAt(unsigned int address);
+    ///returned refers to the function itself
+    std::string symbolAt(unsigned int address);
     ///Given the name of a symbol it returns its value
     ///(which usually is its address);
     ///valid is set to false if no symbol with the specified
@@ -118,6 +123,14 @@ class BFDWrapper{
     bfd & getBFDDescriptor();
     ///It returns all the symbols that match the given regular expression
     std::map<std::string,  unsigned int> findFunction(boost::regex &regEx);
+    ///Specifies whether the address is the entry point of a rountine
+    bool isRoutineEntry(unsigned int address);
+    ///Specifies whether the address is the exit point of a rountine
+    bool isRoutineExit(unsigned int address);
+    ///Given an address, it sets fileName to the name of the source file
+    ///which contains the code and line to the line in that file. Returns
+    ///false if the address is not valid
+    bool getSrcFile(unsigned int address, std::string &fileName, unsigned int &line);
 };
 
 #endif
