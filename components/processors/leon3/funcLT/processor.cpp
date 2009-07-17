@@ -780,9 +780,9 @@ leon3_funclt_trap::Processor::Processor( sc_module_name name, sc_time latency ) 
     this->REGS[29].updateAlias(this->WINREGS[21]);
     this->REGS[30].updateAlias(this->WINREGS[22]);
     this->REGS[31].updateAlias(this->WINREGS[23]);
-    this->LR.updateAlias(this->REGS[31], 0);
     this->SP.updateAlias(this->REGS[14], 0);
     this->FP.updateAlias(this->REGS[30], 0);
+    this->LR.updateAlias(this->REGS[31], 0);
     this->numInstructions = 0;
     this->ENTRY_POINT = 0;
     this->PROGRAM_LIMIT = 0;

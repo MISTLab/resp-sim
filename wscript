@@ -467,7 +467,7 @@ def configure(conf):
             #error TRAP_REVISION not defined in file trap.hpp
             #endif
 
-            #if TRAP_REVISION < 420
+            #if TRAP_REVISION < 492
             #error Wrong version of the TRAP runtime: too old
             #endif
             int main(int argc, char * argv[]){return 0;}

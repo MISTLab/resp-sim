@@ -87,10 +87,11 @@ bool leon3_funclt_trap::LEON3_ABIIf::isRoutineEntry( const InstructionBase * ins
     ) throw(){
     std::vector<std::string> nextNames = this->routineEntrySequence[this->routineEntryState];
     std::vector<std::string>::const_iterator namesIter, namesEnd;
+    std::string curName = instr->getInstructionName();
     for(namesIter = nextNames.begin(), namesEnd = nextNames.end(); namesIter != namesEnd; \
         namesIter++){
-        if(instr->getInstructionName() == *namesIter){
-            if(this->routineEntryState == (2 -1)){
+        if(curName == *namesIter || *namesIter == ""){
+            if(this->routineEntryState == 2){
                 this->routineEntryState = 0;
                 return true;
             }
@@ -106,10 +107,11 @@ bool leon3_funclt_trap::LEON3_ABIIf::isRoutineExit( const InstructionBase * inst
     ) throw(){
     std::vector<std::string> nextNames = this->routineExitSequence[this->routineExitState];
     std::vector<std::string>::const_iterator namesIter, namesEnd;
+    std::string curName = instr->getInstructionName();
     for(namesIter = nextNames.begin(), namesEnd = nextNames.end(); namesIter != namesEnd; \
         namesIter++){
-        if(instr->getInstructionName() == *namesIter){
-            if(this->routineExitState == (2 -1)){
+        if(curName == *namesIter || *namesIter == ""){
+            if(this->routineExitState == 1){
                 this->routineExitState = 0;
                 return true;
             }
@@ -1213,16 +1215,23 @@ leon3_funclt_trap::LEON3_ABIIf::LEON3_ABIIf( unsigned int & PROGRAM_LIMIT, Memor
     tempVec.push_back("CALL");
     this->routineEntrySequence.push_back(tempVec);
     tempVec.clear();
+    tempVec.push_back("");
+    this->routineEntrySequence.push_back(tempVec);
+    tempVec.clear();
     tempVec.push_back("SAVE_imm");
     tempVec.push_back("SAVE_reg");
     this->routineEntrySequence.push_back(tempVec);
     tempVec.clear();
     tempVec.push_back("RESTORE_imm");
     tempVec.push_back("RESTORE_reg");
+    tempVec.push_back("JUMP_imm");
+    tempVec.push_back("JUMP_reg");
     this->routineExitSequence.push_back(tempVec);
     tempVec.clear();
     tempVec.push_back("JUMP_imm");
     tempVec.push_back("JUMP_reg");
+    tempVec.push_back("RESTORE_imm");
+    tempVec.push_back("RESTORE_reg");
     this->routineExitSequence.push_back(tempVec);
 }
 
