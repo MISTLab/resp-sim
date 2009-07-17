@@ -19,7 +19,7 @@
 #
 #   This file is part of ReSP.
 #
-#   TRAP is free software; you can redistribute it and/or modify
+#   ReSP is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU Lesser General Public License as published by
 #   the Free Software Foundation; either version 2 of the License, or
 #   (at your option) any later version.
@@ -471,7 +471,7 @@ def configure(conf):
             #error Wrong version of the TRAP runtime: too old
             #endif
             int main(int argc, char * argv[]){return 0;}
-        ''', msg='Check for TRAP version', uselib='TRAP BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', mandatory=1, includes=trapDirInc, errmsg='Error, at least revision 420 required')
+        ''', msg='Check for TRAP version', uselib='TRAP BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', mandatory=1, includes=trapDirInc, errmsg='Error, at least revision 492 required')
         conf.env.append_unique('RPATH', trapDirLib)
     else:
         conf.check_cxx(lib='trap', uselib='BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', uselib_store='TRAP', mandatory=1)
@@ -483,11 +483,11 @@ def configure(conf):
             #error TRAP_REVISION not defined in file trap.hpp
             #endif
 
-            #if TRAP_REVISION < 420
+            #if TRAP_REVISION < 492
             #error Wrong version of the TRAP runtime: too old
             #endif
             int main(int argc, char * argv[]){return 0;}
-        ''', msg='Check for TRAP version', uselib='TRAP BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', mandatory=1, errmsg='Error, at least revision 420 required')
+        ''', msg='Check for TRAP version', uselib='TRAP BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', mandatory=1, errmsg='Error, at least revision 492 required')
 
     ##################################################
     # Check for GMP & GMPXX libraries and headers
