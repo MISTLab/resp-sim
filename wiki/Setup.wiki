@@ -14,7 +14,7 @@ based project: first there is a configuration step, then the compilation and, fi
   * Boost: Boost libraries, downloadable from [http://www.boost.org].
   * Python version 2.4 - 2.6
   * gccxml: at least version 0.9. Since there are different 0.9 releases, we suggest you go to website [http://www.gccxml.org/HTML/Download.html] and get the latest version from the CVS repository
-  * pyplusplus and pygccxml: at least version 1.5 is required. Such version has not been released yet as a separate download, but it is available on the development SVN repository. Instructions on how to install it can be found at [http://www.language-binding.net/pyplusplus/download.html].
+  * pyplusplus and pygccxml: at least version 1.5 is required. Such version has not been released yet as a separate download, but it is available on the development SVN repository (note that revision at least 1740 is required). Instructions on how to install it can be found at [http://www.language-binding.net/pyplusplus/download.html].
   * TRAP: library for the description of instruction set simulators, dowloadable from the SVN repository of [http://code.google.com/p/trap-gen/]. Do not use the archive in the downloads since it is usually not updated.
 
 There are also optional library which, if present, enhance ReSP's capabilities:
