@@ -449,45 +449,32 @@ def configure(conf):
     ##################################################
     # Check for TRAP runtime libraries and headers
     ##################################################
-    trapDirLib = ''
-    trapDirInc = ''
+    trapRevision = 492
     if Options.options.trapdir:
         trapDirLib = os.path.abspath(os.path.expandvars(os.path.expanduser(os.path.join(Options.options.trapdir, 'lib'))))
         trapDirInc = os.path.abspath(os.path.expandvars(os.path.expanduser(os.path.join(Options.options.trapdir, 'include'))))
-        conf.check_cxx(lib='trap', uselib='BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', uselib_store='TRAP', mandatory=1, libpath=trapDirLib)
+        conf.check_cxx(lib='trap', uselib='BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', uselib_store='TRAP', mandatory=1, libpath=trapDirLib, errmsg='not found, in path ' + trapDirLib)
         if os.path.exists(os.path.join(trapDirLib, conf.env['staticlib_PATTERN'] % 'trap')):
             conf.env['CXXDEPS_TRAP'] = Utils.h_file(os.path.join(trapDirLib, conf.env['staticlib_PATTERN'] % 'trap'))
         else:
             conf.env['CXXDEPS_TRAP'] = Utils.h_file(os.path.join(trapDirLib, conf.env['shlib_PATTERN'] % 'trap'))
-        conf.check_cxx(header_name='trap.hpp', uselib='TRAP BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', uselib_store='TRAP', mandatory=1, includes=trapDirInc)
-        conf.check_cxx(fragment='''
-            #include "trap.hpp"
-
-            #ifndef TRAP_REVISION
-            #error TRAP_REVISION not defined in file trap.hpp
-            #endif
-
-            #if TRAP_REVISION < 492
-            #error Wrong version of the TRAP runtime: too old
-            #endif
-            int main(int argc, char * argv[]){return 0;}
-        ''', msg='Check for TRAP version', uselib='TRAP BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', mandatory=1, includes=trapDirInc, errmsg='Error, at least revision 492 required')
+        conf.check_cxx(header_name='trap.hpp', uselib='TRAP BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', uselib_store='TRAP', mandatory=1, includes=trapDirInc, errmsg='not found, in path ' + trapDirInc)
         conf.env.append_unique('RPATH', trapDirLib)
     else:
-        conf.check_cxx(lib='trap', uselib='BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', uselib_store='TRAP', mandatory=1)
+        conf.check_cxx(lib='trap', uselib='BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', uselib_store='TRAP', mandatory=1, errmsg='not found, use --with-trap option')
         conf.check_cxx(header_name='trap.hpp', uselib='TRAP BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', uselib_store='TRAP', mandatory=1, errmsg='not found, use --with-trap option')
-        conf.check_cxx(fragment='''
-            #include "trap.hpp"
+    conf.check_cxx(fragment='''
+        #include "trap.hpp"
 
-            #ifndef TRAP_REVISION
-            #error TRAP_REVISION not defined in file trap.hpp
-            #endif
+        #ifndef TRAP_REVISION
+        #error TRAP_REVISION not defined in file trap.hpp
+        #endif
 
-            #if TRAP_REVISION < 492
-            #error Wrong version of the TRAP runtime: too old
-            #endif
-            int main(int argc, char * argv[]){return 0;}
-        ''', msg='Check for TRAP version', uselib='TRAP BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', mandatory=1, errmsg='Error, at least revision 492 required')
+        #if TRAP_REVISION < ''' + str(trapRevision) + '''
+        #error Wrong version of the TRAP runtime: too old
+        #endif
+        int main(int argc, char * argv[]){return 0;}
+    ''', msg='Check for TRAP version', uselib='TRAP BOOST_FILESYSTEM BOOST_THREAD BOOST_SYSTEM BFD SYSTEMC_STATIC', mandatory=1, errmsg='Error, at least revision ' + str(trapRevision) + ' required')
 
     ##################################################
     # Check for GMP & GMPXX libraries and headers
