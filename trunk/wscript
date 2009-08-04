@@ -231,6 +231,10 @@ def configure(conf):
             break
     conf.check_message_custom('gcc search path', '', 'ok')
 
+    localLibPath = os.path.join('/', 'usr', 'local', 'lib')
+    if os.path.exists(localLibPath):
+        conf.env.append_unique('RPATH', localLibPath)
+
     ###########################################################
     # Check for IBERTY library
     ###########################################################
