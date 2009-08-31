@@ -120,7 +120,7 @@ class pypp_taskgen(cxx.cxx_taskgen):
     def __setattr__(self, name, attr):
         object.__setattr__(self, name, attr)
 
-    def __init__(self,*k,**kw):
+    def __init__(self, *k, **kw):
         ccroot.ccroot_abstract.__init__(self, *k, **kw)
         self.start_decls = ''
         self.custom_code = ''
@@ -131,11 +131,9 @@ class pypp_taskgen(cxx.cxx_taskgen):
         self.virtuality = False
         self.split = 1
         self.templates = []
-        self.features.append('pypp')
+        self.features.append('pyext')
         self.features.append('cxx')
         self.features.append('cshlib')
-        self.features.append('pyext')
-
 
 def setup(env):
     # create our action here
@@ -149,7 +147,8 @@ def skip_headers(self,node):
 
 @taskgen
 @feature('pypp')
-@before('init_cxx')
+@after('pyext_shlib_ext')
+@before('process_headers')
 def extract_headers(self):
     lst = self.to_list(self.source)
     self.source = ''
@@ -163,7 +162,8 @@ def extract_headers(self):
         self.obj_ext = '.o'
 
     self.srclist = []
-    targetbase, ext = os.path.splitext(ccroot.get_target_name(self))
+
+    targetbase = os.path.splitext(ccroot.get_target_name(self))[0]
 
     find_resource = self.path.find_resource
     for filename in lst:
@@ -192,7 +192,6 @@ def process_headers(self):
     #else:
         #so_ext = self.env['shlib_PATTERN'].split('%s')[1]
     #self.env['shlib_PATTERN'] = '%s'+so_ext
-
     try:
         self.custom_code = get_code_blocks(self.custom_code)
     except:
@@ -214,12 +213,12 @@ def process_headers(self):
             raise Exception('Error, specified ' + str(self.split) + ' output files for task ' + targetbase + '; a number > 0 should be used')
         tgnodes = []
         if self.split == 1:
-            tgnodes.append(self.path.find_or_declare(targetbase+'.pypp.cpp'))
+            tgnodes.append(self.path.find_or_declare(targetbase + '.pypp.cpp'))
         else:
             for i in range( 1 , self.split ):
-                name = targetbase+'_classes_'+str(i)
-                tgnodes.append(self.path.find_or_declare(name+'.pypp.cpp'))
-            tgnodes.append(self.path.find_or_declare(targetbase+'.main.cpp'))
+                name = targetbase + '_classes_' + str(i)
+                tgnodes.append(self.path.find_or_declare(name + '.pypp.cpp'))
+            tgnodes.append(self.path.find_or_declare(targetbase + '.main.cpp'))
 
         # Create a pypp task with all the input headerfiles and one output module
         pypptask = self.create_task('pypp', self.env)
