@@ -18,21 +18,18 @@
  *
  *   This file is part of ReSP.
  *
- *   TRAP is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Lesser General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
  *   (at your option) any later version.
  *
  *   This program is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU Lesser General Public License for more details.
+ *   GNU General Public License for more details.
  *
- *   You should have received a copy of the GNU Lesser General Public License
- *   along with this program; if not, write to the
- *   Free Software Foundation, Inc.,
- *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- *   or see <http://www.gnu.org/licenses/>.
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *
  *
@@ -48,6 +45,29 @@ extern "C" {
 #include <sys/types.h>
 #include <cstdio>
 #include <cstdarg>
+
+#ifdef __GNUC__
+#ifdef __GNUC_MINOR__
+#if (__GNUC__ >= 4 && __GNUC_MINOR__ >= 3)
+#include <tr1/unordered_map>
+#define template_map std::tr1::unordered_map
+#else
+#include <ext/hash_map>
+#define  template_map __gnu_cxx::hash_map
+#endif
+#else
+#include <ext/hash_map>
+#define  template_map __gnu_cxx::hash_map
+#endif
+#else
+#ifdef _WIN32
+#include <hash_map>
+#define  template_map stdext::hash_map
+#else
+#include <map>
+#define  template_map std::map
+#endif
+#endif
 
 #include <map>
 #include <string>
@@ -86,10 +106,9 @@ BFDWrapper & BFDWrapper::getInstance(std::string fileName){
             BFDWrapper::bfdInstances[fileName] = new BFDWrapper(fileName);
         }
         else{
-            THROW_EXCEPTION("An instance of BFDFrontend does not exists yet, so the file name of the binary image must be specified");
+            THROW_EXCEPTION("Please specify the file name of the binary image that must be loaded by the BFDFrontend");
         }
     }
-
     return *(BFDWrapper::bfdInstances.find(fileName)->second);
 }
 
@@ -182,9 +201,9 @@ BFDWrapper::~BFDWrapper(){
 }
 
 ///It returns all the symbols that match the given regular expression
-std::map<std::string,  unsigned int> BFDWrapper::findFunction(boost::regex &regEx){
+std::map<std::string,  unsigned int> BFDWrapper::findFunction(boost::regex &regEx) const{
     std::map<std::string,  unsigned int> foundSyms;
-    std::map<std::string, unsigned int>::iterator addrMap, addrMapEnd;
+    std::map<std::string, unsigned int>::const_iterator addrMap, addrMapEnd;
     for(addrMap = this->symToAddr.begin(), addrMapEnd = this->symToAddr.end(); addrMap != addrMapEnd; addrMap++){
         if(boost::regex_match(addrMap->first, regEx))
             foundSyms.insert(*addrMap);
@@ -196,10 +215,10 @@ std::map<std::string,  unsigned int> BFDWrapper::findFunction(boost::regex &regE
 ///symbol can be mapped to an address). Note
 ///That if address is in the middle of a function, the symbol
 ///returned refers to the function itself
-std::list<std::string> BFDWrapper::symbolsAt(unsigned int address){
-    std::map<unsigned int, std::list<std::string> >::iterator symMap1 = this->addrToSym.find(address);
+std::list<std::string> BFDWrapper::symbolsAt(unsigned int address) const{
+    template_map<unsigned int, std::list<std::string> >::const_iterator symMap1 = this->addrToSym.find(address);
     if(symMap1 == this->addrToSym.end()){
-        std::map<unsigned int, std::string>::iterator symMap2 = this->addrToFunction.find(address);
+        template_map<unsigned int, std::string>::const_iterator symMap2 = this->addrToFunction.find(address);
         std::list<std::string> functionsList;
         if(symMap2 != this->addrToFunction.end())
             functionsList.push_back(symMap2->second);
@@ -213,10 +232,10 @@ std::list<std::string> BFDWrapper::symbolsAt(unsigned int address){
 ///"" if no symbol is found at the specified address; note
 ///That if address is in the middle of a function, the symbol
 ///returned refers to the function itself
-std::string BFDWrapper::symbolAt(unsigned int address){
-    std::map<unsigned int, std::list<std::string> >::iterator symMap1 = this->addrToSym.find(address);
+std::string BFDWrapper::symbolAt(unsigned int address) const{
+    template_map<unsigned int, std::list<std::string> >::const_iterator symMap1 = this->addrToSym.find(address);
     if(symMap1 == this->addrToSym.end()){
-        std::map<unsigned int, std::string>::iterator symMap2 = this->addrToFunction.find(address);
+        template_map<unsigned int, std::string>::const_iterator symMap2 = this->addrToFunction.find(address);
         if(symMap2 != this->addrToFunction.end()){
             return symMap2->second;
         }
@@ -231,8 +250,8 @@ std::string BFDWrapper::symbolAt(unsigned int address){
 ///(which usually is its address);
 ///valid is set to false if no symbol with the specified
 ///name is found
-unsigned int BFDWrapper::getSymAddr(std::string symbol, bool &valid){
-    std::map<std::string, unsigned int>::iterator addrMap = this->symToAddr.find(symbol);
+unsigned int BFDWrapper::getSymAddr(const std::string &symbol, bool &valid) const{
+    std::map<std::string, unsigned int>::const_iterator addrMap = this->symToAddr.find(symbol);
     if(addrMap == this->symToAddr.end()){
         valid = false;
         return 0;
@@ -320,17 +339,17 @@ void BFDWrapper::readSrc(){
 
 
 ///Returns the name of the executable file
-std::string BFDWrapper::getExecName(){
+std::string BFDWrapper::getExecName() const{
     return this->execName;
 }
 
 ///Returns the end address of the loadable code
-unsigned int BFDWrapper::getBinaryEnd(){
+unsigned int BFDWrapper::getBinaryEnd() const{
     return (this->codeSize.first + this->wordsize);
 }
 
 
-std::string BFDWrapper::getMatchingFormats (char **p){
+std::string BFDWrapper::getMatchingFormats (char **p) const{
     std::string match = "";
     if(p != NULL){
         while (*p){
@@ -352,30 +371,32 @@ bfd & BFDWrapper::getBFDDescriptor(){
 }
 
 ///Specifies whether the address is the entry point of a rountine
-bool BFDWrapper::isRoutineEntry(unsigned int address){
-    std::map<unsigned int, std::string>::iterator funNameIter = this->addrToFunction.find(address);
-    if(funNameIter == this->addrToFunction.end())
+bool BFDWrapper::isRoutineEntry(unsigned int address) const{
+    template_map<unsigned int, std::string>::const_iterator funNameIter = this->addrToFunction.find(address);
+    template_map<unsigned int, std::string>::const_iterator endFunNames = this->addrToFunction.end();
+    if(funNameIter == endFunNames)
         return false;
     std::string curName = funNameIter->second;
     funNameIter = this->addrToFunction.find(address + this->wordsize);
-    if(funNameIter != this->addrToFunction.end() && curName == funNameIter->second){
+    if(funNameIter != endFunNames && curName == funNameIter->second){
         funNameIter = this->addrToFunction.find(address - this->wordsize);
-        if(funNameIter == this->addrToFunction.end() || curName != funNameIter->second)
+        if(funNameIter == endFunNames || curName != funNameIter->second)
             return true;
     }
     return false;
 }
 
-///Specifies whether the address is the exit point of a rountine
-bool BFDWrapper::isRoutineExit(unsigned int address){
-    std::map<unsigned int, std::string>::iterator funNameIter = this->addrToFunction.find(address);
-    if(funNameIter == this->addrToFunction.end())
+///Specifies whether the address is the last one of a routine
+bool BFDWrapper::isRoutineExit(unsigned int address) const{
+    template_map<unsigned int, std::string>::const_iterator funNameIter = this->addrToFunction.find(address);
+    template_map<unsigned int, std::string>::const_iterator endFunNames = this->addrToFunction.end();
+    if(funNameIter == endFunNames)
         return false;
     std::string curName = funNameIter->second;
     funNameIter = this->addrToFunction.find(address - this->wordsize);
-    if(funNameIter != this->addrToFunction.end() && curName == funNameIter->second){
+    if(funNameIter != endFunNames && curName == funNameIter->second){
         funNameIter = this->addrToFunction.find(address + this->wordsize);
-        if(funNameIter == this->addrToFunction.end() || curName != funNameIter->second)
+        if(funNameIter == endFunNames || curName != funNameIter->second)
             return true;
     }
     return false;
@@ -384,8 +405,8 @@ bool BFDWrapper::isRoutineExit(unsigned int address){
 ///Given an address, it sets fileName to the name of the source file
 ///which contains the code and line to the line in that file. Returns
 ///false if the address is not valid
-bool BFDWrapper::getSrcFile(unsigned int address, std::string &fileName, unsigned int &line){
-    std::map<unsigned int, std::pair<std::string, unsigned int> >::iterator srcMap = this->addrToSrc.find(address);
+bool BFDWrapper::getSrcFile(unsigned int address, std::string &fileName, unsigned int &line) const{
+    template_map<unsigned int, std::pair<std::string, unsigned int> >::const_iterator srcMap = this->addrToSrc.find(address);
     if(srcMap == this->addrToSrc.end()){
         return false;
     }
