@@ -41,29 +41,28 @@
 ##############################################################################
 
 
+import Options
+
 def build(bld):
+    # Generation of the controller library
+    obj = bld.new_task_gen('cxx', 'cshlib', 'pyembed')
+    obj.source ='''
+        concurrency_manager.cpp concurrency_structures.cpp
+    '''
 
-    obj = bld.new_task_gen('cc')
-    obj.target = 'ecacti_c'
-    obj.name = 'ecacti_c'
-    obj.source = 'area.c io.c leakage.c time.c'
+    obj.target = 'cm'
+    obj.uselib = 'SYSTEMC_H BOOST TRAP'
+    obj.uselib_local = 'systemc'
 
-    obj = bld.new_task_gen('cxx')
-    obj.target = 'ecacti_cpp'
-    obj.name = 'ecacti_cpp'
-    obj.source = 'ecacti_wrapper.cpp'
-
-    obj = bld.new_task_gen('cxx', 'cshlib')
-    obj.target = 'ecacti'
-    obj.name = 'ecacti'
-    obj.add_objects = 'ecacti_cpp ecacti_c'
-
+    # Generation of the controller wrapper extension
     obj = bld.new_task_gen('pypp')
-    obj.target = 'ecacti_wrapper'
+    obj.source ='''
+        concurrency_manager.hpp
+    '''
+
+    obj.target = 'cm_wrapper'
+    obj.uselib = 'SYSTEMC_H BOOST BOOST_PYTHON TRAP'
+    obj.uselib_local = 'systemc cm'
     obj.start_decls = 'resp'
-    obj.source = 'ecacti_wrapper.h'
-    obj.uselib_local = 'ecacti'
-    obj.uselib = 'BOOST_PYTHON BOOST MATH'
     obj.custom_code = """
-mb.class_('cache_power_data').include()
 """
