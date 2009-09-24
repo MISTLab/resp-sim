@@ -51,7 +51,7 @@ extern "C" {
 }
 
 #include "execLoader.hpp"
-#include "bfdFrontend.hpp"
+#include "bfdWrapper.hpp"
 
 Loader::Loader(std::string fileName){
     this->execImage = &(BFDWrapper::getInstance(fileName).getBFDDescriptor());
