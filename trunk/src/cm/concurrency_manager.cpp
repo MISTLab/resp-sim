@@ -41,19 +41,28 @@
 #include "concurrency_manager.hpp"
 
 //Initialization of some static variables
-ConcurrencyManager * ConcurrencyManager::cmInstance = NULL;
-const int ConcurrencyManager::SYSC_SCHED_FIFO = 0;
-const int ConcurrencyManager::SYSC_SCHED_OTHER = 1;
-const int ConcurrencyManager::SYSC_SCHED_RR = 2;
-const int ConcurrencyManager::SYSC_SCHED_EDF = 5;
+const int resp::ConcurrencyManager::SYSC_SCHED_FIFO = 0;
+const int resp::ConcurrencyManager::SYSC_SCHED_OTHER = 1;
+const int resp::ConcurrencyManager::SYSC_SCHED_RR = 2;
+const int resp::ConcurrencyManager::SYSC_SCHED_EDF = 5;
 
-const int ConcurrencyManager::SYSC_PRIO_MAX = 255;
-const int ConcurrencyManager::SYSC_PRIO_MIN = 0;
+const int resp::ConcurrencyManager::SYSC_PRIO_MAX = 255;
+const int resp::ConcurrencyManager::SYSC_PRIO_MIN = 0;
 
-const int ConcurrencyManager::SYSC_PREEMPTIVE = 1;
-const int ConcurrencyManager::SYSC_NON_PREEMPTIVE = 0;
+const int resp::ConcurrencyManager::SYSC_PREEMPTIVE = 1;
+const int resp::ConcurrencyManager::SYSC_NON_PREEMPTIVE = 0;
 
-ConcurrencyManager::ConcurrencyManager(){
+///specifies whether blocked processor halts or keep on working in busy wait loops
+bool resp::ConcurrencyManager::busyWaitLoop = true;
+///Specifies the stack size for each thread
+unsigned int resp::ConcurrencyManager::threadStackSize = 1024*20;
+///Associates thred properties with a routine name: all threads
+///created from that routine shall have such properties
+std::map<std::string, DefaultThreadInfo> resp::ConcurrencyManager::defThreadInfo;
+///The registered interrupt service routines.
+std::map<int, std::string> resp::ConcurrencyManager::interruptServiceRoutines;
+
+resp::ConcurrencyManager::ConcurrencyManager(){
 }
 
 

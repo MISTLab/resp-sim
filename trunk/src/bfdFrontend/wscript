@@ -46,7 +46,7 @@ import os, sys
 def build(bld):
     obj = bld.new_task_gen('cxx', 'cshlib')
     obj.source = """
-        bfdFrontend.cpp
+        bfdWrapper.cpp
     """
     obj.target = 'BFDWrapper'
     obj.export_incdirs = '.'
@@ -55,7 +55,7 @@ def build(bld):
 
     obj = bld.new_task_gen('pypp')
     obj.source = """
-        bfdFrontend.hpp
+        bfdWrapper.hpp
     """
     obj.target = 'bfdwrapper'
     obj.uselib = 'BOOST BOOST_REGEX BOOST_PYTHON BFD_H'

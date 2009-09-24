@@ -41,11 +41,12 @@
 #ifndef CONCURRENCY_MANAGER_HPP
 #define CONCURRENCY_MANAGER_HPP
 
-#include "concurrency_structures.hpp"
-
 #include <systemc.h>
 
 #include <map>
+#include <string>
+
+#include "concurrency_structures.hpp"
 
 ///***************************************************************
 /// Here we declare some classes which will be used as timers
@@ -96,13 +97,11 @@ namespace resp{
 ///synchronization management (mutex, condition variables, semaphores, etc.)
 class ConcurrencyManager{
     private:
-        ///variable pointing to the only instance of the concurrency manager
-        static ConcurrencyManager * cmInstance;
-        ///Private constructor of the CM: it is part of the singleton design
-        ///pattern, meaning that it is not possible to create instances
-        ///of this class from the external world and that only one
-        ///instance will exists
-        ConcurrencyManager();
+        ///Variables used for managing reentrant synchronization
+        unsigned int mallocMutex;
+        unsigned int sfpMutex;
+        unsigned int sinitMutex;
+        unsigned int createMutex;
     public:
         /// Some constants
         static const int SYSC_SCHED_FIFO;
@@ -116,9 +115,25 @@ class ConcurrencyManager{
         static const int SYSC_PREEMPTIVE;
         static const int SYSC_NON_PREEMPTIVE;
 
-        ///Returns an instance of the concurrency manager; if such instance does not
-        ///exists yet it is created.
-        static ConcurrencyManager& getManager();
+        /// Now some static stuff which is shared by all the emulation groups
+        ///specifies whether blocked processor halts or keep on working in busy wait loops
+        static bool busyWaitLoop;
+        ///Specifies the stack size for each thread, defaults to 20 KB
+        static unsigned int threadStackSize;
+        ///Associates thred properties with a routine name: all threads
+        ///created from that routine shall have such properties
+        static std::map<std::string, DefaultThreadInfo> defThreadInfo;
+        ///The registered interrupt service routines.
+        static std::map<int, std::string> interruptServiceRoutines;
+
+        ConcurrencyManager();
+
+        ///*******************************************************************
+        /// Initialization functions
+        ///*******************************************************************
+        ///Initializes the mutexes used to guarantee mutual exclusion access to
+        ///reentrant routines
+        void initReentrantEmulation();
 
         ///*******************************************************************
         /// Here are some functions for computing statistics on the
@@ -202,46 +217,6 @@ class ConcurrencyManager{
         void signalCond(int cond, bool broadcast, unsigned int procId);
         int waitCond(int cond, int mutex, double time, unsigned int procId);
 
-};
-
-///This class is in charge of performing initialization of all
-///the necessary concurrency management structures, of the registration
-///of the emulated routines, etc.
-///Note that the executable must be compiled with the -specs=osemu.specs,
-///Otherwise is will be impossible to use the Operating System
-///Emulation features.
-template<class wordSize> class ConcurrencyEmulator{
-    private:
-        ///Instance of the concurrency manager, used to actually implement the emulated concurrency-related
-        ///functionalities.
-        ConcurrencyManager& cm;
-
-        ///In a multi-processor environment this function has to be called to
-        ///enable the protection of the internal OS routines, ensuring their
-        ///atomicity
-        void initiReentrantEmu();
-    public:
-        ///Constructor of the class, it performs the preliminary initialization of all the necessary data structures
-        ///and of the concurrency manager.
-        ConcurrencyEmulator(unsigned int memSize, bool waitLoop = true, unsigned int defaultStackSize = 1024*20,
-                                        std::map<std::string, sc_time> latencies = std::map<std::string, sc_time>()){
-        }
-        ///Registers the processor interface among the processors that
-        ///will be manged by the concurrency manager.
-        void addProcessorInterface(trap::ABIIf<wordSize> &processorInstance){
-        }
-        ///Marks a function to be executed as an interrupt service routine
-        void registerISR(std::string isrFunctionName, int irqId, bool preemptive = false,
-                                        int schedPolicy = ConcurrencyManager::SYSC_SCHED_FIFO,
-                                                int priority = ConcurrencyManager::SYSC_PRIO_MAX);
-        ///Sets thread properties, so that, when a thread is created, it is associated such properties
-        ///independently from the thread attributes that were specified in the executeable file
-        void setThreadInfo(std::string functionName, bool preemptive,
-                           int schedPolicy, int priority, unsigned int deadline){
-        }
-        ///Resets the whole concurrency emulator, reinitializing it and preparing it for a new simulation
-        void reset(){
-        }
 };
 
 };

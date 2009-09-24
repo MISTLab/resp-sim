@@ -79,7 +79,7 @@ extern "C" {
 
 #include <boost/regex.hpp>
 
-#include "bfdFrontend.hpp"
+#include "bfdWrapper.hpp"
 
 #define DMGL_NO_OPTS     0              /* For readability... */
 #define DMGL_PARAMS      (1 << 0)       /* Include function args */
