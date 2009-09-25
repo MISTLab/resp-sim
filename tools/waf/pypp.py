@@ -142,7 +142,6 @@ def setup(env):
 def skip_headers(self,node):
     pass
 
-@taskgen
 @feature('pypp')
 @after('pyext_shlib_ext')
 @before('process_headers')
@@ -174,6 +173,18 @@ def extract_headers(self):
             self.srclist.append(n)
         else:
             self.source += '\n' + filename
+
+@feature('pypp')
+@after('apply_link_osx')
+def remove_install_name_osx(self):
+    try:
+        install_name_index = self.env['LINKFLAGS'].index('-install_name')
+        if install_name_index >= 0:
+            pathValue = self.env['LINKFLAGS'][install_name_index + 1]
+            self.env['LINKFLAGS'].remove('-install_name')
+            self.env['LINKFLAGS'].remove(pathValue)
+    except:
+        pass
 
 @taskgen
 @feature('pypp')

@@ -46,6 +46,10 @@
 
 #include "concurrency_manager.hpp"
 
+///*********************************************************
+// Calls related to thread destruction and cancellation
+///*********************************************************
+
 template<class wordSize> class pthread_cancelSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -92,6 +96,10 @@ template<class wordSize> class pthread_selfSysCall : public trap::SyscallCB<word
 
     }
 };
+
+///*********************************************************
+// Calls related to mutex management
+///*********************************************************
 
 template<class wordSize> class pthread_mutex_destroySysCall : public trap::SyscallCB<wordSize>{
     private:
@@ -185,6 +193,10 @@ template<class wordSize> class pthread_mutex_trylockSysCall : public trap::Sysca
     }
 };
 
+///*********************************************************
+// Calls related to mutex attributes
+///*********************************************************
+
 template<class wordSize> class pthread_mutexattr_destroySysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -236,6 +248,10 @@ template<class wordSize> class pthread_mutexattr_settypeSysCall : public trap::S
 
     }
 };
+
+///*********************************************************
+// Calls related to thread attributes
+///*********************************************************
 
 template<class wordSize> class pthread_attr_getdetachstateSysCall : public trap::SyscallCB<wordSize>{
     private:
@@ -328,6 +344,10 @@ template<class wordSize> class pthread_attr_setstacksizeSysCall : public trap::S
 
     }
 };
+
+///*********************************************************
+// Calls related to thread attributes: real-time management
+///*********************************************************
 
 template<class wordSize> class pthread_attr_getschedpolicySysCall : public trap::SyscallCB<wordSize>{
     private:
@@ -491,6 +511,10 @@ template<class wordSize> class pthread_setschedparamSysCall : public trap::Sysca
     }
 };
 
+///*********************************************************
+// Calls related to thread specific storage (not TLS)
+///*********************************************************
+
 template<class wordSize> class pthread_getspecificSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -521,6 +545,10 @@ template<class wordSize> class pthread_setspecificSysCall : public trap::Syscall
 
     }
 };
+
+///**************************************************************
+// Calls related to thread management (creation/destruction ...)
+///**************************************************************
 
 template<class wordSize> class pthread_createSysCall : public trap::SyscallCB<wordSize>{
     private:
@@ -577,6 +605,46 @@ template<class wordSize> class pthread_myexitSysCall : public trap::SyscallCB<wo
     }
 };
 
+template<class wordSize> class pthread_joinSysCall : public trap::SyscallCB<wordSize>{
+    private:
+        resp::ConcurrencyManager * cm;
+    public:
+    pthread_joinSysCall(trap::ABIIf<wordSize> &processorInstance, resp::ConcurrencyManager * cm, sc_time latency = SC_ZERO_TIME) :
+                                                    trap::SyscallCB<wordSize>(processorInstance, latency), cm(cm){}
+    bool operator()(){
+            int pthreadId = processorInstance.get_arg(0);
+
+    // Note that these instructions set the return value of the thread before the join operation actually
+    // happens: I can do this only because I discard the thread return value
+    if(processorInstance.get_arg(1) != 0){
+        int retVal  = 0;
+        sc_controller::disableLatency = true;
+        processorInstance.set_buffer_endian(1, (unsigned char *)&retVal, processorInstance.getWordSize());
+        sc_controller::disableLatency = false;
+    }
+    processorInstance.set_retVal(0, 0);
+    processorInstance.return_from_syscall();
+    // end of the setting of the return value
+
+    join(pthreadId, processorInstance.get_proc_id());
+
+    }
+};
+
+template<class wordSize> class pthread_join_allSysCall : public trap::SyscallCB<wordSize>{
+    private:
+        resp::ConcurrencyManager * cm;
+    public:
+    pthread_join_allSysCall(trap::ABIIf<wordSize> &processorInstance, resp::ConcurrencyManager * cm, sc_time latency = SC_ZERO_TIME) :
+                                                    trap::SyscallCB<wordSize>(processorInstance, latency), cm(cm){}
+    bool operator()(){
+            processorInstance.return_from_syscall();
+
+    joinAll(processorInstance.get_proc_id());
+
+    }
+};
+
 template<class wordSize> class pthread_key_createSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -591,6 +659,10 @@ template<class wordSize> class pthread_key_createSysCall : public trap::SyscallC
 
     }
 };
+
+///**************************************************************
+// Calls related to semaphore management
+///**************************************************************
 
 template<class wordSize> class sem_initSysCall : public trap::SyscallCB<wordSize>{
     private:
@@ -656,45 +728,9 @@ template<class wordSize> class sem_waitSysCall : public trap::SyscallCB<wordSize
     }
 };
 
-template<class wordSize> class pthread_joinSysCall : public trap::SyscallCB<wordSize>{
-    private:
-        resp::ConcurrencyManager * cm;
-    public:
-    pthread_joinSysCall(trap::ABIIf<wordSize> &processorInstance, resp::ConcurrencyManager * cm, sc_time latency = SC_ZERO_TIME) :
-                                                    trap::SyscallCB<wordSize>(processorInstance, latency), cm(cm){}
-    bool operator()(){
-            int pthreadId = processorInstance.get_arg(0);
-
-    // Note that these instructions set the return value of the thread before the join operation actually
-    // happens: I can do this only because I discard the thread return value
-    if(processorInstance.get_arg(1) != 0){
-        int retVal  = 0;
-        sc_controller::disableLatency = true;
-        processorInstance.set_buffer_endian(1, (unsigned char *)&retVal, processorInstance.getWordSize());
-        sc_controller::disableLatency = false;
-    }
-    processorInstance.set_retVal(0, 0);
-    processorInstance.return_from_syscall();
-    // end of the setting of the return value
-
-    join(pthreadId, processorInstance.get_proc_id());
-
-    }
-};
-
-template<class wordSize> class pthread_join_allSysCall : public trap::SyscallCB<wordSize>{
-    private:
-        resp::ConcurrencyManager * cm;
-    public:
-    pthread_join_allSysCall(trap::ABIIf<wordSize> &processorInstance, resp::ConcurrencyManager * cm, sc_time latency = SC_ZERO_TIME) :
-                                                    trap::SyscallCB<wordSize>(processorInstance, latency), cm(cm){}
-    bool operator()(){
-            processorInstance.return_from_syscall();
-
-    joinAll(processorInstance.get_proc_id());
-
-    }
-};
+///**************************************************************
+// Calls related to condition-variables management
+///**************************************************************
 
 template<class wordSize> class pthread_cond_initSysCall : public trap::SyscallCB<wordSize>{
     private:
@@ -845,6 +881,10 @@ public:
 
     }
 };
+
+///**************************************************************
+// Calls related to mutual exclusion in newlib reentrant calls
+///**************************************************************
 
 template<class wordSize> class __malloc_lockSysCall : public trap::SyscallCB<wordSize>{
     private:
