@@ -990,6 +990,10 @@ template<class wordSize> class __fp_unlockSysCall : public trap::SyscallCB<wordS
     }
 };
 
+///**************************************************************
+// Call used to read the base address of the Thread-Local storage (TLS)
+///**************************************************************
+
 template<class wordSize> class __aeabi_read_tpSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -1002,6 +1006,10 @@ template<class wordSize> class __aeabi_read_tpSysCall : public trap::SyscallCB<w
 
     }
 };
+
+///**************************************************************
+// Call used to signal that the busy loop is entered
+///**************************************************************
 
 template<class wordSize> class __nop_busy_loopSysCall : public trap::SyscallCB<wordSize>{
     private:
