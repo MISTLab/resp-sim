@@ -46,6 +46,7 @@
 #define LOADER_HPP
 
 #include <string>
+#include <vector>
 
 extern "C" {
 #include <bfd.h>
@@ -57,6 +58,7 @@ class Loader{
     unsigned char * programData;
     unsigned int progDim;
     unsigned int dataStart;
+    std::vector<unsigned char> tlsData;
 
     ///examines the bfd in order to find the sections containing data
     ///to be loaded; at the same time it fills the programData
@@ -78,6 +80,12 @@ class Loader{
     unsigned char * getProgData();
     ///Returns the byte of the program data at index idx
     unsigned char getProgDataValue(unsigned long idx);
+    ///Specifies whether the current executable has a
+    ///Thread-Local-Storage (TLS) section or not
+    bool hasTLS();
+    ///Returns the thread local storage bytes, including both
+    ///static data and the bss
+    std::vector<unsigned char> getTLSData();
 };
 
 #endif

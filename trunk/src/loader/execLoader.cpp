@@ -112,26 +112,35 @@ unsigned int Loader::getDataStart(){
 void Loader::loadProgramData(){
     bfd_section *p = NULL;
     std::map<unsigned long, unsigned char> memMap;
+    std::map<unsigned long, unsigned char> tlsMap;
     for (p = this->execImage->sections; p != NULL; p = p->next){
         flagword flags = bfd_get_section_flags(this->execImage, p);
-        if((flags & SEC_ALLOC) != 0 && (flags & SEC_DEBUGGING) == 0 && (flags & SEC_THREAD_LOCAL) == 0){
+        if((flags & SEC_ALLOC) != 0 && (flags & SEC_DEBUGGING) == 0){
             //Ok,  this is a section which must be in the final executable;
             //Lets see if it has content: if not I have to pad the section with zeros,
             //otherwise I load it
             bfd_size_type datasize = bfd_section_size(this->execImage, p);
             bfd_vma vma = bfd_get_section_vma(this->execImage, p);
-            std::map<unsigned long, unsigned char>::iterator curMapPos = memMap.begin();
+            std::map<unsigned long, unsigned char> * curMap = NULL;
+            if((flags & SEC_THREAD_LOCAL) == 0){
+                curMap = &memMap;
+            }
+            else{
+                curMap = &tlsMap;
+            }
+            //Normal section containing executable data
+            std::map<unsigned long, unsigned char>::iterator curMapPos = curMap->begin();
             if((flags & SEC_HAS_CONTENTS) != 0){
                 bfd_byte *data = new bfd_byte[datasize];
                 bfd_get_section_contents (this->execImage, p, data, 0, datasize);
                 for(unsigned int i = 0; i < datasize; i++){
-                     curMapPos = memMap.insert(curMapPos, std::pair<unsigned long, unsigned char>(vma + i, data[i]));
+                    curMapPos = curMap->insert(curMapPos, std::pair<unsigned long, unsigned char>(vma + i, data[i]));
                 }
                 delete [] data;
             }
             else{
                 for(unsigned int i = 0; i < datasize; i++)
-                    curMapPos = memMap.insert(curMapPos, std::pair<unsigned long, unsigned char>(vma + i, 0));
+                    curMapPos = curMap->insert(curMapPos, std::pair<unsigned long, unsigned char>(vma + i, 0));
             }
         }
     }
@@ -144,4 +153,27 @@ void Loader::loadProgramData(){
     for(memBeg = memMap.begin(),  memEnd = memMap.end(); memBeg != memEnd; memBeg++){
         this->programData[memBeg->first - this->dataStart] = memBeg->second;
     }
+    //Now I process thread local storage
+    if(!tlsMap.empty()){
+        unsigned int tlsStart = tlsMap.begin()->first;
+        unsigned int tlsEnd = tlsMap.rbegin()->first;
+        for(unsigned int i = 0; i < tlsEnd - tlsStart; i++){
+            this->tlsData.push_back(0);
+        }
+        for(memBeg = tlsMap.begin(),  memEnd = tlsMap.end(); memBeg != memEnd; memBeg++){
+            this->tlsData[memBeg->first - tlsStart](memBeg->second);
+        }
+    }
+}
+
+///Specifies whether the current executable has a
+///Thread-Local-Storage (TLS) section or not
+bool Loader::hasTLS(){
+    return !this->tlsData.empty();
+}
+
+///Returns the thread local storage bytes, including both
+///static data and the bss
+std::vector<unsigned char> Loader::getTLSData(){
+    return this->tlsData;
 }
