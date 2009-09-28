@@ -61,6 +61,9 @@ unsigned int resp::ConcurrencyManager::threadStackSize = 1024*20;
 std::map<std::string, DefaultThreadInfo> resp::ConcurrencyManager::defThreadInfo;
 ///The registered interrupt service routines.
 std::map<int, std::string> resp::ConcurrencyManager::interruptServiceRoutines;
+///The size and content of the thread-local-storage
+unsigned int resp::ConcurrencyManager::tlsSize = 0;
+unsigned char * resp::ConcurrencyManager::tlsData = NULL;
 
 resp::ConcurrencyManager::ConcurrencyManager(){
 }
