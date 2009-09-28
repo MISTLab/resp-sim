@@ -161,7 +161,7 @@ void Loader::loadProgramData(){
             this->tlsData.push_back(0);
         }
         for(memBeg = tlsMap.begin(),  memEnd = tlsMap.end(); memBeg != memEnd; memBeg++){
-            this->tlsData[memBeg->first - tlsStart](memBeg->second);
+            this->tlsData[memBeg->first - tlsStart] = memBeg->second;
         }
     }
 }
