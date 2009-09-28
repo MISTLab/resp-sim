@@ -89,6 +89,14 @@ public:
     void countTime();
 };
 
+///Default information associated to a thread.
+struct DefaultThreadInfo{
+    bool preemptive;
+    int schedPolicy;
+    int priority;
+    unsigned int deadline;
+    std::string funName;
+};
 
 namespace resp{
 
@@ -125,8 +133,12 @@ class ConcurrencyManager{
         static std::map<std::string, DefaultThreadInfo> defThreadInfo;
         ///The registered interrupt service routines.
         static std::map<int, std::string> interruptServiceRoutines;
+        ///The size and content of the thread-local-storage
+        static unsigned int tlsSize;
+        static unsigned char * tlsData;
 
         ConcurrencyManager();
+        void reset();
 
         ///*******************************************************************
         /// Initialization functions
@@ -153,8 +165,9 @@ class ConcurrencyManager{
         /// the emulated concurrency related primitives
         ///*******************************************************************
         ///*********** Thread related routines *******************
-        int createThread(thread_routine_t threadFun,  void * args, int attr = -1);
-        void exitThread(unsigned int procId, void * retVal);
+        int createThread(unsigned int threadFun,  unsigned int args, int attr = -1);
+        void exitThread(unsigned int procId, unsigned int retVal);
+        bool cancelThread(int threadId);
 
         int createThreadAttr();
         void deleteThreadAttr(int attr);
@@ -186,7 +199,7 @@ class ConcurrencyManager{
         int getThreadId(unsigned int procId);
 
         int createKey();
-        void setSpecific(unsigned int procId, int key, void *memArea);
+        void setSpecific(unsigned int procId, int key, unsigned int memArea);
         void *getSpecific(unsigned int procId, int key);
 
         void join(int thId, unsigned int procId, int curThread_ = -1);
@@ -194,6 +207,10 @@ class ConcurrencyManager{
 
         std::pair<void *, void *> readTLS(unsigned int procId);
         void idleLoop(unsigned int procId);
+
+        void pushCleanupHandler(unsigned int procId, unsigned int routineAddress, void * arg);
+        void popCleanupHandler(unsigned int procId, bool execute);
+        void execCleanupHandlerTop(unsigned int procId);
 
         ///*********** Mutex related routines *******************
         ///Destroys a previously allocated mutex, exception if the mutex does not exist

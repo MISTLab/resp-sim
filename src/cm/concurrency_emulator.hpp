@@ -78,15 +78,6 @@
 #include <syscCallB.hpp>
 #include <instructionBase.hpp>
 
-///Default information associated to a thread.
-struct DefaultThreadInfo{
-    bool preemptive;
-    int schedPolicy;
-    int priority;
-    unsigned int deadline;
-    std::string funName;
-};
-
 namespace resp{
 
 ///Base class of the ConcurrencyEmulator, used to declare some static
@@ -110,6 +101,9 @@ class ConcurrencyEmulatorBase{
         static void registerISR(std::string isrFunctionName, int irqId, bool preemptive = false,
                                         int schedPolicy = ConcurrencyManager::SYSC_SCHED_FIFO,
                                                 int priority = ConcurrencyManager::SYSC_PRIO_MAX);
+        ///Sets the thread-local-storage data which is going to be used
+        ///for the thread private storage
+        static void setTLSdata(std::vector<unsigned char> tlsData);
 };
 
 ///This class is in charge of performing initialization of all
@@ -573,10 +567,18 @@ template<class wordSize> class ConcurrencyEmulator: public trap::ToolsIf<issueWi
                 if(!this->register_syscall(".__nop_busy_loop", *U))
                     THROW_EXCEPTION(".__nop_busy_loop symbol not found in the executable, unable to initialize pthread-emulation system");
             }
+            if(reentrant)
+                this->initiReentrantEmu(group);
         }
 
         ///Resets the whole concurrency emulator, reinitializing it and preparing it for a new simulation
         void reset(){
+            this->syscCallbacks.clear();
+            std::map<int, ConcurrencyManager * >::iterator cmIter, cmEnd;
+            for(cmIter = ConcurrencyEmulatorBase::cm.begin(), cmEnd = ConcurrencyEmulatorBase::cm.end(); cmIter != cmEnd; cmIter++){
+                cmIter->second->reset();
+            }
+            ConcurrencyEmulatorBase::cm.clear();
         }
 
         ///Method called at every instruction issue by the processor: we have to determine if

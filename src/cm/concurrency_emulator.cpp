@@ -78,3 +78,13 @@ void resp::ConcurrencyEmulatorBase::registerISR(std::string isrFunctionName, int
     resp::ConcurrencyManager::defThreadInfo[isrFunctionName].schedPolicy = schedPolicy;
     resp::ConcurrencyManager::defThreadInfo[isrFunctionName].priority = priority;
 }
+
+///Sets the thread-local-storage data which is going to be used
+///for the thread private storage
+void resp::ConcurrencyEmulatorBase::setTLSdata(std::vector<unsigned char> tlsData){
+    resp::ConcurrencyManager::tlsSize = tlsData.size();
+    resp::ConcurrencyManager::tlsData = new unsigned char[resp::ConcurrencyManager::tlsSize];
+    for(int i = 0; i < tlsData.size(); i++){
+        tlsData[i] = tlsData[i];
+    }
+}
