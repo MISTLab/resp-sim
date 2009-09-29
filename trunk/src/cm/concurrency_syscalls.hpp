@@ -1116,8 +1116,6 @@ template<class wordSize> class pthread_cond_broadcastSysCall : public trap::Sysc
         }
 };
 
-//******************** I ARRIVED HERE IN MODIFYING ALL THE STUFF ************************
-
 ///Waits for the signaling of a condition variable
 template<class wordSize> class pthread_cond_waitSysCall : public trap::SyscallCB<wordSize>{
     private:
@@ -1126,33 +1124,33 @@ template<class wordSize> class pthread_cond_waitSysCall : public trap::SyscallCB
         pthread_cond_waitSysCall(trap::ABIIf<wordSize> &processorInstance, resp::ConcurrencyManager * cm, sc_time latency = SC_ZERO_TIME) :
                                                                 trap::SyscallCB<wordSize>(processorInstance, latency), cm(cm){}
         bool operator()(){
-            int condId = 0;
-            int mutId = 0;
-
             this->processorInstance.preCall();
 
-        processorInstance.get_buffer_endian(0, (unsigned char *)&condId, processorInstance.getWordSize());
-        if(condId == -1){
-            // Condition variable was initialized with the PTHREAD_COND_INITIALIZER
-            // macro
-            condId = createCond(processorInstance.get_proc_id());
-            processorInstance.set_buffer_endian(0, (unsigned char *)&condId, processorInstance.getWordSize());
-        }
-        processorInstance.get_buffer_endian(1, (unsigned char *)&mutId, processorInstance.getWordSize());
-        if(mutId == -1){
-            // Mutex initialized with PTHREAD_MUTEX_INITIALIZER,
-            //I have to create a new mutex
-            mutId = createMutex(processorInstance.get_proc_id());
-            processorInstance.set_buffer_endian(0, (unsigned char *)&mutId, processorInstance.getWordSize());
-        }
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
-
-        int retVal = waitCond(condId, mutId, 0, processorInstance.get_proc_id());
-        if(retVal != 0)
-            processorInstance.set_retVal(0, retVal);
-
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            int condId = this->processorInstance.readMem(callArgs[0]);
+            if(condId == -1){
+                // Condition variable was initialized with the PTHREAD_COND_INITIALIZER
+                // macro
+                condId = this->cm->createCond(this->processorInstance.getProcessorID());
+                this->processorInstance.writeMem(callArgs[0], condId);
+            }
+            int mutId = this->processorInstance.readMem(callArgs[1]);
+            if(mutId == -1){
+                // Mutex initialized with PTHREAD_MUTEX_INITIALIZER,
+                //I have to create a new mutex
+                mutId = this->cm->createMutex(this->processorInstance.getProcessorID());
+                this->processorInstance.writeMem(callArgs[1], condId);
+            }
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
             this->processorInstance.postCall();
+
+            int retVal = this->cm->waitCond(condId, mutId, 0, this->processorInstance.getProcessorID());
+            if(retVal != 0){
+                this->processorInstance.preCall();
+                this->processorInstance.setRetVal(retVal);
+                this->processorInstance.postCall();
+            }
 
             if(this->latency.to_double() > 0)
                 wait(this->latency);
@@ -1160,6 +1158,7 @@ template<class wordSize> class pthread_cond_waitSysCall : public trap::SyscallCB
         }
 };
 
+///Destroys a condition variable
 template<class wordSize> class pthread_cond_destroySysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -1167,14 +1166,13 @@ public:
         pthread_cond_destroySysCall(trap::ABIIf<wordSize> &processorInstance, resp::ConcurrencyManager * cm, sc_time latency = SC_ZERO_TIME) :
                                                                     trap::SyscallCB<wordSize>(processorInstance, latency), cm(cm){}
         bool operator()(){
-            int condId = 0;
-
             this->processorInstance.preCall();
 
-        processorInstance.get_buffer_endian(0, (unsigned char *)&condId, processorInstance.getWordSize());
-        destroyCond(processorInstance.get_proc_id(), condId);
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            int condId = this->processorInstance.readMem(callArgs[0]);
+            this->cm->destroyCond(this->processorInstance.getProcessorID(), condId);
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
 
             this->processorInstance.postCall();
 
@@ -1184,6 +1182,8 @@ public:
         }
 };
 
+///Waits on a condition variable; timed wait in the sense that if the condition is not
+///notified in a specified amount of time, the thread resumes with an error
 template<class wordSize> class pthread_cond_timedwaitSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -1191,42 +1191,41 @@ public:
         pthread_cond_timedwaitSysCall(trap::ABIIf<wordSize> &processorInstance, resp::ConcurrencyManager * cm, sc_time latency = SC_ZERO_TIME) :
                                                                 trap::SyscallCB<wordSize>(processorInstance, latency), cm(cm){}
         bool operator()(){
-            int condId = 0;
-            int mutId = 0;
-            double time = 0;
-            int timeTemp = 0;
-
             this->processorInstance.preCall();
 
-        processorInstance.get_buffer_endian(0, (unsigned char *)&condId, processorInstance.getWordSize());
-        if(condId == -1){
-            // Condition variable was initialized with the PTHREAD_COND_INITIALIZER
-            // macro
-            condId = createCond(processorInstance.get_proc_id());
-            processorInstance.set_buffer_endian(0, (unsigned char *)&condId, processorInstance.getWordSize());
-        }
-        processorInstance.get_buffer_endian(1, (unsigned char *)&mutId, processorInstance.getWordSize());
-        if(mutId == -1){
-            // Mutex initialized with PTHREAD_MUTEX_INITIALIZER,
-            //I have to create a new mutex
-            mutId = createMutex(processorInstance.get_proc_id());
-            processorInstance.set_buffer_endian(0, (unsigned char *)&mutId, processorInstance.getWordSize());
-        }
-        int baseAddr = processorInstance.get_arg(2);
-        if(baseAddr != 0){
-            processorInstance.get_buffer_endian(2, (unsigned char *)&timeTemp, 4);
-            time = timeTemp*1.0e+9;
-            processorInstance.set_arg(2, baseAddr + 4);
-            processorInstance.get_buffer_endian(2, (unsigned char *)&timeTemp, 4);
-            time += timeTemp;
-            processorInstance.set_arg(2, baseAddr);
-        }
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
-
-        waitCond(condId, mutId, time, processorInstance.get_proc_id());
-
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            int condId = this->processorInstance.readMem(callArgs[0]);
+            if(condId == -1){
+                // Condition variable was initialized with the PTHREAD_COND_INITIALIZER
+                // macro
+                condId = this->cm->createCond(this->processorInstance.getProcessorID());
+                this->processorInstance.writeMem(callArgs[0], condId);
+            }
+            int mutId = this->processorInstance.readMem(callArgs[1]);
+            if(mutId == -1){
+                // Mutex initialized with PTHREAD_MUTEX_INITIALIZER,
+                //I have to create a new mutex
+                mutId = this->cm->createMutex(this->processorInstance.getProcessorID());
+                this->processorInstance.writeMem(callArgs[1], condId);
+            }
+            double time = 0;
+            if(callArgs[2] != 0){
+                int timeTemp = 0;
+                timeTemp = this->processorInstance.readMem(callArgs[2]);
+                time = timeTemp*1.0e+9;
+                timeTemp = this->processorInstance.readMem(callArgs[2] + sizeof(wordSize));
+                time += timeTemp;
+            }
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
             this->processorInstance.postCall();
+
+            int retVal = this->cm->waitCond(condId, mutId, time, this->processorInstance.getProcessorID());
+            if(retVal != 0){
+                this->processorInstance.preCall();
+                this->processorInstance.setRetVal(retVal);
+                this->processorInstance.postCall();
+            }
 
             if(this->latency.to_double() > 0)
                 wait(this->latency);
@@ -1238,6 +1237,7 @@ public:
 // Calls related to mutual exclusion in newlib reentrant calls
 ///**************************************************************
 
+///Locks the malloc mutex, protecting reentrancy emulation
 template<class wordSize> class __malloc_lockSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -1247,10 +1247,9 @@ template<class wordSize> class __malloc_lockSysCall : public trap::SyscallCB<wor
         bool operator()(){
             this->processorInstance.preCall();
 
-                processorInstance.return_from_syscall();
-        lockMutex(mallocMutex, processorInstance.get_proc_id(), false);
-
+            this->processorInstance.returnFromCall();
             this->processorInstance.postCall();
+            this->cm->lockMutex(mallocMutex, this->processorInstance.getProcessorID(), false);
 
             if(this->latency.to_double() > 0)
                 wait(this->latency);
@@ -1267,10 +1266,9 @@ template<class wordSize> class __malloc_unlockSysCall : public trap::SyscallCB<w
         bool operator()(){
             this->processorInstance.preCall();
 
-                processorInstance.return_from_syscall();
-        unLockMutex(mallocMutex, processorInstance.get_proc_id());
-
+            this->processorInstance.returnFromCall();
             this->processorInstance.postCall();
+            this->cm->unLockMutex(mallocMutex, this->processorInstance.getProcessorID());
 
             if(this->latency.to_double() > 0)
                 wait(this->latency);
@@ -1287,10 +1285,9 @@ template<class wordSize> class __sfp_lock_acquireSysCall : public trap::SyscallC
         bool operator()(){
             this->processorInstance.preCall();
 
-                processorInstance.return_from_syscall();
-        lockMutex(sfpMutex, processorInstance.get_proc_id(), false);
-
+            this->processorInstance.returnFromCall();
             this->processorInstance.postCall();
+            this->cm->lockMutex(sfpMutex, this->processorInstance.getProcessorID(), false);
 
             if(this->latency.to_double() > 0)
                 wait(this->latency);
@@ -1307,10 +1304,9 @@ template<class wordSize> class __sfp_lock_releaseSysCall : public trap::SyscallC
         bool operator()(){
             this->processorInstance.preCall();
 
-                processorInstance.return_from_syscall();
-        unLockMutex(sfpMutex, processorInstance.get_proc_id());
-
+            this->processorInstance.returnFromCall();
             this->processorInstance.postCall();
+            this->cm->unLockMutex(sfpMutex, this->processorInstance.getProcessorID());
 
             if(this->latency.to_double() > 0)
                 wait(this->latency);
@@ -1327,10 +1323,9 @@ template<class wordSize> class __sinit_lock_acquireSysCall : public trap::Syscal
         bool operator()(){
             this->processorInstance.preCall();
 
-                processorInstance.return_from_syscall();
-        lockMutex(sinitMutex, processorInstance.get_proc_id(), false);
-
+            this->processorInstance.returnFromCall();
             this->processorInstance.postCall();
+            this->cm->lockMutex(sinitMutex, this->processorInstance.getProcessorID(), false);
 
             if(this->latency.to_double() > 0)
                 wait(this->latency);
@@ -1347,10 +1342,9 @@ template<class wordSize> class __sinit_lock_releaseSysCall : public trap::Syscal
         bool operator()(){
             this->processorInstance.preCall();
 
-                processorInstance.return_from_syscall();
-        unLockMutex(sinitMutex, processorInstance.get_proc_id());
-
+            this->processorInstance.returnFromCall();
             this->processorInstance.postCall();
+            this->cm->unLockMutex(sinitMutex, this->processorInstance.getProcessorID());
 
             if(this->latency.to_double() > 0)
                 wait(this->latency);
@@ -1367,10 +1361,9 @@ template<class wordSize> class __fp_lockSysCall : public trap::SyscallCB<wordSiz
         bool operator()(){
             this->processorInstance.preCall();
 
-                processorInstance.return_from_syscall();
-        lockMutex(fpMutex, processorInstance.get_proc_id(), false);
-
+            this->processorInstance.returnFromCall();
             this->processorInstance.postCall();
+            this->cm->lockMutex(fpMutex, this->processorInstance.getProcessorID(), false);
 
             if(this->latency.to_double() > 0)
                 wait(this->latency);
@@ -1387,10 +1380,9 @@ template<class wordSize> class __fp_unlockSysCall : public trap::SyscallCB<wordS
         bool operator()(){
             this->processorInstance.preCall();
 
-                processorInstance.return_from_syscall();
-        unLockMutex(fpMutex, processorInstance.get_proc_id());
-
+            this->processorInstance.returnFromCall();
             this->processorInstance.postCall();
+            this->cm->unLockMutex(fpMutex, this->processorInstance.getProcessorID());
 
             if(this->latency.to_double() > 0)
                 wait(this->latency);
@@ -1402,6 +1394,8 @@ template<class wordSize> class __fp_unlockSysCall : public trap::SyscallCB<wordS
 // Call used to read the base address of the Thread-Local storage (TLS)
 ///**************************************************************
 
+///Returns the address of the thread local storage for the current
+///thread
 template<class wordSize> class __aeabi_read_tpSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -1411,8 +1405,8 @@ template<class wordSize> class __aeabi_read_tpSysCall : public trap::SyscallCB<w
         bool operator()(){
             this->processorInstance.preCall();
 
-        processorInstance.set_retVal(0, (unsigned int)(unsigned long)readTLS(processorInstance.get_proc_id()).second);
-        processorInstance.return_from_syscall();
+            this->processorInstance.setRetVal(this->cm->readTLS(this->processorInstance.getProcessorID()).second);
+            this->processorInstance.returnFromCall();
 
             this->processorInstance.postCall();
 
@@ -1426,6 +1420,7 @@ template<class wordSize> class __aeabi_read_tpSysCall : public trap::SyscallCB<w
 // Call used to signal that the busy loop is entered
 ///**************************************************************
 
+///Called when the busy loop is encountered
 template<class wordSize> class __nop_busy_loopSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -1433,7 +1428,7 @@ public:
     __nop_busy_loopSysCall(trap::ABIIf<wordSize> &processorInstance, resp::ConcurrencyManager * cm, sc_time latency = SC_ZERO_TIME) :
                                                         trap::SyscallCB<wordSize>(processorInstance, latency), cm(cm){}
     bool operator()(){
-        idleLoop(processorInstance.get_proc_id());
+        this->cm->idleLoop(this->processorInstance.getProcessorID());
         return true;
     }
 };
