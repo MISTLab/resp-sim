@@ -554,11 +554,11 @@ template<class wordSize> class ConcurrencyEmulator: public trap::ToolsIf<issueWi
                 S = new pthread_cleanup_pushSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
             if(!this->register_syscall("pthread_cleanup_push", *S))
                 delete S;
-            pthread_myexitSysCall *T = NULL;
+            pthread_exitSysCall *T = NULL;
             if(latencies.find("pthread_myexit") != latencies.end())
-                T = new pthread_myexitSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_myexit"]);
+                T = new pthread_exitSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_myexit"]);
             else
-                T = new pthread_myexitSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                T = new pthread_exitSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
             if(!this->register_syscall("pthread_myexit", *T))
                 delete T;
 

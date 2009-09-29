@@ -525,8 +525,7 @@ template<class wordSize> class pthread_attr_setstacksizeSysCall : public trap::S
 // Calls related to thread attributes: real-time management
 ///*********************************************************
 
-////////////********************************* I GOT HERE WHILE MODIFYING EVERYTHIN ++++++++++++++++++
-
+///Gets the scheduling policy associated with this thread attribute
 template<class wordSize> class pthread_attr_getschedpolicySysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -538,12 +537,12 @@ template<class wordSize> class pthread_attr_getschedpolicySysCall : public trap:
 
             this->processorInstance.preCall();
 
-
-        processorInstance.get_buffer_endian(0, (unsigned char *)&attrId, processorInstance.getWordSize());
-        int policy = getSchedPolicy(attrId);
-        processorInstance.set_buffer_endian(1, (unsigned char *)&policy, processorInstance.getWordSize());
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            attrId = this->processorInstance.readMem(callArgs[0]);
+            int policy = this->cm->getSchedPolicy(attrId);
+            this->processorInstance.writeMem(callArgs[1], policy);
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
 
             this->processorInstance.postCall();
 
@@ -553,6 +552,7 @@ template<class wordSize> class pthread_attr_getschedpolicySysCall : public trap:
         }
 };
 
+///Sets the scheduling policy associated with this thread attribute
 template<class wordSize> class pthread_attr_setschedpolicySysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -564,11 +564,12 @@ template<class wordSize> class pthread_attr_setschedpolicySysCall : public trap:
 
             this->processorInstance.preCall();
 
-        processorInstance.get_buffer_endian(0, (unsigned char *)&attrId, processorInstance.getWordSize());
-        int policy = processorInstance.get_arg(1);
-        setSchedPolicy(attrId, policy);
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            attrId = this->processorInstance.readMem(callArgs[0]);
+            int policy = callArgs[1];
+            this->cm->setSchedPolicy(attrId, policy);
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
 
             this->processorInstance.postCall();
 
@@ -578,6 +579,7 @@ template<class wordSize> class pthread_attr_setschedpolicySysCall : public trap:
         }
 };
 
+///Gets the scheduling parameter associated to the thread attribute
 template<class wordSize> class pthread_attr_getschedparamSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -589,16 +591,15 @@ template<class wordSize> class pthread_attr_getschedparamSysCall : public trap::
 
             this->processorInstance.preCall();
 
-        processorInstance.get_buffer_endian(0, (unsigned char *)&attrId, processorInstance.getWordSize());
-        int retAddr = processorInstance.get_arg(1);
-        int priority = getSchedPrio(attrId);
-        processorInstance.set_buffer_endian(1, (unsigned char *)&priority, processorInstance.getWordSize());
-        processorInstance.set_arg(1, retAddr + processorInstance.getWordSize());
-        unsigned int deadline = getSchedDeadline(attrId);
-        processorInstance.set_buffer_endian(1, (unsigned char *)&deadline, processorInstance.getWordSize());
-        processorInstance.set_arg(1, retAddr);
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            attrId = this->processorInstance.readMem(callArgs[0]);
+            int retAddr = callArgs[1];
+            int priority = this->cm->getSchedPrio(attrId);
+            this->processorInstance.writeMem(callArgs[1], priority);
+            unsigned int deadline = this->cm->getSchedDeadline(attrId);
+            this->processorInstance.writeMem(callArgs[1] + sizeof(wordSize), deadline);
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
 
             this->processorInstance.postCall();
 
@@ -608,6 +609,7 @@ template<class wordSize> class pthread_attr_getschedparamSysCall : public trap::
         }
 };
 
+///Sets the scheduling parameter associated to the thread attribute
 template<class wordSize> class pthread_attr_setschedparamSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -619,18 +621,14 @@ template<class wordSize> class pthread_attr_setschedparamSysCall : public trap::
 
             this->processorInstance.preCall();
 
-        processorInstance.get_buffer_endian(0, (unsigned char *)&attrId, processorInstance.getWordSize());
-        int retAddr = processorInstance.get_arg(1);
-        int priority = 0;
-        processorInstance.get_buffer_endian(1, (unsigned char *)&priority, processorInstance.getWordSize());
-        setSchedPrio(attrId, priority);
-        unsigned int deadline = 0;
-        processorInstance.set_arg(1, retAddr + processorInstance.getWordSize());
-        processorInstance.get_buffer_endian(1, (unsigned char *)&deadline, processorInstance.getWordSize());
-        setSchedDeadline(attrId, deadline);
-        processorInstance.set_arg(1, retAddr);
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            attrId = this->processorInstance.readMem(callArgs[0]);
+            int priority = this->processorInstance.readMem(callArgs[1]);
+            this->cm->setSchedPrio(attrId, priority);
+            unsigned int deadline = this->processorInstance.readMem(callArgs[1] + sizeof(wordSize));
+            this->cm->setSchedDeadline(attrId, deadline);
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
 
             this->processorInstance.postCall();
 
@@ -640,6 +638,7 @@ template<class wordSize> class pthread_attr_setschedparamSysCall : public trap::
         }
 };
 
+///Queries the preemption staus of the current attribute
 template<class wordSize> class pthread_attr_getpreemptparamSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -651,11 +650,12 @@ template<class wordSize> class pthread_attr_getpreemptparamSysCall : public trap
 
             this->processorInstance.preCall();
 
-        processorInstance.get_buffer_endian(0, (unsigned char *)&attrId, processorInstance.getWordSize());
-        int isPreemptive = getPreemptive(attrId);
-        processorInstance.set_buffer_endian(1, (unsigned char *)&isPreemptive, processorInstance.getWordSize());
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            attrId = this->processorInstance.readMem(callArgs[0]);
+            int isPreemptive = this->cm->getPreemptive(attrId);
+            this->processorInstance.writeMem(callArgs[1], isPreemptive);
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
 
             this->processorInstance.postCall();
 
@@ -665,6 +665,7 @@ template<class wordSize> class pthread_attr_getpreemptparamSysCall : public trap
         }
 };
 
+///Sets the preemption status of the current attribute
 template<class wordSize> class pthread_attr_setpreemptparamSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -675,12 +676,11 @@ template<class wordSize> class pthread_attr_setpreemptparamSysCall : public trap
             int attrId = 0;
 
             this->processorInstance.preCall();
-
-        processorInstance.get_buffer_endian(0, (unsigned char *)&attrId, processorInstance.getWordSize());
-        int isPreemptive = processorInstance.get_arg(1);
-        setPreemptive(attrId, isPreemptive);
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            attrId = this->processorInstance.readMem(callArgs[0]);
+            this->cm->setPreemptive(attrId, callArgs[1]);
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
 
             this->processorInstance.postCall();
 
@@ -690,6 +690,7 @@ template<class wordSize> class pthread_attr_setpreemptparamSysCall : public trap
         }
 };
 
+///Queries the scheduling parameter of the current attribute
 template<class wordSize> class pthread_getschedparamSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -699,18 +700,16 @@ template<class wordSize> class pthread_getschedparamSysCall : public trap::Sysca
         bool operator()(){
             this->processorInstance.preCall();
 
-            int threadId = processorInstance.get_arg(0);
-        int policy = getThreadSchePolicy(threadId);
-        processorInstance.set_buffer_endian(1, (unsigned char *)&policy, processorInstance.getWordSize());
-        int retAddr = processorInstance.get_arg(2);
-        int priority = getThreadSchedPrio(threadId);
-        processorInstance.set_buffer_endian(2, (unsigned char *)&priority, processorInstance.getWordSize());
-        processorInstance.set_arg(2, retAddr + processorInstance.getWordSize());
-        unsigned int deadline = getThreadSchedDeadline(threadId);
-        processorInstance.set_buffer_endian(2, (unsigned char *)&deadline, processorInstance.getWordSize());
-        processorInstance.set_arg(2, retAddr);
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            int threadId = callArgs[0];
+            int policy = this->cm->getThreadSchePolicy(threadId);
+            this->processorInstance.writeMem(callArgs[1], policy);
+            int priority = this->cm->getThreadSchedPrio(threadId);
+            this->processorInstance.writeMem(callArgs[2], priority);
+            unsigned int deadline = this->cm->getThreadSchedDeadline(threadId);
+            this->processorInstance.writeMem(callArgs[2] + sizeof(wordSize), deadline);
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
 
             this->processorInstance.postCall();
 
@@ -720,6 +719,7 @@ template<class wordSize> class pthread_getschedparamSysCall : public trap::Sysca
         }
 };
 
+///Sets the scheduling parameter of the current attribute
 template<class wordSize> class pthread_setschedparamSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -729,20 +729,15 @@ template<class wordSize> class pthread_setschedparamSysCall : public trap::Sysca
         bool operator()(){
             this->processorInstance.preCall();
 
-            int threadId = processorInstance.get_arg(0);
-        int policy = processorInstance.get_arg(1);
-        setThreadSchePolicy(threadId, policy);
-        int retAddr = processorInstance.get_arg(2);
-        int priority = 0;
-        processorInstance.get_buffer_endian(2, (unsigned char *)&priority, processorInstance.getWordSize());
-        setThreadSchedPrio(threadId, priority);
-        unsigned int deadline = 0;
-        processorInstance.set_arg(2, retAddr + processorInstance.getWordSize());
-        processorInstance.get_buffer_endian(2, (unsigned char *)&deadline, processorInstance.getWordSize());
-        setThreadSchedDeadline(threadId, deadline);
-        processorInstance.set_arg(2, retAddr);
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            int threadId = callArgs[0];
+            this->cm->setThreadSchePolicy(threadId, callArgs[1]);
+            int priority = this->processorInstance.readMem(callArgs[2]);
+            this->cm->setThreadSchedPrio(threadId, priority);
+            unsigned int deadline = this->processorInstance.readMem(callArgs[2] + sizeof(wordSize));
+            this->cm->setThreadSchedDeadline(threadId, deadline);
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
 
             this->processorInstance.postCall();
 
@@ -756,6 +751,7 @@ template<class wordSize> class pthread_setschedparamSysCall : public trap::Sysca
 // Calls related to thread specific storage (not TLS)
 ///*********************************************************
 
+///Gets the address of the thread specific storage
 template<class wordSize> class pthread_getspecificSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -765,10 +761,10 @@ template<class wordSize> class pthread_getspecificSysCall : public trap::Syscall
         bool operator()(){
             this->processorInstance.preCall();
 
-            int key = processorInstance.get_arg(0);
-        unsigned int memArea = (unsigned int)(unsigned long)getSpecific(processorInstance.get_proc_id(), key);
-        processorInstance.set_retVal(0, memArea);
-        processorInstance.return_from_syscall();
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            unsigned int memArea = (unsigned int)this->cm->getSpecific(this->processorInstance.getProcessorID(), callArgs[0]);
+            this->processorInstance.setRetVal(memArea);
+            this->processorInstance.returnFromCall();
 
             this->processorInstance.postCall();
 
@@ -778,6 +774,7 @@ template<class wordSize> class pthread_getspecificSysCall : public trap::Syscall
         }
 };
 
+///Sets the address of the thread specific storage
 template<class wordSize> class pthread_setspecificSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -787,11 +784,10 @@ template<class wordSize> class pthread_setspecificSysCall : public trap::Syscall
         bool operator()(){
             this->processorInstance.preCall();
 
-            int key = processorInstance.get_arg(0);
-        void * memArea = (void *)processorInstance.get_arg(1);
-        setSpecific(processorInstance.get_proc_id(), key, memArea);
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            this->cm->setSpecific(this->processorInstance.getProcessorID(), callArgs[0], callArgs[1]);
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
 
             this->processorInstance.postCall();
 
@@ -805,6 +801,7 @@ template<class wordSize> class pthread_setspecificSysCall : public trap::Syscall
 // Calls related to thread management (creation/destruction ...)
 ///**************************************************************
 
+///Creation of the system call
 template<class wordSize> class pthread_createSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -814,16 +811,15 @@ template<class wordSize> class pthread_createSysCall : public trap::SyscallCB<wo
         bool operator()(){
             this->processorInstance.preCall();
 
-            thread_routine_t threadFun = (thread_routine_t)processorInstance.get_arg(2);
-        void *args = (void *)processorInstance.get_arg(3);
-        int attrId = 0;
-        processorInstance.get_buffer_endian(1, (unsigned char *)&attrId, processorInstance.getWordSize());
-        processorInstance.return_from_syscall();
-        int thIdAddress = processorInstance.get_arg(0);
-        int thId = createThread(threadFun, args, attrId);
-        processorInstance.set_arg(0, thIdAddress);
-        processorInstance.set_buffer_endian(0, (unsigned char *)&thId, processorInstance.getWordSize());
-        processorInstance.set_retVal(0, 0);
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            unsigned int threadFun = callArgs[2];
+            unsigned int args = callArgs[3];
+            int attrId = this->processorInstance.readMem(callArgs[1]);
+            this->processorInstance.returnFromCall();
+            int thIdAddress = callArgs[0];
+            int thId = this->cm->createThread(threadFun, args, attrId);
+            this->processorInstance.writeMem(thIdAddress, thId);
+            this->processorInstance.setRetVal(0);
 
             this->processorInstance.postCall();
 
@@ -833,6 +829,8 @@ template<class wordSize> class pthread_createSysCall : public trap::SyscallCB<wo
         }
 };
 
+///Exists the current thread; note that when the thread exists, it also calls the
+///cancellation handlers
 template<class wordSize> class pthread_exitSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -842,12 +840,10 @@ template<class wordSize> class pthread_exitSysCall : public trap::SyscallCB<word
         bool operator()(){
             this->processorInstance.preCall();
 
-                void * retVal = (void *)processorInstance.get_arg(0);
-
-        exitThread(processorInstance.get_proc_id(), retVal);
-
-        //There is not need for the call to processorInstance.return_from_syscall(); since I should never
-        //return from this function,  I should always resume a new execution path (a new thread)
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            this->cm->exitThread(this->processorInstance.getProcessorID(), callArgs[0]);
+            //There is no need for the call to processorInstance.return_from_syscall(); since I should never
+            //return from this function,  I should always resume a new execution path (a new thread)
             this->processorInstance.postCall();
 
             if(this->latency.to_double() > 0)
@@ -856,30 +852,7 @@ template<class wordSize> class pthread_exitSysCall : public trap::SyscallCB<word
         }
 };
 
-template<class wordSize> class pthread_myexitSysCall : public trap::SyscallCB<wordSize>{
-    private:
-        resp::ConcurrencyManager * cm;
-    public:
-        pthread_myexitSysCall(trap::ABIIf<wordSize> &processorInstance, resp::ConcurrencyManager * cm, sc_time latency = SC_ZERO_TIME) :
-                                                        trap::SyscallCB<wordSize>(processorInstance, latency), cm(cm){}
-        bool operator()(){
-            this->processorInstance.preCall();
-
-                void * retVal = (void *)processorInstance.get_retVal(0);
-
-        exitThread(processorInstance.get_proc_id(), retVal);
-
-        //There is not need for the call to processorInstance.return_from_syscall(); since I should never
-        //return from this function,  I should always resume a new execution path (a new thread)
-
-            this->processorInstance.postCall();
-
-            if(this->latency.to_double() > 0)
-                wait(this->latency);
-            return true;
-        }
-};
-
+///Halts the execution of a thread waiting
 template<class wordSize> class pthread_joinSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -889,22 +862,16 @@ template<class wordSize> class pthread_joinSysCall : public trap::SyscallCB<word
         bool operator()(){
             this->processorInstance.preCall();
 
-                int pthreadId = processorInstance.get_arg(0);
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            int pthreadId = callArgs[0];
 
-        // Note that these instructions set the return value of the thread before the join operation actually
-        // happens: I can do this only because I discard the thread return value
-        if(processorInstance.get_arg(1) != 0){
-            int retVal  = 0;
-            sc_controller::disableLatency = true;
-            processorInstance.set_buffer_endian(1, (unsigned char *)&retVal, processorInstance.getWordSize());
-            sc_controller::disableLatency = false;
-        }
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
-        // end of the setting of the return value
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
 
-        join(pthreadId, processorInstance.get_proc_id());
-
+            //Note that in case the current thread is blocked waiting for the termination of
+            //'pthreadId', when thread is resumed, I have to set the thread return value correctly
+            //and I also have to execute the postCall routine.
+            this->cm->join(pthreadId, this->processorInstance.getProcessorID(), callArgs[1]);
             this->processorInstance.postCall();
 
             if(this->latency.to_double() > 0)
@@ -913,6 +880,7 @@ template<class wordSize> class pthread_joinSysCall : public trap::SyscallCB<word
         }
 };
 
+///Joins on all the threads executing in the current process (of course all but the current thread)
 template<class wordSize> class pthread_join_allSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -922,9 +890,9 @@ template<class wordSize> class pthread_join_allSysCall : public trap::SyscallCB<
         bool operator()(){
             this->processorInstance.preCall();
 
-                processorInstance.return_from_syscall();
-
-        joinAll(processorInstance.get_proc_id());
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
+            this->cm->joinAll(processorInstance.getProcessorID());
 
             this->processorInstance.postCall();
 
@@ -934,6 +902,7 @@ template<class wordSize> class pthread_join_allSysCall : public trap::SyscallCB<
         }
 };
 
+///Creates a thread-unique key
 template<class wordSize> class pthread_key_createSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -941,13 +910,13 @@ template<class wordSize> class pthread_key_createSysCall : public trap::SyscallC
         pthread_key_createSysCall(trap::ABIIf<wordSize> &processorInstance, resp::ConcurrencyManager * cm, sc_time latency = SC_ZERO_TIME) :
                                                             trap::SyscallCB<wordSize>(processorInstance, latency), cm(cm){}
         bool operator()(){
-            int keyId = createKey();
+            int keyId = this->cm->createKey();
 
             this->processorInstance.preCall();
 
-        processorInstance.set_buffer_endian(0, (unsigned char *)&keyId, processorInstance.getWordSize());
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
+            this->processorInstance.writeMem(this->processorInstance.readArgs()[0], keyId);
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
 
             this->processorInstance.postCall();
 
@@ -961,6 +930,7 @@ template<class wordSize> class pthread_key_createSysCall : public trap::SyscallC
 // Calls related to semaphore management
 ///**************************************************************
 
+///Initialized a semaphore
 template<class wordSize> class sem_initSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -970,10 +940,11 @@ template<class wordSize> class sem_initSysCall : public trap::SyscallCB<wordSize
         bool operator()(){
             this->processorInstance.preCall();
 
-            int semId = createSem(processorInstance.get_proc_id(), processorInstance.get_arg(2));
-        processorInstance.set_buffer_endian(0, (unsigned char *)&semId, processorInstance.getWordSize());
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            int semId = this->cm->createSem(this->processorInstance.getProcessorID(), callArgs[2]);
+            this->processorInstance.writeMem(callArgs[0], semId);
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
 
             this->processorInstance.postCall();
 
@@ -983,6 +954,7 @@ template<class wordSize> class sem_initSysCall : public trap::SyscallCB<wordSize
         }
 };
 
+///Atomically increments the value of a semaphore
 template<class wordSize> class sem_postSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -990,14 +962,13 @@ template<class wordSize> class sem_postSysCall : public trap::SyscallCB<wordSize
         sem_postSysCall(trap::ABIIf<wordSize> &processorInstance, resp::ConcurrencyManager * cm, sc_time latency = SC_ZERO_TIME) :
                                                     trap::SyscallCB<wordSize>(processorInstance, latency), cm(cm){}
         bool operator()(){
-            int semId = 0;
-
             this->processorInstance.preCall();
 
-        processorInstance.get_buffer_endian(0, (unsigned char *)&semId, processorInstance.getWordSize());
-        postSem(semId, processorInstance.get_proc_id());
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            int semId = this->processorInstance.readMem(callArgs[0]);
+            this->cm->postSem(semId, this->processorInstance.getProcessorID());
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
 
             this->processorInstance.postCall();
 
@@ -1007,30 +978,8 @@ template<class wordSize> class sem_postSysCall : public trap::SyscallCB<wordSize
         }
 };
 
-template<class wordSize> class sem_destroySysCall : public trap::SyscallCB<wordSize>{
-    private:
-        resp::ConcurrencyManager * cm;
-    public:
-        sem_destroySysCall(trap::ABIIf<wordSize> &processorInstance, resp::ConcurrencyManager * cm, sc_time latency = SC_ZERO_TIME) :
-                                                        trap::SyscallCB<wordSize>(processorInstance, latency), cm(cm){}
-        bool operator()(){
-            int semId = 0;
-
-            this->processorInstance.preCall();
-
-        processorInstance.get_buffer_endian(0, (unsigned char *)&semId, processorInstance.getWordSize());
-        destroySem(processorInstance.get_proc_id(), semId);
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
-
-            this->processorInstance.postCall();
-
-            if(this->latency.to_double() > 0)
-                wait(this->latency);
-            return true;
-        }
-};
-
+///Atomically decrements the value of a semaphore and it stops thread execution in case the
+///value is smaller than 0
 template<class wordSize> class sem_waitSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -1038,15 +987,37 @@ template<class wordSize> class sem_waitSysCall : public trap::SyscallCB<wordSize
         sem_waitSysCall(trap::ABIIf<wordSize> &processorInstance, resp::ConcurrencyManager * cm, sc_time latency = SC_ZERO_TIME) :
                                                 trap::SyscallCB<wordSize>(processorInstance, latency), cm(cm){}
         bool operator()(){
-            int semId = 0;
-
             this->processorInstance.preCall();
 
-        processorInstance.get_buffer_endian(0, (unsigned char *)&semId, processorInstance.getWordSize());
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            int semId = this->processorInstance.readMem(callArgs[0]);
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
+            this->processorInstance.postCall();
 
-        waitSem(semId, processorInstance.get_proc_id());
+            this->cm->waitSem(semId, this->processorInstance.getProcessorID());
+
+            if(this->latency.to_double() > 0)
+                wait(this->latency);
+            return true;
+        }
+};
+
+///Destroys a semaphore
+template<class wordSize> class sem_destroySysCall : public trap::SyscallCB<wordSize>{
+    private:
+        resp::ConcurrencyManager * cm;
+    public:
+        sem_destroySysCall(trap::ABIIf<wordSize> &processorInstance, resp::ConcurrencyManager * cm, sc_time latency = SC_ZERO_TIME) :
+                                                        trap::SyscallCB<wordSize>(processorInstance, latency), cm(cm){}
+        bool operator()(){
+            this->processorInstance.preCall();
+
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            int semId = this->processorInstance.readMem(callArgs[0]);
+            this->cm->destroySem(this->processorInstance.getProcessorID(), semId);
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
 
             this->processorInstance.postCall();
 
@@ -1060,6 +1031,7 @@ template<class wordSize> class sem_waitSysCall : public trap::SyscallCB<wordSize
 // Calls related to condition-variables management
 ///**************************************************************
 
+///Initializes a condition variable
 template<class wordSize> class pthread_cond_initSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -1067,13 +1039,14 @@ template<class wordSize> class pthread_cond_initSysCall : public trap::SyscallCB
         pthread_cond_initSysCall(trap::ABIIf<wordSize> &processorInstance, resp::ConcurrencyManager * cm, sc_time latency = SC_ZERO_TIME) :
                                                             trap::SyscallCB<wordSize>(processorInstance, latency), cm(cm){}
         bool operator()(){
-            int condId = createCond(processorInstance.get_proc_id());
+            int condId = this->cm->createCond(this->processorInstance.getProcessorID());
 
             this->processorInstance.preCall();
 
-        processorInstance.set_buffer_endian(0, (unsigned char *)&condId, processorInstance.getWordSize());
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            this->processorInstance.writeMem(callArgs[0], condId);
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
 
             this->processorInstance.postCall();
 
@@ -1083,6 +1056,7 @@ template<class wordSize> class pthread_cond_initSysCall : public trap::SyscallCB
         }
 };
 
+///Signals a condition variable
 template<class wordSize> class pthread_cond_signalSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -1090,19 +1064,19 @@ template<class wordSize> class pthread_cond_signalSysCall : public trap::Syscall
         pthread_cond_signalSysCall(trap::ABIIf<wordSize> &processorInstance, resp::ConcurrencyManager * cm, sc_time latency = SC_ZERO_TIME) :
                                                             trap::SyscallCB<wordSize>(processorInstance, latency), cm(cm){}
         bool operator()(){
-            int condId = 0;
             this->processorInstance.preCall();
 
-        processorInstance.get_buffer_endian(0, (unsigned char *)&condId, processorInstance.getWordSize());
-        if(condId == -1){
-            // Condition variable was initialized with the PTHREAD_COND_INITIALIZER
-            // macro
-            condId = createCond(processorInstance.get_proc_id());
-            processorInstance.set_buffer_endian(0, (unsigned char *)&condId, processorInstance.getWordSize());
-        }
-        signalCond(condId, false, processorInstance.get_proc_id());
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            int condId = this->processorInstance.readMem(callArgs[0]);
+            if(condId == -1){
+                // Condition variable was initialized with the PTHREAD_COND_INITIALIZER
+                // macro
+                condId = this->cm->createCond(this->processorInstance.getProcessorID());
+                this->processorInstance.writeMem(callArgs[0], condId);
+            }
+            this->cm->signalCond(condId, false, processorInstance.get_proc_id());
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
 
             this->processorInstance.postCall();
 
@@ -1112,6 +1086,7 @@ template<class wordSize> class pthread_cond_signalSysCall : public trap::Syscall
         }
 };
 
+///Singlas in broadcast a condition variable
 template<class wordSize> class pthread_cond_broadcastSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
@@ -1119,20 +1094,19 @@ template<class wordSize> class pthread_cond_broadcastSysCall : public trap::Sysc
         pthread_cond_broadcastSysCall(trap::ABIIf<wordSize> &processorInstance, resp::ConcurrencyManager * cm, sc_time latency = SC_ZERO_TIME) :
                                                                 trap::SyscallCB<wordSize>(processorInstance, latency), cm(cm){}
         bool operator()(){
-            int condId = 0;
-
             this->processorInstance.preCall();
 
-        processorInstance.get_buffer_endian(0, (unsigned char *)&condId, processorInstance.getWordSize());
-        if(condId == -1){
-            // Condition variable was initialized with the PTHREAD_COND_INITIALIZER
-            // macro
-            condId = createCond(processorInstance.get_proc_id());
-            processorInstance.set_buffer_endian(0, (unsigned char *)&condId, processorInstance.getWordSize());
-        }
-        signalCond(condId, true, processorInstance.get_proc_id());
-        processorInstance.set_retVal(0, 0);
-        processorInstance.return_from_syscall();
+            std::vector< wordSize > callArgs = this->processorInstance.readArgs();
+            int condId = this->processorInstance.readMem(callArgs[0]);
+            if(condId == -1){
+                // Condition variable was initialized with the PTHREAD_COND_INITIALIZER
+                // macro
+                condId = this->cm->createCond(this->processorInstance.getProcessorID());
+                this->processorInstance.writeMem(callArgs[0], condId);
+            }
+            this->cm->signalCond(condId, true, processorInstance.get_proc_id());
+            this->processorInstance.setRetVal(0);
+            this->processorInstance.returnFromCall();
 
             this->processorInstance.postCall();
 
@@ -1142,6 +1116,9 @@ template<class wordSize> class pthread_cond_broadcastSysCall : public trap::Sysc
         }
 };
 
+//******************** I ARRIVED HERE IN MODIFYING ALL THE STUFF ************************
+
+///Waits for the signaling of a condition variable
 template<class wordSize> class pthread_cond_waitSysCall : public trap::SyscallCB<wordSize>{
     private:
         resp::ConcurrencyManager * cm;
