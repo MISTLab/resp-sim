@@ -38,10 +38,47 @@
  *
 \***************************************************************************/
 
+#include <systemc.h>
+
+#include <list>
+#include <vector>
+#include <string>
+
 #include "concurrency_structures.hpp"
 
-Processor::Processor(trap::ABIIf<wordSize> &processorInstance) : procIf(procIf){
-    runThread = NULL;
-    curIdleStart = -1;
+AttributeEmu::AttributeEmu(){
 }
-Processor::~Processor(){}
+AttributeEmu::AttributeEmu(unsigned int stackSize){
+}
+
+ThreadEmu::ThreadEmu(int id, unsigned int thread_routine, unsigned int args, unsigned int stackBase, unsigned int tlsSize, AttributeEmu *attr){
+}
+ThreadEmu::~ThreadEmu(){
+}
+
+ThreadEmu::ExecutionTrace::ExecutionTrace(){
+    this->startTime = -1;
+    this->endTime = -1;
+    this->processorId = -1;
+    this->startAddress = 0;
+    this->endAddress = 0;
+}
+void ThreadEmu::ExecutionTrace::clear(){
+    this->startTime = -1;
+    this->endTime = -1;
+    this->processorId = -1;
+    this->startAddress = 0;
+    this->endAddress = 0;
+}
+
+SemaphoreEmu::SemaphoreEmu(int initialValue){
+}
+SemaphoreEmu::~SemaphoreEmu(){
+}
+
+ConditionEmu::ConditionEmu(){
+    this->waitTime = 0;
+    this->mutex = -1;
+}
+ConditionEmu::~ConditionEmu(){
+}

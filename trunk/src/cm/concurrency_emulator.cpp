@@ -38,6 +38,9 @@
  *
 \***************************************************************************/
 
+#include <vector>
+#include <map>
+
 #include "concurrency_emulator.hpp"
 #include "concurrency_manager.hpp"
 

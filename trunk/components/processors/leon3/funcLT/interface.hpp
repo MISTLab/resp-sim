@@ -48,6 +48,7 @@
 #include <memory.hpp>
 #include <registers.hpp>
 #include <alias.hpp>
+#include <systemc.h>
 #include <vector>
 #include <string>
 #include <instructionBase.hpp>
@@ -77,6 +78,8 @@ namespace leon3_funclt_trap{
         Alias & SP;
         Alias & PCR;
         Alias * & REGS;
+        bool & instrExecuting;
+        sc_event & instrEndEvent;
         int routineEntryState;
         int routineExitState;
         std::vector< std::vector< std::string > > routineEntrySequence;
@@ -87,8 +90,11 @@ namespace leon3_funclt_trap{
             & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 \
             & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, \
             Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & \
-            PCR, Alias * & REGS );
+            PCR, Alias * & REGS, bool & instrExecuting, sc_event & instrEndEvent );
         bool isLittleEndian() const throw();
+        int getProcessorID() const throw();
+        bool isInstrExecuting() const throw();
+        void waitInstrEnd() const throw();
         void preCall() throw();
         void postCall() throw();
         void returnFromCall() throw();

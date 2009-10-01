@@ -72,6 +72,8 @@ namespace leon3_funclt_trap{
         virtual void write_word_dbg( const unsigned int & address, unsigned int datum );
         virtual void write_half_dbg( const unsigned int & address, unsigned short int datum );
         virtual void write_byte_dbg( const unsigned int & address, unsigned char datum );
+        virtual void lock() = 0;
+        virtual void unlock() = 0;
         inline void swapEndianess( unsigned int & datum ) const throw(){
             unsigned char helperByte = 0;
             for(int i = 0; i < sizeof(unsigned int)/2; i++){
@@ -89,8 +91,6 @@ namespace leon3_funclt_trap{
                 ((unsigned char *)&datum)[sizeof(unsigned short int) -1 -i] = helperByte;
             }
         }
-        virtual void lock() = 0;
-        virtual void unlock() = 0;
         virtual ~MemoryInterface();
     };
 
@@ -122,21 +122,10 @@ namespace leon3_funclt_trap{
         }
         unsigned short int read_half( const unsigned int & address ) throw();
         unsigned char read_byte( const unsigned int & address ) throw();
-        sc_dt::uint64 read_dword_dbg( const unsigned int & address );
-        inline unsigned int read_word_dbg( const unsigned int & address ){
-            if(address >= this->size){
-                THROW_EXCEPTION("Address " << std::hex << std::showbase << address << " out of memory");
-            }
-
-            unsigned int datum = *(unsigned int *)(this->memory + (unsigned long)address);
-            #ifdef LITTLE_ENDIAN_BO
-            this->swapEndianess(datum);
-            #endif
-
-            return datum;
-        }
-        unsigned short int read_half_dbg( const unsigned int & address );
-        unsigned char read_byte_dbg( const unsigned int & address );
+        sc_dt::uint64 read_dword_dbg( const unsigned int & address ) throw();
+        unsigned int read_word_dbg( const unsigned int & address ) throw();
+        unsigned short int read_half_dbg( const unsigned int & address ) throw();
+        unsigned char read_byte_dbg( const unsigned int & address ) throw();
         void write_dword( const unsigned int & address, sc_dt::uint64 datum ) throw();
         inline void write_word( const unsigned int & address, unsigned int datum ) throw(){
             if(address >= this->size){
@@ -154,23 +143,10 @@ namespace leon3_funclt_trap{
         }
         void write_half( const unsigned int & address, unsigned short int datum ) throw();
         void write_byte( const unsigned int & address, unsigned char datum ) throw();
-        void write_dword_dbg( const unsigned int & address, sc_dt::uint64 datum );
-        inline void write_word_dbg( const unsigned int & address, unsigned int datum ){
-            if(address >= this->size){
-                THROW_EXCEPTION("Address " << std::hex << std::showbase << address << " out of memory");
-            }
-            if(this->debugger != NULL){
-                this->debugger->notifyAddress(address, sizeof(datum));
-            }
-
-            #ifdef LITTLE_ENDIAN_BO
-            this->swapEndianess(datum);
-            #endif
-
-            *(unsigned int *)(this->memory + (unsigned long)address) = datum;
-        }
-        void write_half_dbg( const unsigned int & address, unsigned short int datum );
-        void write_byte_dbg( const unsigned int & address, unsigned char datum );
+        void write_dword_dbg( const unsigned int & address, sc_dt::uint64 datum ) throw();
+        void write_word_dbg( const unsigned int & address, unsigned int datum ) throw();
+        void write_half_dbg( const unsigned int & address, unsigned short int datum ) throw();
+        void write_byte_dbg( const unsigned int & address, unsigned char datum ) throw();
         void lock();
         void unlock();
         virtual ~LocalMemory();

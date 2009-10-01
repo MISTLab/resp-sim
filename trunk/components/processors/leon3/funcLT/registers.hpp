@@ -48,18 +48,18 @@
 #include <ostream>
 #include <trap_utils.hpp>
 
-#define key_PS 0
-#define key_VER 1
-#define key_ICC_z 2
-#define key_ICC_v 3
-#define key_EF 4
-#define key_EC 5
-#define key_ICC_n 6
-#define key_S 7
-#define key_CWP 8
-#define key_ET 9
+#define key_VER 0
+#define key_ICC_z 1
+#define key_ICC_v 2
+#define key_EF 3
+#define key_EC 4
+#define key_ICC_n 5
+#define key_S 6
+#define key_ET 7
+#define key_ICC_c 8
+#define key_PS 9
 #define key_PIL 10
-#define key_ICC_c 11
+#define key_CWP 11
 #define key_IMPL 12
 #define key_WIM_28 13
 #define key_WIM_29 14
@@ -167,21 +167,6 @@ namespace leon3_funclt_trap{
 
     class Reg32_0_delay_3 : public Register{
         public:
-        class InnerField_PS : public InnerField{
-            private:
-            unsigned int & value;
-            unsigned int & valueLast;
-            bool & lastValid;
-
-            public:
-            InnerField_PS( unsigned int & value, unsigned int & valueLast, bool & lastValid );
-            InnerField & operator =( const unsigned int & other ) throw();
-            inline operator unsigned int() const throw(){
-                return (this->value & 0x40) >> 6;
-            }
-            virtual ~InnerField_PS();
-        };
-
         class InnerField_VER : public InnerField{
             private:
             unsigned int & value;
@@ -287,21 +272,6 @@ namespace leon3_funclt_trap{
             virtual ~InnerField_S();
         };
 
-        class InnerField_CWP : public InnerField{
-            private:
-            unsigned int & value;
-            unsigned int & valueLast;
-            bool & lastValid;
-
-            public:
-            InnerField_CWP( unsigned int & value, unsigned int & valueLast, bool & lastValid );
-            InnerField & operator =( const unsigned int & other ) throw();
-            inline operator unsigned int() const throw(){
-                return (this->value & 0x1f);
-            }
-            virtual ~InnerField_CWP();
-        };
-
         class InnerField_ET : public InnerField{
             private:
             unsigned int & value;
@@ -315,6 +285,36 @@ namespace leon3_funclt_trap{
                 return (this->value & 0x20) >> 5;
             }
             virtual ~InnerField_ET();
+        };
+
+        class InnerField_ICC_c : public InnerField{
+            private:
+            unsigned int & value;
+            unsigned int & valueLast;
+            bool & lastValid;
+
+            public:
+            InnerField_ICC_c( unsigned int & value, unsigned int & valueLast, bool & lastValid );
+            InnerField & operator =( const unsigned int & other ) throw();
+            inline operator unsigned int() const throw(){
+                return (this->value & 0x100000) >> 20;
+            }
+            virtual ~InnerField_ICC_c();
+        };
+
+        class InnerField_PS : public InnerField{
+            private:
+            unsigned int & value;
+            unsigned int & valueLast;
+            bool & lastValid;
+
+            public:
+            InnerField_PS( unsigned int & value, unsigned int & valueLast, bool & lastValid );
+            InnerField & operator =( const unsigned int & other ) throw();
+            inline operator unsigned int() const throw(){
+                return (this->value & 0x40) >> 6;
+            }
+            virtual ~InnerField_PS();
         };
 
         class InnerField_PIL : public InnerField{
@@ -332,19 +332,19 @@ namespace leon3_funclt_trap{
             virtual ~InnerField_PIL();
         };
 
-        class InnerField_ICC_c : public InnerField{
+        class InnerField_CWP : public InnerField{
             private:
             unsigned int & value;
             unsigned int & valueLast;
             bool & lastValid;
 
             public:
-            InnerField_ICC_c( unsigned int & value, unsigned int & valueLast, bool & lastValid );
+            InnerField_CWP( unsigned int & value, unsigned int & valueLast, bool & lastValid );
             InnerField & operator =( const unsigned int & other ) throw();
             inline operator unsigned int() const throw(){
-                return (this->value & 0x100000) >> 20;
+                return (this->value & 0x1f);
             }
-            virtual ~InnerField_ICC_c();
+            virtual ~InnerField_CWP();
         };
 
         class InnerField_IMPL : public InnerField{
@@ -374,7 +374,6 @@ namespace leon3_funclt_trap{
         };
 
         private:
-        InnerField_PS field_PS;
         InnerField_VER field_VER;
         InnerField_ICC_z field_ICC_z;
         InnerField_ICC_v field_ICC_v;
@@ -382,10 +381,11 @@ namespace leon3_funclt_trap{
         InnerField_EC field_EC;
         InnerField_ICC_n field_ICC_n;
         InnerField_S field_S;
-        InnerField_CWP field_CWP;
         InnerField_ET field_ET;
-        InnerField_PIL field_PIL;
         InnerField_ICC_c field_ICC_c;
+        InnerField_PS field_PS;
+        InnerField_PIL field_PIL;
+        InnerField_CWP field_CWP;
         InnerField_IMPL field_IMPL;
         InnerField_Empty field_empty;
         unsigned int value;
@@ -397,10 +397,6 @@ namespace leon3_funclt_trap{
         Reg32_0_delay_3( sc_module_name name );
         inline InnerField & operator []( int bitField ) throw(){
             switch(bitField){
-                case key_PS:{
-                    return this->field_PS;
-                    break;
-                }
                 case key_VER:{
                     return this->field_VER;
                     break;
@@ -429,20 +425,24 @@ namespace leon3_funclt_trap{
                     return this->field_S;
                     break;
                 }
-                case key_CWP:{
-                    return this->field_CWP;
-                    break;
-                }
                 case key_ET:{
                     return this->field_ET;
+                    break;
+                }
+                case key_ICC_c:{
+                    return this->field_ICC_c;
+                    break;
+                }
+                case key_PS:{
+                    return this->field_PS;
                     break;
                 }
                 case key_PIL:{
                     return this->field_PIL;
                     break;
                 }
-                case key_ICC_c:{
-                    return this->field_ICC_c;
+                case key_CWP:{
+                    return this->field_CWP;
                     break;
                 }
                 case key_IMPL:{
@@ -1635,19 +1635,6 @@ namespace leon3_funclt_trap{
 
     class Reg32_0 : public Register{
         public:
-        class InnerField_PS : public InnerField{
-            private:
-            unsigned int & value;
-
-            public:
-            InnerField_PS( unsigned int & value );
-            InnerField & operator =( const unsigned int & other ) throw();
-            inline operator unsigned int() const throw(){
-                return (this->value & 0x40) >> 6;
-            }
-            virtual ~InnerField_PS();
-        };
-
         class InnerField_VER : public InnerField{
             private:
             unsigned int & value;
@@ -1739,19 +1726,6 @@ namespace leon3_funclt_trap{
             virtual ~InnerField_S();
         };
 
-        class InnerField_CWP : public InnerField{
-            private:
-            unsigned int & value;
-
-            public:
-            InnerField_CWP( unsigned int & value );
-            InnerField & operator =( const unsigned int & other ) throw();
-            inline operator unsigned int() const throw(){
-                return (this->value & 0x1f);
-            }
-            virtual ~InnerField_CWP();
-        };
-
         class InnerField_ET : public InnerField{
             private:
             unsigned int & value;
@@ -1763,6 +1737,32 @@ namespace leon3_funclt_trap{
                 return (this->value & 0x20) >> 5;
             }
             virtual ~InnerField_ET();
+        };
+
+        class InnerField_ICC_c : public InnerField{
+            private:
+            unsigned int & value;
+
+            public:
+            InnerField_ICC_c( unsigned int & value );
+            InnerField & operator =( const unsigned int & other ) throw();
+            inline operator unsigned int() const throw(){
+                return (this->value & 0x100000) >> 20;
+            }
+            virtual ~InnerField_ICC_c();
+        };
+
+        class InnerField_PS : public InnerField{
+            private:
+            unsigned int & value;
+
+            public:
+            InnerField_PS( unsigned int & value );
+            InnerField & operator =( const unsigned int & other ) throw();
+            inline operator unsigned int() const throw(){
+                return (this->value & 0x40) >> 6;
+            }
+            virtual ~InnerField_PS();
         };
 
         class InnerField_PIL : public InnerField{
@@ -1778,17 +1778,17 @@ namespace leon3_funclt_trap{
             virtual ~InnerField_PIL();
         };
 
-        class InnerField_ICC_c : public InnerField{
+        class InnerField_CWP : public InnerField{
             private:
             unsigned int & value;
 
             public:
-            InnerField_ICC_c( unsigned int & value );
+            InnerField_CWP( unsigned int & value );
             InnerField & operator =( const unsigned int & other ) throw();
             inline operator unsigned int() const throw(){
-                return (this->value & 0x100000) >> 20;
+                return (this->value & 0x1f);
             }
-            virtual ~InnerField_ICC_c();
+            virtual ~InnerField_CWP();
         };
 
         class InnerField_IMPL : public InnerField{
@@ -1816,7 +1816,6 @@ namespace leon3_funclt_trap{
         };
 
         private:
-        InnerField_PS field_PS;
         InnerField_VER field_VER;
         InnerField_ICC_z field_ICC_z;
         InnerField_ICC_v field_ICC_v;
@@ -1824,10 +1823,11 @@ namespace leon3_funclt_trap{
         InnerField_EC field_EC;
         InnerField_ICC_n field_ICC_n;
         InnerField_S field_S;
-        InnerField_CWP field_CWP;
         InnerField_ET field_ET;
-        InnerField_PIL field_PIL;
         InnerField_ICC_c field_ICC_c;
+        InnerField_PS field_PS;
+        InnerField_PIL field_PIL;
+        InnerField_CWP field_CWP;
         InnerField_IMPL field_IMPL;
         InnerField_Empty field_empty;
         unsigned int value;
@@ -1837,10 +1837,6 @@ namespace leon3_funclt_trap{
         Reg32_0( sc_module_name name );
         inline InnerField & operator []( int bitField ) throw(){
             switch(bitField){
-                case key_PS:{
-                    return this->field_PS;
-                    break;
-                }
                 case key_VER:{
                     return this->field_VER;
                     break;
@@ -1869,20 +1865,24 @@ namespace leon3_funclt_trap{
                     return this->field_S;
                     break;
                 }
-                case key_CWP:{
-                    return this->field_CWP;
-                    break;
-                }
                 case key_ET:{
                     return this->field_ET;
+                    break;
+                }
+                case key_ICC_c:{
+                    return this->field_ICC_c;
+                    break;
+                }
+                case key_PS:{
+                    return this->field_PS;
                     break;
                 }
                 case key_PIL:{
                     return this->field_PIL;
                     break;
                 }
-                case key_ICC_c:{
-                    return this->field_ICC_c;
+                case key_CWP:{
+                    return this->field_CWP;
                     break;
                 }
                 case key_IMPL:{

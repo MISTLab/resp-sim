@@ -43,14 +43,112 @@
 
 
 #include <decoder.hpp>
+#include <instructions.hpp>
 
 using namespace leon3_funclt_trap;
+leon3_funclt_trap::CacheElem::CacheElem( Instruction * instr, unsigned int count \
+    ) : instr(instr), count(count){
+
+}
+
+leon3_funclt_trap::CacheElem::CacheElem() : instr(NULL), count(1){
+
+}
+
 int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
-    switch(instrCode & 0x1e00000){
+    switch(instrCode & 0x1c00000){
         case 0x0:{
             switch(instrCode & 0xc0000000L){
+                case 0xc0000000L:{
+                    switch(instrCode & 0x380000){
+                        case 0x0:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction LD_imm
+                                return 8;
+                            }
+                            else{
+                                // Instruction LD_reg
+                                return 9;
+                            }
+                        break;}
+                        case 0x200000:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction ST_imm
+                                return 22;
+                            }
+                            else{
+                                // Instruction ST_reg
+                                return 23;
+                            }
+                        break;}
+                        case 0x100000:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction LDUH_imm
+                                return 6;
+                            }
+                            else{
+                                // Instruction LDUH_reg
+                                return 7;
+                            }
+                        break;}
+                        case 0x180000:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction LDD_imm
+                                return 10;
+                            }
+                            else{
+                                // Instruction LDD_reg
+                                return 11;
+                            }
+                        break;}
+                        case 0x80000:{
+                            if((instrCode & 0x2000) == 0x0){
+                                // Instruction LDUB_reg
+                                return 5;
+                            }
+                            else{
+                                // Instruction LDUB_imm
+                                return 4;
+                            }
+                        break;}
+                        case 0x300000:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction STH_imm
+                                return 20;
+                            }
+                            else{
+                                // Instruction STH_reg
+                                return 21;
+                            }
+                        break;}
+                        case 0x380000:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction STD_imm
+                                return 24;
+                            }
+                            else{
+                                // Instruction STD_reg
+                                return 25;
+                            }
+                        break;}
+                        case 0x280000:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction STB_imm
+                                return 18;
+                            }
+                            else{
+                                // Instruction STB_reg
+                                return 19;
+                            }
+                        break;}
+                        default:{
+                            // Non-valid pattern
+                            return 144;
+                        }
+                    }
+                break;}
                 case 0x80000000L:{
-                    switch(instrCode & 0x180000){
+                    switch(instrCode & 0x380000){
                         case 0x100000:{
                             if((instrCode & 0x2000) != 0x0){
                                 // Instruction OR_imm
@@ -81,6 +179,16 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                                 return 38;
                             }
                         break;}
+                        case 0x200000:{
+                            if((instrCode & 0x2000) == 0x0){
+                                // Instruction SUB_reg
+                                return 80;
+                            }
+                            else{
+                                // Instruction SUB_imm
+                                return 79;
+                            }
+                        break;}
                         case 0x180000:{
                             if((instrCode & 0x2000) == 0x0){
                                 // Instruction XOR_reg
@@ -91,137 +199,7 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                                 return 53;
                             }
                         break;}
-                        default:{
-                            // Non-valid pattern
-                            return 144;
-                        }
-                    }
-                break;}
-                case 0xc0000000L:{
-                    switch(instrCode & 0x180000){
-                        case 0x0:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction LD_imm
-                                return 8;
-                            }
-                            else{
-                                // Instruction LD_reg
-                                return 9;
-                            }
-                        break;}
-                        case 0x100000:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction LDUH_imm
-                                return 6;
-                            }
-                            else{
-                                // Instruction LDUH_reg
-                                return 7;
-                            }
-                        break;}
-                        case 0x80000:{
-                            if((instrCode & 0x2000) == 0x0){
-                                // Instruction LDUB_reg
-                                return 5;
-                            }
-                            else{
-                                // Instruction LDUB_imm
-                                return 4;
-                            }
-                        break;}
-                        case 0x180000:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction LDD_imm
-                                return 10;
-                            }
-                            else{
-                                // Instruction LDD_reg
-                                return 11;
-                            }
-                        break;}
-                        default:{
-                            // Non-valid pattern
-                            return 144;
-                        }
-                    }
-                break;}
-                case 0x40000000:{
-                    // Instruction CALL
-                    return 118;
-                break;}
-                case 0x0:{
-                    // Instruction UNIMP
-                    return 141;
-                break;}
-                default:{
-                    // Non-valid pattern
-                    return 144;
-                }
-            }
-        break;}
-        case 0x200000:{
-            switch(instrCode & 0xc0000000L){
-                case 0xc0000000L:{
-                    switch(instrCode & 0x180000){
-                        case 0x0:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction ST_imm
-                                return 22;
-                            }
-                            else{
-                                // Instruction ST_reg
-                                return 23;
-                            }
-                        break;}
-                        case 0x100000:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction STH_imm
-                                return 20;
-                            }
-                            else{
-                                // Instruction STH_reg
-                                return 21;
-                            }
-                        break;}
-                        case 0x180000:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction STD_imm
-                                return 24;
-                            }
-                            else{
-                                // Instruction STD_reg
-                                return 25;
-                            }
-                        break;}
-                        case 0x80000:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction STB_imm
-                                return 18;
-                            }
-                            else{
-                                // Instruction STB_reg
-                                return 19;
-                            }
-                        break;}
-                        default:{
-                            // Non-valid pattern
-                            return 144;
-                        }
-                    }
-                break;}
-                case 0x80000000L:{
-                    switch(instrCode & 0x180000){
-                        case 0x0:{
-                            if((instrCode & 0x2000) == 0x0){
-                                // Instruction SUB_reg
-                                return 80;
-                            }
-                            else{
-                                // Instruction SUB_imm
-                                return 79;
-                            }
-                        break;}
-                        case 0x80000:{
+                        case 0x280000:{
                             if((instrCode & 0x2000) == 0x0){
                                 // Instruction ANDN_reg
                                 return 42;
@@ -231,7 +209,7 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                                 return 41;
                             }
                         break;}
-                        case 0x180000:{
+                        case 0x380000:{
                             if((instrCode & 0x2000) != 0x0){
                                 // Instruction XNOR_imm
                                 return 57;
@@ -241,7 +219,7 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                                 return 58;
                             }
                         break;}
-                        case 0x100000:{
+                        case 0x300000:{
                             if((instrCode & 0x2000) != 0x0){
                                 // Instruction ORN_imm
                                 return 49;
@@ -271,74 +249,20 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                 }
             }
         break;}
-        case 0x1200000:{
-            switch(instrCode & 0xc0000000L){
-                case 0x80000000L:{
-                    switch(instrCode & 0x180000){
-                        case 0x80000:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction SLL_imm
-                                return 61;
-                            }
-                            else{
-                                // Instruction SLL_reg
-                                return 62;
-                            }
-                        break;}
-                        case 0x100000:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction SRL_imm
-                                return 63;
-                            }
-                            else{
-                                // Instruction SRL_reg
-                                return 64;
-                            }
-                        break;}
-                        case 0x180000:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction SRA_imm
-                                return 65;
-                            }
-                            else{
-                                // Instruction SRA_reg
-                                return 66;
-                            }
-                        break;}
-                        case 0x0:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction MULScc_imm
-                                return 91;
-                            }
-                            else{
-                                // Instruction MULScc_reg
-                                return 92;
-                            }
-                        break;}
-                        default:{
-                            // Non-valid pattern
-                            return 144;
-                        }
-                    }
-                break;}
-                case 0x0:{
-                    // Instruction SETHI
-                    return 36;
-                break;}
-                case 0x40000000:{
-                    // Instruction CALL
-                    return 118;
-                break;}
-                default:{
-                    // Non-valid pattern
-                    return 144;
-                }
-            }
-        break;}
         case 0x800000:{
             switch(instrCode & 0xc0000000L){
                 case 0x80000000L:{
-                    switch(instrCode & 0x180000){
+                    switch(instrCode & 0x380000){
+                        case 0x200000:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction SUBcc_imm
+                                return 81;
+                            }
+                            else{
+                                // Instruction SUBcc_reg
+                                return 82;
+                            }
+                        break;}
                         case 0x0:{
                             if((instrCode & 0x2000) == 0x0){
                                 // Instruction ADDcc_reg
@@ -369,6 +293,16 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                                 return 40;
                             }
                         break;}
+                        case 0x280000:{
+                            if((instrCode & 0x2000) == 0x0){
+                                // Instruction ANDNcc_reg
+                                return 44;
+                            }
+                            else{
+                                // Instruction ANDNcc_imm
+                                return 43;
+                            }
+                        break;}
                         case 0x180000:{
                             if((instrCode & 0x2000) != 0x0){
                                 // Instruction XORcc_imm
@@ -379,63 +313,7 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                                 return 56;
                             }
                         break;}
-                        default:{
-                            // Non-valid pattern
-                            return 144;
-                        }
-                    }
-                break;}
-                case 0x0:{
-                    // Instruction BRANCH
-                    return 117;
-                break;}
-                case 0x40000000:{
-                    // Instruction CALL
-                    return 118;
-                break;}
-                case 0xc0000000L:{
-                    if((instrCode & 0x80000) != 0x0){
-                        if((instrCode & 0x100000) != 0x0){
-                            // Instruction LDDA_reg
-                            return 17;
-                        }
-                        else{
-                            // Instruction LDUBA_reg
-                            return 14;
-                        }
-                    }
-                    else{
-                        if((instrCode & 0x100000) == 0x0){
-                            // Instruction LDA_reg
-                            return 16;
-                        }
-                        else{
-                            // Instruction LDUHA_reg
-                            return 15;
-                        }
-                    }
-                break;}
-                default:{
-                    // Non-valid pattern
-                    return 144;
-                }
-            }
-        break;}
-        case 0xa00000:{
-            switch(instrCode & 0xc0000000L){
-                case 0x80000000L:{
-                    switch(instrCode & 0x180000){
-                        case 0x0:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction SUBcc_imm
-                                return 81;
-                            }
-                            else{
-                                // Instruction SUBcc_reg
-                                return 82;
-                            }
-                        break;}
-                        case 0x180000:{
+                        case 0x380000:{
                             if((instrCode & 0x2000) != 0x0){
                                 // Instruction XNORcc_imm
                                 return 59;
@@ -445,7 +323,7 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                                 return 60;
                             }
                         break;}
-                        case 0x100000:{
+                        case 0x300000:{
                             if((instrCode & 0x2000) == 0x0){
                                 // Instruction ORNcc_reg
                                 return 52;
@@ -453,16 +331,6 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                             else{
                                 // Instruction ORNcc_imm
                                 return 51;
-                            }
-                        break;}
-                        case 0x80000:{
-                            if((instrCode & 0x2000) == 0x0){
-                                // Instruction ANDNcc_reg
-                                return 44;
-                            }
-                            else{
-                                // Instruction ANDNcc_imm
-                                return 43;
                             }
                         break;}
                         default:{
@@ -480,96 +348,42 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                     return 118;
                 break;}
                 case 0xc0000000L:{
-                    if((instrCode & 0x80000) == 0x0){
-                        if((instrCode & 0x100000) == 0x0){
-                            // Instruction STA_reg
-                            return 28;
-                        }
-                        else{
-                            // Instruction STHA_reg
-                            return 27;
-                        }
-                    }
-                    else{
-                        if((instrCode & 0x100000) == 0x0){
-                            // Instruction STBA_reg
-                            return 26;
-                        }
-                        else{
+                    switch(instrCode & 0x380000){
+                        case 0x380000:{
                             // Instruction STDA_reg
                             return 29;
-                        }
-                    }
-                break;}
-                default:{
-                    // Non-valid pattern
-                    return 144;
-                }
-            }
-        break;}
-        case 0x400000:{
-            switch(instrCode & 0xc0000000L){
-                case 0x80000000L:{
-                    switch(instrCode & 0x180000){
-                        case 0x0:{
-                            if((instrCode & 0x2000) == 0x0){
-                                // Instruction ADDX_reg
-                                return 72;
-                            }
-                            else{
-                                // Instruction ADDX_imm
-                                return 71;
-                            }
+                        break;}
+                        case 0x280000:{
+                            // Instruction STBA_reg
+                            return 26;
+                        break;}
+                        case 0x300000:{
+                            // Instruction STHA_reg
+                            return 27;
+                        break;}
+                        case 0x200000:{
+                            // Instruction STA_reg
+                            return 28;
                         break;}
                         case 0x180000:{
-                            if((instrCode & 0x2000) == 0x0){
-                                // Instruction SMUL_reg
-                                return 96;
-                            }
-                            else{
-                                // Instruction SMUL_imm
-                                return 95;
-                            }
+                            // Instruction LDDA_reg
+                            return 17;
+                        break;}
+                        case 0x80000:{
+                            // Instruction LDUBA_reg
+                            return 14;
                         break;}
                         case 0x100000:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction UMUL_imm
-                                return 93;
-                            }
-                            else{
-                                // Instruction UMUL_reg
-                                return 94;
-                            }
+                            // Instruction LDUHA_reg
+                            return 15;
+                        break;}
+                        case 0x0:{
+                            // Instruction LDA_reg
+                            return 16;
                         break;}
                         default:{
                             // Non-valid pattern
                             return 144;
-                        }
-                    }
-                break;}
-                case 0x40000000:{
-                    // Instruction CALL
-                    return 118;
-                break;}
-                case 0xc0000000L:{
-                    if((instrCode & 0x2000) == 0x0){
-                        if((instrCode & 0x80000) != 0x0){
-                            // Instruction LDSB_reg
-                            return 1;
-                        }
-                        else{
-                            // Instruction LDSH_reg
-                            return 3;
-                        }
-                    }
-                    else{
-                        if((instrCode & 0x80000) != 0x0){
-                            // Instruction LDSB_imm
-                            return 0;
-                        }
-                        else{
-                            // Instruction LDSH_imm
-                            return 2;
                         }
                     }
                 break;}
@@ -581,16 +395,48 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
         break;}
         case 0x1000000:{
             switch(instrCode & 0xc0000000L){
-                case 0x0:{
-                    // Instruction SETHI
-                    return 36;
-                break;}
-                case 0x40000000:{
-                    // Instruction CALL
-                    return 118;
-                break;}
                 case 0x80000000L:{
-                    switch(instrCode & 0x180000){
+                    switch(instrCode & 0x380000){
+                        case 0x280000:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction SLL_imm
+                                return 61;
+                            }
+                            else{
+                                // Instruction SLL_reg
+                                return 62;
+                            }
+                        break;}
+                        case 0x300000:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction SRL_imm
+                                return 63;
+                            }
+                            else{
+                                // Instruction SRL_reg
+                                return 64;
+                            }
+                        break;}
+                        case 0x380000:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction SRA_imm
+                                return 65;
+                            }
+                            else{
+                                // Instruction SRA_reg
+                                return 66;
+                            }
+                        break;}
+                        case 0x200000:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction MULScc_imm
+                                return 91;
+                            }
+                            else{
+                                // Instruction MULScc_reg
+                                return 92;
+                            }
+                        break;}
                         case 0x180000:{
                             if((instrCode & 0x2000) == 0x0){
                                 // Instruction TSUBccTV_reg
@@ -599,26 +445,6 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                             else{
                                 // Instruction TSUBccTV_imm
                                 return 89;
-                            }
-                        break;}
-                        case 0x80000:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction TSUBcc_imm
-                                return 87;
-                            }
-                            else{
-                                // Instruction TSUBcc_reg
-                                return 88;
-                            }
-                        break;}
-                        case 0x0:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction TADDcc_imm
-                                return 75;
-                            }
-                            else{
-                                // Instruction TADDcc_reg
-                                return 76;
                             }
                         break;}
                         case 0x100000:{
@@ -631,11 +457,39 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                                 return 77;
                             }
                         break;}
+                        case 0x0:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction TADDcc_imm
+                                return 75;
+                            }
+                            else{
+                                // Instruction TADDcc_reg
+                                return 76;
+                            }
+                        break;}
+                        case 0x80000:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction TSUBcc_imm
+                                return 87;
+                            }
+                            else{
+                                // Instruction TSUBcc_reg
+                                return 88;
+                            }
+                        break;}
                         default:{
                             // Non-valid pattern
                             return 144;
                         }
                     }
+                break;}
+                case 0x0:{
+                    // Instruction SETHI
+                    return 36;
+                break;}
+                case 0x40000000:{
+                    // Instruction CALL
+                    return 118;
                 break;}
                 default:{
                     // Non-valid pattern
@@ -643,11 +497,65 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                 }
             }
         break;}
-        case 0x600000:{
+        case 0x400000:{
             switch(instrCode & 0xc0000000L){
                 case 0x80000000L:{
-                    switch(instrCode & 0x180000){
+                    switch(instrCode & 0x300000){
                         case 0x0:{
+                            if((instrCode & 0x2000) == 0x0){
+                                // Instruction ADDX_reg
+                                return 72;
+                            }
+                            else{
+                                // Instruction ADDX_imm
+                                return 71;
+                            }
+                        break;}
+                        case 0x100000:{
+                            if((instrCode & 0x2000) == 0x0){
+                                if((instrCode & 0x80000) != 0x0){
+                                    // Instruction SMUL_reg
+                                    return 96;
+                                }
+                                else{
+                                    // Instruction UMUL_reg
+                                    return 94;
+                                }
+                            }
+                            else{
+                                if((instrCode & 0x80000) == 0x80000){
+                                    // Instruction SMUL_imm
+                                    return 95;
+                                }
+                                else{
+                                    // Instruction UMUL_imm
+                                    return 93;
+                                }
+                            }
+                        break;}
+                        case 0x300000:{
+                            if((instrCode & 0x2000) == 0x0){
+                                if((instrCode & 0x80000) != 0x0){
+                                    // Instruction SDIV_reg
+                                    return 108;
+                                }
+                                else{
+                                    // Instruction UDIV_reg
+                                    return 106;
+                                }
+                            }
+                            else{
+                                if((instrCode & 0x80000) != 0x0){
+                                    // Instruction SDIV_imm
+                                    return 107;
+                                }
+                                else{
+                                    // Instruction UDIV_imm
+                                    return 105;
+                                }
+                            }
+                        break;}
+                        case 0x200000:{
                             if((instrCode & 0x2000) == 0x0){
                                 // Instruction SUBX_reg
                                 return 84;
@@ -657,24 +565,52 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                                 return 83;
                             }
                         break;}
-                        case 0x180000:{
+                        default:{
+                            // Non-valid pattern
+                            return 144;
+                        }
+                    }
+                break;}
+                case 0xc0000000L:{
+                    switch(instrCode & 0x300000){
+                        case 0x0:{
                             if((instrCode & 0x2000) == 0x0){
-                                // Instruction SDIV_reg
-                                return 108;
+                                // Instruction LDSB_reg
+                                return 1;
                             }
                             else{
-                                // Instruction SDIV_imm
-                                return 107;
+                                // Instruction LDSB_imm
+                                return 0;
+                            }
+                        break;}
+                        case 0x200000:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction LDSTUB_imm
+                                return 30;
+                            }
+                            else{
+                                // Instruction LDSTUB_reg
+                                return 31;
                             }
                         break;}
                         case 0x100000:{
                             if((instrCode & 0x2000) == 0x0){
-                                // Instruction UDIV_reg
-                                return 106;
+                                // Instruction LDSH_reg
+                                return 3;
                             }
                             else{
-                                // Instruction UDIV_imm
-                                return 105;
+                                // Instruction LDSH_imm
+                                return 2;
+                            }
+                        break;}
+                        case 0x300000:{
+                            if((instrCode & 0x2000) == 0x0){
+                                // Instruction SWAP_reg
+                                return 34;
+                            }
+                            else{
+                                // Instruction SWAP_imm
+                                return 33;
                             }
                         break;}
                         default:{
@@ -687,49 +623,27 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                     // Instruction CALL
                     return 118;
                 break;}
-                case 0xc0000000L:{
-                    if((instrCode & 0x2000) != 0x0){
-                        if((instrCode & 0x100000) != 0x0){
-                            // Instruction SWAP_imm
-                            return 33;
-                        }
-                        else{
-                            // Instruction LDSTUB_imm
-                            return 30;
-                        }
-                    }
-                    else{
-                        if((instrCode & 0x100000) != 0x0){
-                            // Instruction SWAP_reg
-                            return 34;
-                        }
-                        else{
-                            // Instruction LDSTUB_reg
-                            return 31;
-                        }
-                    }
-                break;}
                 default:{
                     // Non-valid pattern
                     return 144;
                 }
             }
         break;}
-        case 0x1e00000:{
+        case 0x1c00000:{
             switch(instrCode & 0xc0000000L){
                 case 0x80000000L:{
-                    switch(instrCode & 0x180000){
-                        case 0x80000:{
-                            if((instrCode & 0x2000) == 0x0){
-                                // Instruction RESTORE_reg
-                                return 116;
+                    switch(instrCode & 0x380000){
+                        case 0x0:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction JUMP_imm
+                                return 119;
                             }
                             else{
-                                // Instruction RESTORE_imm
-                                return 115;
+                                // Instruction JUMP_reg
+                                return 120;
                             }
                         break;}
-                        case 0x0:{
+                        case 0x200000:{
                             if((instrCode & 0x2000) != 0x0){
                                 // Instruction SAVE_imm
                                 return 113;
@@ -739,7 +653,37 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                                 return 114;
                             }
                         break;}
+                        case 0x280000:{
+                            if((instrCode & 0x2000) == 0x0){
+                                // Instruction RESTORE_reg
+                                return 116;
+                            }
+                            else{
+                                // Instruction RESTORE_imm
+                                return 115;
+                            }
+                        break;}
+                        case 0x80000:{
+                            if((instrCode & 0x2000) == 0x0){
+                                // Instruction RETT_reg
+                                return 122;
+                            }
+                            else{
+                                // Instruction RETT_imm
+                                return 121;
+                            }
+                        break;}
                         case 0x180000:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction FLUSH_imm
+                                return 143;
+                            }
+                            else{
+                                // Instruction FLUSH_reg
+                                return 142;
+                            }
+                        break;}
+                        case 0x380000:{
                             if((instrCode & 0x2000) != 0x0){
                                 // Instruction SMAC_imm
                                 return 103;
@@ -750,6 +694,16 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                             }
                         break;}
                         case 0x100000:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction TRAP_imm
+                                return 123;
+                            }
+                            else{
+                                // Instruction TRAP_reg
+                                return 124;
+                            }
+                        break;}
+                        case 0x300000:{
                             if((instrCode & 0x2000) != 0x0){
                                 // Instruction UMAC_imm
                                 return 101;
@@ -775,78 +729,62 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                 }
             }
         break;}
-        case 0x1c00000:{
-            switch(instrCode & 0xc0000000L){
-                case 0x80000000L:{
-                    switch(instrCode & 0x180000){
-                        case 0x0:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction JUMP_imm
-                                return 119;
-                            }
-                            else{
-                                // Instruction JUMP_reg
-                                return 120;
-                            }
-                        break;}
-                        case 0x80000:{
-                            if((instrCode & 0x2000) == 0x0){
-                                // Instruction RETT_reg
-                                return 122;
-                            }
-                            else{
-                                // Instruction RETT_imm
-                                return 121;
-                            }
-                        break;}
-                        case 0x100000:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction TRAP_imm
-                                return 123;
-                            }
-                            else{
-                                // Instruction TRAP_reg
-                                return 124;
-                            }
-                        break;}
-                        case 0x180000:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction FLUSH_imm
-                                return 143;
-                            }
-                            else{
-                                // Instruction FLUSH_reg
-                                return 142;
-                            }
-                        break;}
-                        default:{
-                            // Non-valid pattern
-                            return 144;
-                        }
-                    }
-                break;}
-                case 0x40000000:{
-                    // Instruction CALL
-                    return 118;
-                break;}
-                default:{
-                    // Non-valid pattern
-                    return 144;
-                }
-            }
-        break;}
         case 0xc00000:{
             switch(instrCode & 0xc0000000L){
                 case 0x80000000L:{
-                    switch(instrCode & 0x180000){
-                        case 0x180000:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction SMULcc_imm
-                                return 99;
+                    switch(instrCode & 0x300000){
+                        case 0x100000:{
+                            if((instrCode & 0x2000) == 0x0){
+                                if((instrCode & 0x80000) == 0x0){
+                                    // Instruction UMULcc_reg
+                                    return 98;
+                                }
+                                else{
+                                    // Instruction SMULcc_reg
+                                    return 100;
+                                }
                             }
                             else{
-                                // Instruction SMULcc_reg
-                                return 100;
+                                if((instrCode & 0x80000) != 0x0){
+                                    // Instruction SMULcc_imm
+                                    return 99;
+                                }
+                                else{
+                                    // Instruction UMULcc_imm
+                                    return 97;
+                                }
+                            }
+                        break;}
+                        case 0x200000:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction SUBXcc_imm
+                                return 85;
+                            }
+                            else{
+                                // Instruction SUBXcc_reg
+                                return 86;
+                            }
+                        break;}
+                        case 0x300000:{
+                            if((instrCode & 0x2000) == 0x0){
+                                if((instrCode & 0x80000) == 0x0){
+                                    // Instruction UDIVcc_reg
+                                    return 110;
+                                }
+                                else{
+                                    // Instruction SDIVcc_reg
+                                    return 112;
+                                }
+                            }
+                            else{
+                                if((instrCode & 0x80000) == 0x0){
+                                    // Instruction UDIVcc_imm
+                                    return 109;
+                                }
+                                else{
+                                    // Instruction SDIVcc_imm
+                                    return 111;
+                                }
                             }
                         break;}
                         case 0x0:{
@@ -859,16 +797,6 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                                 return 74;
                             }
                         break;}
-                        case 0x100000:{
-                            if((instrCode & 0x2000) == 0x0){
-                                // Instruction UMULcc_reg
-                                return 98;
-                            }
-                            else{
-                                // Instruction UMULcc_imm
-                                return 97;
-                            }
-                        break;}
                         default:{
                             // Non-valid pattern
                             return 144;
@@ -878,75 +806,27 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                 case 0x40000000:{
                     // Instruction CALL
                     return 118;
-                break;}
-                case 0xc0000000L:{
-                    if((instrCode & 0x80000) == 0x0){
-                        // Instruction LDSHA_reg
-                        return 13;
-                    }
-                    else{
-                        // Instruction LDSBA_reg
-                        return 12;
-                    }
-                break;}
-                default:{
-                    // Non-valid pattern
-                    return 144;
-                }
-            }
-        break;}
-        case 0xe00000:{
-            switch(instrCode & 0xc0000000L){
-                case 0x40000000:{
-                    // Instruction CALL
-                    return 118;
-                break;}
-                case 0x80000000L:{
-                    switch(instrCode & 0x180000){
-                        case 0x0:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction SUBXcc_imm
-                                return 85;
-                            }
-                            else{
-                                // Instruction SUBXcc_reg
-                                return 86;
-                            }
-                        break;}
-                        case 0x180000:{
-                            if((instrCode & 0x2000) == 0x0){
-                                // Instruction SDIVcc_reg
-                                return 112;
-                            }
-                            else{
-                                // Instruction SDIVcc_imm
-                                return 111;
-                            }
-                        break;}
-                        case 0x100000:{
-                            if((instrCode & 0x2000) == 0x0){
-                                // Instruction UDIVcc_reg
-                                return 110;
-                            }
-                            else{
-                                // Instruction UDIVcc_imm
-                                return 109;
-                            }
-                        break;}
-                        default:{
-                            // Non-valid pattern
-                            return 144;
-                        }
-                    }
                 break;}
                 case 0xc0000000L:{
                     if((instrCode & 0x100000) == 0x0){
-                        // Instruction LDSTUBA_reg
-                        return 32;
+                        if((instrCode & 0x200000) == 0x0){
+                            // Instruction LDSBA_reg
+                            return 12;
+                        }
+                        else{
+                            // Instruction LDSTUBA_reg
+                            return 32;
+                        }
                     }
                     else{
-                        // Instruction SWAPA_reg
-                        return 35;
+                        if((instrCode & 0x80000) == 0x0){
+                            // Instruction LDSHA_reg
+                            return 13;
+                        }
+                        else{
+                            // Instruction SWAPA_reg
+                            return 35;
+                        }
                     }
                 break;}
                 default:{
@@ -956,71 +836,65 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
             }
         break;}
         case 0x1800000:{
-            switch(instrCode & 0xc0000000L){
-                case 0x80000000L:{
-                    switch(instrCode & 0x180000){
-                        case 0x80000:{
-                            if((instrCode & 0x2000) == 0x0){
-                                // Instruction WRITEpsr_reg
-                                return 134;
-                            }
-                            else{
-                                // Instruction WRITEpsr_imm
-                                return 135;
-                            }
-                        break;}
-                        case 0x180000:{
-                            if((instrCode & 0x2000) == 0x0){
-                                // Instruction WRITEtbr_reg
-                                return 138;
-                            }
-                            else{
-                                // Instruction WRITEtbr_imm
-                                return 139;
-                            }
-                        break;}
-                        case 0x0:{
-                            if((instrCode & 0x2000) != 0x0){
-                                if((instrCode & 0xfff82000L) == 0x81802000L ){
-                                    // Instruction WRITEY_imm
-                                    return 131;
-                                }
-                                // Instruction WRITEasr_imm
-                                return 133;
-                            }
-                            else{
-                                if((instrCode & 0xfff83fe0L) == 0x81800000L ){
-                                    // Instruction WRITEY_reg
-                                    return 130;
-                                }
-                                // Instruction WRITEasr_reg
-                                return 132;
-                            }
-                        break;}
-                        case 0x100000:{
-                            if((instrCode & 0x2000) == 0x0){
-                                // Instruction WRITEwim_reg
-                                return 136;
-                            }
-                            else{
-                                // Instruction WRITEwim_imm
-                                return 137;
-                            }
-                        break;}
-                        default:{
-                            // Non-valid pattern
-                            return 144;
+            if((instrCode & 0x40000000) != 0x40000000){
+                switch(instrCode & 0x180000){
+                    case 0x80000:{
+                        if((instrCode & 0x2000) == 0x0){
+                            // Instruction WRITEpsr_reg
+                            return 134;
                         }
+                        else{
+                            // Instruction WRITEpsr_imm
+                            return 135;
+                        }
+                    break;}
+                    case 0x180000:{
+                        if((instrCode & 0x2000) == 0x0){
+                            // Instruction WRITEtbr_reg
+                            return 138;
+                        }
+                        else{
+                            // Instruction WRITEtbr_imm
+                            return 139;
+                        }
+                    break;}
+                    case 0x0:{
+                        if((instrCode & 0x2000) != 0x0){
+                            if((instrCode & 0xfff82000L) == 0x81802000L ){
+                                // Instruction WRITEY_imm
+                                return 131;
+                            }
+                            // Instruction WRITEasr_imm
+                            return 133;
+                        }
+                        else{
+                            if((instrCode & 0xfff83fe0L) == 0x81800000L ){
+                                // Instruction WRITEY_reg
+                                return 130;
+                            }
+                            // Instruction WRITEasr_reg
+                            return 132;
+                        }
+                    break;}
+                    case 0x100000:{
+                        if((instrCode & 0x2000) == 0x0){
+                            // Instruction WRITEwim_reg
+                            return 136;
+                        }
+                        else{
+                            // Instruction WRITEwim_imm
+                            return 137;
+                        }
+                    break;}
+                    default:{
+                        // Non-valid pattern
+                        return 144;
                     }
-                break;}
-                case 0x40000000:{
-                    // Instruction CALL
-                    return 118;
-                break;}
-                default:{
-                    // Non-valid pattern
-                    return 144;
                 }
+            }
+            else{
+                // Instruction CALL
+                return 118;
             }
         break;}
         case 0x1400000:{
@@ -1058,14 +932,6 @@ int leon3_funclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                     }
                 }
             }
-        break;}
-        case 0x1a00000:{
-            // Instruction CALL
-            return 118;
-        break;}
-        case 0x1600000:{
-            // Instruction CALL
-            return 118;
         break;}
         default:{
             // Non-valid pattern

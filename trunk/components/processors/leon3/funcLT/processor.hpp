@@ -44,9 +44,9 @@
 #ifndef PROCESSOR_HPP
 #define PROCESSOR_HPP
 
-#include <instructions.hpp>
 #include <systemc.h>
 #include <customExceptions.hpp>
+#include <instructions.hpp>
 #include <decoder.hpp>
 #include <interface.hpp>
 #include <ToolsIf.hpp>
@@ -83,23 +83,12 @@
 using namespace trap;
 namespace leon3_funclt_trap{
 
-    class CacheElem{
-
-        public:
-        CacheElem();
-        CacheElem( Instruction * instr, unsigned int count );
-        Instruction * instr;
-        unsigned int count;
-    };
-
-};
-
-namespace leon3_funclt_trap{
-
     class Processor : public sc_module{
         private:
         Decoder decoder;
         tlm_utils::tlm_quantumkeeper quantKeeper;
+        bool instrExecuting;
+        sc_event instrEndEvent;
         static Instruction * * INSTRUCTIONS;
         template_map< unsigned int, CacheElem > instrCache;
         static int numInstances;
@@ -110,8 +99,8 @@ namespace leon3_funclt_trap{
         Processor( sc_module_name name, sc_time latency );
         void mainLoop();
         void resetOp();
-        Instruction * decode( unsigned int bitString );
         void end_of_elaboration();
+        Instruction * decode( unsigned int bitString );
         LEON3_ABIIf * abiIf;
         LEON3_ABIIf & getInterface();
         ToolsManager< unsigned int > toolManager;
@@ -141,6 +130,7 @@ namespace leon3_funclt_trap{
         unsigned int PROGRAM_START;
         IntrTLMPort_32 IRQ_port;
         PinTLM_out_32 irqAck;
+        IRQ_IRQ_Instruction * IRQ_irqInstr;
         ~Processor();
     };
 

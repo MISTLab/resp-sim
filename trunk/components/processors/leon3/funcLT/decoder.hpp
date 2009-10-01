@@ -44,6 +44,21 @@
 #ifndef DECODER_HPP
 #define DECODER_HPP
 
+#include <instructions.hpp>
+
+namespace leon3_funclt_trap{
+
+    class CacheElem{
+
+        public:
+        CacheElem();
+        CacheElem( Instruction * instr, unsigned int count );
+        Instruction * instr;
+        unsigned int count;
+    };
+
+};
+
 namespace leon3_funclt_trap{
 
     class Decoder{

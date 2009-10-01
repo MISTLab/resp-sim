@@ -43,6 +43,7 @@
 
 
 #include <instructionBase.hpp>
+#include <string>
 #include <customExceptions.hpp>
 #include <trap_utils.hpp>
 #include <registers.hpp>
@@ -50,7 +51,6 @@
 #include <externalPorts.hpp>
 #include <externalPins.hpp>
 #include <instructions.hpp>
-#include <string>
 #include <sstream>
 #include <systemc.h>
 
@@ -270,7 +270,7 @@ leon3_funclt_trap::Instruction::Instruction( Reg32_0_delay_3 & PSR, Reg32_1_dela
     TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : PSR(PSR), WIM(WIM), \
     TBR(TBR), Y(Y), PC(PC), NPC(NPC), PSRbp(PSRbp), Ybp(Ybp), ASR18bp(ASR18bp), GLOBAL(GLOBAL), \
     WINREGS(WINREGS), ASR(ASR), FP(FP), LR(LR), SP(SP), PCR(PCR), REGS(REGS), instrMem(instrMem), \
-    dataMem(dataMem), irqAck(irqAck), NUM_REG_WIN(8){
+    dataMem(dataMem), irqAck(irqAck), NUM_REG_WIN(8), PIPELINED_MULT(false){
     this->totalInstrCycles = 0;
 }
 
@@ -1397,6 +1397,7 @@ unsigned int leon3_funclt_trap::STA_reg::behavior(){
     else{
         flush();
     }
+    stall(1);
 
     if(!supervisor){
         RaiseException(PRIVILEDGE_INSTR);
@@ -1616,6 +1617,7 @@ unsigned int leon3_funclt_trap::STBA_reg::behavior(){
     else{
         flush();
     }
+    stall(1);
 
     if(!supervisor){
         RaiseException(PRIVILEDGE_INSTR);
@@ -1691,6 +1693,7 @@ unsigned int leon3_funclt_trap::ST_imm::behavior(){
     else{
         flush();
     }
+    stall(1);
 
     if(notAligned){
         RaiseException(MEM_ADDR_NOT_ALIGNED);
@@ -1819,6 +1822,7 @@ unsigned int leon3_funclt_trap::UDIVcc_imm::behavior(){
             result = (unsigned int)(res64 & 0x00000000FFFFFFFFLL);
         }
     }
+    stall(35);
     this->ICC_writeDiv(this->result, this->temp_V, this->rs1_op, this->rs2_op);
 
     if(exception){
@@ -1900,6 +1904,7 @@ unsigned int leon3_funclt_trap::SWAPA_reg::behavior(){
         readValue = dataMem.read_word(address);
         dataMem.write_word(address, toWrite);
     }
+    stall(2);
 
     notAligned = (address & 0x00000003) != 0;
     if(!supervisor || notAligned){
@@ -2031,6 +2036,7 @@ unsigned int leon3_funclt_trap::STB_imm::behavior(){
     toWrite = (unsigned char)(rd & 0x000000FF);
 
     dataMem.write_byte(address, toWrite);
+    stall(1);
     return this->totalInstrCycles;
 }
 
@@ -2161,6 +2167,7 @@ unsigned int leon3_funclt_trap::STH_reg::behavior(){
     else{
         flush();
     }
+    stall(1);
 
     if(notAligned){
         RaiseException(MEM_ADDR_NOT_ALIGNED);
@@ -2346,6 +2353,7 @@ unsigned int leon3_funclt_trap::UMULcc_reg::behavior(){
         int)rs1_op))*((unsigned long long)((unsigned int)rs2_op)));
     Ybp = resultTemp >> 32;
     result = resultTemp & 0x00000000FFFFFFFF;
+    stall(2);
     this->ICC_writeLogic(this->result);
     this->WB_yicc(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
@@ -2410,6 +2418,7 @@ unsigned int leon3_funclt_trap::LDSTUB_reg::behavior(){
 
     readValue = dataMem.read_byte(address);
     dataMem.write_byte(address, 0xff);
+    stall(2);
 
     rd = readValue;
     return this->totalInstrCycles;
@@ -2536,6 +2545,7 @@ unsigned int leon3_funclt_trap::SMAC_reg::behavior(){
     Ybp = (resultAcc & 0x000000ff00000000LL) >> 32;
     ASR18bp = resultAcc & 0x00000000FFFFFFFFLL;
     result = resultAcc & 0x00000000FFFFFFFFLL;
+    stall(1);
     this->WB_yasr(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
@@ -2737,6 +2747,7 @@ unsigned int leon3_funclt_trap::ST_reg::behavior(){
     else{
         flush();
     }
+    stall(1);
 
     if(notAligned){
         RaiseException(MEM_ADDR_NOT_ALIGNED);
@@ -2875,6 +2886,7 @@ unsigned int leon3_funclt_trap::LDD_reg::behavior(){
     }
 
     readValue = dataMem.read_dword(address);
+    stall(1);
 
     if(notAligned){
         RaiseException(MEM_ADDR_NOT_ALIGNED);
@@ -3360,6 +3372,7 @@ unsigned int leon3_funclt_trap::STD_imm::behavior(){
     else{
         flush();
     }
+    stall(2);
 
     if(notAligned){
         RaiseException(MEM_ADDR_NOT_ALIGNED);
@@ -3555,6 +3568,7 @@ unsigned int leon3_funclt_trap::SWAP_imm::behavior(){
         readValue = dataMem.read_word(address);
         dataMem.write_word(address, toWrite);
     }
+    stall(2);
 
     notAligned = (address & 0x00000003) != 0;
     if(notAligned){
@@ -3622,6 +3636,7 @@ unsigned int leon3_funclt_trap::UMUL_reg::behavior(){
         int)rs1_op))*((unsigned long long)((unsigned int)rs2_op)));
     Ybp = resultTemp >> 32;
     result = resultTemp & 0x00000000FFFFFFFF;
+    stall(2);
     this->WB_y(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
@@ -3921,6 +3936,7 @@ unsigned int leon3_funclt_trap::STH_imm::behavior(){
     else{
         flush();
     }
+    stall(1);
 
     if(notAligned){
         RaiseException(MEM_ADDR_NOT_ALIGNED);
@@ -4055,6 +4071,7 @@ unsigned int leon3_funclt_trap::LDD_imm::behavior(){
     }
 
     readValue = dataMem.read_dword(address);
+    stall(1);
 
     if(notAligned){
         RaiseException(MEM_ADDR_NOT_ALIGNED);
@@ -4424,6 +4441,7 @@ unsigned int leon3_funclt_trap::SDIV_imm::behavior(){
             result = (unsigned int)(res64 & 0x00000000FFFFFFFFLL);
         }
     }
+    stall(2);
 
     if(exception){
         RaiseException(DIV_ZERO);
@@ -4680,6 +4698,7 @@ unsigned int leon3_funclt_trap::RETT_imm::behavior(){
 
     targetAddr = rs1_op + rs2_op;
     newCwp = ((unsigned int)(PSR[key_CWP] + 1)) % NUM_REG_WIN;
+    stall(2);
 
     if(exceptionEnabled){
         if(supervisor){
@@ -4775,6 +4794,7 @@ unsigned int leon3_funclt_trap::SDIVcc_reg::behavior(){
             result = (unsigned int)(res64 & 0x00000000FFFFFFFFLL);
         }
     }
+    stall(2);
     this->ICC_writeDiv(this->result, this->temp_V, this->rs1_op, this->rs2_op);
 
     if(exception){
@@ -4917,6 +4937,7 @@ unsigned int leon3_funclt_trap::TRAP_imm::behavior(){
     ((cond == 0x7) && PSRbp[key_ICC_v] != 0);
 
     if(raiseException){
+        stall(4);
         RaiseException(TRAP_INSTRUCTION, (rs1 + SignExtend(imm7, 7)) & 0x0000007F);
     }
     #ifndef ACC_MODEL
@@ -5284,6 +5305,7 @@ unsigned int leon3_funclt_trap::STB_reg::behavior(){
     toWrite = (unsigned char)(rd & 0x000000FF);
 
     dataMem.write_byte(address, toWrite);
+    stall(1);
     return this->totalInstrCycles;
 }
 
@@ -5404,6 +5426,7 @@ unsigned int leon3_funclt_trap::SMUL_imm::behavior(){
     long long resultTemp = (long long)(((long long)((int)rs1_op))*((long long)((int)rs2_op)));
     Ybp = ((unsigned long long)resultTemp) >> 32;
     result = resultTemp & 0x00000000FFFFFFFF;
+    stall(2);
     this->WB_y(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
@@ -5527,6 +5550,7 @@ unsigned int leon3_funclt_trap::UMUL_imm::behavior(){
         int)rs1_op))*((unsigned long long)((unsigned int)rs2_op)));
     Ybp = resultTemp >> 32;
     result = resultTemp & 0x00000000FFFFFFFF;
+    stall(2);
     this->WB_y(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
@@ -5643,6 +5667,7 @@ unsigned int leon3_funclt_trap::LDSTUB_imm::behavior(){
 
     readValue = dataMem.read_byte(address);
     dataMem.write_byte(address, 0xff);
+    stall(2);
 
     rd = readValue;
     return this->totalInstrCycles;
@@ -5708,6 +5733,7 @@ unsigned int leon3_funclt_trap::SMAC_imm::behavior(){
     Ybp = (resultAcc & 0x000000ff00000000LL) >> 32;
     ASR18bp = resultAcc & 0x00000000FFFFFFFFLL;
     result = resultAcc & 0x00000000FFFFFFFFLL;
+    stall(1);
     this->WB_yasr(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
@@ -6160,6 +6186,7 @@ unsigned int leon3_funclt_trap::UDIVcc_reg::behavior(){
             result = (unsigned int)(res64 & 0x00000000FFFFFFFFLL);
         }
     }
+    stall(35);
     this->ICC_writeDiv(this->result, this->temp_V, this->rs1_op, this->rs2_op);
 
     if(exception){
@@ -6302,6 +6329,7 @@ unsigned int leon3_funclt_trap::STD_reg::behavior(){
     else{
         flush();
     }
+    stall(2);
 
     if(notAligned){
         RaiseException(MEM_ADDR_NOT_ALIGNED);
@@ -6694,6 +6722,7 @@ unsigned int leon3_funclt_trap::UDIV_imm::behavior(){
             result = (unsigned int)(res64 & 0x00000000FFFFFFFFLL);
         }
     }
+    stall(35);
 
     if(exception){
         RaiseException(DIV_ZERO);
@@ -6889,6 +6918,7 @@ unsigned int leon3_funclt_trap::LDSTUBA_reg::behavior(){
     else{
         flush();
     }
+    stall(2);
 
     if(!supervisor){
         RaiseException(PRIVILEDGE_INSTR);
@@ -6959,6 +6989,7 @@ unsigned int leon3_funclt_trap::UMULcc_imm::behavior(){
         int)rs1_op))*((unsigned long long)((unsigned int)rs2_op)));
     Ybp = resultTemp >> 32;
     result = resultTemp & 0x00000000FFFFFFFF;
+    stall(2);
     this->ICC_writeLogic(this->result);
     this->WB_yicc(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
@@ -7352,6 +7383,7 @@ unsigned int leon3_funclt_trap::UMAC_imm::behavior(){
     Ybp = (resultAcc & 0x000000ff00000000LL) >> 32;
     ASR18bp = resultAcc & 0x00000000FFFFFFFFLL;
     result = resultAcc & 0x00000000FFFFFFFFLL;
+    stall(1);
     this->WB_yasr(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
@@ -7671,6 +7703,7 @@ unsigned int leon3_funclt_trap::SMULcc_reg::behavior(){
     long long resultTemp = (long long)(((long long)((int)rs1_op))*((long long)((int)rs2_op)));
     Ybp = ((unsigned long long)resultTemp) >> 32;
     result = resultTemp & 0x00000000FFFFFFFF;
+    stall(2);
     this->ICC_writeLogic(this->result);
     this->WB_yicc(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
@@ -8074,6 +8107,7 @@ unsigned int leon3_funclt_trap::SDIV_reg::behavior(){
             result = (unsigned int)(res64 & 0x00000000FFFFFFFFLL);
         }
     }
+    stall(2);
 
     if(exception){
         RaiseException(DIV_ZERO);
@@ -8141,6 +8175,7 @@ unsigned int leon3_funclt_trap::SMULcc_imm::behavior(){
     long long resultTemp = (long long)(((long long)((int)rs1_op))*((long long)((int)rs2_op)));
     Ybp = ((unsigned long long)resultTemp) >> 32;
     result = resultTemp & 0x00000000FFFFFFFF;
+    stall(2);
     this->ICC_writeLogic(this->result);
     this->WB_yicc(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
@@ -8214,6 +8249,7 @@ unsigned int leon3_funclt_trap::SWAP_reg::behavior(){
         readValue = dataMem.read_word(address);
         dataMem.write_word(address, toWrite);
     }
+    stall(2);
 
     notAligned = (address & 0x00000003) != 0;
     if(notAligned){
@@ -8356,6 +8392,7 @@ unsigned int leon3_funclt_trap::STDA_reg::behavior(){
     else{
         flush();
     }
+    stall(1);
 
     if(!supervisor){
         RaiseException(PRIVILEDGE_INSTR);
@@ -8430,6 +8467,7 @@ unsigned int leon3_funclt_trap::UMAC_reg::behavior(){
     Ybp = (resultAcc & 0x000000ff00000000LL) >> 32;
     ASR18bp = resultAcc & 0x00000000FFFFFFFFLL;
     result = resultAcc & 0x00000000FFFFFFFFLL;
+    stall(1);
     this->WB_yasr(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
@@ -8502,6 +8540,8 @@ unsigned int leon3_funclt_trap::JUMP_imm::behavior(){
         #endif
     }
 
+    stall(2);
+
     if(trapNotAligned){
         RaiseException(MEM_ADDR_NOT_ALIGNED);
     }
@@ -8568,6 +8608,7 @@ unsigned int leon3_funclt_trap::SMUL_reg::behavior(){
     long long resultTemp = (long long)(((long long)((int)rs1_op))*((long long)((int)rs2_op)));
     Ybp = ((unsigned long long)resultTemp) >> 32;
     result = resultTemp & 0x00000000FFFFFFFF;
+    stall(2);
     this->WB_y(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
@@ -8840,6 +8881,8 @@ unsigned int leon3_funclt_trap::JUMP_reg::behavior(){
         #endif
     }
 
+    stall(2);
+
     if(trapNotAligned){
         RaiseException(MEM_ADDR_NOT_ALIGNED);
     }
@@ -8977,6 +9020,7 @@ unsigned int leon3_funclt_trap::UDIV_reg::behavior(){
             result = (unsigned int)(res64 & 0x00000000FFFFFFFFLL);
         }
     }
+    stall(35);
 
     if(exception){
         RaiseException(DIV_ZERO);
@@ -9242,6 +9286,7 @@ unsigned int leon3_funclt_trap::STHA_reg::behavior(){
     else{
         flush();
     }
+    stall(1);
 
     if(!supervisor){
         RaiseException(PRIVILEDGE_INSTR);
@@ -9618,6 +9663,7 @@ unsigned int leon3_funclt_trap::TRAP_reg::behavior(){
     ((cond == 0x7) && PSRbp[key_ICC_v] != 0);
 
     if(raiseException){
+        stall(4);
         RaiseException(TRAP_INSTRUCTION, (rs1 + rs2) & 0x0000007F);
     }
     #ifndef ACC_MODEL
@@ -9793,6 +9839,7 @@ unsigned int leon3_funclt_trap::RETT_reg::behavior(){
 
     targetAddr = rs1_op + rs2_op;
     newCwp = ((unsigned int)(PSR[key_CWP] + 1)) % NUM_REG_WIN;
+    stall(2);
 
     if(exceptionEnabled){
         if(supervisor){
@@ -9889,6 +9936,7 @@ unsigned int leon3_funclt_trap::SDIVcc_imm::behavior(){
             result = (unsigned int)(res64 & 0x00000000FFFFFFFFLL);
         }
     }
+    stall(2);
     this->ICC_writeDiv(this->result, this->temp_V, this->rs1_op, this->rs2_op);
 
     if(exception){
@@ -10325,6 +10373,66 @@ leon3_funclt_trap::ANDcc_imm::ANDcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 }
 
 leon3_funclt_trap::ANDcc_imm::~ANDcc_imm(){
+
+}
+unsigned int leon3_funclt_trap::IRQ_IRQ_Instruction::behavior(){
+    this->totalInstrCycles = 0;
+    //Basically, what I have to do when
+    //an interrupt arrives is very simple: we check that interrupts
+    //are enabled and that the the processor can take this interrupt
+    //(valid interrupt level). The we simply raise an exception and
+    //acknowledge the IRQ on the irqAck port.
+    // First of all I have to move to a new register window
+    unsigned int newCwp = ((unsigned int)(PSR[key_CWP] - 1)) % NUM_REG_WIN;
+    PSRbp = (PSR & 0xFFFFFFE0) | newCwp;
+    PSR.immediateWrite(PSRbp);
+    for(int i = 8; i < 32; i++){
+        REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (128)]);
+    }
+
+    // Now I set the TBR
+    TBR[key_TT] = 0x10 + IRQ;
+    // I have to jump to the address contained in the TBR register
+    PC = TBR;
+    NPC = TBR + 4;
+    // finally I acknowledge the interrupt on the external pin port
+    irqAck.send_pin_req(IRQ, 0);
+    return this->totalInstrCycles;
+}
+
+Instruction * leon3_funclt_trap::IRQ_IRQ_Instruction::replicate() const throw(){
+    return new IRQ_IRQ_Instruction(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, \
+        WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck, this->IRQ);
+}
+
+void leon3_funclt_trap::IRQ_IRQ_Instruction::setParams( const unsigned int & bitString \
+    ) throw(){
+
+}
+
+std::string leon3_funclt_trap::IRQ_IRQ_Instruction::getInstructionName() const throw(){
+    return "IRQIRQInstruction";
+}
+
+std::string leon3_funclt_trap::IRQ_IRQ_Instruction::getMnemonic() const throw(){
+    return "irq_IRQ";
+}
+
+unsigned int leon3_funclt_trap::IRQ_IRQ_Instruction::getId() const throw(){
+    return (unsigned int)-1;
+}
+
+leon3_funclt_trap::IRQ_IRQ_Instruction::IRQ_IRQ_Instruction( Reg32_0_delay_3 & PSR, \
+    Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & \
+    NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, \
+    Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & \
+    PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck, \
+    unsigned int & IRQ ) : Instruction(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IRQ(IRQ){
+
+}
+
+leon3_funclt_trap::IRQ_IRQ_Instruction::~IRQ_IRQ_Instruction(){
 
 }
 

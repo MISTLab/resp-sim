@@ -41,6 +41,8 @@
 #ifndef CONCURRENCY_SYSCALLS_HPP
 #define CONCURRENCY_SYSCALLS_HPP
 
+#include <systemc.h>
+
 #include <sysCallB.hpp>
 #include <ABIIf.hpp>
 

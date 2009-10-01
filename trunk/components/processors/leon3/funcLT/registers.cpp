@@ -67,23 +67,6 @@ leon3_funclt_trap::Register::Register( const sc_module_name & name, unsigned int
     end_module();
 }
 
-InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_PS::operator =( const \
-    unsigned int & other ) throw(){
-    this->lastValid = true;
-    this->valueLast = (this->value & 0xffffffbfL);
-    this->valueLast |= ((other & 0x1) << 6);
-    return *this;
-}
-
-leon3_funclt_trap::Reg32_0_delay_3::InnerField_PS::InnerField_PS( unsigned int & \
-    value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
-    lastValid(lastValid){
-
-}
-
-leon3_funclt_trap::Reg32_0_delay_3::InnerField_PS::~InnerField_PS(){
-
-}
 InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_VER::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
@@ -203,23 +186,6 @@ leon3_funclt_trap::Reg32_0_delay_3::InnerField_S::InnerField_S( unsigned int & v
 leon3_funclt_trap::Reg32_0_delay_3::InnerField_S::~InnerField_S(){
 
 }
-InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_CWP::operator =( const \
-    unsigned int & other ) throw(){
-    this->lastValid = true;
-    this->valueLast = (this->value & 0xffffffe0L);
-    this->valueLast |= other;
-    return *this;
-}
-
-leon3_funclt_trap::Reg32_0_delay_3::InnerField_CWP::InnerField_CWP( unsigned int \
-    & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
-    lastValid(lastValid){
-
-}
-
-leon3_funclt_trap::Reg32_0_delay_3::InnerField_CWP::~InnerField_CWP(){
-
-}
 InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_ET::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
@@ -235,6 +201,40 @@ leon3_funclt_trap::Reg32_0_delay_3::InnerField_ET::InnerField_ET( unsigned int &
 }
 
 leon3_funclt_trap::Reg32_0_delay_3::InnerField_ET::~InnerField_ET(){
+
+}
+InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_ICC_c::operator =( const \
+    unsigned int & other ) throw(){
+    this->lastValid = true;
+    this->valueLast = (this->value & 0xffefffffL);
+    this->valueLast |= ((other & 0x1) << 20);
+    return *this;
+}
+
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_ICC_c::InnerField_ICC_c( unsigned \
+    int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
+    lastValid(lastValid){
+
+}
+
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_ICC_c::~InnerField_ICC_c(){
+
+}
+InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_PS::operator =( const \
+    unsigned int & other ) throw(){
+    this->lastValid = true;
+    this->valueLast = (this->value & 0xffffffbfL);
+    this->valueLast |= ((other & 0x1) << 6);
+    return *this;
+}
+
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_PS::InnerField_PS( unsigned int & \
+    value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
+    lastValid(lastValid){
+
+}
+
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_PS::~InnerField_PS(){
 
 }
 InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_PIL::operator =( const \
@@ -254,21 +254,21 @@ leon3_funclt_trap::Reg32_0_delay_3::InnerField_PIL::InnerField_PIL( unsigned int
 leon3_funclt_trap::Reg32_0_delay_3::InnerField_PIL::~InnerField_PIL(){
 
 }
-InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_ICC_c::operator =( const \
+InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_CWP::operator =( const \
     unsigned int & other ) throw(){
     this->lastValid = true;
-    this->valueLast = (this->value & 0xffefffffL);
-    this->valueLast |= ((other & 0x1) << 20);
+    this->valueLast = (this->value & 0xffffffe0L);
+    this->valueLast |= other;
     return *this;
 }
 
-leon3_funclt_trap::Reg32_0_delay_3::InnerField_ICC_c::InnerField_ICC_c( unsigned \
-    int & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_CWP::InnerField_CWP( unsigned int \
+    & value, unsigned int & valueLast, bool & lastValid ) : value(value), valueLast(valueLast), \
     lastValid(lastValid){
 
 }
 
-leon3_funclt_trap::Reg32_0_delay_3::InnerField_ICC_c::~InnerField_ICC_c(){
+leon3_funclt_trap::Reg32_0_delay_3::InnerField_CWP::~InnerField_CWP(){
 
 }
 InnerField & leon3_funclt_trap::Reg32_0_delay_3::InnerField_IMPL::operator =( const \
@@ -692,16 +692,15 @@ std::ostream & leon3_funclt_trap::Reg32_0_delay_3::operator <<( std::ostream & s
 }
 
 leon3_funclt_trap::Reg32_0_delay_3::Reg32_0_delay_3( sc_module_name name ) : Register(name, \
-    32), field_PS(this->value, this->values[2], this->updateSlot[2]), field_VER(this->value, \
-    this->values[2], this->updateSlot[2]), field_ICC_z(this->value, this->values[2], \
-    this->updateSlot[2]), field_ICC_v(this->value, this->values[2], this->updateSlot[2]), \
-    field_EF(this->value, this->values[2], this->updateSlot[2]), field_EC(this->value, \
-    this->values[2], this->updateSlot[2]), field_ICC_n(this->value, this->values[2], \
-    this->updateSlot[2]), field_S(this->value, this->values[2], this->updateSlot[2]), \
-    field_CWP(this->value, this->values[2], this->updateSlot[2]), field_ET(this->value, \
-    this->values[2], this->updateSlot[2]), field_PIL(this->value, this->values[2], this->updateSlot[2]), \
-    field_ICC_c(this->value, this->values[2], this->updateSlot[2]), field_IMPL(this->value, \
-    this->values[2], this->updateSlot[2]){
+    32), field_VER(this->value, this->values[2], this->updateSlot[2]), field_ICC_z(this->value, \
+    this->values[2], this->updateSlot[2]), field_ICC_v(this->value, this->values[2], \
+    this->updateSlot[2]), field_EF(this->value, this->values[2], this->updateSlot[2]), \
+    field_EC(this->value, this->values[2], this->updateSlot[2]), field_ICC_n(this->value, \
+    this->values[2], this->updateSlot[2]), field_S(this->value, this->values[2], this->updateSlot[2]), \
+    field_ET(this->value, this->values[2], this->updateSlot[2]), field_ICC_c(this->value, \
+    this->values[2], this->updateSlot[2]), field_PS(this->value, this->values[2], this->updateSlot[2]), \
+    field_PIL(this->value, this->values[2], this->updateSlot[2]), field_CWP(this->value, \
+    this->values[2], this->updateSlot[2]), field_IMPL(this->value, this->values[2], this->updateSlot[2]){
     this->value = 0;
     this->updateSlot[0] = false;
     this->updateSlot[1] = false;
@@ -709,16 +708,15 @@ leon3_funclt_trap::Reg32_0_delay_3::Reg32_0_delay_3( sc_module_name name ) : Reg
 }
 
 leon3_funclt_trap::Reg32_0_delay_3::Reg32_0_delay_3() : Register(sc_gen_unique_name("Reg32_0_delay_3"), \
-    32), field_PS(this->value, this->values[2], this->updateSlot[2]), field_VER(this->value, \
-    this->values[2], this->updateSlot[2]), field_ICC_z(this->value, this->values[2], \
-    this->updateSlot[2]), field_ICC_v(this->value, this->values[2], this->updateSlot[2]), \
-    field_EF(this->value, this->values[2], this->updateSlot[2]), field_EC(this->value, \
-    this->values[2], this->updateSlot[2]), field_ICC_n(this->value, this->values[2], \
-    this->updateSlot[2]), field_S(this->value, this->values[2], this->updateSlot[2]), \
-    field_CWP(this->value, this->values[2], this->updateSlot[2]), field_ET(this->value, \
-    this->values[2], this->updateSlot[2]), field_PIL(this->value, this->values[2], this->updateSlot[2]), \
-    field_ICC_c(this->value, this->values[2], this->updateSlot[2]), field_IMPL(this->value, \
-    this->values[2], this->updateSlot[2]){
+    32), field_VER(this->value, this->values[2], this->updateSlot[2]), field_ICC_z(this->value, \
+    this->values[2], this->updateSlot[2]), field_ICC_v(this->value, this->values[2], \
+    this->updateSlot[2]), field_EF(this->value, this->values[2], this->updateSlot[2]), \
+    field_EC(this->value, this->values[2], this->updateSlot[2]), field_ICC_n(this->value, \
+    this->values[2], this->updateSlot[2]), field_S(this->value, this->values[2], this->updateSlot[2]), \
+    field_ET(this->value, this->values[2], this->updateSlot[2]), field_ICC_c(this->value, \
+    this->values[2], this->updateSlot[2]), field_PS(this->value, this->values[2], this->updateSlot[2]), \
+    field_PIL(this->value, this->values[2], this->updateSlot[2]), field_CWP(this->value, \
+    this->values[2], this->updateSlot[2]), field_IMPL(this->value, this->values[2], this->updateSlot[2]){
     this->value = 0;
     this->updateSlot[0] = false;
     this->updateSlot[1] = false;
@@ -2789,21 +2787,6 @@ leon3_funclt_trap::Reg32_3_off_4::Reg32_3_off_4() : Register(sc_gen_unique_name(
     this->value = 0;
 }
 
-InnerField & leon3_funclt_trap::Reg32_0::InnerField_PS::operator =( const unsigned \
-    int & other ) throw(){
-    this->value &= 0xffffffbfL;
-    this->value |= ((other & 0x1) << 6);
-    return *this;
-}
-
-leon3_funclt_trap::Reg32_0::InnerField_PS::InnerField_PS( unsigned int & value ) \
-    : value(value){
-
-}
-
-leon3_funclt_trap::Reg32_0::InnerField_PS::~InnerField_PS(){
-
-}
 InnerField & leon3_funclt_trap::Reg32_0::InnerField_VER::operator =( const unsigned \
     int & other ) throw(){
     this->value &= 0xf0ffffffL;
@@ -2909,21 +2892,6 @@ leon3_funclt_trap::Reg32_0::InnerField_S::InnerField_S( unsigned int & value ) :
 leon3_funclt_trap::Reg32_0::InnerField_S::~InnerField_S(){
 
 }
-InnerField & leon3_funclt_trap::Reg32_0::InnerField_CWP::operator =( const unsigned \
-    int & other ) throw(){
-    this->value &= 0xffffffe0L;
-    this->value |= other;
-    return *this;
-}
-
-leon3_funclt_trap::Reg32_0::InnerField_CWP::InnerField_CWP( unsigned int & value \
-    ) : value(value){
-
-}
-
-leon3_funclt_trap::Reg32_0::InnerField_CWP::~InnerField_CWP(){
-
-}
 InnerField & leon3_funclt_trap::Reg32_0::InnerField_ET::operator =( const unsigned \
     int & other ) throw(){
     this->value &= 0xffffffdfL;
@@ -2937,6 +2905,36 @@ leon3_funclt_trap::Reg32_0::InnerField_ET::InnerField_ET( unsigned int & value )
 }
 
 leon3_funclt_trap::Reg32_0::InnerField_ET::~InnerField_ET(){
+
+}
+InnerField & leon3_funclt_trap::Reg32_0::InnerField_ICC_c::operator =( const unsigned \
+    int & other ) throw(){
+    this->value &= 0xffefffffL;
+    this->value |= ((other & 0x1) << 20);
+    return *this;
+}
+
+leon3_funclt_trap::Reg32_0::InnerField_ICC_c::InnerField_ICC_c( unsigned int & value \
+    ) : value(value){
+
+}
+
+leon3_funclt_trap::Reg32_0::InnerField_ICC_c::~InnerField_ICC_c(){
+
+}
+InnerField & leon3_funclt_trap::Reg32_0::InnerField_PS::operator =( const unsigned \
+    int & other ) throw(){
+    this->value &= 0xffffffbfL;
+    this->value |= ((other & 0x1) << 6);
+    return *this;
+}
+
+leon3_funclt_trap::Reg32_0::InnerField_PS::InnerField_PS( unsigned int & value ) \
+    : value(value){
+
+}
+
+leon3_funclt_trap::Reg32_0::InnerField_PS::~InnerField_PS(){
 
 }
 InnerField & leon3_funclt_trap::Reg32_0::InnerField_PIL::operator =( const unsigned \
@@ -2954,19 +2952,19 @@ leon3_funclt_trap::Reg32_0::InnerField_PIL::InnerField_PIL( unsigned int & value
 leon3_funclt_trap::Reg32_0::InnerField_PIL::~InnerField_PIL(){
 
 }
-InnerField & leon3_funclt_trap::Reg32_0::InnerField_ICC_c::operator =( const unsigned \
+InnerField & leon3_funclt_trap::Reg32_0::InnerField_CWP::operator =( const unsigned \
     int & other ) throw(){
-    this->value &= 0xffefffffL;
-    this->value |= ((other & 0x1) << 20);
+    this->value &= 0xffffffe0L;
+    this->value |= other;
     return *this;
 }
 
-leon3_funclt_trap::Reg32_0::InnerField_ICC_c::InnerField_ICC_c( unsigned int & value \
+leon3_funclt_trap::Reg32_0::InnerField_CWP::InnerField_CWP( unsigned int & value \
     ) : value(value){
 
 }
 
-leon3_funclt_trap::Reg32_0::InnerField_ICC_c::~InnerField_ICC_c(){
+leon3_funclt_trap::Reg32_0::InnerField_CWP::~InnerField_CWP(){
 
 }
 InnerField & leon3_funclt_trap::Reg32_0::InnerField_IMPL::operator =( const unsigned \
@@ -3303,17 +3301,17 @@ std::ostream & leon3_funclt_trap::Reg32_0::operator <<( std::ostream & stream ) 
 }
 
 leon3_funclt_trap::Reg32_0::Reg32_0( sc_module_name name ) : Register(name, 32), \
-    field_PS(this->value), field_VER(this->value), field_ICC_z(this->value), field_ICC_v(this->value), \
-    field_EF(this->value), field_EC(this->value), field_ICC_n(this->value), field_S(this->value), \
-    field_CWP(this->value), field_ET(this->value), field_PIL(this->value), field_ICC_c(this->value), \
+    field_VER(this->value), field_ICC_z(this->value), field_ICC_v(this->value), field_EF(this->value), \
+    field_EC(this->value), field_ICC_n(this->value), field_S(this->value), field_ET(this->value), \
+    field_ICC_c(this->value), field_PS(this->value), field_PIL(this->value), field_CWP(this->value), \
     field_IMPL(this->value){
     this->value = 0;
 }
 
 leon3_funclt_trap::Reg32_0::Reg32_0() : Register(sc_gen_unique_name("Reg32_0"), 32), \
-    field_PS(this->value), field_VER(this->value), field_ICC_z(this->value), field_ICC_v(this->value), \
-    field_EF(this->value), field_EC(this->value), field_ICC_n(this->value), field_S(this->value), \
-    field_CWP(this->value), field_ET(this->value), field_PIL(this->value), field_ICC_c(this->value), \
+    field_VER(this->value), field_ICC_z(this->value), field_ICC_v(this->value), field_EF(this->value), \
+    field_EC(this->value), field_ICC_n(this->value), field_S(this->value), field_ET(this->value), \
+    field_ICC_c(this->value), field_PS(this->value), field_PIL(this->value), field_CWP(this->value), \
     field_IMPL(this->value){
     this->value = 0;
 }
