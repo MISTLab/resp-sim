@@ -41,12 +41,54 @@
 #ifndef CONCURRENCY_MANAGER_HPP
 #define CONCURRENCY_MANAGER_HPP
 
+#include <ABIIf.hpp>
+
 #include <systemc.h>
 
 #include <map>
 #include <string>
 
+#include <ctime>
+#include <boost/random/linear_congruential.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/variate_generator.hpp>
+#ifdef BOOST_NO_STDC_NAMESPACE
+namespace std {
+  using ::time;
+}
+#endif
+
 #include "concurrency_structures.hpp"
+
+///High level representation of a processor; it contains also the
+///methods to manage the scheduling/unscheduling of the software running
+///on it
+template <class wordSize> struct Processor{
+    trap::ABIIf<wordSize> &processorInstance;
+    ThreadEmu * runThread;
+    std::vector<std::pair<double, double> > idleTrace;
+    double curIdleStart;
+
+    // Idle event
+    sc_event idleEvent;
+
+    Processor(trap::ABIIf<wordSize> &processorInstance) : processorInstance(processorInstance){
+        runThread = NULL;
+        curIdleStart = -1;
+    }
+    ~Processor(){
+    }
+
+    void schedule(ThreadEmu * thread){
+    }
+    int deSchedule(bool saveStatus = true){
+    }
+    void printIdleTrace(){
+    }
+    std::string getIdleTraceCSV(){
+    }
+};
 
 ///***************************************************************
 /// Here we declare some classes which will be used as timers
@@ -89,15 +131,6 @@ public:
     void countTime();
 };
 
-///Default information associated to a thread.
-struct DefaultThreadInfo{
-    bool preemptive;
-    int schedPolicy;
-    int priority;
-    unsigned int deadline;
-    std::string funName;
-};
-
 namespace resp{
 
 ///Main class of the concurrency manager: it is in charge of implementing the
@@ -109,7 +142,7 @@ class ConcurrencyManager{
         unsigned int mallocMutex;
         unsigned int sfpMutex;
         unsigned int sinitMutex;
-        unsigned int createMutex;
+        unsigned int fpMutex;
     public:
         /// Some constants
         static const int SYSC_SCHED_FIFO;
@@ -138,6 +171,8 @@ class ConcurrencyManager{
         static unsigned char * tlsData;
 
         ConcurrencyManager();
+
+        ///Resets the CM to its original status as after the construction
         void reset();
 
         ///*******************************************************************
@@ -146,6 +181,8 @@ class ConcurrencyManager{
         ///Initializes the mutexes used to guarantee mutual exclusion access to
         ///reentrant routines
         void initReentrantEmulation();
+        template <class wordSize> void addProcessor(trap::ABIIf<wordSize> &processorInstance){
+        }
 
         ///*******************************************************************
         /// Here are some functions for computing statistics on the
@@ -200,15 +237,15 @@ class ConcurrencyManager{
 
         int createKey();
         void setSpecific(unsigned int procId, int key, unsigned int memArea);
-        void *getSpecific(unsigned int procId, int key);
+        unsigned int getSpecific(unsigned int procId, int key);
 
         void join(int thId, unsigned int procId, int curThread_ = -1);
         void joinAll(unsigned int procId);
 
-        std::pair<void *, void *> readTLS(unsigned int procId);
+        std::pair<unsigned int, unsigned int> readTLS(unsigned int procId);
         void idleLoop(unsigned int procId);
 
-        void pushCleanupHandler(unsigned int procId, unsigned int routineAddress, void * arg);
+        void pushCleanupHandler(unsigned int procId, unsigned int routineAddress, unsigned int arg);
         void popCleanupHandler(unsigned int procId, bool execute);
         void execCleanupHandlerTop(unsigned int procId);
 
@@ -233,7 +270,6 @@ class ConcurrencyManager{
         void destroyCond(unsigned int procId, int cond);
         void signalCond(int cond, bool broadcast, unsigned int procId);
         int waitCond(int cond, int mutex, double time, unsigned int procId);
-
 };
 
 };

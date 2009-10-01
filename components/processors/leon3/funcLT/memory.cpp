@@ -134,13 +134,16 @@ unsigned char leon3_funclt_trap::LocalMemory::read_byte( const unsigned int & ad
     if(address >= this->size){
         THROW_ERROR("Address " << std::hex << std::showbase << address << " out of memory");
     }
-    return *(unsigned char *)(this->memory + (unsigned long)address);
+
+    unsigned char datum = *(unsigned char *)(this->memory + (unsigned long)address);
+
+    return datum;
 }
 
 sc_dt::uint64 leon3_funclt_trap::LocalMemory::read_dword_dbg( const unsigned int \
-    & address ){
+    & address ) throw(){
     if(address >= this->size){
-        THROW_EXCEPTION("Address " << std::hex << std::showbase << address << " out of memory");
+        THROW_ERROR("Address " << std::hex << std::showbase << address << " out of memory");
     }
 
     sc_dt::uint64 datum = *(sc_dt::uint64 *)(this->memory + (unsigned long)address);
@@ -155,10 +158,24 @@ sc_dt::uint64 leon3_funclt_trap::LocalMemory::read_dword_dbg( const unsigned int
     return datum;
 }
 
-unsigned short int leon3_funclt_trap::LocalMemory::read_half_dbg( const unsigned \
-    int & address ){
+unsigned int leon3_funclt_trap::LocalMemory::read_word_dbg( const unsigned int & \
+    address ) throw(){
     if(address >= this->size){
-        THROW_EXCEPTION("Address " << std::hex << std::showbase << address << " out of memory");
+        THROW_ERROR("Address " << std::hex << std::showbase << address << " out of memory");
+    }
+
+    unsigned int datum = *(unsigned int *)(this->memory + (unsigned long)address);
+    #ifdef LITTLE_ENDIAN_BO
+    this->swapEndianess(datum);
+    #endif
+
+    return datum;
+}
+
+unsigned short int leon3_funclt_trap::LocalMemory::read_half_dbg( const unsigned \
+    int & address ) throw(){
+    if(address >= this->size){
+        THROW_ERROR("Address " << std::hex << std::showbase << address << " out of memory");
     }
 
     unsigned short int datum = *(unsigned short int *)(this->memory + (unsigned long)address);
@@ -170,11 +187,14 @@ unsigned short int leon3_funclt_trap::LocalMemory::read_half_dbg( const unsigned
 }
 
 unsigned char leon3_funclt_trap::LocalMemory::read_byte_dbg( const unsigned int & \
-    address ){
+    address ) throw(){
     if(address >= this->size){
-        THROW_EXCEPTION("Address " << std::hex << std::showbase << address << " out of memory");
+        THROW_ERROR("Address " << std::hex << std::showbase << address << " out of memory");
     }
-    return *(unsigned char *)(this->memory + (unsigned long)address);
+
+    unsigned char datum = *(unsigned char *)(this->memory + (unsigned long)address);
+
+    return datum;
 }
 
 void leon3_funclt_trap::LocalMemory::write_dword( const unsigned int & address, sc_dt::uint64 \
@@ -221,13 +241,15 @@ void leon3_funclt_trap::LocalMemory::write_byte( const unsigned int & address, u
     if(this->debugger != NULL){
         this->debugger->notifyAddress(address, sizeof(datum));
     }
+
+
     *(unsigned char *)(this->memory + (unsigned long)address) = datum;
 }
 
 void leon3_funclt_trap::LocalMemory::write_dword_dbg( const unsigned int & address, \
-    sc_dt::uint64 datum ){
+    sc_dt::uint64 datum ) throw(){
     if(address >= this->size){
-        THROW_EXCEPTION("Address " << std::hex << std::showbase << address << " out of memory");
+        THROW_ERROR("Address " << std::hex << std::showbase << address << " out of memory");
     }
     if(this->debugger != NULL){
         this->debugger->notifyAddress(address, sizeof(datum));
@@ -244,10 +266,26 @@ void leon3_funclt_trap::LocalMemory::write_dword_dbg( const unsigned int & addre
     *(sc_dt::uint64 *)(this->memory + (unsigned long)address) = datum;
 }
 
-void leon3_funclt_trap::LocalMemory::write_half_dbg( const unsigned int & address, \
-    unsigned short int datum ){
+void leon3_funclt_trap::LocalMemory::write_word_dbg( const unsigned int & address, \
+    unsigned int datum ) throw(){
     if(address >= this->size){
-        THROW_EXCEPTION("Address " << std::hex << std::showbase << address << " out of memory");
+        THROW_ERROR("Address " << std::hex << std::showbase << address << " out of memory");
+    }
+    if(this->debugger != NULL){
+        this->debugger->notifyAddress(address, sizeof(datum));
+    }
+
+    #ifdef LITTLE_ENDIAN_BO
+    this->swapEndianess(datum);
+    #endif
+
+    *(unsigned int *)(this->memory + (unsigned long)address) = datum;
+}
+
+void leon3_funclt_trap::LocalMemory::write_half_dbg( const unsigned int & address, \
+    unsigned short int datum ) throw(){
+    if(address >= this->size){
+        THROW_ERROR("Address " << std::hex << std::showbase << address << " out of memory");
     }
     if(this->debugger != NULL){
         this->debugger->notifyAddress(address, sizeof(datum));
@@ -261,13 +299,15 @@ void leon3_funclt_trap::LocalMemory::write_half_dbg( const unsigned int & addres
 }
 
 void leon3_funclt_trap::LocalMemory::write_byte_dbg( const unsigned int & address, \
-    unsigned char datum ){
+    unsigned char datum ) throw(){
     if(address >= this->size){
-        THROW_EXCEPTION("Address " << std::hex << std::showbase << address << " out of memory");
+        THROW_ERROR("Address " << std::hex << std::showbase << address << " out of memory");
     }
     if(this->debugger != NULL){
         this->debugger->notifyAddress(address, sizeof(datum));
     }
+
+
     *(unsigned char *)(this->memory + (unsigned long)address) = datum;
 }
 

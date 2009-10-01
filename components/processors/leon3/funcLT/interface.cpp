@@ -47,6 +47,7 @@
 #include <memory.hpp>
 #include <registers.hpp>
 #include <alias.hpp>
+#include <systemc.h>
 #include <vector>
 #include <string>
 #include <instructionBase.hpp>
@@ -56,6 +57,20 @@ using namespace leon3_funclt_trap;
 using namespace trap;
 bool leon3_funclt_trap::LEON3_ABIIf::isLittleEndian() const throw(){
     return false;
+}
+
+int leon3_funclt_trap::LEON3_ABIIf::getProcessorID() const throw(){
+    return ((ASR[17] & 0xF0000000) >> 28);
+}
+
+bool leon3_funclt_trap::LEON3_ABIIf::isInstrExecuting() const throw(){
+    return this->instrExecuting;
+}
+
+void leon3_funclt_trap::LEON3_ABIIf::waitInstrEnd() const throw(){
+    if(this->instrExecuting){
+        wait(this->instrEndEvent);
+    }
 }
 
 void leon3_funclt_trap::LEON3_ABIIf::preCall() throw(){
@@ -1205,9 +1220,11 @@ leon3_funclt_trap::LEON3_ABIIf::LEON3_ABIIf( unsigned int & PROGRAM_LIMIT, Memor
     & dataMem, Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
     Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
     RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-    & LR, Alias & SP, Alias & PCR, Alias * & REGS ) : PROGRAM_LIMIT(PROGRAM_LIMIT), dataMem(dataMem), \
-    PSR(PSR), WIM(WIM), TBR(TBR), Y(Y), PC(PC), NPC(NPC), PSRbp(PSRbp), Ybp(Ybp), ASR18bp(ASR18bp), \
-    GLOBAL(GLOBAL), WINREGS(WINREGS), ASR(ASR), FP(FP), LR(LR), SP(SP), PCR(PCR), REGS(REGS){
+    & LR, Alias & SP, Alias & PCR, Alias * & REGS, bool & instrExecuting, sc_event & \
+    instrEndEvent ) : PROGRAM_LIMIT(PROGRAM_LIMIT), dataMem(dataMem), PSR(PSR), WIM(WIM), \
+    TBR(TBR), Y(Y), PC(PC), NPC(NPC), PSRbp(PSRbp), Ybp(Ybp), ASR18bp(ASR18bp), GLOBAL(GLOBAL), \
+    WINREGS(WINREGS), ASR(ASR), FP(FP), LR(LR), SP(SP), PCR(PCR), REGS(REGS), instrExecuting(instrExecuting), \
+    instrEndEvent(instrEndEvent){
     this->routineExitState = 0;
     this->routineEntryState = 0;
     std::vector<std::string> tempVec;

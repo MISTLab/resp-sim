@@ -45,13 +45,13 @@
 #define INSTRUCTIONS_HPP
 
 #include <instructionBase.hpp>
+#include <string>
 #include <customExceptions.hpp>
 #include <trap_utils.hpp>
 #include <registers.hpp>
 #include <alias.hpp>
 #include <externalPorts.hpp>
 #include <externalPins.hpp>
-#include <string>
 #include <sstream>
 #include <systemc.h>
 
@@ -124,6 +124,7 @@ namespace leon3_funclt_trap{
         TLMMemory & dataMem;
         PinTLM_out_32 & irqAck;
         const unsigned int NUM_REG_WIN;
+        const bool PIPELINED_MULT;
 
         public:
         Instruction( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
@@ -134,6 +135,9 @@ namespace leon3_funclt_trap{
         virtual unsigned int behavior() = 0;
         virtual Instruction * replicate() const throw() = 0;
         virtual void setParams( const unsigned int & bitString ) throw() = 0;
+        virtual std::string getInstructionName() const throw() = 0;
+        virtual std::string getMnemonic() const throw() = 0;
+        virtual unsigned int getId() const throw() = 0;
         inline void annull(){
             throw annull_exception();
         }
@@ -5176,6 +5180,31 @@ namespace leon3_funclt_trap{
         void setParams( const unsigned int & bitString ) throw();
         std::string getMnemonic() const throw();
         virtual ~ANDcc_imm();
+    };
+
+};
+
+namespace leon3_funclt_trap{
+
+    class IRQ_IRQ_Instruction : public Instruction{
+
+        public:
+        IRQ_IRQ_Instruction( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, \
+            Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 \
+            & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+            TLMMemory & dataMem, PinTLM_out_32 & irqAck, unsigned int & IRQ );
+        unsigned int behavior();
+        Instruction * replicate() const throw();
+        void setParams( const unsigned int & bitString ) throw();
+        std::string getInstructionName() const throw();
+        std::string getMnemonic() const throw();
+        unsigned int getId() const throw();
+        unsigned int & IRQ;
+        inline void setInterruptValue( const unsigned int & interruptValue ) throw(){
+            this->IRQ = interruptValue;
+        }
+        virtual ~IRQ_IRQ_Instruction();
     };
 
 };

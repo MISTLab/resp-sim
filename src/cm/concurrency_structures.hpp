@@ -41,12 +41,18 @@
 #ifndef CONCURRENCY_STRUCTURES_HPP
 #define CONCURRENCY_STRUCTURES_HPP
 
+#include <systemc.h>
+
 #include <list>
 #include <vector>
 #include <string>
 
-typedef void *(*thread_routine_t)(void*);
+///************************************************************************
+///Here are the data structures use to represent threads, thread-attributes,
+///etc.
+///************************************************************************
 
+///Thread attributes, determining the thread behavior
 struct AttributeEmu{
     unsigned int stackSize;
     bool detached;
@@ -60,6 +66,7 @@ struct AttributeEmu{
     AttributeEmu(unsigned int stackSize);
 };
 
+///High level, internal representation of a thread
 struct ThreadEmu{
     struct ExecutionTrace{
         double startTime;
@@ -67,23 +74,11 @@ struct ThreadEmu{
         int processorId;
         unsigned int startAddress;
         unsigned int endAddress;
-        ExecutionTrace(){
-            this->startTime = -1;
-            this->endTime = -1;
-            this->processorId = -1;
-            this->startAddress = 0;
-            this->endAddress = 0;
-        }
-        void clear(){
-            this->startTime = -1;
-            this->endTime = -1;
-            this->processorId = -1;
-            this->startAddress = 0;
-            this->endAddress = 0;
-        }
+        ExecutionTrace();
+        void clear();
     };
     enum status_t {READY, RUNNING, WAITING, DEAD};
-    thread_routine_t thread_routine;
+    unsigned int thread_routine;
     AttributeEmu *attr;
     void * args;
     status_t status;
@@ -106,12 +101,23 @@ struct ThreadEmu{
     unsigned int lastPc;
     unsigned int lastRetAddr;
 
-    ThreadEmu(int id, thread_routine_t thread_routine, void * args, unsigned int stackBase, unsigned int tlsSize, AttributeEmu *attr);
+    ThreadEmu(int id, unsigned int thread_routine, unsigned int args, unsigned int stackBase, unsigned int tlsSize, AttributeEmu *attr);
     ~ThreadEmu();
     void printTrace();
     std::string getTrace();
 };
 
+///Default information associated to a thread, which can be specified from the command line.
+///If a thread contains such information, it is
+struct DefaultThreadInfo{
+    bool preemptive;
+    int schedPolicy;
+    int priority;
+    unsigned int deadline;
+    std::string funName;
+};
+
+///Internal representation of a mutex
 struct MutexEmu{
     enum status_t {LOCKED, FREE};
     std::list<ThreadEmu *> waitingTh;
@@ -123,6 +129,7 @@ struct MutexEmu{
     ~MutexEmu();
 };
 
+///Internal representation of a sempahore
 struct SemaphoreEmu{
     unsigned int value;
     std::list<ThreadEmu *> waitingTh;
@@ -131,34 +138,14 @@ struct SemaphoreEmu{
     ~SemaphoreEmu();
 };
 
+///Internal representation of a condition variable
 struct ConditionEmu{
     std::list<ThreadEmu *> waitingTh;
     unsigned int waitTime;
     int mutex;
 
-    ConditionEmu(){
-        this->waitTime = 0;
-        this->mutex = -1;
-    }
-    ~ConditionEmu(){}
-};
-
-struct Processor{
-    trap::ABIIf<wordSize> &processorInstance;
-    ThreadEmu * runThread;
-    std::vector<std::pair<double, double> > idleTrace;
-    double curIdleStart;
-
-    // Idle event
-    sc_event idleEvent;
-
-    Processor(trap::ABIIf<wordSize> &processorInstance);
-    ~Processor();
-
-    void schedule(ThreadEmu * thread);
-    int deSchedule(bool saveStatus = true);
-    void printIdleTrace();
-    std::string getIdleTraceCSV();
+    ConditionEmu();
+    ~ConditionEmu();
 };
 
 #endif

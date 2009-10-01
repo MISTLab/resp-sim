@@ -236,6 +236,8 @@ template<class wordSize> class ConcurrencyEmulator: public trap::ToolsIf<issueWi
             //does not exist yet
             if(ConcurrencyEmulatorBase::cm.find(group) == ConcurrencyEmulatorBase::cm.end())
                 ConcurrencyEmulatorBase::cm[group] = new ConcurrencyManager();
+            //Lets add a processor to the current concurrency manager
+            ConcurrencyEmulatorBase::cm[group]->addProcessor(this->processorInstance);
             //Now I initialized the BFD library with an instance of the current executable file
             BFDWrapper::getInstance(execName);
             //Now I perform the registration of the emulated pthread-Calls

@@ -43,9 +43,9 @@
 
 
 #include <processor.hpp>
-#include <instructions.hpp>
 #include <systemc.h>
 #include <customExceptions.hpp>
+#include <instructions.hpp>
 #include <decoder.hpp>
 #include <interface.hpp>
 #include <ToolsIf.hpp>
@@ -81,44 +81,13 @@
 
 using namespace leon3_funclt_trap;
 using namespace trap;
-leon3_funclt_trap::CacheElem::CacheElem( Instruction * instr, unsigned int count \
-    ) : instr(instr), count(count){
-
-}
-
-leon3_funclt_trap::CacheElem::CacheElem() : instr(NULL), count(1){
-
-}
-
 void leon3_funclt_trap::Processor::mainLoop(){
-    template_map< unsigned int, CacheElem >::iterator instrCacheEnd = this->instrCache.end();
-    while(true){
+    template_map< unsigned int, CacheElem >::iterator instrCacheEnd = this->instrCache.end();while(true){
         unsigned int numCycles = 0;
-        if(IRQ != -1){
-            //Basically, what I have to do when
-            //an interrupt arrives is very simple: we check that interrupts
-            //are enabled and that the the processor can take this interrupt
-            //(valid interrupt level). The we simply raise an exception and
-            //acknowledge the IRQ on the irqAck port.
-            if(PSR[key_ET]){
-                if(IRQ == 15 || IRQ > PSR[key_PIL]){
-                    // First of all I have to move to a new register window
-                    unsigned int newCwp = ((unsigned int)(PSR[key_CWP] - 1)) % 8;
-                    PSRbp = (PSR & 0xFFFFFFE0) | newCwp;
-                    PSR.immediateWrite(PSRbp);
-                    for(int i = 8; i < 32; i++){
-                        REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (128)]);
-                    }
-
-                    // Now I set the TBR
-                    TBR[key_TT] = 0x10 + IRQ;
-                    // I have to jump to the address contained in the TBR register
-                    PC = TBR;
-                    NPC = TBR + 4;
-                    // finally I acknowledge the interrupt on the external pin port
-                    irqAck.send_pin_req(IRQ, 0);
-                }
-            }
+        this->instrExecuting = true;
+        if((IRQ != -1) && (PSR[key_ET] && (IRQ == 15 || IRQ > PSR[key_PIL]))){
+            this->IRQ_irqInstr->setInterruptValue(IRQ);
+            numCycles = this->IRQ_irqInstr->behavior();
 
         }
         else{
@@ -159,7 +128,7 @@ void leon3_funclt_trap::Processor::mainLoop(){
                         numCycles = 0;
                     }
                     unsigned int & curCount = cachedInstr->second.count;
-                    if(curCount < 40){
+                    if(curCount < 256){
                         curCount++;
                     }
                     else{
@@ -193,6 +162,8 @@ void leon3_funclt_trap::Processor::mainLoop(){
         }
         this->quantKeeper.inc((numCycles + 1)*this->latency);
         if(this->quantKeeper.need_sync()) this->quantKeeper.sync();
+        this->instrExecuting = false;
+        this->instrEndEvent.notify();
         this->numInstructions++;
 
         PSR.clockCycle();
@@ -409,8 +380,11 @@ void leon3_funclt_trap::Processor::resetOp(){
     PSRbp.immediateWrite(0x0);
     Ybp.immediateWrite(0x0);
     ASR18bp.immediateWrite(0x0);
-    PCR.immediateWrite(0x307);
     this->IRQ = -1;
+}
+
+void leon3_funclt_trap::Processor::end_of_elaboration(){
+    this->resetOp();
 }
 
 Instruction * leon3_funclt_trap::Processor::decode( unsigned int bitString ){
@@ -421,10 +395,6 @@ Instruction * leon3_funclt_trap::Processor::decode( unsigned int bitString ){
         return instr;
     }
     return NULL;
-}
-
-void leon3_funclt_trap::Processor::end_of_elaboration(){
-    this->resetOp();
 }
 
 LEON3_ABIIf & leon3_funclt_trap::Processor::getInterface(){
@@ -733,6 +703,9 @@ leon3_funclt_trap::Processor::Processor( sc_module_name name, sc_time latency ) 
         Processor::INSTRUCTIONS[144] = new InvalidInstr(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
             Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
     }
+    this->IRQ_irqInstr = new IRQ_IRQ_Instruction(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
+        ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck, \
+        this->IRQ);
     quantKeeper.set_global_quantum( this->latency*100 );
     quantKeeper.reset();
     this->GLOBAL.setSize(8);
@@ -746,7 +719,6 @@ leon3_funclt_trap::Processor::Processor( sc_module_name name, sc_time latency ) 
     this->GLOBAL.setNewRegister(7, new Reg32_3());
     this->WINREGS = new Reg32_3[128];
     this->ASR = new Reg32_3[32];
-    this->PCR.updateAlias(this->ASR[17], 0);
     this->REGS = new Alias[32];
     this->REGS[0].updateAlias(this->GLOBAL[0]);
     this->REGS[1].updateAlias(this->GLOBAL[1]);
@@ -780,16 +752,18 @@ leon3_funclt_trap::Processor::Processor( sc_module_name name, sc_time latency ) 
     this->REGS[29].updateAlias(this->WINREGS[21]);
     this->REGS[30].updateAlias(this->WINREGS[22]);
     this->REGS[31].updateAlias(this->WINREGS[23]);
+    this->LR.updateAlias(this->REGS[31], 0);
+    this->PCR.updateAlias(this->ASR[17], 0);
     this->SP.updateAlias(this->REGS[14], 0);
     this->FP.updateAlias(this->REGS[30], 0);
-    this->LR.updateAlias(this->REGS[31], 0);
     this->numInstructions = 0;
     this->ENTRY_POINT = 0;
     this->PROGRAM_LIMIT = 0;
     this->PROGRAM_START = 0;
     this->abiIf = new LEON3_ABIIf(this->PROGRAM_LIMIT, this->dataMem, this->PSR, this->WIM, \
         this->TBR, this->Y, this->PC, this->NPC, this->PSRbp, this->Ybp, this->ASR18bp, this->GLOBAL, \
-        this->WINREGS, this->ASR, this->FP, this->LR, this->SP, this->PCR, this->REGS);
+        this->WINREGS, this->ASR, this->FP, this->LR, this->SP, this->PCR, this->REGS, this->instrExecuting, \
+        this->instrEndEvent);
     SC_THREAD(mainLoop);
     end_module();
 }
@@ -802,13 +776,14 @@ leon3_funclt_trap::Processor::~Processor(){
         }
         delete [] Processor::INSTRUCTIONS;
         Processor::INSTRUCTIONS = NULL;
-        template_map< unsigned int, CacheElem >::const_iterator cacheIter, cacheEnd;
-        for(cacheIter = this->instrCache.begin(), cacheEnd = this->instrCache.end(); cacheIter \
-            != cacheEnd; cacheIter++){
-            delete cacheIter->second.instr;
-        }
-        delete this->abiIf;
     }
+    template_map< unsigned int, CacheElem >::const_iterator cacheIter, cacheEnd;
+    for(cacheIter = this->instrCache.begin(), cacheEnd = this->instrCache.end(); cacheIter \
+        != cacheEnd; cacheIter++){
+        delete cacheIter->second.instr;
+    }
+    delete this->abiIf;
+    delete this->IRQ_irqInstr;
     delete [] this->WINREGS;
     delete [] this->ASR;
     delete [] this->REGS;
