@@ -47,6 +47,7 @@
 
 #include <map>
 #include <string>
+#include <list>
 
 #include <ctime>
 #include <boost/random/linear_congruential.hpp>
@@ -60,6 +61,27 @@ namespace std {
 #endif
 
 #include "concurrency_structures.hpp"
+
+///Variables necessary to implement a SystemC lock:
+///the boolean variables is used to check the status of
+///the lock, while the event is used to awake a waiting
+///sc_thread.
+struct SysCLock{
+    private:
+    sc_event awakeEvent;
+    bool busy;
+    public:
+    SysCLock() : busy(false){}
+    void lock(){
+        while(this->busy)
+            wait(this->awakeEvent);
+        this->busy = true;
+    }
+    void unlock(){
+        this->busy = false;
+        this->awakeEvent.notify();
+    }
+};
 
 ///High level representation of a processor; it contains also the
 ///methods to manage the scheduling/unscheduling of the software running
@@ -143,6 +165,13 @@ class ConcurrencyManager{
         unsigned int sfpMutex;
         unsigned int sinitMutex;
         unsigned int fpMutex;
+        ///Variables used to actually manage synchronization and scheduling
+        ///among processes and threads
+        std::list<Processor<unsigned int> > managedProc;
+        unsigned int maxProcId;
+        ///SystemC mutex variables used to maintain synchronization
+        ///among the different sc_treads
+        SysCLock schedLock;
     public:
         /// Some constants
         static const int SYSC_SCHED_FIFO;
@@ -170,6 +199,7 @@ class ConcurrencyManager{
         static unsigned int tlsSize;
         static unsigned char * tlsData;
 
+        /// HERE WE START WITH THE METHODS
         ConcurrencyManager();
 
         ///Resets the CM to its original status as after the construction
@@ -181,7 +211,19 @@ class ConcurrencyManager{
         ///Initializes the mutexes used to guarantee mutual exclusion access to
         ///reentrant routines
         void initReentrantEmulation();
+
+        ///Adds a processor to be managed by this concurrency
+        ///concurrency emulator
         template <class wordSize> void addProcessor(trap::ABIIf<wordSize> &processorInstance){
+            Processor<wordSize> newProc(&processorInstance);
+            typename std::list<Processor<wordSize> >::iterator procIter,  procEnd;
+            for(procIter = managedProc.begin(), procEnd = managedProc.end(); procIter != procEnd; procIter++){
+                if(procIter->processorInstance->getProcessorID() == processorInstance.getProcessorID())
+                    THROW_EXCEPTION("There is another processor already registered with ID = " << processorInstance.getProcessorID());
+            }
+            managedProc.push_back(newProc);
+            if(processorInstance.getProcessorID() + 1 > this->maxProcId)
+                this->maxProcId = processorInstance.getProcessorID() + 1;
         }
 
         ///*******************************************************************
@@ -252,7 +294,7 @@ class ConcurrencyManager{
         ///*********** Mutex related routines *******************
         ///Destroys a previously allocated mutex, exception if the mutex does not exist
         void destroyMutex(unsigned int procId, int mutex);
-        int createMutex(unsigned int procId);
+        int createMutex();
         ///Locks the mutex, deschedules the thread if the mutex is busy; in case
         ///nonbl == true, the function behaves as a trylock
         bool lockMutex(int mutex, unsigned int procId, bool nonbl = false);
