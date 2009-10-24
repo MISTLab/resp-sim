@@ -167,11 +167,27 @@ class ConcurrencyManager{
         unsigned int fpMutex;
         ///Variables used to actually manage synchronization and scheduling
         ///among processes and threads
+        ///TODO .... we are fixing this template, we should find an elegant way of
+        ///setting the template dynamically
         std::list<Processor<unsigned int> > managedProc;
         unsigned int maxProcId;
+        ///Contains the allocated thread attributes
+        std::map<int, AttributeEmu *> existingAttr;
+        ///Contains the allocated threads; note that no thread
+        ///is eliminated from the system (all threads can be joined
+        ///and only one process is running, so we must keep track
+        ///of all the threads forever)
+        std::map<int, ThreadEmu *> existingThreads;
+        ///Stard address and size of the thread stacks (of course there is no
+        ///way of determining if a thread has grown over its stack)
+        std::map<unsigned int, unsigned int> stacks;
         ///SystemC mutex variables used to maintain synchronization
         ///among the different sc_treads
         SysCLock schedLock;
+
+        ///Some methods internally used to help concurrency management
+        bool scheduleFreeProcessor(ThreadEmu *th);
+        bool preemptLowerPrio(ThreadEmu *th);
     public:
         /// Some constants
         static const int SYSC_SCHED_FIFO;
