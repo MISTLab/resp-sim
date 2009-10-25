@@ -340,9 +340,9 @@ int resp::ConcurrencyManager::createThread(unsigned int threadFun, unsigned int 
                 THROW_EXCEPTION("Non valid priority value " << curPrio);
             }
             #endif
-            readyQueue[curPrio].push_back(existingThreads[existingThreads.size() - 1]);
+            this->readyQueue[curPrio].push_back(th);
             if(curPrio == resp::SYSC_PRIO_MAX + 1)
-                sort(readyQueue[curPrio].begin(), readyQueue[curPrio].end(), deadlineSort);
+                sort(this->readyQueue[curPrio].begin(), this->readyQueue[curPrio].end(), deadlineSort);
         }
     }
 
@@ -353,10 +353,8 @@ int resp::ConcurrencyManager::createThread(unsigned int threadFun, unsigned int 
                 th->status << " address " << std::hex << std::showbase << threadFun <<  std::endl;
     #endif
 
-    schedulingLockBusy = false;
-    schedulingEvent.notify();
-
-    return (existingThreads.size() - 1);
+    this->schedLock.unlock();
+    return createdThId;
 }
 void resp::ConcurrencyManager::exitThread(unsigned int procId, unsigned int retVal){
 }
