@@ -71,6 +71,14 @@ std::map<int, std::string> resp::ConcurrencyManager::interruptServiceRoutines;
 unsigned int resp::ConcurrencyManager::tlsSize = 0;
 unsigned char * resp::ConcurrencyManager::tlsData = NULL;
 
+///Function used to sort the tasks in the last ready queue according
+///to their deadlines, the closest deadline first
+bool deadlineSort(const ThreadEmu * a, const ThreadEmu * b){
+    if(a->attr == NULL || b->attr == NULL)
+        return false;
+    return a->attr->deadline < b->attr->deadline;
+}
+
 resp::ConcurrencyManager::ConcurrencyManager(){
     //Constructor: there is not much to do
     //a part from se-setting the reentracy
@@ -218,6 +226,49 @@ int resp::ConcurrencyManager::getDeadlineOk(){
     return 0;
 }
 
+///******************************************************************
+/// Helper Functions used access and modify the internal structure
+/// of the Concurrency Manager, and to help thread management
+///******************************************************************
+///This is the main function implementing the scheduling policy. In order to change the policy, this
+///is the function which should be changed.
+ThreadEmu * resp::ConcurrencyManager::findReadyThread(){
+    //I get the thread of the first queue which is not empty
+/*    if(enableWait)
+        wait(schedChooseLatency);
+
+    ThreadEmu * foundThread = NULL;
+    int j = -1;
+    for(int i = resp::SYSC_PRIO_MAX + 1; i >= 0; i--){
+        if(readyQueue[i].size() > 0){
+            foundThread = readyQueue[i].front();
+            readyQueue[i].pop_front();
+            j = i;
+            break;
+        }
+    }
+    if(foundThread == NULL){
+        bool foundRun = false;
+        std::vector<ThreadEmu *> foundWait;
+        std::map<int, ThreadEmu *>::iterator thIter, thEnd;
+        for(thIter = existingThreads.begin(), thEnd = existingThreads.end(); thIter != thEnd; thIter++){
+            if(thIter->second->status == ThreadEmu::RUNNING)
+                foundRun = true;
+            else if(thIter->second->status == ThreadEmu::WAITING)
+                foundWait.push_back(thIter->second);
+        }
+        if(foundWait.size() > 0 && !foundRun){
+            std::cerr << "waiting threads ";
+            for(unsigned int j = 0; j < foundWait.size(); j++)
+                std::cerr << foundWait[j]->id << " ";
+            std::cerr << std::endl;
+            THROW_EXCEPTION("Deadlock: there are no ready threads in the system");
+        }
+    }
+
+    return foundThread;*/
+}
+
 ///*******************************************************************
 /// Finally we have the real core of the concurrency manager,
 /// it contains the functions emulating the functionalities of
@@ -357,6 +408,73 @@ int resp::ConcurrencyManager::createThread(unsigned int threadFun, unsigned int 
     return createdThId;
 }
 void resp::ConcurrencyManager::exitThread(unsigned int procId, unsigned int retVal){
+    //I have to see if there are available threads and to schedule on the processor which is being left empty.
+    //I also check that, in case there are none, that there are no threads waiting,  otherwise there is
+    //a deadlock
+    this->schedLock.lock();
+
+    std::map<unsigned int, Processor<unsigned int> >::iterator curProcIter = this->managedProc.find(procId);
+    if(curProcIter == this->managedProc.end())
+        THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
+    Processor<unsigned int> & curProc = curProcIter->second;
+
+    int th = curProc.deSchedule();
+    // Update statistics for the just ended thread
+/*    if(this->existingThreads[th]->attr->schedPolicy == resp::SYSC_SCHED_EDF){
+        if(sc_time_stamp().to_double() > this->existingThreads[th]->attr->deadline*1e3 )
+            deadlineMisses++;
+        else
+            deadlineOk++;
+    }*/
+
+    this->stacks.erase(existingThreads[th]->stackBase);
+    this->existingThreads[th]->status = ThreadEmu::DEAD;
+
+    if(!this->existingThreads[th]->isIRQ){
+        this->existingThreads[th]->retVal = retVal;
+        //Finally I have to awake all the threads which were wating on a join on this thread
+        std::vector<ThreadEmu *>::iterator joinIter, joinEnd;
+        for(joinIter = this->existingThreads[th]->joining.begin(), joinEnd = this->existingThreads[th]->joining.end(); joinIter != joinEnd; joinIter++){
+            #ifndef NDEBUG
+            std::cerr << "Checking joined " << (*joinIter)->id << " joined on " << th << " waiting for the end of " << (*joinIter)->numJoined-1 << " others" << std::endl;
+            #endif
+            (*joinIter)->numJoined--;
+            if((*joinIter)->numJoined == 0){
+                (*joinIter)->status = ThreadEmu::READY;
+                //I add the thread to the queue of ready threads
+                int curPrio = 0;
+                if((*joinIter)->attr != NULL){
+                    if((*joinIter)->attr->schedPolicy == resp::SYSC_SCHED_EDF)
+                        curPrio = resp::SYSC_PRIO_MAX + 1;
+                    else
+                        curPrio = (*joinIter)->attr->priority;
+                }
+                this->readyQueue[curPrio].push_back(*joinIter);
+                if(curPrio == resp::SYSC_PRIO_MAX + 1)
+                    sort(this->readyQueue[curPrio].begin(), this->readyQueue[curPrio].end(), deadlineSort);
+            }
+        }
+        this->existingThreads[th]->joining.clear();
+
+        #ifndef NDEBUG
+        std::cerr << "Exiting thread " << th << " Return Value " << retVal << std::endl;
+        #endif
+    }
+    else{
+        //It is an IRQ thread, so I can freely deallocate it and the corresponding attribute
+        this->deleteThreadAttr(this->existingThreads[th]->attr->id);
+        #ifndef NDEBUG
+        std::cerr << "Exiting IRQ thread " << th << std::endl;
+        #endif
+    }
+
+    //Now I have to schedule a new thread on the just freed processor
+    ThreadEmu * readTh = this->findReadyThread();
+    if(readTh != NULL){
+        curProc.schedule(readTh);
+    }
+
+    this->schedLock.unlock();
 }
 bool resp::ConcurrencyManager::cancelThread(int threadId){
 }
