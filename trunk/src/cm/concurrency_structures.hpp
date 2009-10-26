@@ -80,7 +80,7 @@ struct ThreadEmu{
     enum status_t {READY, RUNNING, WAITING, DEAD};
     unsigned int thread_routine;
     AttributeEmu *attr;
-    void * args;
+    unsigned int args;
     status_t status;
     unsigned int stackBase;
     unsigned int tlsSize;
@@ -91,7 +91,7 @@ struct ThreadEmu{
     int syscallRetVal;
     bool setSyscRetVal;
 
-    void * retVal;
+    unsigned int retVal;
     std::vector<ThreadEmu *> joining;
     int numJoined;
     std::vector<ExecutionTrace> execTrace;

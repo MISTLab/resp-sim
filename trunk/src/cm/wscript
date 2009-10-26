@@ -52,7 +52,7 @@ def build(bld):
 
     obj.target = 'cm'
     obj.uselib = 'SYSTEMC_H BOOST TRAP'
-    obj.uselib_local = 'systemc'
+    obj.uselib_local = 'systemc BFDWrapper'
 
     # Generation of the controller wrapper extension
     obj = bld.new_task_gen('pypp')
@@ -62,7 +62,7 @@ def build(bld):
 
     obj.target = 'cm_wrapper'
     obj.uselib = 'SYSTEMC_H BOOST BOOST_PYTHON TRAP'
-    obj.uselib_local = 'systemc cm'
+    obj.uselib_local = 'systemc BFDWrapper cm'
     obj.start_decls = 'resp'
     obj.custom_code = """
 """

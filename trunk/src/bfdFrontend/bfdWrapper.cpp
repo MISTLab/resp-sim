@@ -101,7 +101,8 @@ extern "C" {
 std::map<std::string, BFDWrapper *> BFDWrapper::bfdInstances;
 
 BFDWrapper & BFDWrapper::getInstance(std::string fileName){
-    if(BFDWrapper::bfdInstances.find(fileName) == BFDWrapper::bfdInstances.end()){
+    std::map<std::string, BFDWrapper *>::iterator bfdIter = BFDWrapper::bfdInstances.find(fileName);
+    if(bfdIter == BFDWrapper::bfdInstances.end()){
         if(fileName != ""){
             BFDWrapper::bfdInstances[fileName] = new BFDWrapper(fileName);
         }
@@ -109,7 +110,7 @@ BFDWrapper & BFDWrapper::getInstance(std::string fileName){
             THROW_EXCEPTION("Please specify the file name of the binary image that must be loaded by the BFDFrontend");
         }
     }
-    return *(BFDWrapper::bfdInstances.find(fileName)->second);
+    return *(bfdIter->second);
 }
 
 BFDWrapper::BFDWrapper(std::string binaryName) : execImage(NULL){
