@@ -172,13 +172,12 @@ class ConcurrencyManager{
         ///TODO .... we are fixing this template, we should find an elegant way of
         ///setting the template dynamically
         std::map<unsigned int, Processor<unsigned int> > managedProc;
-        std::list<Processor<unsigned int> > managedProc;
         unsigned int maxProcId;
         ///Note that the last element of the readyQueue, the one containing
         ///the tasks with EDF schedule, must be ordered on the
         ///schedule deadline: the first element the one with closest
         ///deadline, the last one with the furthest one
-        std::deque<ThreadEmu *> readyQueue[resp::SYSC_PRIO_MAX + 2];
+        std::deque<ThreadEmu *> * readyQueue;
         ///Contains the allocated thread attributes
         std::map<int, AttributeEmu *> existingAttr;
         ///Contains the allocated threads; note that no thread
@@ -223,9 +222,13 @@ class ConcurrencyManager{
         ///The size and content of the thread-local-storage
         static unsigned int tlsSize;
         static unsigned char * tlsData;
+        ///Default thread attribute, used to initialize threads which do not declare
+        ///any specific attribute
+        static AttributeEmu defaultAttr;
 
         /// HERE WE START WITH THE METHODS
         ConcurrencyManager();
+        ~ConcurrencyManager();
 
         ///Resets the CM to its original status as after the construction
         void reset();

@@ -88,6 +88,11 @@ resp::ConcurrencyManager::ConcurrencyManager(){
     this->sinitMutex = -1;
     this->fpMutex = -1;
     this->maxProcId = 0;
+    this->readyQueue = new std::deque<ThreadEmu *>[resp::ConcurrencyManager::SYSC_PRIO_MAX + 2];
+}
+
+resp::ConcurrencyManager::~ConcurrencyManager(){
+    delete [] this->readyQueue;
 }
 
 ///Resets the CM to its original status as after the construction
@@ -107,7 +112,7 @@ void resp::ConcurrencyManager::reset(){
     this->maxProcId = 0;
     this->existingAttr.clear();
     this->managedProc.clear();
-    this->stacks.clear()
+    this->stacks.clear();
 }
 
 ///*******************************************************************
@@ -117,11 +122,11 @@ void resp::ConcurrencyManager::reset(){
 ///schedules a thread for execution on that processor
 bool resp::ConcurrencyManager::scheduleFreeProcessor(ThreadEmu *th){
     //Ok,  now I have to see if there is a free processor on which I can schedule the thread
-    std::list<Processor<unsigned int> >::iterator procIter, procIterEnd;
-    for(procIter = this->existingProc.begin(), procIterEnd = this->existingProc.end(); procIter != procIterEnd; procIter++){
-        if(procIter->runThread == NULL){
+    std::map<unsigned int, Processor<unsigned int> >::iterator procIter, procIterEnd;
+    for(procIter = this->managedProc.begin(), procIterEnd = this->managedProc.end(); procIter != procIterEnd; procIter++){
+        if(procIter->second.runThread == NULL){
             //Here we are,  I have found the empty processor
-            procIter->schedule(th);
+            procIter->second.schedule(th);
             return true;
         }
     }
@@ -130,7 +135,7 @@ bool resp::ConcurrencyManager::scheduleFreeProcessor(ThreadEmu *th){
 
 ///Determines the lowest priority thread which is currently running and it
 ///preepts it in case the current thread has a higher priority
-bool preemptLowerPrio(ThreadEmu *th){
+bool resp::ConcurrencyManager::preemptLowerPrio(ThreadEmu *th){
 /*    std::list<Processor>::iterator procIter, procIterEnd;
     for(procIter = existingProc.begin(), procIterEnd = existingProc.end(); procIter != procIterEnd; procIter++){
         if(procIter->runThread == NULL){
@@ -180,6 +185,45 @@ bool preemptLowerPrio(ThreadEmu *th){
     return false;
 }
 
+///This is the main function implementing the scheduling policy. In order to change the policy, this
+///is the function which should be changed.
+ThreadEmu * resp::ConcurrencyManager::findReadyThread(){
+    //I get the thread of the first queue which is not empty
+/*    if(enableWait)
+        wait(schedChooseLatency);
+
+    ThreadEmu * foundThread = NULL;
+    int j = -1;
+    for(int i = resp::SYSC_PRIO_MAX + 1; i >= 0; i--){
+        if(readyQueue[i].size() > 0){
+            foundThread = readyQueue[i].front();
+            readyQueue[i].pop_front();
+            j = i;
+            break;
+        }
+    }
+    if(foundThread == NULL){
+        bool foundRun = false;
+        std::vector<ThreadEmu *> foundWait;
+        std::map<int, ThreadEmu *>::iterator thIter, thEnd;
+        for(thIter = existingThreads.begin(), thEnd = existingThreads.end(); thIter != thEnd; thIter++){
+            if(thIter->second->status == ThreadEmu::RUNNING)
+                foundRun = true;
+            else if(thIter->second->status == ThreadEmu::WAITING)
+                foundWait.push_back(thIter->second);
+        }
+        if(foundWait.size() > 0 && !foundRun){
+            std::cerr << "waiting threads ";
+            for(unsigned int j = 0; j < foundWait.size(); j++)
+                std::cerr << foundWait[j]->id << " ";
+            std::cerr << std::endl;
+            THROW_EXCEPTION("Deadlock: there are no ready threads in the system");
+        }
+    }
+
+    return foundThread;*/
+}
+
 ///*******************************************************************
 /// Initialization functions
 ///*******************************************************************
@@ -226,49 +270,6 @@ int resp::ConcurrencyManager::getDeadlineOk(){
     return 0;
 }
 
-///******************************************************************
-/// Helper Functions used access and modify the internal structure
-/// of the Concurrency Manager, and to help thread management
-///******************************************************************
-///This is the main function implementing the scheduling policy. In order to change the policy, this
-///is the function which should be changed.
-ThreadEmu * resp::ConcurrencyManager::findReadyThread(){
-    //I get the thread of the first queue which is not empty
-/*    if(enableWait)
-        wait(schedChooseLatency);
-
-    ThreadEmu * foundThread = NULL;
-    int j = -1;
-    for(int i = resp::SYSC_PRIO_MAX + 1; i >= 0; i--){
-        if(readyQueue[i].size() > 0){
-            foundThread = readyQueue[i].front();
-            readyQueue[i].pop_front();
-            j = i;
-            break;
-        }
-    }
-    if(foundThread == NULL){
-        bool foundRun = false;
-        std::vector<ThreadEmu *> foundWait;
-        std::map<int, ThreadEmu *>::iterator thIter, thEnd;
-        for(thIter = existingThreads.begin(), thEnd = existingThreads.end(); thIter != thEnd; thIter++){
-            if(thIter->second->status == ThreadEmu::RUNNING)
-                foundRun = true;
-            else if(thIter->second->status == ThreadEmu::WAITING)
-                foundWait.push_back(thIter->second);
-        }
-        if(foundWait.size() > 0 && !foundRun){
-            std::cerr << "waiting threads ";
-            for(unsigned int j = 0; j < foundWait.size(); j++)
-                std::cerr << foundWait[j]->id << " ";
-            std::cerr << std::endl;
-            THROW_EXCEPTION("Deadlock: there are no ready threads in the system");
-        }
-    }
-
-    return foundThread;*/
-}
-
 ///*******************************************************************
 /// Finally we have the real core of the concurrency manager,
 /// it contains the functions emulating the functionalities of
@@ -295,14 +296,14 @@ int resp::ConcurrencyManager::createThread(unsigned int threadFun, unsigned int 
     unsigned int curStackSize = 0;
     std::map<int, AttributeEmu *>::iterator currentAttrIter = this->existingAttr.find(attr);
     if(currentAttrIter == this->existingAttr.end()){
-        curStackSize = defaultStackSize;
+        curStackSize = resp::ConcurrencyManager::threadStackSize;
     }
     else{
         curStackSize = existingAttr[attr]->stackSize;
     }
     //I have to determine if there is space for the stack among two already existing ones
     //or if I have to position myself at the end of the stack
-    std::map<unsigned int, unsigned int>::constiterator stacksIter, stacksNext, stacksEnd;
+    std::map<unsigned int, unsigned int>::const_iterator stacksIter, stacksNext, stacksEnd;
     for(stacksIter = this->stacks.begin(), stacksNext = stacksIter, stacksNext++, stacksEnd = this->stacks.end();
                                                                         stacksNext != stacksEnd; stacksIter++, stacksNext++){
         if((stacksIter->first - stacksIter->second - stacksNext->first) > curStackSize){
@@ -323,7 +324,7 @@ int resp::ConcurrencyManager::createThread(unsigned int threadFun, unsigned int 
     if(this->managedProc.empty()){
         THROW_EXCEPTION("Trying to create a thread while there is not processor interfacee registered");
     }
-    unsigned int codeLimit = managedProc.front().getCodeLimit();
+    unsigned int codeLimit = this->managedProc.begin()->second.processorInstance.getCodeLimit();
     if(curStackBase < codeLimit)
         THROW_EXCEPTION("Unable to allocate " << curStackSize << " bytes for the stack of thread " << existingThreads.size() << ": no more space in memory");
 
@@ -331,12 +332,12 @@ int resp::ConcurrencyManager::createThread(unsigned int threadFun, unsigned int 
     int createdThId = this->existingThreads.size();
     ThreadEmu *th = NULL;
     AttributeEmu *curAttr = NULL;
-    std::string routineName = bfdFE->symbolAt(threadFun);
+    std::string routineName = bfdFE.symbolAt(threadFun);
     if(currentAttrIter == this->existingAttr.end()){
         //I see if default properties were specified for this thread in ReSP's
         //command line
         if(resp::ConcurrencyManager::defThreadInfo.find(routineName) == resp::ConcurrencyManager::defThreadInfo.end()){
-            th = new ThreadEmu(createdThId, threadFun, args, curStackBase, defaultTLSSize, &defaultAttr);
+            th = new ThreadEmu(createdThId, threadFun, args, curStackBase, resp::ConcurrencyManager::tlsSize, &resp::ConcurrencyManager::defaultAttr);
         }
         else{
             curAttr = this->existingAttr[this->createThreadAttr()];
@@ -344,7 +345,7 @@ int resp::ConcurrencyManager::createThread(unsigned int threadFun, unsigned int 
             curAttr->schedPolicy = resp::ConcurrencyManager::defThreadInfo[routineName].schedPolicy;
             curAttr->priority = resp::ConcurrencyManager::defThreadInfo[routineName].priority;
             curAttr->deadline = resp::ConcurrencyManager::defThreadInfo[routineName].deadline;
-            th = new ThreadEmu(createdThId, threadFun, args, curStackBase, defaultTLSSize, curAttr);
+            th = new ThreadEmu(createdThId, threadFun, args, curStackBase, resp::ConcurrencyManager::tlsSize, curAttr);
         }
     }
     else{
@@ -357,7 +358,7 @@ int resp::ConcurrencyManager::createThread(unsigned int threadFun, unsigned int 
             curAttr->priority = resp::ConcurrencyManager::defThreadInfo[routineName].priority;
             curAttr->deadline = resp::ConcurrencyManager::defThreadInfo[routineName].deadline;
         }
-        th = new ThreadEmu(createdThId, threadFun, args, curStackBase, defaultTLSSize, curAttr);
+        th = new ThreadEmu(createdThId, threadFun, args, curStackBase, resp::ConcurrencyManager::tlsSize, curAttr);
     }
     this->existingThreads[createdThId] = th;
 
@@ -381,18 +382,18 @@ int resp::ConcurrencyManager::createThread(unsigned int threadFun, unsigned int 
             //ready queue
             int curPrio = 0;
             if(curAttr != NULL){
-                if(curAttr->schedPolicy == resp::SYSC_SCHED_EDF)
-                    curPrio = resp::SYSC_PRIO_MAX + 1;
+                if(curAttr->schedPolicy == resp::ConcurrencyManager::SYSC_SCHED_EDF)
+                    curPrio = resp::ConcurrencyManager::SYSC_PRIO_MAX + 1;
                 else
                     curPrio = curAttr->priority;
             }
             #ifndef NDEBUG
-            if(curPrio < resp::SYSC_PRIO_MIN || curPrio > resp::SYSC_PRIO_MAX + 1){
+            if(curPrio < resp::ConcurrencyManager::SYSC_PRIO_MIN || curPrio > resp::ConcurrencyManager::SYSC_PRIO_MAX + 1){
                 THROW_EXCEPTION("Non valid priority value " << curPrio);
             }
             #endif
             this->readyQueue[curPrio].push_back(th);
-            if(curPrio == resp::SYSC_PRIO_MAX + 1)
+            if(curPrio == resp::ConcurrencyManager::SYSC_PRIO_MAX + 1)
                 sort(this->readyQueue[curPrio].begin(), this->readyQueue[curPrio].end(), deadlineSort);
         }
     }
@@ -444,13 +445,13 @@ void resp::ConcurrencyManager::exitThread(unsigned int procId, unsigned int retV
                 //I add the thread to the queue of ready threads
                 int curPrio = 0;
                 if((*joinIter)->attr != NULL){
-                    if((*joinIter)->attr->schedPolicy == resp::SYSC_SCHED_EDF)
-                        curPrio = resp::SYSC_PRIO_MAX + 1;
+                    if((*joinIter)->attr->schedPolicy == resp::ConcurrencyManager::SYSC_SCHED_EDF)
+                        curPrio = resp::ConcurrencyManager::SYSC_PRIO_MAX + 1;
                     else
                         curPrio = (*joinIter)->attr->priority;
                 }
                 this->readyQueue[curPrio].push_back(*joinIter);
-                if(curPrio == resp::SYSC_PRIO_MAX + 1)
+                if(curPrio == resp::ConcurrencyManager::SYSC_PRIO_MAX + 1)
                     sort(this->readyQueue[curPrio].begin(), this->readyQueue[curPrio].end(), deadlineSort);
             }
         }
@@ -476,6 +477,7 @@ void resp::ConcurrencyManager::exitThread(unsigned int procId, unsigned int retV
 
     this->schedLock.unlock();
 }
+
 bool resp::ConcurrencyManager::cancelThread(int threadId){
 }
 
