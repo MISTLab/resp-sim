@@ -95,15 +95,15 @@ class ConcurrencyEmulatorBase{
         static void setThreadProps(bool waitLoop, unsigned int defaultStackSize);
         ///Sets thread properties, so that, when a thread is created, it is associated such properties
         ///independently from the thread attributes that were specified in the executeable file
-        static void setThreadInfo(std::string functionName, bool preemptive,
+        static void setThreadInfo(const std::string functionName, bool preemptive,
                            int schedPolicy, int priority, unsigned int deadline);
         ///Marks a function to be executed as an interrupt service routine
-        static void registerISR(std::string isrFunctionName, int irqId, bool preemptive = false,
+        static void registerISR(const std::string isrFunctionName, int irqId, bool preemptive = false,
                                         int schedPolicy = ConcurrencyManager::SYSC_SCHED_FIFO,
                                                 int priority = ConcurrencyManager::SYSC_PRIO_MAX);
         ///Sets the thread-local-storage data which is going to be used
         ///for the thread private storage
-        static void setTLSdata(std::vector<unsigned char> tlsData);
+        static void setTLSdata(const std::vector<unsigned char> tlsData);
 };
 
 ///This class is in charge of performing initialization of all
@@ -124,7 +124,7 @@ template<class wordSize> class ConcurrencyEmulator: public trap::ToolsIf<issueWi
 
         ///Associates an emulated functionality with a routine name
         ///Returns true if the association was successfully performed
-        bool register_syscall(std::string funName, trap::SyscallCB<issueWidth> &callBack){
+        bool register_syscall(const std::string funName, trap::SyscallCB<issueWidth> &callBack){
             BFDWrapper &bfdFE = BFDWrapper::getInstance();
             bool valid = false;
             unsigned int symAddr = bfdFE.getSymAddr(funName, valid) + this->routineOffset;
@@ -181,31 +181,32 @@ template<class wordSize> class ConcurrencyEmulator: public trap::ToolsIf<issueWi
             //manager
             if(ConcurrencyEmulatorBase::cm.find(group) == ConcurrencyEmulatorBase::cm.end())
                 THROW_EXCEPTION("The current emulation group " << group << " has not been initialized yet: have you correctly called the initSysCalls method?");
-            ConcurrencyEmulatorBase::cm[group]->initReentrantEmulation();
+            ConcurrencyManager * curCm  = ConcurrencyEmulatorBase::cm[group];
+            curCm->initReentrantEmulation();
 
             //Now I can register the routines managing reentrant emulation
-            __malloc_lockSysCall *a = new __malloc_lockSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+            __malloc_lockSysCall *a = new __malloc_lockSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("__malloc_lock", *a))
                 delete a;
-            __malloc_unlockSysCall *b = new __malloc_unlockSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+            __malloc_unlockSysCall *b = new __malloc_unlockSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("__malloc_unlock", *b))
                 delete b;
-            __sfp_lock_acquireSysCall *c = new __sfp_lock_acquireSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+            __sfp_lock_acquireSysCall *c = new __sfp_lock_acquireSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("__sfp_lock_acquire", *c))
                 delete c;
-            __sfp_lock_releaseSysCall *d = new __sfp_lock_releaseSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+            __sfp_lock_releaseSysCall *d = new __sfp_lock_releaseSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("__sfp_lock_release", *d))
                 delete d;
-            __sinit_lock_acquireSysCall *e = new __sinit_lock_acquireSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+            __sinit_lock_acquireSysCall *e = new __sinit_lock_acquireSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("__sinit_lock_acquire", *e))
                 delete e;
-            __sinit_lock_releaseSysCall *f = new __sinit_lock_releaseSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+            __sinit_lock_releaseSysCall *f = new __sinit_lock_releaseSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("__sinit_lock_release", *f))
                 delete f;
-            __fp_lockSysCall *g = new __fp_lockSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+            __fp_lockSysCall *g = new __fp_lockSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("__fp_lock", *g))
                 delete g;
-            __fp_unlockSysCall *h = new __fp_unlockSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+            __fp_unlockSysCall *h = new __fp_unlockSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("__fp_unlock", *h))
                 delete h;
         }
@@ -231,341 +232,390 @@ template<class wordSize> class ConcurrencyEmulator: public trap::ToolsIf<issueWi
         }
         ///Initializes the system calls for emulation; it registers all the PTHREAD routines which need
         ///emulation. The group parameter specifies the current emulation group
-        void initSysCalls(std::string execName, std::map<std::string, sc_time> latencies, bool reentrant = false, int group = 0){
+        void initSysCalls(const std::string execName, const std::map<std::string, sc_time> &latencies, bool reentrant = false, int group = 0){
             //First of all I have to make sure that a concurrency manager for the current group
             //does not exist yet
-            if(ConcurrencyEmulatorBase::cm.find(group) == ConcurrencyEmulatorBase::cm.end())
+            if(ConcurrencyEmulatorBase::cm.find(group) == ConcurrencyEmulatorBase::cm.end()){
                 ConcurrencyEmulatorBase::cm[group] = new ConcurrencyManager();
+            }
+            ConcurrencyManager * curCm  = ConcurrencyEmulatorBase::cm[group];
+            std::map<std::string, sc_time>::const_iterator curLatency;
             //Lets add a processor to the current concurrency manager
-            ConcurrencyEmulatorBase::cm[group]->addProcessor(this->processorInstance);
+            curCm->addProcessor(this->processorInstance);
             //Now I initialized the BFD library with an instance of the current executable file
             BFDWrapper::getInstance(execName);
             //Now I perform the registration of the emulated pthread-Calls
             pthread_mutex_destroySysCall *a = NULL;
-            if(latencies.find("pthread_mutex_destroy") != latencies.end())
-                a = new pthread_mutex_destroySysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_mutex_destroy"]);
+            curLatency = latencies.find("pthread_mutex_destroy");
+            if(curLatency != latencies.end())
+                a = new pthread_mutex_destroySysCall(this->processorInstance, curCm, curLatency);
             else
-                a = new pthread_mutex_destroySysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                a = new pthread_mutex_destroySysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_mutex_destroy", *a))
                 delete a;
             pthread_mutex_initSysCall *b = NULL;
-            if(latencies.find("pthread_mutex_init") != latencies.end())
-                b = new pthread_mutex_initSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_mutex_init"]);
+            curLatency = latencies.find("pthread_mutex_init");
+            if(curLatency != latencies.end())
+                b = new pthread_mutex_initSysCall(this->processorInstance, curCm, curLatency);
             else
-                b = new pthread_mutex_initSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                b = new pthread_mutex_initSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_mutex_init", *b))
                 delete b;
             pthread_mutex_lockSysCall *c = NULL;
-            if(latencies.find("pthread_mutex_lock") != latencies.end())
-                c = new pthread_mutex_lockSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_mutex_lock"]);
+            curLatency = latencies.find("pthread_mutex_lock");
+            if(curLatency != latencies.end())
+                c = new pthread_mutex_lockSysCall(this->processorInstance, curCm, curLatency);
             else
-                c = new pthread_mutex_lockSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                c = new pthread_mutex_lockSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_mutex_lock", *c))
                 delete c;
             pthread_mutex_unlockSysCall *d = NULL;
-            if(latencies.find("pthread_mutex_unlock") != latencies.end())
-                d = new pthread_mutex_unlockSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_mutex_unlock"]);
+            curLatency = latencies.find("pthread_mutex_unlock");
+            if(curLatency != latencies.end())
+                d = new pthread_mutex_unlockSysCall(this->processorInstance, curCm, curLatency);
             else
-                d = new pthread_mutex_unlockSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                d = new pthread_mutex_unlockSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_mutex_unlock", *d))
                 delete d;
             pthread_mutex_trylockSysCall *e = NULL;
-            if(latencies.find("pthread_mutex_trylock") != latencies.end())
-                e = new pthread_mutex_trylockSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_mutex_trylock"]);
+            curLatency = latencies.find("pthread_mutex_trylock");
+            if(curLatency != latencies.end())
+                e = new pthread_mutex_trylockSysCall(this->processorInstance, curCm, curLatency);
             else
-                e = new pthread_mutex_trylockSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                e = new pthread_mutex_trylockSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_mutex_trylock", *e))
                 delete e;
             pthread_mutexattr_destroySysCall *f = NULL;
-            if(latencies.find("pthread_mutexattr_destroy") != latencies.end())
-                f = new pthread_mutexattr_destroySysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_mutexattr_destroy"]);
+            curLatency = latencies.find("pthread_mutexattr_destroy");
+            if(curLatency != latencies.end())
+                f = new pthread_mutexattr_destroySysCall(this->processorInstance, curCm, curLatency);
             else
-                f = new pthread_mutexattr_destroySysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                f = new pthread_mutexattr_destroySysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_mutexattr_destroy", *f))
                 delete f;
             pthread_mutexattr_initSysCall *g = NULL;
-            if(latencies.find("pthread_mutexattr_init") != latencies.end())
-                g = new pthread_mutexattr_initSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_mutexattr_init"]);
+            curLatency = latencies.find("pthread_mutexattr_init");
+            if(curLatency != latencies.end())
+                g = new pthread_mutexattr_initSysCall(this->processorInstance, curCm, curLatency);
             else
-                g = new pthread_mutexattr_initSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                g = new pthread_mutexattr_initSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_mutexattr_init", *g))
                 delete g;
             pthread_mutexattr_gettypeSysCall *h = NULL;
-            if(latencies.find("pthread_mutexattr_gettype") != latencies.end())
-                h = new pthread_mutexattr_gettypeSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_mutexattr_gettype"]);
+            curLatency = latencies.find("pthread_mutexattr_gettype");
+            if(curLatency != latencies.end())
+                h = new pthread_mutexattr_gettypeSysCall(this->processorInstance, curCm, curLatency);
             else
-                h = new pthread_mutexattr_gettypeSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                h = new pthread_mutexattr_gettypeSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_mutexattr_gettype", *h))
                 delete h;
             pthread_mutexattr_settypeSysCall *i = NULL;
-            if(latencies.find("pthread_mutexattr_settype") != latencies.end())
-                i = new pthread_mutexattr_settypeSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_mutexattr_settype"]);
+            curLatency = latencies.find("pthread_mutexattr_settype");
+            if(curLatency != latencies.end())
+                i = new pthread_mutexattr_settypeSysCall(this->processorInstance, curCm, curLatency);
             else
-                i = new pthread_mutexattr_settypeSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                i = new pthread_mutexattr_settypeSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_mutexattr_settype", *i))
                 delete i;
             pthread_attr_getdetachstateSysCall *j = NULL;
-            if(latencies.find("pthread_attr_getdetachstate") != latencies.end())
-                j = new pthread_attr_getdetachstateSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_attr_getdetachstate"]);
+            curLatency = latencies.find("pthread_attr_getdetachstate");
+            if(curLatency != latencies.end())
+                j = new pthread_attr_getdetachstateSysCall(this->processorInstance, curCm, curLatency);
             else
-                j = new pthread_attr_getdetachstateSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                j = new pthread_attr_getdetachstateSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_getdetachstate", *j))
                 delete j;
             pthread_attr_setdetachstateSysCall *k = NULL;
-            if(latencies.find("pthread_attr_setdetachstate") != latencies.end())
-                k = new pthread_attr_setdetachstateSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_attr_setdetachstate"]);
+            curLatency = latencies.find("pthread_attr_setdetachstate");
+            if(curLatency != latencies.end())
+                k = new pthread_attr_setdetachstateSysCall(this->processorInstance, curCm, curLatency);
             else
-                k = new pthread_attr_setdetachstateSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                k = new pthread_attr_setdetachstateSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_setdetachstate", *k))
                 delete k;
             pthread_attr_destroySysCall *l = NULL;
-            if(latencies.find("pthread_attr_destroy") != latencies.end())
-                l = new pthread_attr_destroySysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_attr_destroy"]);
+            curLatency = latencies.find("pthread_attr_destroy");
+            if(curLatency != latencies.end())
+                l = new pthread_attr_destroySysCall(this->processorInstance, curCm, curLatency);
             else
-                l = new pthread_attr_destroySysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                l = new pthread_attr_destroySysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_destroy", *l))
                 delete l;
             pthread_attr_initSysCall *m = NULL;
-            if(latencies.find("pthread_attr_init") != latencies.end())
-                m = new pthread_attr_initSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_attr_init"]);
+            curLatency = latencies.find("pthread_attr_init");
+            if(curLatency != latencies.end())
+                m = new pthread_attr_initSysCall(this->processorInstance, curCm, curLatency);
             else
-                m = new pthread_attr_initSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                m = new pthread_attr_initSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_init", *m))
                 delete m;
             pthread_attr_getstacksizeSysCall *n = NULL;
-            if(latencies.find("pthread_attr_getstacksize") != latencies.end())
-                n = new pthread_attr_getstacksizeSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_attr_getstacksize"]);
+            curLatency = latencies.find("pthread_attr_getstacksize");
+            if(curLatency != latencies.end())
+                n = new pthread_attr_getstacksizeSysCall(this->processorInstance, curCm, curLatency);
             else
-                n = new pthread_attr_getstacksizeSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                n = new pthread_attr_getstacksizeSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_getstacksize", *n))
                 delete n;
             pthread_attr_setstacksizeSysCall *o = NULL;
-            if(latencies.find("pthread_attr_setstacksize") != latencies.end())
-                o = new pthread_attr_setstacksizeSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_attr_setstacksize"]);
+            curLatency = latencies.find("pthread_attr_setstacksize");
+            if(curLatency != latencies.end())
+                o = new pthread_attr_setstacksizeSysCall(this->processorInstance, curCm, curLatency);
             else
-                o = new pthread_attr_setstacksizeSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                o = new pthread_attr_setstacksizeSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_setstacksize", *o))
                 delete o;
             pthread_getspecificSysCall *p = NULL;
-            if(latencies.find("pthread_getspecific") != latencies.end())
-                p = new pthread_getspecificSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_getspecific"]);
+            curLatency = latencies.find("pthread_getspecific");
+            if(curLatency != latencies.end())
+                p = new pthread_getspecificSysCall(this->processorInstance, curCm, curLatency);
             else
-                p = new pthread_getspecificSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                p = new pthread_getspecificSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_getspecific", *p))
                 delete p;
             pthread_setspecificSysCall *q = NULL;
-            if(latencies.find("pthread_setspecific") != latencies.end())
-                q = new pthread_setspecificSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_setspecific"]);
+            curLatency = latencies.find("pthread_setspecific");
+            if(curLatency != latencies.end())
+                q = new pthread_setspecificSysCall(this->processorInstance, curCm, curLatency);
             else
-                q = new pthread_setspecificSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                q = new pthread_setspecificSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_setspecific", *q))
                 delete q;
             pthread_createSysCall *r = NULL;
-            if(latencies.find("pthread_create") != latencies.end())
-                r = new pthread_createSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_create"]);
+            curLatency = latencies.find("pthread_create");
+            if(curLatency != latencies.end())
+                r = new pthread_createSysCall(this->processorInstance, curCm, curLatency);
             else
-                r = new pthread_createSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                r = new pthread_createSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_create", *r))
                 delete r;
             pthread_key_createSysCall *s = NULL;
-            if(latencies.find("pthread_key_create") != latencies.end())
-                s = new pthread_key_createSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_key_create"]);
+            curLatency = latencies.find("pthread_key_create");
+            if(curLatency != latencies.end())
+                s = new pthread_key_createSysCall(this->processorInstance, curCm, curLatency);
             else
-                s = new pthread_key_createSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                s = new pthread_key_createSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_key_create", *s))
                 delete s;
             sem_initSysCall *t = NULL;
-            if(latencies.find("sem_init") != latencies.end())
-                t = new sem_initSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["sem_init"]);
+            curLatency = latencies.find("sem_init");
+            if(curLatency != latencies.end())
+                t = new sem_initSysCall(this->processorInstance, curCm, curLatency);
             else
-                t = new sem_initSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                t = new sem_initSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("sem_init", *t))
                 delete t;
             sem_postSysCall *u = NULL;
-            if(latencies.find("sem_post") != latencies.end())
-                u = new sem_postSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["sem_post"]);
+            curLatency = latencies.find("sem_post");
+            if(curLatency != latencies.end())
+                u = new sem_postSysCall(this->processorInstance, curCm, curLatency);
             else
-                u = new sem_postSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                u = new sem_postSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("sem_post", *u))
                 delete u;
             sem_destroySysCall *v = NULL;
-            if(latencies.find("sem_destroy") != latencies.end())
-                v = new sem_destroySysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["sem_destroy"]);
+            curLatency = latencies.find("sem_destroy");
+            if(curLatency != latencies.end())
+                v = new sem_destroySysCall(this->processorInstance, curCm, curLatency);
             else
-                v = new sem_destroySysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                v = new sem_destroySysCall(this->processorInstance, curCm);
             if(!this->register_syscall("sem_destroy", *v))
                 delete v;
             pthread_exitSysCall *w = NULL;
-            if(latencies.find("pthread_exit") != latencies.end())
-                w = new pthread_exitSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_exit"]);
+            curLatency = latencies.find("pthread_exit");
+            if(curLatency != latencies.end())
+                w = new pthread_exitSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                w = new pthread_exitSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                w = new pthread_exitSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_exit", *w))
                 delete w;
             sem_waitSysCall *x = NULL;
-            if(latencies.find("sem_wait") != latencies.end())
-                x = new sem_waitSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["sem_wait"]);
+            curLatency = latencies.find("sem_wait");
+            if(curLatency != latencies.end())
+                x = new sem_waitSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                x = new sem_waitSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                x = new sem_waitSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("sem_wait", *x))
                 delete x;
             pthread_joinSysCall *y = NULL;
-            if(latencies.find("pthread_join") != latencies.end())
-                y = new pthread_joinSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_join"]);
+            curLatency = latencies.find("pthread_join");
+            if(curLatency != latencies.end())
+                y = new pthread_joinSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                y = new pthread_joinSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                y = new pthread_joinSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_join", *y))
                 delete y;
             pthread_join_allSysCall *z = NULL;
-            if(latencies.find("pthread_join_all") != latencies.end())
-                z = new pthread_join_allSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_join_all"]);
+            curLatency = latencies.find("pthread_join_all");
+            if(curLatency != latencies.end())
+                z = new pthread_join_allSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                z = new pthread_join_allSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                z = new pthread_join_allSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_join_all", *z))
                 delete z;
             __aeabi_read_tpSysCall *A = NULL;
-            if(latencies.find("__aeabi_read_tp") != latencies.end())
-                A = new __aeabi_read_tpSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["__aeabi_read_tp"]);
+            curLatency = latencies.find("__aeabi_read_tp");
+            if(curLatency != latencies.end())
+                A = new __aeabi_read_tpSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                A = new __aeabi_read_tpSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                A = new __aeabi_read_tpSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("__aeabi_read_tp", *A))
                 delete A;
             pthread_cond_initSysCall *B = NULL;
-            if(latencies.find("pthread_cond_init") != latencies.end())
-                B = new pthread_cond_initSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_cond_init"]);
+            curLatency = latencies.find("pthread_cond_init");
+            if(curLatency != latencies.end())
+                B = new pthread_cond_initSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                B = new pthread_cond_initSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                B = new pthread_cond_initSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_cond_init", *B))
                 delete B;
             pthread_cond_signalSysCall *C = NULL;
-            if(latencies.find("pthread_cond_signal") != latencies.end())
-                C = new pthread_cond_signalSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_cond_signal"]);
+            curLatency = latencies.find("pthread_cond_signal");
+            if(curLatency != latencies.end())
+                C = new pthread_cond_signalSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                C = new pthread_cond_signalSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                C = new pthread_cond_signalSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_cond_signal", *C))
                 delete C;
             pthread_cond_broadcastSysCall *D = NULL;
-            if(latencies.find("pthread_cond_broadcast") != latencies.end())
-                D = new pthread_cond_broadcastSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_cond_broadcast"]);
+            curLatency = latencies.find("pthread_cond_broadcast");
+            if(curLatency != latencies.end())
+                D = new pthread_cond_broadcastSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                D = new pthread_cond_broadcastSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                D = new pthread_cond_broadcastSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_cond_broadcast", *D))
                 delete D;
             pthread_cond_waitSysCall *E = NULL;
-            if(latencies.find("pthread_cond_wait") != latencies.end())
-                E = new pthread_cond_waitSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_cond_wait"]);
+            curLatency = latencies.find("pthread_cond_wait");
+            if(curLatency != latencies.end())
+                E = new pthread_cond_waitSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                E = new pthread_cond_waitSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                E = new pthread_cond_waitSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_cond_wait", *E))
                 delete E;
             pthread_cond_destroySysCall *F = NULL;
-            if(latencies.find("pthread_cond_destroy") != latencies.end())
-                F = new pthread_cond_destroySysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_cond_destroy"]);
+            curLatency = latencies.find("pthread_cond_destroy");
+            if(curLatency != latencies.end())
+                F = new pthread_cond_destroySysCall(this->processorInstance, curCm, curLatency->second);
             else
-                F = new pthread_cond_destroySysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                F = new pthread_cond_destroySysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_cond_destroy", *F))
                 delete F;
             pthread_cond_timedwaitSysCall *G = NULL;
-            if(latencies.find("pthread_cond_timedwait") != latencies.end())
-                G = new pthread_cond_timedwaitSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_cond_timedwait"]);
+            curLatency = latencies.find("pthread_cond_timedwait");
+            if(curLatency != latencies.end())
+                G = new pthread_cond_timedwaitSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                G = new pthread_cond_timedwaitSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                G = new pthread_cond_timedwaitSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_cond_timedwait", *G))
                 delete G;
             pthread_attr_getschedpolicySysCall *H = NULL;
-            if(latencies.find("pthread_attr_getschedpolicy") != latencies.end())
-                H = new pthread_attr_getschedpolicySysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_attr_getschedpolicy"]);
+            curLatency = latencies.find("pthread_attr_getschedpolicy");
+            if(curLatency != latencies.end())
+                H = new pthread_attr_getschedpolicySysCall(this->processorInstance, curCm, curLatency->second);
             else
-                H = new pthread_attr_getschedpolicySysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                H = new pthread_attr_getschedpolicySysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_getschedpolicy", *H))
                 delete H;
             pthread_attr_setschedpolicySysCall *I = NULL;
-            if(latencies.find("pthread_attr_setschedpolicy") != latencies.end())
-                I = new pthread_attr_setschedpolicySysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_attr_setschedpolicy"]);
+            curLatency = latencies.find("pthread_attr_setschedpolicy");
+            if(curLatency != latencies.end())
+                I = new pthread_attr_setschedpolicySysCall(this->processorInstance, curCm, curLatency->second);
             else
-                I = new pthread_attr_setschedpolicySysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                I = new pthread_attr_setschedpolicySysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_setschedpolicy", *I))
                 delete I;
             pthread_attr_getschedparamSysCall *J = NULL;
-            if(latencies.find("pthread_attr_getschedparam") != latencies.end())
-                J = new pthread_attr_getschedparamSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_attr_getschedparam"]);
+            curLatency = latencies.find("pthread_attr_getschedparam");
+            if(curLatency != latencies.end())
+                J = new pthread_attr_getschedparamSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                J = new pthread_attr_getschedparamSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                J = new pthread_attr_getschedparamSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_getschedparam", *J))
                 delete J;
             pthread_attr_setschedparamSysCall *K = NULL;
-            if(latencies.find("pthread_attr_setschedparam") != latencies.end())
-                K = new pthread_attr_setschedparamSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_attr_setschedparam"]);
+            curLatency = latencies.find("pthread_attr_setschedparam");
+            if(curLatency != latencies.end())
+                K = new pthread_attr_setschedparamSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                K = new pthread_attr_setschedparamSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                K = new pthread_attr_setschedparamSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_setschedparam", *K))
                 delete K;
             pthread_attr_getpreemptparamSysCall *L = NULL;
-            if(latencies.find("pthread_attr_getpreemptparam") != latencies.end())
-                L = new pthread_attr_getpreemptparamSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_attr_getpreemptparam]);
+            curLatency = latencies.find("pthread_attr_getpreemptparam");
+            if(curLatency != latencies.end())
+                L = new pthread_attr_getpreemptparamSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                L = new pthread_attr_getpreemptparamSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                L = new pthread_attr_getpreemptparamSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_getpreemptparam", *L))
                 delete L;
             pthread_attr_setpreemptparamSysCall *M = NULL;
-            if(latencies.find("pthread_attr_setpreemptparam") != latencies.end())
-                M = new pthread_attr_setpreemptparamSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_attr_setpreemptparam"]);
+            curLatency = latencies.find("pthread_attr_setpreemptparam");
+            if(curLatency != latencies.end())
+                M = new pthread_attr_setpreemptparamSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                M = new pthread_attr_setpreemptparamSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                M = new pthread_attr_setpreemptparamSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_setpreemptparam", *M))
                 delete M;
             pthread_getschedparamSysCall *N = NULL;
-            if(latencies.find("pthread_getschedparam") != latencies.end())
-                N = new pthread_getschedparamSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_getschedparam"]);
+            curLatency = latencies.find("pthread_getschedparam");
+            if(curLatency != latencies.end())
+                N = new pthread_getschedparamSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                N = new pthread_getschedparamSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                N = new pthread_getschedparamSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_getschedparam", *N))
                 delete N;
             pthread_setschedparamSysCall *O = NULL;
-            if(latencies.find("pthread_setschedparam") != latencies.end())
-                O = new pthread_setschedparamSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_setschedparam"]);
+            curLatency = latencies.find("pthread_setschedparam");
+            if(curLatency != latencies.end())
+                O = new pthread_setschedparamSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                O = new pthread_setschedparamSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                O = new pthread_setschedparamSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_setschedparam", *O))
                 delete O;
             pthread_selfSysCall *P = NULL;
-            if(latencies.find("pthread_self") != latencies.end())
-                P = new pthread_selfSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_self"]);
+            curLatency = latencies.find("pthread_self");
+            if(curLatency != latencies.end())
+                P = new pthread_selfSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                P = new pthread_selfSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                P = new pthread_selfSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_self", *P))
                 delete P;
             pthread_cancelSysCall *Q = NULL;
-            if(latencies.find("pthread_cancel") != latencies.end())
-                Q = new pthread_cancelSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_cancel"]);
+            curLatency = latencies.find("pthread_cancel");
+            if(curLatency != latencies.end())
+                Q = new pthread_cancelSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                Q = new pthread_cancelSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                Q = new pthread_cancelSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_cancel", *Q))
                 delete Q;
             pthread_cleanup_popSysCall *R = NULL;
-            if(latencies.find("pthread_cleanup_pop") != latencies.end())
-                R = new pthread_cleanup_popSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_cleanup_pop"]);
+            curLatency = latencies.find("pthread_cleanup_pop");
+            if(curLatency != latencies.end())
+                R = new pthread_cleanup_popSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                R = new pthread_cleanup_popSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                R = new pthread_cleanup_popSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_cleanup_pop", *R))
                 delete R;
             pthread_cleanup_pushSysCall *S = NULL;
-            if(latencies.find("pthread_cleanup_push") != latencies.end())
-                S = new pthread_cleanup_pushSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_cleanup_push"]);
+            curLatency = latencies.find("pthread_cleanup_push");
+            if(curLatency != latencies.end())
+                S = new pthread_cleanup_pushSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                S = new pthread_cleanup_pushSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                S = new pthread_cleanup_pushSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_cleanup_push", *S))
                 delete S;
             pthread_exitSysCall *T = NULL;
-            if(latencies.find("pthread_myexit") != latencies.end())
-                T = new pthread_exitSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group], latencies["pthread_myexit"]);
+            curLatency = latencies.find("pthread_myexit");
+            if(curLatency != latencies.end())
+                T = new pthread_exitSysCall(this->processorInstance, curCm, curLatency->second);
             else
-                T = new pthread_exitSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                T = new pthread_exitSysCall(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_myexit", *T))
                 delete T;
 
             if(waitLoop){
-                __nop_busy_loopSysCall *U = new __nop_busy_loopSysCall(this->processorInstance, ConcurrencyEmulatorBase::cm[group]);
+                __nop_busy_loopSysCall *U = new __nop_busy_loopSysCall(this->processorInstance, curCm);
                 if(!this->register_syscall(".__nop_busy_loop", *U))
                     THROW_EXCEPTION(".__nop_busy_loop symbol not found in the executable, unable to initialize pthread-emulation system");
             }

@@ -48,6 +48,7 @@
 #include <map>
 #include <string>
 #include <list>
+#include <deque>
 
 #include <ctime>
 #include <boost/random/linear_congruential.hpp>
@@ -167,10 +168,17 @@ class ConcurrencyManager{
         unsigned int fpMutex;
         ///Variables used to actually manage synchronization and scheduling
         ///among processes and threads
+
         ///TODO .... we are fixing this template, we should find an elegant way of
         ///setting the template dynamically
+        std::map<unsigned int, Processor<unsigned int> > managedProc;
         std::list<Processor<unsigned int> > managedProc;
         unsigned int maxProcId;
+        ///Note that the last element of the readyQueue, the one containing
+        ///the tasks with EDF schedule, must be ordered on the
+        ///schedule deadline: the first element the one with closest
+        ///deadline, the last one with the furthest one
+        std::deque<ThreadEmu *> readyQueue[resp::SYSC_PRIO_MAX + 2];
         ///Contains the allocated thread attributes
         std::map<int, AttributeEmu *> existingAttr;
         ///Contains the allocated threads; note that no thread
@@ -188,6 +196,7 @@ class ConcurrencyManager{
         ///Some methods internally used to help concurrency management
         bool scheduleFreeProcessor(ThreadEmu *th);
         bool preemptLowerPrio(ThreadEmu *th);
+        ThreadEmu * findReadyThread();
     public:
         /// Some constants
         static const int SYSC_SCHED_FIFO;
@@ -232,12 +241,11 @@ class ConcurrencyManager{
         ///concurrency emulator
         template <class wordSize> void addProcessor(trap::ABIIf<wordSize> &processorInstance){
             Processor<wordSize> newProc(&processorInstance);
-            typename std::list<Processor<wordSize> >::iterator procIter,  procEnd;
-            for(procIter = managedProc.begin(), procEnd = managedProc.end(); procIter != procEnd; procIter++){
-                if(procIter->processorInstance->getProcessorID() == processorInstance.getProcessorID())
-                    THROW_EXCEPTION("There is another processor already registered with ID = " << processorInstance.getProcessorID());
-            }
-            managedProc.push_back(newProc);
+
+            if(this->managedProc.find(processorInstance.getProcessorID()) != this->managedProc.end())
+                THORW_EXCEPTION("A processor with ID = " << processorInstance.getProcessorID() << " has already been added to the concurrency emulator");
+
+            this->managedProc[processorInstance.getProcessorID()] = newProc;
             if(processorInstance.getProcessorID() + 1 > this->maxProcId)
                 this->maxProcId = processorInstance.getProcessorID() + 1;
         }
