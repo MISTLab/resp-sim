@@ -43,6 +43,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <algorithm>
 
 #include <systemc.h>
 
@@ -78,9 +79,9 @@ unsigned char * resp::ConcurrencyManager::tlsData = NULL;
 AttributeEmu resp::ConcurrencyManager::defaultAttr;
 ///Latencies of the scheduling operations, used to mimick the behavior
 ///of a real scheduler and to correctly keep track of time
-sc_time resp::ConcurrencyManager::schedLatency = SC_ZERO_TIME;
-sc_time resp::ConcurrencyManager::deSchedLatency = SC_ZERO_TIME;
-sc_time resp::ConcurrencyManager::schedChooseLatency = SC_ZERO_TIME;
+sc_time resp::ConcurrencyManager::schedLatency(SC_ZERO_TIME);
+sc_time resp::ConcurrencyManager::deSchedLatency(SC_ZERO_TIME);
+sc_time resp::ConcurrencyManager::schedChooseLatency(SC_ZERO_TIME);
 
 ///Function used to sort the tasks in the last ready queue according
 ///to their deadlines, the closest deadline first
@@ -159,52 +160,47 @@ bool resp::ConcurrencyManager::preemptLowerPrio(ThreadEmu *th){
     }
     //Here I have found no idle processor: I have to determine the processor running the lowest priority
     //thread and then, if it is lower than the current thread's priority, preempt it
-    int curMinPrio = 0;
+    int curMinPrio = resp::ConcurrencyManager::SYSC_PRIO_MAX + 2;
     Processor<unsigned int> * minPriProc = NULL;
     for(procIter = this->managedProc.begin(), procIterEnd = this->managedProc.end(); procIter != procIterEnd; procIter++){
-        if(procIter->runThread->attr != NULL){
-            if(procIter->runThread->attr->schedPolicy == resp::ConcurrencyManager::SYSC_SCHED_EDF){
+        int curPrio = 0;
+        if(procIter->second.runThread->attr != NULL){
+            if(procIter->second.runThread->attr->schedPolicy == resp::ConcurrencyManager::SYSC_SCHED_EDF){
                 curPrio = resp::ConcurrencyManager::SYSC_PRIO_MAX + 1;
-                deadline = procIter->runThread->attr->deadline;
             }
             else
-                curPrio = procIter->runThread->attr->priority;
+                curPrio = procIter->second.runThread->attr->priority;
+        }
+        else{
+            std::cerr << "thread attribute is NULL??" << std::endl;
+        }
+        if(curPrio < curMinPrio){
+            curMinPrio = curPrio;
+            minPriProc = &(procIter->second);
         }
     }
 
-
-    unsigned int deadline = 0;
-    if(procIter->runThread->attr != NULL){
-        if(procIter->runThread->attr->schedPolicy == resp::ConcurrencyManager::SYSC_SCHED_EDF){
-            curPrio = resp::SYSC_PRIO_MAX + 1;
-            deadline = procIter->runThread->attr->deadline;
-        }
-        else
-            curPrio = procIter->runThread->attr->priority;
-    }
     if(th->attr != NULL){
         int newPrio = 0;
         if(th->attr->schedPolicy == resp::ConcurrencyManager::SYSC_SCHED_EDF){
-            newPrio = resp::SYSC_PRIO_MAX + 1;
+            newPrio = resp::ConcurrencyManager::SYSC_PRIO_MAX + 1;
         }
         else
             newPrio = th->attr->priority;
-        #ifndef NDEBUG
-        std::cerr << "trying to preempt task " << procIter->runThread->id << " (prio=" << curPrio << ",deadline=" << deadline << ") with " << th->id << " (prio=" << newPrio << ",deadline=" << th->attr->deadline << ")" << std::endl;
-        #endif
-        if((curPrio < newPrio || (newPrio == (resp::SYSC_PRIO_MAX + 1) && th->attr->deadline < deadline)) && (procIter->runThread->attr == NULL || procIter->runThread->attr->preemptive)){
-            #ifndef NDEBUG
-            std::cerr << "preempting" << std::endl;
-            #endif
+
+        if((curMinPrio < newPrio || (newPrio == (resp::ConcurrencyManager::SYSC_PRIO_MAX + 1) && th->attr->deadline < minPriProc->runThread->attr->deadline)) && (minPriProc->runThread->attr == NULL || minPriProc->runThread->attr->preemptive)){
             //Lets deschedule the old thread and schedule the new one.
-            readyQueue[curPrio].push_back(procIter->runThread);
-            if(curPrio == resp::ConcurrencyManager::SYSC_PRIO_MAX + 1)
-                sort(readyQueue[curPrio].begin(), readyQueue[curPrio].end(), deadlineSort);
-            int thId = procIter->deSchedule();
-            existingThreads[thId]->status = ThreadEmu::READY;
-            procIter->schedule(th);
+            this->readyQueue[curMinPrio].push_back(minPriProc->runThread);
+            if(curMinPrio == resp::ConcurrencyManager::SYSC_PRIO_MAX + 1)
+                std::sort(this->readyQueue[curMinPrio].begin(), this->readyQueue[curMinPrio].end(), deadlineSort);
+            int thId = minPriProc->deSchedule();
+            this->existingThreads[thId]->status = ThreadEmu::READY;
+            minPriProc->schedule(th);
             return true;
         }
+    }
+    else{
+        std::cerr << "the thread being created has a NULL attribute???" << std::endl;
     }
 
     return false;
@@ -420,7 +416,7 @@ int resp::ConcurrencyManager::createThread(unsigned int threadFun, unsigned int 
             #endif
             this->readyQueue[curPrio].push_back(th);
             if(curPrio == resp::ConcurrencyManager::SYSC_PRIO_MAX + 1)
-                sort(this->readyQueue[curPrio].begin(), this->readyQueue[curPrio].end(), deadlineSort);
+                std::sort(this->readyQueue[curPrio].begin(), this->readyQueue[curPrio].end(), deadlineSort);
         }
     }
 
@@ -478,7 +474,7 @@ void resp::ConcurrencyManager::exitThread(unsigned int procId, unsigned int retV
                 }
                 this->readyQueue[curPrio].push_back(*joinIter);
                 if(curPrio == resp::ConcurrencyManager::SYSC_PRIO_MAX + 1)
-                    sort(this->readyQueue[curPrio].begin(), this->readyQueue[curPrio].end(), deadlineSort);
+                    std::sort(this->readyQueue[curPrio].begin(), this->readyQueue[curPrio].end(), deadlineSort);
             }
         }
         this->existingThreads[th]->joining.clear();
