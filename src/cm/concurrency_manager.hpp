@@ -225,6 +225,11 @@ class ConcurrencyManager{
         ///Default thread attribute, used to initialize threads which do not declare
         ///any specific attribute
         static AttributeEmu defaultAttr;
+        ///Latencies of the scheduling operations, used to mimick the behavior
+        ///of a real scheduler and to correctly keep track of time
+        static sc_time schedLatency = SC_ZERO_TIME;
+        static sc_time deSchedLatency = SC_ZERO_TIME;
+        static sc_time schedChooseLatency = SC_ZERO_TIME;
 
         /// HERE WE START WITH THE METHODS
         ConcurrencyManager();

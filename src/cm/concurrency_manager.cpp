@@ -38,6 +38,9 @@
  *
 \***************************************************************************/
 
+#include <iostream>
+#include <sstream>
+#include <string>
 #include <vector>
 #include <map>
 
@@ -70,6 +73,14 @@ std::map<int, std::string> resp::ConcurrencyManager::interruptServiceRoutines;
 ///The size and content of the thread-local-storage
 unsigned int resp::ConcurrencyManager::tlsSize = 0;
 unsigned char * resp::ConcurrencyManager::tlsData = NULL;
+///Default thread attribute, used to initialize threads which do not declare
+///any specific attribute
+AttributeEmu resp::ConcurrencyManager::defaultAttr;
+///Latencies of the scheduling operations, used to mimick the behavior
+///of a real scheduler and to correctly keep track of time
+sc_time resp::ConcurrencyManager::schedLatency = SC_ZERO_TIME;
+sc_time resp::ConcurrencyManager::deSchedLatency = SC_ZERO_TIME;
+sc_time resp::ConcurrencyManager::schedChooseLatency = SC_ZERO_TIME;
 
 ///Function used to sort the tasks in the last ready queue according
 ///to their deadlines, the closest deadline first
@@ -136,52 +147,66 @@ bool resp::ConcurrencyManager::scheduleFreeProcessor(ThreadEmu *th){
 ///Determines the lowest priority thread which is currently running and it
 ///preepts it in case the current thread has a higher priority
 bool resp::ConcurrencyManager::preemptLowerPrio(ThreadEmu *th){
-/*    std::list<Processor>::iterator procIter, procIterEnd;
-    for(procIter = existingProc.begin(), procIterEnd = existingProc.end(); procIter != procIterEnd; procIter++){
-        if(procIter->runThread == NULL){
+    //First of all I loop all over the ready processors in order to determine
+    //the ready ones
+    std::map<unsigned int, Processor<unsigned int> >::iterator procIter, procIterEnd;
+    for(procIter = this->managedProc.begin(), procIterEnd = this->managedProc.end(); procIter != procIterEnd; procIter++){
+        if(procIter->second.runThread == NULL){
             //Here we are, I have found the empty processor
+            procIter->second.schedule(th);
+            return true;
+        }
+    }
+    //Here I have found no idle processor: I have to determine the processor running the lowest priority
+    //thread and then, if it is lower than the current thread's priority, preempt it
+    int curMinPrio = 0;
+    Processor<unsigned int> * minPriProc = NULL;
+    for(procIter = this->managedProc.begin(), procIterEnd = this->managedProc.end(); procIter != procIterEnd; procIter++){
+        if(procIter->runThread->attr != NULL){
+            if(procIter->runThread->attr->schedPolicy == resp::ConcurrencyManager::SYSC_SCHED_EDF){
+                curPrio = resp::ConcurrencyManager::SYSC_PRIO_MAX + 1;
+                deadline = procIter->runThread->attr->deadline;
+            }
+            else
+                curPrio = procIter->runThread->attr->priority;
+        }
+    }
+
+
+    unsigned int deadline = 0;
+    if(procIter->runThread->attr != NULL){
+        if(procIter->runThread->attr->schedPolicy == resp::ConcurrencyManager::SYSC_SCHED_EDF){
+            curPrio = resp::SYSC_PRIO_MAX + 1;
+            deadline = procIter->runThread->attr->deadline;
+        }
+        else
+            curPrio = procIter->runThread->attr->priority;
+    }
+    if(th->attr != NULL){
+        int newPrio = 0;
+        if(th->attr->schedPolicy == resp::ConcurrencyManager::SYSC_SCHED_EDF){
+            newPrio = resp::SYSC_PRIO_MAX + 1;
+        }
+        else
+            newPrio = th->attr->priority;
+        #ifndef NDEBUG
+        std::cerr << "trying to preempt task " << procIter->runThread->id << " (prio=" << curPrio << ",deadline=" << deadline << ") with " << th->id << " (prio=" << newPrio << ",deadline=" << th->attr->deadline << ")" << std::endl;
+        #endif
+        if((curPrio < newPrio || (newPrio == (resp::SYSC_PRIO_MAX + 1) && th->attr->deadline < deadline)) && (procIter->runThread->attr == NULL || procIter->runThread->attr->preemptive)){
+            #ifndef NDEBUG
+            std::cerr << "preempting" << std::endl;
+            #endif
+            //Lets deschedule the old thread and schedule the new one.
+            readyQueue[curPrio].push_back(procIter->runThread);
+            if(curPrio == resp::ConcurrencyManager::SYSC_PRIO_MAX + 1)
+                sort(readyQueue[curPrio].begin(), readyQueue[curPrio].end(), deadlineSort);
+            int thId = procIter->deSchedule();
+            existingThreads[thId]->status = ThreadEmu::READY;
             procIter->schedule(th);
             return true;
         }
-        else{
-            //Lets check the priority level of the task: if it is lower than the current task, then
-            //I preempt the task which is currently running on that processor
-            int curPrio = 0;
-            unsigned int deadline = 0;
-            if(procIter->runThread->attr != NULL){
-                if(procIter->runThread->attr->schedPolicy == resp::SYSC_SCHED_EDF){
-                    curPrio = resp::SYSC_PRIO_MAX + 1;
-                    deadline = procIter->runThread->attr->deadline;
-                }
-                else
-                    curPrio = procIter->runThread->attr->priority;
-            }
-            if(th->attr != NULL){
-                int newPrio = 0;
-                if(th->attr->schedPolicy == resp::SYSC_SCHED_EDF){
-                    newPrio = resp::SYSC_PRIO_MAX + 1;
-                }
-                else
-                    newPrio = th->attr->priority;
-                #ifndef NDEBUG
-                std::cerr << "trying to preempt task " << procIter->runThread->id << " (prio=" << curPrio << ",deadline=" << deadline << ") with " << th->id << " (prio=" << newPrio << ",deadline=" << th->attr->deadline << ")" << std::endl;
-                #endif
-                if((curPrio < newPrio || (newPrio == (resp::SYSC_PRIO_MAX + 1) && th->attr->deadline < deadline)) && (procIter->runThread->attr == NULL || procIter->runThread->attr->preemptive)){
-                    #ifndef NDEBUG
-                    std::cerr << "preempting" << std::endl;
-                    #endif
-                    //Lets deschedule the old thread and schedule the new one.
-                    readyQueue[curPrio].push_back(procIter->runThread);
-                    if(curPrio == resp::SYSC_PRIO_MAX + 1)
-                        sort(readyQueue[curPrio].begin(), readyQueue[curPrio].end(), deadlineSort);
-                    int thId = procIter->deSchedule();
-                    existingThreads[thId]->status = ThreadEmu::READY;
-                    procIter->schedule(th);
-                    return true;
-                }
-            }
-        }
-    }*/
+    }
+
     return false;
 }
 
@@ -189,23 +214,25 @@ bool resp::ConcurrencyManager::preemptLowerPrio(ThreadEmu *th){
 ///is the function which should be changed.
 ThreadEmu * resp::ConcurrencyManager::findReadyThread(){
     //I get the thread of the first queue which is not empty
-/*    if(enableWait)
-        wait(schedChooseLatency);
+    wait(resp::ConcurrencyManager::schedChooseLatency);
 
     ThreadEmu * foundThread = NULL;
     int j = -1;
-    for(int i = resp::SYSC_PRIO_MAX + 1; i >= 0; i--){
-        if(readyQueue[i].size() > 0){
-            foundThread = readyQueue[i].front();
-            readyQueue[i].pop_front();
+    for(int i = resp::ConcurrencyManager::SYSC_PRIO_MAX + 1; i >= 0; i--){
+        if(this->readyQueue[i].size() > 0){
+            foundThread = this->readyQueue[i].front();
+            this->readyQueue[i].pop_front();
             j = i;
             break;
         }
     }
+    //I have found no thread ready to be scheduled; I check that this is not a deadlock
+    //condition (it is a deadlock condition if in the system we have threads and none
+    //of them is ready or running)
     if(foundThread == NULL){
         bool foundRun = false;
         std::vector<ThreadEmu *> foundWait;
-        std::map<int, ThreadEmu *>::iterator thIter, thEnd;
+        std::map<int, ThreadEmu *>::const_iterator thIter, thEnd;
         for(thIter = existingThreads.begin(), thEnd = existingThreads.end(); thIter != thEnd; thIter++){
             if(thIter->second->status == ThreadEmu::RUNNING)
                 foundRun = true;
@@ -213,15 +240,14 @@ ThreadEmu * resp::ConcurrencyManager::findReadyThread(){
                 foundWait.push_back(thIter->second);
         }
         if(foundWait.size() > 0 && !foundRun){
-            std::cerr << "waiting threads ";
+            std::stringstream oss;
             for(unsigned int j = 0; j < foundWait.size(); j++)
-                std::cerr << foundWait[j]->id << " ";
-            std::cerr << std::endl;
-            THROW_EXCEPTION("Deadlock: there are no ready threads in the system");
+                oss << foundWait[j]->id << " ";
+            THROW_EXCEPTION("Deadlock: there are no ready threads in the system; waiting threads: " << oss.str());
         }
     }
 
-    return foundThread;*/
+    return foundThread;
 }
 
 ///*******************************************************************
