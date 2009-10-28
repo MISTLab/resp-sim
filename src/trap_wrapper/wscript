@@ -65,8 +65,8 @@ for i in tcls:
 ocls = mb.global_ns.classes(lambda decl: decl.name.startswith('OSEmulator'), allow_empty=True)
 for i in ocls:
     i.include()
-    if i.name == 'OSEmulator<unsigned int, 0>':
-        i.alias = 'OSEmulator32_0'
+    if i.name == 'OSEmulator<unsigned int>':
+        i.alias = 'OSEmulator32'
 mb.global_ns.class_('ABIIf<unsigned int>').include()
 
 mb.global_ns.classes(lambda decl: decl.name.startswith('ToolsManager'), allow_empty=True).include()
