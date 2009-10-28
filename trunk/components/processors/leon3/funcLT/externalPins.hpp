@@ -49,6 +49,8 @@
 #include <tlm.h>
 #include <tlm_utils/multi_passthrough_initiator_socket.h>
 
+#define FUNC_MODEL
+#define LT_IF
 namespace leon3_funclt_trap{
 
     class PinTLM_out_32 : public sc_module{

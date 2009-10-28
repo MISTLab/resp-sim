@@ -49,6 +49,8 @@
 #include <trap_utils.hpp>
 #include <tlm_utils/multi_passthrough_target_socket.h>
 
+#define FUNC_MODEL
+#define LT_IF
 namespace leon3_funclt_trap{
 
     class IntrTLMPort_32 : public sc_module{

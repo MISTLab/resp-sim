@@ -61,6 +61,10 @@ sc_dt::uint64 leon3_funclt_trap::TLMMemory::read_dword( const unsigned int & add
     ) throw(){
     sc_dt::uint64 datum = 0;
     if (this->dmi_ptr_valid){
+        if(address + this->dmi_data.get_start_address() > this->dmi_data.get_end_address()){
+            SC_REPORT_ERROR("TLM-2", "Error in reading memory data through DMI: address out of \
+                bounds");
+        }
         memcpy(&datum, this->dmi_data.get_dmi_ptr() - this->dmi_data.get_start_address() \
             + address, sizeof(datum));
         this->quantKeeper.inc(this->dmi_data.get_read_latency());
@@ -103,6 +107,10 @@ unsigned short int leon3_funclt_trap::TLMMemory::read_half( const unsigned int &
     address ) throw(){
     unsigned short int datum = 0;
     if (this->dmi_ptr_valid){
+        if(address + this->dmi_data.get_start_address() > this->dmi_data.get_end_address()){
+            SC_REPORT_ERROR("TLM-2", "Error in reading memory data through DMI: address out of \
+                bounds");
+        }
         memcpy(&datum, this->dmi_data.get_dmi_ptr() - this->dmi_data.get_start_address() \
             + address, sizeof(datum));
         this->quantKeeper.inc(this->dmi_data.get_read_latency());
@@ -144,6 +152,10 @@ unsigned char leon3_funclt_trap::TLMMemory::read_byte( const unsigned int & addr
     ) throw(){
     unsigned char datum = 0;
     if (this->dmi_ptr_valid){
+        if(address + this->dmi_data.get_start_address() > this->dmi_data.get_end_address()){
+            SC_REPORT_ERROR("TLM-2", "Error in reading memory data through DMI: address out of \
+                bounds");
+        }
         memcpy(&datum, this->dmi_data.get_dmi_ptr() - this->dmi_data.get_start_address() \
             + address, sizeof(datum));
         this->quantKeeper.inc(this->dmi_data.get_read_latency());
@@ -188,6 +200,10 @@ void leon3_funclt_trap::TLMMemory::write_dword( const unsigned int & address, sc
         this->debugger->notifyAddress(address, sizeof(datum));
     }
     if(this->dmi_ptr_valid){
+        if(address + this->dmi_data.get_start_address() > this->dmi_data.get_end_address()){
+            SC_REPORT_ERROR("TLM-2", "Error in writing memory data through DMI: address out of \
+                bounds");
+        }
         memcpy(this->dmi_data.get_dmi_ptr() - this->dmi_data.get_start_address() + address, \
             &datum, sizeof(datum));
         this->quantKeeper.inc(this->dmi_data.get_write_latency());
@@ -229,6 +245,10 @@ void leon3_funclt_trap::TLMMemory::write_half( const unsigned int & address, uns
         this->debugger->notifyAddress(address, sizeof(datum));
     }
     if(this->dmi_ptr_valid){
+        if(address + this->dmi_data.get_start_address() > this->dmi_data.get_end_address()){
+            SC_REPORT_ERROR("TLM-2", "Error in writing memory data through DMI: address out of \
+                bounds");
+        }
         memcpy(this->dmi_data.get_dmi_ptr() - this->dmi_data.get_start_address() + address, \
             &datum, sizeof(datum));
         this->quantKeeper.inc(this->dmi_data.get_write_latency());
@@ -264,6 +284,10 @@ void leon3_funclt_trap::TLMMemory::write_byte( const unsigned int & address, uns
         this->debugger->notifyAddress(address, sizeof(datum));
     }
     if(this->dmi_ptr_valid){
+        if(address + this->dmi_data.get_start_address() > this->dmi_data.get_end_address()){
+            SC_REPORT_ERROR("TLM-2", "Error in writing memory data through DMI: address out of \
+                bounds");
+        }
         memcpy(this->dmi_data.get_dmi_ptr() - this->dmi_data.get_start_address() + address, \
             &datum, sizeof(datum));
         this->quantKeeper.inc(this->dmi_data.get_write_latency());

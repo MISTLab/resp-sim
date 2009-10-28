@@ -54,6 +54,8 @@
 #include <instructionBase.hpp>
 #include <trap_utils.hpp>
 
+#define FUNC_MODEL
+#define LT_IF
 using namespace trap;
 namespace leon3_funclt_trap{
 
@@ -61,23 +63,20 @@ namespace leon3_funclt_trap{
         private:
         unsigned int & PROGRAM_LIMIT;
         MemoryInterface & dataMem;
-        Reg32_0_delay_3 & PSR;
-        Reg32_1_delay_3 & WIM;
+        Reg32_0 & PSR;
+        Reg32_1 & WIM;
         Reg32_2 & TBR;
         Reg32_3 & Y;
-        Reg32_3_off_4 & PC;
+        Reg32_3 & PC;
         Reg32_3 & NPC;
-        Reg32_0 & PSRbp;
-        Reg32_3 & Ybp;
-        Reg32_3 & ASR18bp;
         RegisterBankClass & GLOBAL;
-        Reg32_3 * & WINREGS;
-        Reg32_3 * & ASR;
+        Reg32_3 * WINREGS;
+        Reg32_3 * ASR;
         Alias & FP;
         Alias & LR;
         Alias & SP;
         Alias & PCR;
-        Alias * & REGS;
+        Alias * REGS;
         bool & instrExecuting;
         sc_event & instrEndEvent;
         int routineEntryState;
@@ -86,11 +85,10 @@ namespace leon3_funclt_trap{
         std::vector< std::vector< std::string > > routineExitSequence;
 
         public:
-        LEON3_ABIIf( unsigned int & PROGRAM_LIMIT, MemoryInterface & dataMem, Reg32_0_delay_3 \
-            & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 \
-            & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, \
-            Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & \
-            PCR, Alias * & REGS, bool & instrExecuting, sc_event & instrEndEvent );
+        LEON3_ABIIf( unsigned int & PROGRAM_LIMIT, MemoryInterface & dataMem, Reg32_0 & PSR, \
+            Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass \
+            & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias \
+            & PCR, Alias * REGS, bool & instrExecuting, sc_event & instrEndEvent );
         bool isLittleEndian() const throw();
         int getProcessorID() const throw();
         bool isInstrExecuting() const throw();

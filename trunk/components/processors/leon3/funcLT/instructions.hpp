@@ -103,23 +103,26 @@ namespace leon3_funclt_trap{
     class Instruction : public InstructionBase{
 
         protected:
-        Reg32_0_delay_3 & PSR;
-        Reg32_1_delay_3 & WIM;
+        inline void IncrementPC() throw(){
+            unsigned int npc = NPC;
+            PC = npc;
+            npc += 4;
+            NPC = npc;
+        }
+        Reg32_0 & PSR;
+        Reg32_1 & WIM;
         Reg32_2 & TBR;
         Reg32_3 & Y;
-        Reg32_3_off_4 & PC;
+        Reg32_3 & PC;
         Reg32_3 & NPC;
-        Reg32_0 & PSRbp;
-        Reg32_3 & Ybp;
-        Reg32_3 & ASR18bp;
         RegisterBankClass & GLOBAL;
-        Reg32_3 * & WINREGS;
-        Reg32_3 * & ASR;
+        Reg32_3 * WINREGS;
+        Reg32_3 * ASR;
         Alias & FP;
         Alias & LR;
         Alias & SP;
         Alias & PCR;
-        Alias * & REGS;
+        Alias * REGS;
         TLMMemory & instrMem;
         TLMMemory & dataMem;
         PinTLM_out_32 & irqAck;
@@ -127,10 +130,9 @@ namespace leon3_funclt_trap{
         const bool PIPELINED_MULT;
 
         public:
-        Instruction( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        Instruction( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & \
+            PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         virtual unsigned int behavior() = 0;
         virtual Instruction * replicate() const throw() = 0;
@@ -150,32 +152,12 @@ namespace leon3_funclt_trap{
         bool IncrementRegWindow();
         bool DecrementRegWindow();
         int SignExtend( unsigned int bitSeq, unsigned int bitSeq_length ) const throw();
-        void RaiseException( unsigned int exceptionId, unsigned int customTrapOffset = 0 );
+        void RaiseException( unsigned int pcounter, unsigned int npcounter, unsigned int \
+            exceptionId, unsigned int customTrapOffset = 0 );
+        bool checkIncrementWin();
+        bool checkDecrementWin();
         unsigned int totalInstrCycles;
         virtual ~Instruction();
-    };
-
-};
-
-namespace leon3_funclt_trap{
-
-    class IncrementPC_op : public virtual Instruction{
-
-        protected:
-        inline void IncrementPC() throw(){
-            unsigned int npc = NPC;
-            PC = npc;
-            npc += 4;
-            NPC = npc;
-        }
-
-        public:
-        IncrementPC_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
-        virtual ~IncrementPC_op();
     };
 
 };
@@ -191,10 +173,9 @@ namespace leon3_funclt_trap{
         }
 
         public:
-        WB_plain_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        WB_plain_op( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & \
+            PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         virtual ~WB_plain_op();
     };
@@ -208,41 +189,18 @@ namespace leon3_funclt_trap{
         protected:
         inline void ICC_writeLogic( unsigned int & result ){
 
-            PSRbp[key_ICC_n] = ((result & 0x80000000) >> 31);
-            PSRbp[key_ICC_z] = (result == 0);
-            PSRbp[key_ICC_v] = 0;
-            PSRbp[key_ICC_c] = 0;
+            PSR[key_ICC_n] = ((result & 0x80000000) >> 31);
+            PSR[key_ICC_z] = (result == 0);
+            PSR[key_ICC_v] = 0;
+            PSR[key_ICC_c] = 0;
         }
 
         public:
-        ICC_writeLogic_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        ICC_writeLogic_op( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 \
+            & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         virtual ~ICC_writeLogic_op();
-    };
-
-};
-
-namespace leon3_funclt_trap{
-
-    class WB_icc_op : public virtual Instruction{
-
-        protected:
-        inline void WB_icc( Alias & rd, unsigned int & rd_bit, unsigned int & result ){
-
-            rd = result;
-            PSR = (PSR & 0xff0fffff) | (PSRbp & 0x00f00000);
-        }
-
-        public:
-        WB_icc_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
-        virtual ~WB_icc_op();
     };
 
 };
@@ -255,18 +213,17 @@ namespace leon3_funclt_trap{
         inline void ICC_writeTSub( unsigned int & result, bool & temp_V, unsigned int & rs1_op, \
             unsigned int & rs2_op ){
 
-            PSRbp[key_ICC_n] = ((result & 0x80000000) >> 31);
-            PSRbp[key_ICC_z] = (result == 0);
-            PSRbp[key_ICC_v] = temp_V;
-            PSRbp[key_ICC_c] = ((unsigned int)(((~rs1_op) & rs2_op) | (((~rs1_op) | rs2_op) & \
-                result))) >> 31;
+            PSR[key_ICC_n] = ((result & 0x80000000) >> 31);
+            PSR[key_ICC_z] = (result == 0);
+            PSR[key_ICC_v] = temp_V;
+            PSR[key_ICC_c] = ((unsigned int)(((~rs1_op) & rs2_op) | (((~rs1_op) | rs2_op) & result))) \
+                >> 31;
         }
 
         public:
-        ICC_writeTSub_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        ICC_writeTSub_op( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 \
+            & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         virtual ~ICC_writeTSub_op();
     };
@@ -278,20 +235,20 @@ namespace leon3_funclt_trap{
     class ICC_writeDiv_op : public virtual Instruction{
 
         protected:
-        inline void ICC_writeDiv( unsigned int & result, bool & temp_V, unsigned int & rs1_op, \
-            unsigned int & rs2_op ){
+        inline void ICC_writeDiv( bool & exception, unsigned int & result, bool & temp_V ){
 
-            PSRbp[key_ICC_n] = ((result & 0x80000000) >> 31);
-            PSRbp[key_ICC_z] = (result == 0);
-            PSRbp[key_ICC_v] = temp_V;
-            PSRbp[key_ICC_c] = 0;
+            if(!exception){
+                PSR[key_ICC_n] = ((result & 0x80000000) >> 31);
+                PSR[key_ICC_z] = (result == 0);
+                PSR[key_ICC_v] = temp_V;
+                PSR[key_ICC_c] = 0;
+            }
         }
 
         public:
-        ICC_writeDiv_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        ICC_writeDiv_op( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 \
+            & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         virtual ~ICC_writeDiv_op();
     };
@@ -306,19 +263,18 @@ namespace leon3_funclt_trap{
         inline void ICC_writeAdd( unsigned int & result, unsigned int & rs1_op, unsigned \
             int & rs2_op ){
 
-            PSRbp[key_ICC_n] = ((result & 0x80000000) >> 31);
-            PSRbp[key_ICC_z] = (result == 0);
-            PSRbp[key_ICC_v] = ((unsigned int)((rs1_op & rs2_op & (~result)) | ((~rs1_op) & (~rs2_op) \
+            PSR[key_ICC_n] = ((result & 0x80000000) >> 31);
+            PSR[key_ICC_z] = (result == 0);
+            PSR[key_ICC_v] = ((unsigned int)((rs1_op & rs2_op & (~result)) | ((~rs1_op) & (~rs2_op) \
                 & result))) >> 31;
-            PSRbp[key_ICC_c] = ((unsigned int)((rs1_op & rs2_op) | ((rs1_op | rs2_op) & (~result)))) \
+            PSR[key_ICC_c] = ((unsigned int)((rs1_op & rs2_op) | ((rs1_op | rs2_op) & (~result)))) \
                 >> 31;
         }
 
         public:
-        ICC_writeAdd_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        ICC_writeAdd_op( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 \
+            & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         virtual ~ICC_writeAdd_op();
     };
@@ -333,89 +289,20 @@ namespace leon3_funclt_trap{
         inline void ICC_writeSub( unsigned int & result, unsigned int & rs1_op, unsigned \
             int & rs2_op ){
 
-            PSRbp[key_ICC_n] = ((result & 0x80000000) >> 31);
-            PSRbp[key_ICC_z] = (result == 0);
-            PSRbp[key_ICC_v] = ((unsigned int)((rs1_op & (~rs2_op) & (~result)) | ((~rs1_op) \
-                & rs2_op & result))) >> 31;
-            PSRbp[key_ICC_c] = ((unsigned int)(((~rs1_op) & rs2_op) | (((~rs1_op) | rs2_op) & \
-                result))) >> 31;
+            PSR[key_ICC_n] = ((result & 0x80000000) >> 31);
+            PSR[key_ICC_z] = (result == 0);
+            PSR[key_ICC_v] = ((unsigned int)((rs1_op & (~rs2_op) & (~result)) | ((~rs1_op) & \
+                rs2_op & result))) >> 31;
+            PSR[key_ICC_c] = ((unsigned int)(((~rs1_op) & rs2_op) | (((~rs1_op) | rs2_op) & result))) \
+                >> 31;
         }
 
         public:
-        ICC_writeSub_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        ICC_writeSub_op( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 \
+            & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         virtual ~ICC_writeSub_op();
-    };
-
-};
-
-namespace leon3_funclt_trap{
-
-    class WB_yicc_op : public virtual Instruction{
-
-        protected:
-        inline void WB_yicc( Alias & rd, unsigned int & rd_bit, unsigned int & result ){
-
-            rd = result;
-            PSR = (PSR & 0xff0fffff) | (PSRbp & 0x00f00000);
-            Y = Ybp;
-        }
-
-        public:
-        WB_yicc_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
-        virtual ~WB_yicc_op();
-    };
-
-};
-
-namespace leon3_funclt_trap{
-
-    class WB_yasr_op : public virtual Instruction{
-
-        protected:
-        inline void WB_yasr( Alias & rd, unsigned int & rd_bit, unsigned int & result ){
-
-            rd = result;
-            Y = Ybp;
-            ASR[18] = ASR18bp;
-        }
-
-        public:
-        WB_yasr_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
-        virtual ~WB_yasr_op();
-    };
-
-};
-
-namespace leon3_funclt_trap{
-
-    class WB_y_op : public virtual Instruction{
-
-        protected:
-        inline void WB_y( Alias & rd, unsigned int & rd_bit, unsigned int & result ){
-
-            rd = result;
-            Y = Ybp;
-        }
-
-        public:
-        WB_y_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
-        virtual ~WB_y_op();
     };
 
 };
@@ -428,18 +315,17 @@ namespace leon3_funclt_trap{
         inline void ICC_writeTAdd( unsigned int & result, bool & temp_V, unsigned int & rs1_op, \
             unsigned int & rs2_op ){
 
-            PSRbp[key_ICC_n] = ((result & 0x80000000) >> 31);
-            PSRbp[key_ICC_z] = (result == 0);
-            PSRbp[key_ICC_v] = temp_V;
-            PSRbp[key_ICC_c] = ((unsigned int)((rs1_op & rs2_op) | ((rs1_op | rs2_op) & (~result)))) \
+            PSR[key_ICC_n] = ((result & 0x80000000) >> 31);
+            PSR[key_ICC_z] = (result == 0);
+            PSR[key_ICC_v] = temp_V;
+            PSR[key_ICC_c] = ((unsigned int)((rs1_op & rs2_op) | ((rs1_op | rs2_op) & (~result)))) \
                 >> 31;
         }
 
         public:
-        ICC_writeTAdd_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        ICC_writeTAdd_op( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 \
+            & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         virtual ~ICC_writeTAdd_op();
     };
@@ -455,19 +341,18 @@ namespace leon3_funclt_trap{
             rs1_op, unsigned int & rs2_op ){
 
             if(!temp_V){
-                PSRbp[key_ICC_n] = ((result & 0x80000000) >> 31);
-                PSRbp[key_ICC_z] = (result == 0);
-                PSRbp[key_ICC_v] = temp_V;
-                PSRbp[key_ICC_c] = ((unsigned int)(((~rs1_op) & rs2_op) | (((~rs1_op) | rs2_op) & \
-                    result))) >> 31;
+                PSR[key_ICC_n] = ((result & 0x80000000) >> 31);
+                PSR[key_ICC_z] = (result == 0);
+                PSR[key_ICC_v] = temp_V;
+                PSR[key_ICC_c] = ((unsigned int)(((~rs1_op) & rs2_op) | (((~rs1_op) | rs2_op) & result))) \
+                    >> 31;
             }
         }
 
         public:
-        ICC_writeTVSub_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        ICC_writeTVSub_op( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 \
+            & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         virtual ~ICC_writeTVSub_op();
     };
@@ -476,25 +361,23 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class WB_icctv_op : public virtual Instruction{
+    class WB_tv_op : public virtual Instruction{
 
         protected:
-        inline void WB_icctv( Alias & rd, unsigned int & rd_bit, unsigned int & result, bool \
+        inline void WB_tv( Alias & rd, unsigned int & rd_bit, unsigned int & result, bool \
             & temp_V ){
 
             if(!temp_V){
                 rd = result;
-                PSR = (PSR & 0xff0fffff) | (PSRbp & 0x00f00000);
             }
         }
 
         public:
-        WB_icctv_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
-        virtual ~WB_icctv_op();
+        WB_tv_op( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
+        virtual ~WB_tv_op();
     };
 
 };
@@ -508,19 +391,18 @@ namespace leon3_funclt_trap{
             rs1_op, unsigned int & rs2_op ){
 
             if(!temp_V){
-                PSRbp[key_ICC_n] = ((result & 0x80000000) >> 31);
-                PSRbp[key_ICC_z] = (result == 0);
-                PSRbp[key_ICC_v] = 0;
-                PSRbp[key_ICC_c] = ((unsigned int)((rs1_op & rs2_op) | ((rs1_op | rs2_op) & (~result)))) \
+                PSR[key_ICC_n] = ((result & 0x80000000) >> 31);
+                PSR[key_ICC_z] = (result == 0);
+                PSR[key_ICC_v] = 0;
+                PSR[key_ICC_c] = ((unsigned int)((rs1_op & rs2_op) | ((rs1_op | rs2_op) & (~result)))) \
                     >> 31;
             }
         }
 
         public:
-        ICC_writeTVAdd_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        ICC_writeTVAdd_op( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 \
+            & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         virtual ~ICC_writeTVAdd_op();
     };
@@ -532,10 +414,9 @@ namespace leon3_funclt_trap{
     class InvalidInstr : public Instruction{
 
         public:
-        InvalidInstr( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        InvalidInstr( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & \
+            PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
@@ -550,7 +431,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class READasr : public IncrementPC_op{
+    class READasr : public Instruction{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -560,11 +441,10 @@ namespace leon3_funclt_trap{
         unsigned int asr_temp;
 
         public:
-        READasr( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        READasr( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -578,7 +458,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class WRITEY_reg : public IncrementPC_op{
+    class WRITEY_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -589,11 +469,10 @@ namespace leon3_funclt_trap{
         unsigned int result;
 
         public:
-        WRITEY_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        WRITEY_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -607,7 +486,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class XNOR_reg : public WB_plain_op, public IncrementPC_op{
+    class XNOR_reg : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -622,11 +501,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        XNOR_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        XNOR_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -640,7 +518,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ANDNcc_reg : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
+    class ANDNcc_reg : public ICC_writeLogic_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -655,11 +533,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        ANDNcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        ANDNcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -673,7 +550,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LDSB_imm : public IncrementPC_op{
+    class LDSB_imm : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -686,11 +563,10 @@ namespace leon3_funclt_trap{
         unsigned int readValue;
 
         public:
-        LDSB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        LDSB_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -704,7 +580,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class WRITEpsr_imm : public IncrementPC_op{
+    class WRITEpsr_imm : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -712,15 +588,16 @@ namespace leon3_funclt_trap{
         unsigned int simm13;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool supervisorException;
         bool illegalCWP;
         unsigned int result;
 
         public:
-        WRITEpsr_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        WRITEpsr_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & \
+            PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
@@ -735,7 +612,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class READy : public IncrementPC_op{
+    class READy : public Instruction{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -744,11 +621,10 @@ namespace leon3_funclt_trap{
         unsigned int y_temp;
 
         public:
-        READy( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        READy( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 \
+            & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, \
+            Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -762,7 +638,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class XNORcc_reg : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
+    class XNORcc_reg : public ICC_writeLogic_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -777,11 +653,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        XNORcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        XNORcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -795,22 +670,23 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class READpsr : public IncrementPC_op{
+    class READpsr : public Instruction{
         private:
         Alias rd;
         unsigned int rd_bit;
         unsigned int asr;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool supervisor;
         unsigned int psr_temp;
 
         public:
-        READpsr( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        READpsr( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -824,7 +700,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ANDN_imm : public WB_plain_op, public IncrementPC_op{
+    class ANDN_imm : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -837,11 +713,10 @@ namespace leon3_funclt_trap{
         unsigned int rs1_op;
 
         public:
-        ANDN_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        ANDN_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -855,7 +730,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ANDcc_reg : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
+    class ANDcc_reg : public ICC_writeLogic_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -870,11 +745,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        ANDcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        ANDcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -888,7 +762,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class TSUBcc_imm : public ICC_writeTSub_op, public WB_icc_op, public IncrementPC_op{
+    class TSUBcc_imm : public ICC_writeTSub_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -903,11 +777,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        TSUBcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        TSUBcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -921,7 +794,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LDSBA_reg : public IncrementPC_op{
+    class LDSBA_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -932,16 +805,17 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int address;
         unsigned int readValue;
         bool supervisor;
 
         public:
-        LDSBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        LDSBA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -955,7 +829,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LDUH_imm : public IncrementPC_op{
+    class LDUH_imm : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -964,16 +838,17 @@ namespace leon3_funclt_trap{
         unsigned int simm13;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int address;
         unsigned int readValue;
         bool notAligned;
 
         public:
-        LDUH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        LDUH_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -987,7 +862,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class STA_reg : public IncrementPC_op{
+    class STA_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -998,17 +873,18 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool supervisor;
         bool notAligned;
         unsigned int address;
         unsigned int toWrite;
 
         public:
-        STA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        STA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1022,7 +898,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ORN_reg : public WB_plain_op, public IncrementPC_op{
+    class ORN_reg : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -1037,11 +913,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        ORN_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        ORN_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1055,7 +930,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LDSHA_reg : public IncrementPC_op{
+    class LDSHA_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -1066,17 +941,18 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int address;
         unsigned int readValue;
         bool supervisor;
         bool notAligned;
 
         public:
-        LDSHA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        LDSHA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1090,7 +966,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class STBA_reg : public IncrementPC_op{
+    class STBA_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -1101,16 +977,17 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool supervisor;
         unsigned int address;
         unsigned char toWrite;
 
         public:
-        STBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        STBA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1124,7 +1001,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ST_imm : public IncrementPC_op{
+    class ST_imm : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -1133,16 +1010,17 @@ namespace leon3_funclt_trap{
         unsigned int simm13;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool notAligned;
         unsigned int address;
         unsigned int toWrite;
 
         public:
-        ST_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        ST_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 \
+            & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, \
+            Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1156,22 +1034,23 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class READtbr : public IncrementPC_op{
+    class READtbr : public Instruction{
         private:
         Alias rd;
         unsigned int rd_bit;
         unsigned int asr;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool supervisor;
         unsigned int tbr_temp;
 
         public:
-        READtbr( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        READtbr( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1185,7 +1064,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class UDIVcc_imm : public ICC_writeDiv_op, public IncrementPC_op, public WB_icc_op{
+    class UDIVcc_imm : public ICC_writeDiv_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -1194,18 +1073,19 @@ namespace leon3_funclt_trap{
         unsigned int simm13;
 
         protected:
+        bool exception;
         unsigned int result;
         bool temp_V;
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int rs1_op;
         unsigned int rs2_op;
-        bool exception;
 
         public:
-        UDIVcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        UDIVcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1219,7 +1099,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SWAPA_reg : public IncrementPC_op{
+    class SWAPA_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -1230,6 +1110,8 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool supervisor;
         bool notAligned;
         unsigned int address;
@@ -1237,11 +1119,10 @@ namespace leon3_funclt_trap{
         unsigned int toWrite;
 
         public:
-        SWAPA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SWAPA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1255,7 +1136,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ADDXcc_imm : public ICC_writeAdd_op, public WB_icc_op, public IncrementPC_op{
+    class ADDXcc_imm : public ICC_writeAdd_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -1269,11 +1150,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        ADDXcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        ADDXcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1287,7 +1167,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class STB_imm : public IncrementPC_op{
+    class STB_imm : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -1300,11 +1180,10 @@ namespace leon3_funclt_trap{
         unsigned char toWrite;
 
         public:
-        STB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        STB_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1318,7 +1197,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SUBXcc_imm : public ICC_writeSub_op, public WB_icc_op, public IncrementPC_op{
+    class SUBXcc_imm : public ICC_writeSub_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -1332,11 +1211,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        SUBXcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        SUBXcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1350,7 +1228,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class STH_reg : public IncrementPC_op{
+    class STH_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -1361,16 +1239,17 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool notAligned;
         unsigned int address;
         unsigned short int toWrite;
 
         public:
-        STH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        STH_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1384,7 +1263,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SRL_imm : public WB_plain_op, public IncrementPC_op{
+    class SRL_imm : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -1397,11 +1276,10 @@ namespace leon3_funclt_trap{
         unsigned int rs1_op;
 
         public:
-        SRL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SRL_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1415,7 +1293,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class WRITEasr_imm : public IncrementPC_op{
+    class WRITEasr_imm : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -1426,10 +1304,9 @@ namespace leon3_funclt_trap{
         unsigned int result;
 
         public:
-        WRITEasr_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        WRITEasr_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & \
+            PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
@@ -1444,7 +1321,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class UMULcc_reg : public ICC_writeLogic_op, public WB_yicc_op, public IncrementPC_op{
+    class UMULcc_reg : public ICC_writeLogic_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -1459,11 +1336,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        UMULcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        UMULcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1477,7 +1353,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LDSTUB_reg : public IncrementPC_op{
+    class LDSTUB_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -1492,11 +1368,10 @@ namespace leon3_funclt_trap{
         unsigned int readValue;
 
         public:
-        LDSTUB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        LDSTUB_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1510,7 +1385,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class XOR_imm : public WB_plain_op, public IncrementPC_op{
+    class XOR_imm : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -1523,11 +1398,10 @@ namespace leon3_funclt_trap{
         unsigned int rs1_op;
 
         public:
-        XOR_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        XOR_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1541,7 +1415,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SMAC_reg : public WB_yasr_op, public IncrementPC_op{
+    class SMAC_reg : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -1556,11 +1430,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        SMAC_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SMAC_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1574,7 +1447,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class WRITEasr_reg : public IncrementPC_op{
+    class WRITEasr_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -1586,10 +1459,9 @@ namespace leon3_funclt_trap{
         unsigned int result;
 
         public:
-        WRITEasr_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        WRITEasr_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & \
+            PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
@@ -1604,7 +1476,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LD_reg : public IncrementPC_op{
+    class LD_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -1615,16 +1487,17 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int address;
         unsigned int readValue;
         bool notAligned;
 
         public:
-        LD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        LD_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 \
+            & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, \
+            Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1638,7 +1511,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ST_reg : public IncrementPC_op{
+    class ST_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -1649,16 +1522,17 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool notAligned;
         unsigned int address;
         unsigned int toWrite;
 
         public:
-        ST_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        ST_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 \
+            & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, \
+            Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1672,7 +1546,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SUBcc_reg : public ICC_writeSub_op, public WB_icc_op, public IncrementPC_op{
+    class SUBcc_reg : public ICC_writeSub_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -1687,11 +1561,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        SUBcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SUBcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1705,7 +1578,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LDD_reg : public IncrementPC_op{
+    class LDD_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -1716,16 +1589,17 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int address;
         sc_dt::uint64 readValue;
         bool notAligned;
 
         public:
-        LDD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        LDD_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1739,7 +1613,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ADDcc_imm : public ICC_writeAdd_op, public WB_icc_op, public IncrementPC_op{
+    class ADDcc_imm : public ICC_writeAdd_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -1753,11 +1627,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        ADDcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        ADDcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1771,7 +1644,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LDUH_reg : public IncrementPC_op{
+    class LDUH_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -1782,16 +1655,17 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int address;
         unsigned int readValue;
         bool notAligned;
 
         public:
-        LDUH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        LDUH_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1805,7 +1679,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SRL_reg : public WB_plain_op, public IncrementPC_op{
+    class SRL_reg : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -1820,11 +1694,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        SRL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SRL_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1838,7 +1711,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SAVE_imm : public IncrementPC_op{
+    class SAVE_imm : public Instruction{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -1847,17 +1720,19 @@ namespace leon3_funclt_trap{
         unsigned int simm13;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool okNewWin;
         unsigned int result;
         unsigned int rs1_op;
         unsigned int rs2_op;
+        unsigned int newCwp;
 
         public:
-        SAVE_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SAVE_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1871,7 +1746,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class MULScc_reg : public ICC_writeAdd_op, public WB_yicc_op, public IncrementPC_op{
+    class MULScc_reg : public ICC_writeAdd_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -1886,11 +1761,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        MULScc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        MULScc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1904,7 +1778,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class OR_imm : public WB_plain_op, public IncrementPC_op{
+    class OR_imm : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -1917,11 +1791,10 @@ namespace leon3_funclt_trap{
         unsigned int rs1_op;
 
         public:
-        OR_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        OR_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 \
+            & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, \
+            Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1935,7 +1808,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class STD_imm : public IncrementPC_op{
+    class STD_imm : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -1944,16 +1817,17 @@ namespace leon3_funclt_trap{
         unsigned int simm13;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool notAligned;
         unsigned int address;
         sc_dt::uint64 toWrite;
 
         public:
-        STD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        STD_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -1967,7 +1841,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SUBXcc_reg : public ICC_writeSub_op, public WB_icc_op, public IncrementPC_op{
+    class SUBXcc_reg : public ICC_writeSub_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -1982,11 +1856,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        SUBXcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        SUBXcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2000,7 +1873,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ADDX_imm : public WB_plain_op, public IncrementPC_op{
+    class ADDX_imm : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2014,11 +1887,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        ADDX_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        ADDX_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2032,7 +1904,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SWAP_imm : public IncrementPC_op{
+    class SWAP_imm : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -2041,17 +1913,18 @@ namespace leon3_funclt_trap{
         unsigned int simm13;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool notAligned;
         unsigned int address;
         unsigned int readValue;
         unsigned int toWrite;
 
         public:
-        SWAP_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SWAP_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2065,7 +1938,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class UMUL_reg : public WB_y_op, public IncrementPC_op{
+    class UMUL_reg : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2080,11 +1953,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        UMUL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        UMUL_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2098,7 +1970,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class WRITEY_imm : public IncrementPC_op{
+    class WRITEY_imm : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -2108,11 +1980,10 @@ namespace leon3_funclt_trap{
         unsigned int result;
 
         public:
-        WRITEY_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        WRITEY_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2126,7 +1997,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class AND_reg : public WB_plain_op, public IncrementPC_op{
+    class AND_reg : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2141,11 +2012,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        AND_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        AND_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2159,7 +2029,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class FLUSH_imm : public IncrementPC_op{
+    class FLUSH_imm : public Instruction{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2168,11 +2038,10 @@ namespace leon3_funclt_trap{
         unsigned int simm13;
 
         public:
-        FLUSH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        FLUSH_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2186,7 +2055,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SRA_reg : public WB_plain_op, public IncrementPC_op{
+    class SRA_reg : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2201,11 +2070,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        SRA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SRA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2219,7 +2087,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class STH_imm : public IncrementPC_op{
+    class STH_imm : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -2228,16 +2096,17 @@ namespace leon3_funclt_trap{
         unsigned int simm13;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool notAligned;
         unsigned int address;
         unsigned short int toWrite;
 
         public:
-        STH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        STH_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2251,7 +2120,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class WRITEwim_imm : public IncrementPC_op{
+    class WRITEwim_imm : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -2259,14 +2128,15 @@ namespace leon3_funclt_trap{
         unsigned int simm13;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool raiseException;
         unsigned int result;
 
         public:
-        WRITEwim_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        WRITEwim_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & \
+            PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
@@ -2281,7 +2151,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LDD_imm : public IncrementPC_op{
+    class LDD_imm : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -2290,16 +2160,17 @@ namespace leon3_funclt_trap{
         unsigned int simm13;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int address;
         sc_dt::uint64 readValue;
         bool notAligned;
 
         public:
-        LDD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        LDD_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2313,7 +2184,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SLL_imm : public WB_plain_op, public IncrementPC_op{
+    class SLL_imm : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2326,11 +2197,10 @@ namespace leon3_funclt_trap{
         unsigned int rs1_op;
 
         public:
-        SLL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SLL_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2344,7 +2214,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LDUHA_reg : public IncrementPC_op{
+    class LDUHA_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -2355,17 +2225,18 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int address;
         unsigned int readValue;
         bool supervisor;
         bool notAligned;
 
         public:
-        LDUHA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        LDUHA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2379,7 +2250,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class TADDcc_reg : public ICC_writeTAdd_op, public WB_icc_op, public IncrementPC_op{
+    class TADDcc_reg : public ICC_writeTAdd_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2395,11 +2266,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        TADDcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        TADDcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2413,7 +2283,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class TADDcc_imm : public ICC_writeTAdd_op, public WB_icc_op, public IncrementPC_op{
+    class TADDcc_imm : public ICC_writeTAdd_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2428,11 +2298,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        TADDcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        TADDcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2446,7 +2315,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SDIV_imm : public IncrementPC_op, public WB_plain_op{
+    class SDIV_imm : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2456,17 +2325,18 @@ namespace leon3_funclt_trap{
 
         protected:
         unsigned int result;
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool exception;
         bool temp_V;
         unsigned int rs1_op;
         unsigned int rs2_op;
 
         public:
-        SDIV_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SDIV_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2480,7 +2350,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class TSUBccTV_imm : public ICC_writeTVSub_op, public WB_icctv_op, public IncrementPC_op{
+    class TSUBccTV_imm : public ICC_writeTVSub_op, public WB_tv_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2493,12 +2363,13 @@ namespace leon3_funclt_trap{
         bool temp_V;
         unsigned int rs1_op;
         unsigned int rs2_op;
+        unsigned int pcounter;
+        unsigned int npcounter;
 
         public:
-        TSUBccTV_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        TSUBccTV_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & \
+            PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
@@ -2513,7 +2384,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class FLUSH_reg : public IncrementPC_op{
+    class FLUSH_reg : public Instruction{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2523,11 +2394,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_bit;
 
         public:
-        FLUSH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        FLUSH_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2541,7 +2411,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ORNcc_reg : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
+    class ORNcc_reg : public ICC_writeLogic_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2556,11 +2426,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        ORNcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        ORNcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2574,7 +2443,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class RETT_imm : public IncrementPC_op{
+    class RETT_imm : public Instruction{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2583,19 +2452,22 @@ namespace leon3_funclt_trap{
         unsigned int simm13;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int rs1_op;
         unsigned int rs2_op;
         unsigned int targetAddr;
         unsigned int newCwp;
         bool exceptionEnabled;
+        bool invalidWin;
+        bool notAligned;
         bool supervisor;
 
         public:
-        RETT_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        RETT_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2609,7 +2481,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SDIVcc_reg : public ICC_writeDiv_op, public IncrementPC_op, public WB_icc_op{
+    class SDIVcc_reg : public ICC_writeDiv_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2619,18 +2491,19 @@ namespace leon3_funclt_trap{
         unsigned int rs2_bit;
 
         protected:
+        bool exception;
         unsigned int result;
         bool temp_V;
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int rs1_op;
         unsigned int rs2_op;
-        bool exception;
 
         public:
-        SDIVcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        SDIVcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2644,7 +2517,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ADD_reg : public WB_plain_op, public IncrementPC_op{
+    class ADD_reg : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2659,11 +2532,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        ADD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        ADD_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2687,14 +2559,15 @@ namespace leon3_funclt_trap{
         unsigned int imm7;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool raiseException;
 
         public:
-        TRAP_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        TRAP_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2708,7 +2581,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class WRITEtbr_imm : public IncrementPC_op{
+    class WRITEtbr_imm : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -2716,14 +2589,15 @@ namespace leon3_funclt_trap{
         unsigned int simm13;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool raiseException;
         unsigned int result;
 
         public:
-        WRITEtbr_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        WRITEtbr_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & \
+            PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
@@ -2738,7 +2612,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LDUB_reg : public IncrementPC_op{
+    class LDUB_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -2753,11 +2627,10 @@ namespace leon3_funclt_trap{
         unsigned int readValue;
 
         public:
-        LDUB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        LDUB_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2771,7 +2644,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class RESTORE_reg : public IncrementPC_op{
+    class RESTORE_reg : public Instruction{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2781,16 +2654,18 @@ namespace leon3_funclt_trap{
         unsigned int rs2_bit;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool okNewWin;
         unsigned int result;
         unsigned int rs1_op;
         unsigned int rs2_op;
+        unsigned int newCwp;
 
         public:
-        RESTORE_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        RESTORE_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & \
+            PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
@@ -2805,7 +2680,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ADDXcc_reg : public ICC_writeAdd_op, public WB_icc_op, public IncrementPC_op{
+    class ADDXcc_reg : public ICC_writeAdd_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2820,11 +2695,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        ADDXcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        ADDXcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2838,7 +2712,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class STB_reg : public IncrementPC_op{
+    class STB_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -2853,11 +2727,10 @@ namespace leon3_funclt_trap{
         unsigned char toWrite;
 
         public:
-        STB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        STB_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2871,7 +2744,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class AND_imm : public WB_plain_op, public IncrementPC_op{
+    class AND_imm : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2884,11 +2757,10 @@ namespace leon3_funclt_trap{
         unsigned int rs1_op;
 
         public:
-        AND_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        AND_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2902,7 +2774,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SMUL_imm : public WB_y_op, public IncrementPC_op{
+    class SMUL_imm : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2916,11 +2788,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        SMUL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SMUL_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2934,7 +2805,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ADD_imm : public WB_plain_op, public IncrementPC_op{
+    class ADD_imm : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2948,11 +2819,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        ADD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        ADD_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2966,7 +2836,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class UMUL_imm : public WB_y_op, public IncrementPC_op{
+    class UMUL_imm : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -2980,11 +2850,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        UMUL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        UMUL_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -2998,22 +2867,23 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class READwim : public IncrementPC_op{
+    class READwim : public Instruction{
         private:
         Alias rd;
         unsigned int rd_bit;
         unsigned int asr;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool supervisor;
         unsigned int wim_temp;
 
         public:
-        READwim( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        READwim( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3027,7 +2897,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LDSTUB_imm : public IncrementPC_op{
+    class LDSTUB_imm : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -3040,11 +2910,10 @@ namespace leon3_funclt_trap{
         unsigned int readValue;
 
         public:
-        LDSTUB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        LDSTUB_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3058,7 +2927,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SMAC_imm : public WB_yasr_op, public IncrementPC_op{
+    class SMAC_imm : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3072,11 +2941,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        SMAC_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SMAC_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3090,7 +2958,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LDSB_reg : public IncrementPC_op{
+    class LDSB_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -3105,11 +2973,10 @@ namespace leon3_funclt_trap{
         unsigned int readValue;
 
         public:
-        LDSB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        LDSB_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3123,7 +2990,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ANDN_reg : public WB_plain_op, public IncrementPC_op{
+    class ANDN_reg : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3138,11 +3005,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        ANDN_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        ANDN_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3156,7 +3022,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class TSUBccTV_reg : public ICC_writeTVSub_op, public WB_icctv_op, public IncrementPC_op{
+    class TSUBccTV_reg : public ICC_writeTVSub_op, public WB_tv_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3170,12 +3036,13 @@ namespace leon3_funclt_trap{
         bool temp_V;
         unsigned int rs1_op;
         unsigned int rs2_op;
+        unsigned int pcounter;
+        unsigned int npcounter;
 
         public:
-        TSUBccTV_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        TSUBccTV_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & \
+            PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
@@ -3190,7 +3057,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SETHI : public WB_plain_op, public IncrementPC_op{
+    class SETHI : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3200,11 +3067,10 @@ namespace leon3_funclt_trap{
         unsigned int result;
 
         public:
-        SETHI( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SETHI( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 \
+            & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, \
+            Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3218,7 +3084,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SRA_imm : public WB_plain_op, public IncrementPC_op{
+    class SRA_imm : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3231,11 +3097,10 @@ namespace leon3_funclt_trap{
         unsigned int rs1_op;
 
         public:
-        SRA_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SRA_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3249,7 +3114,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LDSH_reg : public IncrementPC_op{
+    class LDSH_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -3260,16 +3125,17 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int address;
         unsigned int readValue;
         bool notAligned;
 
         public:
-        LDSH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        LDSH_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3283,7 +3149,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class UDIVcc_reg : public ICC_writeDiv_op, public IncrementPC_op, public WB_icc_op{
+    class UDIVcc_reg : public ICC_writeDiv_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3293,18 +3159,19 @@ namespace leon3_funclt_trap{
         unsigned int rs2_bit;
 
         protected:
+        bool exception;
         unsigned int result;
         bool temp_V;
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int rs1_op;
         unsigned int rs2_op;
-        bool exception;
 
         public:
-        UDIVcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        UDIVcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3318,7 +3185,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ORN_imm : public WB_plain_op, public IncrementPC_op{
+    class ORN_imm : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3331,11 +3198,10 @@ namespace leon3_funclt_trap{
         unsigned int rs1_op;
 
         public:
-        ORN_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        ORN_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3349,7 +3215,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class STD_reg : public IncrementPC_op{
+    class STD_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -3360,16 +3226,17 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool notAligned;
         unsigned int address;
         sc_dt::uint64 toWrite;
 
         public:
-        STD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        STD_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3383,7 +3250,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ANDNcc_imm : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
+    class ANDNcc_imm : public ICC_writeLogic_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3396,11 +3263,10 @@ namespace leon3_funclt_trap{
         unsigned int rs1_op;
 
         public:
-        ANDNcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        ANDNcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3414,7 +3280,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class TADDccTV_imm : public ICC_writeTVAdd_op, public WB_icctv_op, public IncrementPC_op{
+    class TADDccTV_imm : public ICC_writeTVAdd_op, public WB_tv_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3427,12 +3293,13 @@ namespace leon3_funclt_trap{
         bool temp_V;
         unsigned int rs1_op;
         unsigned int rs2_op;
+        unsigned int pcounter;
+        unsigned int npcounter;
 
         public:
-        TADDccTV_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        TADDccTV_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & \
+            PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
@@ -3447,7 +3314,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class WRITEtbr_reg : public IncrementPC_op{
+    class WRITEtbr_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -3456,14 +3323,15 @@ namespace leon3_funclt_trap{
         unsigned int rd;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool raiseException;
         unsigned int result;
 
         public:
-        WRITEtbr_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        WRITEtbr_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & \
+            PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
@@ -3478,7 +3346,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SUBX_reg : public WB_plain_op, public IncrementPC_op{
+    class SUBX_reg : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3493,11 +3361,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        SUBX_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SUBX_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3511,7 +3378,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class XNOR_imm : public WB_plain_op, public IncrementPC_op{
+    class XNOR_imm : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3524,11 +3391,10 @@ namespace leon3_funclt_trap{
         unsigned int rs1_op;
 
         public:
-        XNOR_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        XNOR_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3542,7 +3408,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class UDIV_imm : public IncrementPC_op, public WB_plain_op{
+    class UDIV_imm : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3552,17 +3418,18 @@ namespace leon3_funclt_trap{
 
         protected:
         unsigned int result;
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool exception;
         bool temp_V;
         unsigned int rs1_op;
         unsigned int rs2_op;
 
         public:
-        UDIV_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        UDIV_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3576,7 +3443,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LDSH_imm : public IncrementPC_op{
+    class LDSH_imm : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -3585,16 +3452,17 @@ namespace leon3_funclt_trap{
         unsigned int simm13;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int address;
         unsigned int readValue;
         bool notAligned;
 
         public:
-        LDSH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        LDSH_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3608,18 +3476,21 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class UNIMP : public IncrementPC_op{
+    class UNIMP : public Instruction{
         private:
         Alias rd;
         unsigned int rd_bit;
         unsigned int imm22;
 
+        protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
+
         public:
-        UNIMP( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        UNIMP( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 \
+            & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, \
+            Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3633,7 +3504,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LDSTUBA_reg : public IncrementPC_op{
+    class LDSTUBA_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -3644,15 +3515,16 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool supervisor;
         unsigned int address;
         unsigned int readValue;
 
         public:
-        LDSTUBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        LDSTUBA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & \
+            PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
@@ -3667,7 +3539,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class UMULcc_imm : public ICC_writeLogic_op, public WB_yicc_op, public IncrementPC_op{
+    class UMULcc_imm : public ICC_writeLogic_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3681,11 +3553,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        UMULcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        UMULcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3699,7 +3570,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ORcc_reg : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
+    class ORcc_reg : public ICC_writeLogic_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3714,11 +3585,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        ORcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        ORcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3732,7 +3602,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class MULScc_imm : public ICC_writeAdd_op, public WB_yicc_op, public IncrementPC_op{
+    class MULScc_imm : public ICC_writeAdd_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3746,11 +3616,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        MULScc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        MULScc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3764,7 +3633,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class XORcc_reg : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
+    class XORcc_reg : public ICC_writeLogic_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3779,11 +3648,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        XORcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        XORcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3797,7 +3665,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SUB_reg : public WB_plain_op, public IncrementPC_op{
+    class SUB_reg : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3812,11 +3680,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        SUB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SUB_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3830,7 +3697,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class WRITEwim_reg : public IncrementPC_op{
+    class WRITEwim_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -3839,14 +3706,15 @@ namespace leon3_funclt_trap{
         unsigned int rd;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool raiseException;
         unsigned int result;
 
         public:
-        WRITEwim_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        WRITEwim_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & \
+            PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
@@ -3861,7 +3729,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class UMAC_imm : public WB_yasr_op, public IncrementPC_op{
+    class UMAC_imm : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3875,11 +3743,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        UMAC_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        UMAC_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3893,7 +3760,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class TSUBcc_reg : public ICC_writeTSub_op, public WB_icc_op, public IncrementPC_op{
+    class TSUBcc_reg : public ICC_writeTSub_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3909,11 +3776,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        TSUBcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        TSUBcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3933,12 +3799,15 @@ namespace leon3_funclt_trap{
         unsigned int cond;
         unsigned int disp22;
 
+        protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
+
         public:
-        BRANCH( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        BRANCH( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 \
+            & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, \
+            Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3952,7 +3821,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SMULcc_reg : public ICC_writeLogic_op, public WB_yicc_op, public IncrementPC_op{
+    class SMULcc_reg : public ICC_writeLogic_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3967,11 +3836,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        SMULcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        SMULcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -3985,7 +3853,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SUB_imm : public WB_plain_op, public IncrementPC_op{
+    class SUB_imm : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -3999,11 +3867,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        SUB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SUB_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4017,7 +3884,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ADDcc_reg : public ICC_writeAdd_op, public WB_icc_op, public IncrementPC_op{
+    class ADDcc_reg : public ICC_writeAdd_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -4032,11 +3899,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        ADDcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        ADDcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4050,7 +3916,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class XOR_reg : public WB_plain_op, public IncrementPC_op{
+    class XOR_reg : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -4065,11 +3931,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        XOR_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        XOR_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4083,7 +3948,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SUBcc_imm : public ICC_writeSub_op, public WB_icc_op, public IncrementPC_op{
+    class SUBcc_imm : public ICC_writeSub_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -4097,11 +3962,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        SUBcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SUBcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4115,7 +3979,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class TADDccTV_reg : public ICC_writeTVAdd_op, public WB_icctv_op, public IncrementPC_op{
+    class TADDccTV_reg : public ICC_writeTVAdd_op, public WB_tv_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -4129,12 +3993,13 @@ namespace leon3_funclt_trap{
         bool temp_V;
         unsigned int rs1_op;
         unsigned int rs2_op;
+        unsigned int pcounter;
+        unsigned int npcounter;
 
         public:
-        TADDccTV_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        TADDccTV_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & \
+            PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
@@ -4149,7 +4014,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SDIV_reg : public IncrementPC_op, public WB_plain_op{
+    class SDIV_reg : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -4160,17 +4025,18 @@ namespace leon3_funclt_trap{
 
         protected:
         unsigned int result;
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool exception;
         bool temp_V;
         unsigned int rs1_op;
         unsigned int rs2_op;
 
         public:
-        SDIV_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SDIV_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4184,7 +4050,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SMULcc_imm : public ICC_writeLogic_op, public WB_yicc_op, public IncrementPC_op{
+    class SMULcc_imm : public ICC_writeLogic_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -4198,11 +4064,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        SMULcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        SMULcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4216,7 +4081,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SWAP_reg : public IncrementPC_op{
+    class SWAP_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -4227,17 +4092,18 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool notAligned;
         unsigned int address;
         unsigned int readValue;
         unsigned int toWrite;
 
         public:
-        SWAP_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SWAP_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4251,7 +4117,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SUBX_imm : public WB_plain_op, public IncrementPC_op{
+    class SUBX_imm : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -4265,11 +4131,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        SUBX_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SUBX_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4283,7 +4148,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class STDA_reg : public IncrementPC_op{
+    class STDA_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -4294,17 +4159,18 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool supervisor;
         bool notAligned;
         unsigned int address;
         sc_dt::uint64 toWrite;
 
         public:
-        STDA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        STDA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4318,7 +4184,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class UMAC_reg : public WB_yasr_op, public IncrementPC_op{
+    class UMAC_reg : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -4333,11 +4199,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        UMAC_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        UMAC_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4360,15 +4225,15 @@ namespace leon3_funclt_trap{
         unsigned int simm13;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool trapNotAligned;
-        unsigned int oldPC;
 
         public:
-        JUMP_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        JUMP_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4382,7 +4247,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SMUL_reg : public WB_y_op, public IncrementPC_op{
+    class SMUL_reg : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -4397,11 +4262,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        SMUL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SMUL_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4415,7 +4279,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class XORcc_imm : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
+    class XORcc_imm : public ICC_writeLogic_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -4428,11 +4292,10 @@ namespace leon3_funclt_trap{
         unsigned int rs1_op;
 
         public:
-        XORcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        XORcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4446,7 +4309,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ORNcc_imm : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
+    class ORNcc_imm : public ICC_writeLogic_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -4459,11 +4322,10 @@ namespace leon3_funclt_trap{
         unsigned int rs1_op;
 
         public:
-        ORNcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        ORNcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4477,7 +4339,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LDUBA_reg : public IncrementPC_op{
+    class LDUBA_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -4488,16 +4350,17 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int address;
         unsigned int readValue;
         bool supervisor;
 
         public:
-        LDUBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        LDUBA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4521,15 +4384,15 @@ namespace leon3_funclt_trap{
         unsigned int rs2_bit;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool trapNotAligned;
-        unsigned int oldPC;
 
         public:
-        JUMP_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        JUMP_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4543,7 +4406,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ADDX_reg : public WB_plain_op, public IncrementPC_op{
+    class ADDX_reg : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -4558,11 +4421,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        ADDX_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        ADDX_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4576,7 +4438,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class UDIV_reg : public IncrementPC_op, public WB_plain_op{
+    class UDIV_reg : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -4587,17 +4449,18 @@ namespace leon3_funclt_trap{
 
         protected:
         unsigned int result;
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool exception;
         bool temp_V;
         unsigned int rs1_op;
         unsigned int rs2_op;
 
         public:
-        UDIV_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        UDIV_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4611,7 +4474,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class XNORcc_imm : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
+    class XNORcc_imm : public ICC_writeLogic_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -4624,11 +4487,10 @@ namespace leon3_funclt_trap{
         unsigned int rs1_op;
 
         public:
-        XNORcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        XNORcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4645,11 +4507,10 @@ namespace leon3_funclt_trap{
     class STBAR : public Instruction{
 
         public:
-        STBAR( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        STBAR( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 \
+            & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, \
+            Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4663,7 +4524,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LDA_reg : public IncrementPC_op{
+    class LDA_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -4674,17 +4535,18 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int address;
         unsigned int readValue;
         bool supervisor;
         bool notAligned;
 
         public:
-        LDA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        LDA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4698,7 +4560,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class STHA_reg : public IncrementPC_op{
+    class STHA_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -4709,17 +4571,18 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool supervisor;
         bool notAligned;
         unsigned int address;
         unsigned short int toWrite;
 
         public:
-        STHA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        STHA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4733,7 +4596,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LDDA_reg : public IncrementPC_op{
+    class LDDA_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -4744,17 +4607,18 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int address;
         sc_dt::uint64 readValue;
         bool supervisor;
         bool notAligned;
 
         public:
-        LDDA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        LDDA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4768,7 +4632,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SLL_reg : public WB_plain_op, public IncrementPC_op{
+    class SLL_reg : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -4783,11 +4647,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        SLL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SLL_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4801,7 +4664,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class RESTORE_imm : public IncrementPC_op{
+    class RESTORE_imm : public Instruction{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -4810,16 +4673,18 @@ namespace leon3_funclt_trap{
         unsigned int simm13;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool okNewWin;
         unsigned int result;
         unsigned int rs1_op;
         unsigned int rs2_op;
+        unsigned int newCwp;
 
         public:
-        RESTORE_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        RESTORE_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & \
+            PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
@@ -4834,7 +4699,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LD_imm : public IncrementPC_op{
+    class LD_imm : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -4843,16 +4708,17 @@ namespace leon3_funclt_trap{
         unsigned int simm13;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int address;
         unsigned int readValue;
         bool notAligned;
 
         public:
-        LD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        LD_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 \
+            & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, \
+            Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4877,14 +4743,15 @@ namespace leon3_funclt_trap{
         unsigned int asi;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool raiseException;
 
         public:
-        TRAP_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        TRAP_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4898,7 +4765,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class LDUB_imm : public IncrementPC_op{
+    class LDUB_imm : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -4911,11 +4778,10 @@ namespace leon3_funclt_trap{
         unsigned int readValue;
 
         public:
-        LDUB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        LDUB_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4929,7 +4795,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class RETT_reg : public IncrementPC_op{
+    class RETT_reg : public Instruction{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -4939,19 +4805,22 @@ namespace leon3_funclt_trap{
         unsigned int rs2_bit;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int rs1_op;
         unsigned int rs2_op;
         unsigned int targetAddr;
         unsigned int newCwp;
         bool exceptionEnabled;
+        bool invalidWin;
+        bool notAligned;
         bool supervisor;
 
         public:
-        RETT_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        RETT_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4965,7 +4834,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SDIVcc_imm : public ICC_writeDiv_op, public IncrementPC_op, public WB_icc_op{
+    class SDIVcc_imm : public ICC_writeDiv_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -4974,18 +4843,19 @@ namespace leon3_funclt_trap{
         unsigned int simm13;
 
         protected:
+        bool exception;
         unsigned int result;
         bool temp_V;
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int rs1_op;
         unsigned int rs2_op;
-        bool exception;
 
         public:
-        SDIVcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
-            TLMMemory & dataMem, PinTLM_out_32 & irqAck );
+        SDIVcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -4999,7 +4869,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class SAVE_reg : public IncrementPC_op{
+    class SAVE_reg : public Instruction{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -5009,17 +4879,19 @@ namespace leon3_funclt_trap{
         unsigned int rs2_bit;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool okNewWin;
         unsigned int result;
         unsigned int rs1_op;
         unsigned int rs2_op;
+        unsigned int newCwp;
 
         public:
-        SAVE_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        SAVE_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -5033,7 +4905,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class OR_reg : public WB_plain_op, public IncrementPC_op{
+    class OR_reg : public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -5048,11 +4920,10 @@ namespace leon3_funclt_trap{
         unsigned int rs2_op;
 
         public:
-        OR_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, \
-            Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        OR_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 \
+            & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, \
+            Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -5066,7 +4937,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ORcc_imm : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
+    class ORcc_imm : public ICC_writeLogic_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -5079,11 +4950,10 @@ namespace leon3_funclt_trap{
         unsigned int rs1_op;
 
         public:
-        ORcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        ORcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -5102,14 +4972,15 @@ namespace leon3_funclt_trap{
         unsigned int disp30;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         unsigned int oldPC;
 
         public:
-        CALL( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 \
-            & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass \
-            & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, \
-            Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 \
-            & irqAck );
+        CALL( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 \
+            & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, \
+            Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -5123,7 +4994,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class WRITEpsr_reg : public IncrementPC_op{
+    class WRITEpsr_reg : public Instruction{
         private:
         Alias rs1;
         unsigned int rs1_bit;
@@ -5132,15 +5003,16 @@ namespace leon3_funclt_trap{
         unsigned int rd;
 
         protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
         bool supervisorException;
         bool illegalCWP;
         unsigned int result;
 
         public:
-        WRITEpsr_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 \
-            & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & \
-            ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        WRITEpsr_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & \
+            PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
@@ -5155,7 +5027,7 @@ namespace leon3_funclt_trap{
 
 namespace leon3_funclt_trap{
 
-    class ANDcc_imm : public ICC_writeLogic_op, public WB_icc_op, public IncrementPC_op{
+    class ANDcc_imm : public ICC_writeLogic_op, public WB_plain_op{
         private:
         Alias rd;
         unsigned int rd_bit;
@@ -5168,11 +5040,10 @@ namespace leon3_funclt_trap{
         unsigned int rs1_op;
 
         public:
-        ANDcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-            Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-            RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-            & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & \
-            dataMem, PinTLM_out_32 & irqAck );
+        ANDcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+            Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory \
+            & dataMem, PinTLM_out_32 & irqAck );
         unsigned int behavior();
         Instruction * replicate() const throw();
         std::string getInstructionName() const throw();
@@ -5189,10 +5060,9 @@ namespace leon3_funclt_trap{
     class IRQ_IRQ_Instruction : public Instruction{
 
         public:
-        IRQ_IRQ_Instruction( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, \
-            Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 \
-            & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias \
-            & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory & instrMem, \
+        IRQ_IRQ_Instruction( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 \
+            & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, \
+            Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory & instrMem, \
             TLMMemory & dataMem, PinTLM_out_32 & irqAck, unsigned int & IRQ );
         unsigned int behavior();
         Instruction * replicate() const throw();
