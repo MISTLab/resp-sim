@@ -127,6 +127,6 @@ for i in range(0, PROCESSOR_NUMBER):
 # Now I initialize the OS emulator
 if OS_EMULATION:
     for i in range(0, PROCESSOR_NUMBER):
-        curEmu = trapwrapper.OSEmulator32_0(processors[i].getInterface(), 0)
+        curEmu = trapwrapper.OSEmulator32(processors[i].getInterface())
         curEmu.initSysCalls(SOFTWARE)
         processors[i].toolManager.addTool(curEmu)
