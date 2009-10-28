@@ -104,6 +104,10 @@ resp::ConcurrencyManager::ConcurrencyManager(std::string execName) : execName(ex
 }
 
 resp::ConcurrencyManager::~ConcurrencyManager(){
+    if(resp::ConcurrencyManager::tlsData != NULL){
+        delete [] resp::ConcurrencyManager::tlsData;
+        resp::ConcurrencyManager::tlsData = NULL;
+    }
     delete [] this->readyQueue;
 }
 
@@ -115,7 +119,10 @@ void resp::ConcurrencyManager::reset(){
     resp::ConcurrencyManager::defThreadInfo.clear();
     resp::ConcurrencyManager::interruptServiceRoutines.clear();
     resp::ConcurrencyManager::tlsSize = 0;
-    resp::ConcurrencyManager::tlsData = NULL;
+    if(resp::ConcurrencyManager::tlsData != NULL){
+        delete [] resp::ConcurrencyManager::tlsData;
+        resp::ConcurrencyManager::tlsData = NULL;
+    }
     //Resetting instance variables
     this->mallocMutex = -1;
     this->sfpMutex = -1;
@@ -299,9 +306,7 @@ int resp::ConcurrencyManager::getDeadlineOk(){
 ///*******************************************************************
 ///*********** Thread related routines *******************
 
-//TODO: HERE WE ALSO HAVE TO DEAL WITH THE TLS
-
-int resp::ConcurrencyManager::createThread(unsigned int threadFun, unsigned int args, int attr){
+int resp::ConcurrencyManager::createThread(unsigned int procId, unsigned int threadFun, unsigned int args, int attr){
     BFDWrapper &bfdFE = BFDWrapper::getInstance(this->execName);
 
     //I have to create the thread handle and add it to the list of
@@ -309,6 +314,11 @@ int resp::ConcurrencyManager::createThread(unsigned int threadFun, unsigned int 
     //I also start the execution of the thread on it; note that all the
     //data structures touched here are also used during scheduling,
     //so synchronization must be enforced with respect to those structures
+
+    std::map<unsigned int, Processor<unsigned int> >::iterator curProcIter = this->managedProc.find(procId);
+    if(curProcIter == this->managedProc.end())
+        THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
+    Processor<unsigned int> & curProc = curProcIter->second;
 
     //Lets determine the lock of the schedule
     this->schedLock.lock();
@@ -355,11 +365,25 @@ int resp::ConcurrencyManager::createThread(unsigned int threadFun, unsigned int 
     ThreadEmu *th = NULL;
     AttributeEmu *curAttr = NULL;
     std::string routineName = bfdFE.symbolAt(threadFun);
+    //Now I have to allocate the space for the thread local storage: I use the thread's stack.
+    //I also have to copy the static initialization of the TLS into that location
+    unsigned int curTlsAddress = 0;
+    if(resp::ConcurrencyManager::tlsSize > 0){
+        if(resp::ConcurrencyManager::tlsSize > curStackSize){
+            THROW_EXCEPTION("Unable to allocate a TLS of size " << resp::ConcurrencyManager::tlsSize << " for thread " << threadFun << " since it is bigger than the stack size " << curStackSize);
+        }
+        curTlsAddress = curStackBase + curStackSize - 4;
+        //Now I copy the content of the TLS; in order to do this
+        //I use the memory as seen by the current processor
+        for(int i = 0; i < resp::ConcurrencyManager::tlsSize; i++){
+            curProc.processorInstance.writeCharMem(curTlsAddress + i, resp::ConcurrencyManager::tlsData[i]);
+        }
+    }
     if(currentAttrIter == this->existingAttr.end()){
         //I see if default properties were specified for this thread in ReSP's
         //command line
         if(resp::ConcurrencyManager::defThreadInfo.find(routineName) == resp::ConcurrencyManager::defThreadInfo.end()){
-            th = new ThreadEmu(createdThId, threadFun, args, curStackBase, resp::ConcurrencyManager::tlsSize, &resp::ConcurrencyManager::defaultAttr);
+            th = new ThreadEmu(createdThId, threadFun, args, curStackBase, curTlsAddress, &resp::ConcurrencyManager::defaultAttr);
         }
         else{
             curAttr = this->existingAttr[this->createThreadAttr()];
@@ -367,7 +391,7 @@ int resp::ConcurrencyManager::createThread(unsigned int threadFun, unsigned int 
             curAttr->schedPolicy = resp::ConcurrencyManager::defThreadInfo[routineName].schedPolicy;
             curAttr->priority = resp::ConcurrencyManager::defThreadInfo[routineName].priority;
             curAttr->deadline = resp::ConcurrencyManager::defThreadInfo[routineName].deadline;
-            th = new ThreadEmu(createdThId, threadFun, args, curStackBase, resp::ConcurrencyManager::tlsSize, curAttr);
+            th = new ThreadEmu(createdThId, threadFun, args, curStackBase, curTlsAddress, curAttr);
         }
     }
     else{
@@ -380,7 +404,7 @@ int resp::ConcurrencyManager::createThread(unsigned int threadFun, unsigned int 
             curAttr->priority = resp::ConcurrencyManager::defThreadInfo[routineName].priority;
             curAttr->deadline = resp::ConcurrencyManager::defThreadInfo[routineName].deadline;
         }
-        th = new ThreadEmu(createdThId, threadFun, args, curStackBase, resp::ConcurrencyManager::tlsSize, curAttr);
+        th = new ThreadEmu(createdThId, threadFun, args, curStackBase, curTlsAddress, curAttr);
     }
     this->existingThreads[createdThId] = th;
 
@@ -428,6 +452,7 @@ int resp::ConcurrencyManager::createThread(unsigned int threadFun, unsigned int 
     #endif
 
     this->schedLock.unlock();
+
     return createdThId;
 }
 void resp::ConcurrencyManager::exitThread(unsigned int procId, unsigned int retVal){
@@ -501,36 +526,127 @@ void resp::ConcurrencyManager::exitThread(unsigned int procId, unsigned int retV
 }
 
 bool resp::ConcurrencyManager::cancelThread(int threadId){
+    THROW_EXCEPTION("Error function " << __PRETTY_FUNCTION__ << " not yet implemented");
+    return false;
 }
 
 int resp::ConcurrencyManager::createThreadAttr(){
+    int newAttrId = 0;
+    if(this->existingAttr.size() > 0)
+        newAttrId = this->existingAttr.rbegin()->first + 1;
+    this->existingAttr[newAttrId] = new AttributeEmu();
+    this->existingAttr[newAttrId]->id = newAttrId;
+    return newAttrId;
 }
 void resp::ConcurrencyManager::deleteThreadAttr(int attr){
+    if(this->existingAttr.find(attr) == this->existingAttr.end()){
+        THROW_EXCEPTION("Cannot destroy attribute " << attr << " unable to find it");
+    }
 }
 
 void resp::ConcurrencyManager::setStackSize(int attr, int stackSize){
+    std::map<int, AttributeEmu *>::iterator foundAttr = this->existingAttr.find(attr);
+    if(foundAttr == this->existingAttr.end()){
+        THROW_EXCEPTION("Cannot set stack for attribute " << attr << " unable to find it");
+    }
+
+    #ifndef NDEBUG
+    std::cerr << "Setting stack " << stackSize << " for attribute " << attr << std::endl;
+    #endif
+
+    foundAttr->second->stackSize = stackSize;
 }
 unsigned int resp::ConcurrencyManager::getStackSize(int attr){
+    std::map<int, AttributeEmu *>::const_iterator foundAttr = this->existingAttr.find(attr);
+    if(foundAttr == this->existingAttr.end()){
+        THROW_EXCEPTION("Cannot get stack for attribute " << attr << " unable to find it");
+    }
+
+    return foundAttr->second->stackSize;
 }
 
 void resp::ConcurrencyManager::setPreemptive(int attr, int isPreemptive){
+    std::map<int, AttributeEmu *>::iterator foundAttr = this->existingAttr.find(attr);
+    if(foundAttr == this->existingAttr.end()){
+        THROW_EXCEPTION("Cannot set preemptive status for attribute " << attr << " unable to find it");
+    }
+
+    #ifndef NDEBUG
+    std::cerr << "Setting preemptive status " << isPreemptive << " for attribute " << attr << std::endl;
+    #endif
+
+    foundAttr->second->preemptive = (isPreemptive == resp::ConcurrencyManager::SYSC_PREEMPTIVE);
 }
 int resp::ConcurrencyManager::getPreemptive(int attr){
+    std::map<int, AttributeEmu *>::const_iterator foundAttr = this->existingAttr.find(attr);
+    if(foundAttr == this->existingAttr.end()){
+        THROW_EXCEPTION("Cannot get stack for attribute " << attr << " unable to find it");
+    }
+
+    return foundAttr->second->preemptive ? resp::ConcurrencyManager::SYSC_PREEMPTIVE : resp::ConcurrencyManager::SYSC_NON_PREEMPTIVE;
 }
 
 void resp::ConcurrencyManager::setSchedDeadline(int attr, unsigned int deadline){
+    std::map<int, AttributeEmu *>::iterator foundAttr = this->existingAttr.find(attr);
+    if(foundAttr == this->existingAttr.end()){
+        THROW_EXCEPTION("Cannot set scheduling deadline for attribute " << attr << " unable to find it");
+    }
+
+    #ifndef NDEBUG
+    std::cerr << "Setting scheduling deadline " << deadline << " for attribute " << attr << std::endl;
+    #endif
+
+    foundAttr->second->deadline = deadline;
 }
 unsigned int resp::ConcurrencyManager::getSchedDeadline(int attr){
+    std::map<int, AttributeEmu *>::iterator foundAttr = this->existingAttr.find(attr);
+    if(foundAttr == this->existingAttr.end()){
+        THROW_EXCEPTION("Cannot get scheduling deadline for attribute " << attr << " unable to find it");
+    }
+
+    return foundAttr->second->deadline;
 }
 
 void resp::ConcurrencyManager::setSchedPrio(int attr, int priority){
+    std::map<int, AttributeEmu *>::iterator foundAttr = this->existingAttr.find(attr);
+    if(foundAttr == this->existingAttr.end()){
+        THROW_EXCEPTION("Cannot set priority for attribute " << attr << " unable to find it");
+    }
+
+    #ifndef NDEBUG
+    std::cerr << "Setting priority " << priority << " for attribute " << attr << std::endl;
+    #endif
+
+    foundAttr->second->priority = priority;
 }
 int resp::ConcurrencyManager::getSchedPrio(int attr){
+    std::map<int, AttributeEmu *>::iterator foundAttr = this->existingAttr.find(attr);
+    if(foundAttr == this->existingAttr.end()){
+        THROW_EXCEPTION("Cannot get priority for attribute " << attr << " unable to find it");
+    }
+
+    return foundAttr->second->priority;
 }
 
 void resp::ConcurrencyManager::setSchedPolicy(int attr, int policy){
+    std::map<int, AttributeEmu *>::iterator foundAttr = this->existingAttr.find(attr);
+    if(foundAttr == this->existingAttr.end()){
+        THROW_EXCEPTION("Cannot set scheduling policy for attribute " << attr << " unable to find it");
+    }
+
+    #ifndef NDEBUG
+    std::cerr << "Setting scheduling policy " << policy << " for attribute " << attr << std::endl;
+    #endif
+
+    foundAttr->second->schedPolicy = policy;
 }
 int resp::ConcurrencyManager::getSchedPolicy(int attr){
+    std::map<int, AttributeEmu *>::iterator foundAttr = this->existingAttr.find(attr);
+    if(foundAttr == this->existingAttr.end()){
+        THROW_EXCEPTION("Cannot get scheduling policy for attribute " << attr << " unable to find it");
+    }
+
+    return foundAttr->second->schedPolicy;
 }
 
 int resp::ConcurrencyManager::getThreadSchePolicy(int threadId){

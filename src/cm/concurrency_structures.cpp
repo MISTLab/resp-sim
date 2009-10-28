@@ -51,7 +51,7 @@ AttributeEmu::AttributeEmu(){
 AttributeEmu::AttributeEmu(unsigned int stackSize){
 }
 
-ThreadEmu::ThreadEmu(int id, unsigned int thread_routine, unsigned int args, unsigned int stackBase, unsigned int tlsSize, AttributeEmu *attr){
+ThreadEmu::ThreadEmu(int id, unsigned int thread_routine, unsigned int args, unsigned int stackBase, unsigned int tlsAddress, AttributeEmu *attr){
 }
 ThreadEmu::~ThreadEmu(){
 }

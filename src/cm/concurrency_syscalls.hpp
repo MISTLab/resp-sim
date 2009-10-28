@@ -819,7 +819,7 @@ template<class wordSize> class pthread_createSysCall : public trap::SyscallCB<wo
             int attrId = this->processorInstance.readMem(callArgs[1]);
             this->processorInstance.returnFromCall();
             int thIdAddress = callArgs[0];
-            int thId = this->cm->createThread(threadFun, args, attrId);
+            int thId = this->cm->createThread(this->processorInstance.getProcessorID(), threadFun, args, attrId);
             this->processorInstance.writeMem(thIdAddress, thId);
             this->processorInstance.setRetVal(0);
 
