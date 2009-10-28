@@ -88,6 +88,6 @@ void resp::ConcurrencyEmulatorBase::setTLSdata(std::vector<unsigned char> tlsDat
     resp::ConcurrencyManager::tlsSize = tlsData.size();
     resp::ConcurrencyManager::tlsData = new unsigned char[resp::ConcurrencyManager::tlsSize];
     for(int i = 0; i < tlsData.size(); i++){
-        tlsData[i] = tlsData[i];
+        resp::ConcurrencyManager::tlsData[i] = tlsData[i];
     }
 }

@@ -279,7 +279,7 @@ class ConcurrencyManager{
         /// the emulated concurrency related primitives
         ///*******************************************************************
         ///*********** Thread related routines *******************
-        int createThread(unsigned int threadFun,  unsigned int args, int attr = -1);
+        int createThread(unsigned int procId, unsigned int threadFun,  unsigned int args, int attr = -1);
         void exitThread(unsigned int procId, unsigned int retVal);
         bool cancelThread(int threadId);
 

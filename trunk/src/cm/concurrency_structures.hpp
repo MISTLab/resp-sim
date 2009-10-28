@@ -83,7 +83,7 @@ struct ThreadEmu{
     unsigned int args;
     status_t status;
     unsigned int stackBase;
-    unsigned int tlsSize;
+    unsigned int tlsAddress;
     std::vector<unsigned char> state;
     int id;
     bool isIRQ;
@@ -101,7 +101,7 @@ struct ThreadEmu{
     unsigned int lastPc;
     unsigned int lastRetAddr;
 
-    ThreadEmu(int id, unsigned int thread_routine, unsigned int args, unsigned int stackBase, unsigned int tlsSize, AttributeEmu *attr);
+    ThreadEmu(int id, unsigned int thread_routine, unsigned int args, unsigned int stackBase, unsigned int tlsAddress, AttributeEmu *attr);
     ~ThreadEmu();
     void printTrace();
     std::string getTrace();
