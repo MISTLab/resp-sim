@@ -161,6 +161,9 @@ namespace resp{
 ///synchronization management (mutex, condition variables, semaphores, etc.)
 class ConcurrencyManager{
     private:
+        ///The name of the executable file which is managed by this version of the
+        ///concurrency manager
+        std::string execName;
         ///Variables used for managing reentrant synchronization
         unsigned int mallocMutex;
         unsigned int sfpMutex;
@@ -232,7 +235,7 @@ class ConcurrencyManager{
         static sc_time schedChooseLatency;
 
         /// HERE WE START WITH THE METHODS
-        ConcurrencyManager();
+        ConcurrencyManager(std::string execName);
         ~ConcurrencyManager();
 
         ///Resets the CM to its original status as after the construction

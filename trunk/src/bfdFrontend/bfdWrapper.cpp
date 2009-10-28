@@ -103,14 +103,13 @@ std::map<std::string, BFDWrapper *> BFDWrapper::bfdInstances;
 BFDWrapper & BFDWrapper::getInstance(std::string fileName){
     std::map<std::string, BFDWrapper *>::iterator bfdIter = BFDWrapper::bfdInstances.find(fileName);
     if(bfdIter == BFDWrapper::bfdInstances.end()){
-        if(fileName != ""){
-            BFDWrapper::bfdInstances[fileName] = new BFDWrapper(fileName);
-        }
-        else{
-            THROW_EXCEPTION("Please specify the file name of the binary image that must be loaded by the BFDFrontend");
-        }
+        BFDWrapper * newBfdInstance = new BFDWrapper(fileName);
+        BFDWrapper::bfdInstances[fileName] = newBfdInstance;
+        return *newBfdInstance;
     }
-    return *(bfdIter->second);
+    else{
+        return *(bfdIter->second);
+    }
 }
 
 BFDWrapper::BFDWrapper(std::string binaryName) : execImage(NULL){
