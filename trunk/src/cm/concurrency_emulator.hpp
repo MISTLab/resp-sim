@@ -650,9 +650,17 @@ template<class wordSize> class ConcurrencyEmulator: public trap::ToolsIf<issueWi
             //I have to go over all the registered system calls and check if there is one
             //that matches the current program counter. In case I simply call the corresponding
             //callback.
-            typename template_map<issueWidth, SyscallCB<issueWidth>* >::const_iterator foundSysc = this->syscCallbacks.find(curPC + stageOffset);
+            typename template_map<issueWidth, SyscallCB<issueWidth>* >::const_iterator foundSysc = this->syscCallbacks.find(curPC);
             if(foundSysc != this->syscCallbacksEnd){
                 return (*(foundSysc->second))();
+            }
+            return false;
+        }
+
+        ///Method called together with the cycle accurate processor to check that
+        bool emptyPipeline(const issueWidth &curPC) const throw(){
+            if(this->syscCallbacks.find(curPC) != this->syscCallbacksEnd){
+                return true;
             }
             return false;
         }

@@ -452,7 +452,7 @@ def configure(conf):
     ##################################################
     # Check for TRAP runtime libraries and headers
     ##################################################
-    trapRevision = 568
+    trapRevision = 618
     if Options.options.trapdir:
         trapDirLib = os.path.abspath(os.path.expandvars(os.path.expanduser(os.path.join(Options.options.trapdir, 'lib'))))
         trapDirInc = os.path.abspath(os.path.expandvars(os.path.expanduser(os.path.join(Options.options.trapdir, 'include'))))
