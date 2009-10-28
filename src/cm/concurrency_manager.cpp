@@ -91,7 +91,7 @@ bool deadlineSort(const ThreadEmu * a, const ThreadEmu * b){
     return a->attr->deadline < b->attr->deadline;
 }
 
-resp::ConcurrencyManager::ConcurrencyManager(){
+resp::ConcurrencyManager::ConcurrencyManager(std::string execName) : execName(execName){
     //Constructor: there is not much to do
     //a part from se-setting the reentracy
     //variables
@@ -302,7 +302,7 @@ int resp::ConcurrencyManager::getDeadlineOk(){
 //TODO: HERE WE ALSO HAVE TO DEAL WITH THE TLS
 
 int resp::ConcurrencyManager::createThread(unsigned int threadFun, unsigned int args, int attr){
-    BFDWrapper &bfdFE = BFDWrapper::getInstance();
+    BFDWrapper &bfdFE = BFDWrapper::getInstance(this->execName);
 
     //I have to create the thread handle and add it to the list of
     //existing threads; in case there is an available processor,

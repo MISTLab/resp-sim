@@ -114,6 +114,8 @@ class ConcurrencyEmulatorBase{
 ///Emulation features.
 template<class wordSize> class ConcurrencyEmulator: public trap::ToolsIf<issueWidth>, ConcurrencyEmulatorBase{
     private:
+        ///The name of the executable managed by this emulator
+        std::string execName;
         ///routine offset
         int routineOffset;
         ///map holding the addresses of the emulated routines
@@ -125,7 +127,10 @@ template<class wordSize> class ConcurrencyEmulator: public trap::ToolsIf<issueWi
         ///Associates an emulated functionality with a routine name
         ///Returns true if the association was successfully performed
         bool register_syscall(const std::string funName, trap::SyscallCB<issueWidth> &callBack){
-            BFDWrapper &bfdFE = BFDWrapper::getInstance();
+            if(this->execName = ""){
+                THROW_EXCEPTION("Error the initSysCalls still has to be called before calling register_syscall");
+            }
+            BFDWrapper &bfdFE = BFDWrapper::getInstance(this->execName);
             bool valid = false;
             unsigned int symAddr = bfdFE.getSymAddr(funName, valid) + this->routineOffset;
             if(!valid){
@@ -215,10 +220,14 @@ template<class wordSize> class ConcurrencyEmulator: public trap::ToolsIf<issueWi
         ConcurrencyEmulator(ABIIf<issueWidth> &processorInstance, int routineOffset = 0) :
                                 processorInstance(processorInstance), routineOffset(routineOffset){
             this->syscCallbacksEnd = this->syscCallbacks.end();
+            this->execName = "";
         }
         ///Returns the list of the routines marked for emulation insisde the this manager
         std::set<std::string> getRegisteredFunctions(){
-            BFDWrapper &bfdFE = BFDWrapper::getInstance();
+            if(this->execName = ""){
+                THROW_EXCEPTION("Error the initSysCalls still has to be called before calling getRegisteredFunctions");
+            }
+            BFDWrapper &bfdFE = BFDWrapper::getInstance(this->execName);
             std::set<std::string> registeredFunctions;
             typename template_map<issueWidth, trap::SyscallCB<issueWidth>* >::iterator emuIter, emuEnd;
             for(emuIter = this->syscCallbacks.begin(), emuEnd = this->syscCallbacks.end(); emuIter != emuEnd; emuIter++){
@@ -235,8 +244,9 @@ template<class wordSize> class ConcurrencyEmulator: public trap::ToolsIf<issueWi
         void initSysCalls(const std::string execName, const std::map<std::string, sc_time> &latencies, bool reentrant = false, int group = 0){
             //First of all I have to make sure that a concurrency manager for the current group
             //does not exist yet
+            this->execName = execName;
             if(ConcurrencyEmulatorBase::cm.find(group) == ConcurrencyEmulatorBase::cm.end()){
-                ConcurrencyEmulatorBase::cm[group] = new ConcurrencyManager();
+                ConcurrencyEmulatorBase::cm[group] = new ConcurrencyManager(execName);
             }
             ConcurrencyManager * curCm  = ConcurrencyEmulatorBase::cm[group];
             std::map<std::string, sc_time>::const_iterator curLatency;
