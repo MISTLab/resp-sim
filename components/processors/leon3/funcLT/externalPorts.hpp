@@ -52,6 +52,8 @@
 #include <tlm_utils/simple_initiator_socket.h>
 #include <tlm_utils/tlm_quantumkeeper.h>
 
+#define FUNC_MODEL
+#define LT_IF
 namespace leon3_funclt_trap{
 
     class TLMMemory : public MemoryInterface, public sc_module{
@@ -68,6 +70,10 @@ namespace leon3_funclt_trap{
         inline unsigned int read_word( const unsigned int & address ) throw(){
             unsigned int datum = 0;
             if (this->dmi_ptr_valid){
+                if(address + this->dmi_data.get_start_address() > this->dmi_data.get_end_address()){
+                    SC_REPORT_ERROR("TLM-2", "Error in reading memory data through DMI: address out of \
+                        bounds");
+                }
                 memcpy(&datum, this->dmi_data.get_dmi_ptr() - this->dmi_data.get_start_address() \
                     + address, sizeof(datum));
                 this->quantKeeper.inc(this->dmi_data.get_read_latency());
@@ -118,6 +124,10 @@ namespace leon3_funclt_trap{
                 this->debugger->notifyAddress(address, sizeof(datum));
             }
             if(this->dmi_ptr_valid){
+                if(address + this->dmi_data.get_start_address() > this->dmi_data.get_end_address()){
+                    SC_REPORT_ERROR("TLM-2", "Error in writing memory data through DMI: address out of \
+                        bounds");
+                }
                 memcpy(this->dmi_data.get_dmi_ptr() - this->dmi_data.get_start_address() + address, \
                     &datum, sizeof(datum));
                 this->quantKeeper.inc(this->dmi_data.get_write_latency());

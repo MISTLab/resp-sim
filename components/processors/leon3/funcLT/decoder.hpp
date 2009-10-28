@@ -46,6 +46,8 @@
 
 #include <instructions.hpp>
 
+#define FUNC_MODEL
+#define LT_IF
 namespace leon3_funclt_trap{
 
     class CacheElem{

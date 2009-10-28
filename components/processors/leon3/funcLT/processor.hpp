@@ -80,6 +80,8 @@
 #include <irqPorts.hpp>
 #include <externalPins.hpp>
 
+#define FUNC_MODEL
+#define LT_IF
 using namespace trap;
 namespace leon3_funclt_trap{
 
@@ -104,23 +106,20 @@ namespace leon3_funclt_trap{
         LEON3_ABIIf * abiIf;
         LEON3_ABIIf & getInterface();
         ToolsManager< unsigned int > toolManager;
-        Reg32_0_delay_3 PSR;
-        Reg32_1_delay_3 WIM;
+        Reg32_0 PSR;
+        Reg32_1 WIM;
         Reg32_2 TBR;
         Reg32_3 Y;
-        Reg32_3_off_4 PC;
+        Reg32_3 PC;
         Reg32_3 NPC;
-        Reg32_0 PSRbp;
-        Reg32_3 Ybp;
-        Reg32_3 ASR18bp;
         RegisterBankClass GLOBAL;
-        Reg32_3 * WINREGS;
-        Reg32_3 * ASR;
+        Reg32_3 WINREGS[128];
+        Reg32_3 ASR[32];
         Alias FP;
         Alias LR;
         Alias SP;
         Alias PCR;
-        Alias * REGS;
+        Alias REGS[32];
         TLMMemory instrMem;
         TLMMemory dataMem;
         sc_time latency;

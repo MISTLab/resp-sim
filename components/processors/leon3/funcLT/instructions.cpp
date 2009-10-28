@@ -63,11 +63,23 @@ bool leon3_funclt_trap::Instruction::IncrementRegWindow(){
         if(((0x01 << (newCwp)) & WIM) != 0){
             return false;
         }
-        PSRbp = (PSR & 0xFFFFFFE0) | newCwp;
-        PSR.immediateWrite(PSRbp);
+        PSR = (PSR & 0xFFFFFFE0) | newCwp;
+        #ifndef ACC_MODEL
+        //Functional model: we simply immediately update the alias
         for(int i = 8; i < 32; i++){
-            REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (16*NUM_REG_WIN)]);
+            REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (128)]);
         }
+        #else
+        //Cycle accurate model: we have to update the alias using the pipeline register
+        //We update the aliases for this stage and for all the preceding ones (we are in the
+        //execute stage and we need to update fetch, decode, and register read and execute)
+        for(int i = 8; i < 32; i++){
+            REGS_fetch[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_decode[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_regs[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_execute[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+        }
+        #endif
         return true;
     }
 }
@@ -80,11 +92,23 @@ bool leon3_funclt_trap::Instruction::DecrementRegWindow(){
         if(((0x01 << (newCwp)) & WIM) != 0){
             return false;
         }
-        PSRbp = (PSR & 0xFFFFFFE0) | newCwp;
-        PSR.immediateWrite(PSRbp);
+        PSR = (PSR & 0xFFFFFFE0) | newCwp;
+        #ifndef ACC_MODEL
+        //Functional model: we simply immediately update the alias
         for(int i = 8; i < 32; i++){
-            REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (16*NUM_REG_WIN)]);
+            REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (128)]);
         }
+        #else
+        //Cycle accurate model: we have to update the alias using the pipeline register
+        //We update the aliases for this stage and for all the preceding ones (we are in the
+        //execute stage and we need to update fetch, decode, and register read and execute)
+        for(int i = 8; i < 32; i++){
+            REGS_fetch[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_decode[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_regs[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_execute[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+        }
+        #endif
         return true;
     }
 }
@@ -97,8 +121,8 @@ int leon3_funclt_trap::Instruction::SignExtend( unsigned int bitSeq, unsigned in
     return bitSeq;
 }
 
-void leon3_funclt_trap::Instruction::RaiseException( unsigned int exceptionId, unsigned \
-    int customTrapOffset ){
+void leon3_funclt_trap::Instruction::RaiseException( unsigned int pcounter, unsigned \
+    int npcounter, unsigned int exceptionId, unsigned int customTrapOffset ){
 
     if(PSR[key_ET] == 0){
         if(exceptionId < IRQ_LEV_15){
@@ -114,20 +138,32 @@ void leon3_funclt_trap::Instruction::RaiseException( unsigned int exceptionId, u
         curPSR = (curPSR & 0xffffff7f) | 0x00000080;
         curPSR &= 0xffffffdf;
         unsigned int newCwp = ((unsigned int)(PSR[key_CWP] - 1)) % NUM_REG_WIN;
+        #ifndef ACC_MODEL
+        //Functional model: we simply immediately update the alias
         for(int i = 8; i < 32; i++){
-            REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (16*NUM_REG_WIN)]);
+            REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (128)]);
         }
+        #else
+        //Cycle accurate model: we have to update the alias using the pipeline register
+        //We update the aliases for this stage and for all the preceding ones (we are in the
+        //execute stage and we need to update fetch, decode, and register read and execute)
+        for(int i = 8; i < 32; i++){
+            REGS_fetch[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_decode[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_regs[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_execute[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_memory[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_exception[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+        }
+        #endif
 
         curPSR = (curPSR & 0xffffffe0) + newCwp;
         PSR = curPSR;
-        PSRbp = curPSR;
         #ifdef ACC_MODEL
-        REGS[17] = PC;
-        REGS[18] = NPC;
-        #else
-        REGS[17] = PC - 12;
-        REGS[18] = NPC - 4;
+        PSR_execute = curPSR;
         #endif
+        REGS[17] = pcounter;
+        REGS[18] = npcounter;
         switch(exceptionId){
             case RESET:{
             }break;
@@ -263,68 +299,61 @@ void leon3_funclt_trap::Instruction::RaiseException( unsigned int exceptionId, u
     }
 }
 
-leon3_funclt_trap::Instruction::Instruction( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : PSR(PSR), WIM(WIM), \
-    TBR(TBR), Y(Y), PC(PC), NPC(NPC), PSRbp(PSRbp), Ybp(Ybp), ASR18bp(ASR18bp), GLOBAL(GLOBAL), \
-    WINREGS(WINREGS), ASR(ASR), FP(FP), LR(LR), SP(SP), PCR(PCR), REGS(REGS), instrMem(instrMem), \
-    dataMem(dataMem), irqAck(irqAck), NUM_REG_WIN(8), PIPELINED_MULT(false){
+bool leon3_funclt_trap::Instruction::checkIncrementWin(){
+
+    unsigned int newCwp = ((unsigned int)(PSR[key_CWP] + 1)) % NUM_REG_WIN;
+    if(((0x01 << (newCwp)) & WIM) != 0){
+        return false;
+    }
+    else{
+        return true;
+    }
+}
+
+bool leon3_funclt_trap::Instruction::checkDecrementWin(){
+
+    unsigned int newCwp = ((unsigned int)(PSR[key_CWP] - 1)) % NUM_REG_WIN;
+    if(((0x01 << (newCwp)) & WIM) != 0){
+        return false;
+    }
+    else{
+        return true;
+    }
+}
+
+leon3_funclt_trap::Instruction::Instruction( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : PSR(PSR), \
+    WIM(WIM), TBR(TBR), Y(Y), PC(PC), NPC(NPC), GLOBAL(GLOBAL), WINREGS(WINREGS), ASR(ASR), \
+    FP(FP), LR(LR), SP(SP), PCR(PCR), REGS(REGS), instrMem(instrMem), dataMem(dataMem), \
+    irqAck(irqAck), NUM_REG_WIN(8), PIPELINED_MULT(false){
     this->totalInstrCycles = 0;
 }
 
 leon3_funclt_trap::Instruction::~Instruction(){
 
 }
-leon3_funclt_trap::IncrementPC_op::~IncrementPC_op(){
-
-}
-leon3_funclt_trap::IncrementPC_op::IncrementPC_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
-
-}
-
 leon3_funclt_trap::WB_plain_op::~WB_plain_op(){
 
 }
-leon3_funclt_trap::WB_plain_op::WB_plain_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::WB_plain_op::WB_plain_op( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
 leon3_funclt_trap::ICC_writeLogic_op::~ICC_writeLogic_op(){
 
 }
-leon3_funclt_trap::ICC_writeLogic_op::ICC_writeLogic_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
-
-}
-
-leon3_funclt_trap::WB_icc_op::~WB_icc_op(){
-
-}
-leon3_funclt_trap::WB_icc_op::WB_icc_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
-    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+leon3_funclt_trap::ICC_writeLogic_op::ICC_writeLogic_op( Reg32_0 & PSR, Reg32_1 & \
+    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & \
+    GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias \
+    & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck \
+    ) : Instruction(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
     REGS, instrMem, dataMem, irqAck){
 
 }
@@ -332,90 +361,47 @@ leon3_funclt_trap::WB_icc_op::WB_icc_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 
 leon3_funclt_trap::ICC_writeTSub_op::~ICC_writeTSub_op(){
 
 }
-leon3_funclt_trap::ICC_writeTSub_op::ICC_writeTSub_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::ICC_writeTSub_op::ICC_writeTSub_op( Reg32_0 & PSR, Reg32_1 & WIM, \
+    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, \
+    Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, \
+    Alias * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) \
+    : Instruction(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
+    instrMem, dataMem, irqAck){
 
 }
 
 leon3_funclt_trap::ICC_writeDiv_op::~ICC_writeDiv_op(){
 
 }
-leon3_funclt_trap::ICC_writeDiv_op::ICC_writeDiv_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::ICC_writeDiv_op::ICC_writeDiv_op( Reg32_0 & PSR, Reg32_1 & WIM, \
+    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, \
+    Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, \
+    Alias * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) \
+    : Instruction(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
+    instrMem, dataMem, irqAck){
 
 }
 
 leon3_funclt_trap::ICC_writeAdd_op::~ICC_writeAdd_op(){
 
 }
-leon3_funclt_trap::ICC_writeAdd_op::ICC_writeAdd_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::ICC_writeAdd_op::ICC_writeAdd_op( Reg32_0 & PSR, Reg32_1 & WIM, \
+    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, \
+    Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, \
+    Alias * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) \
+    : Instruction(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
+    instrMem, dataMem, irqAck){
 
 }
 
 leon3_funclt_trap::ICC_writeSub_op::~ICC_writeSub_op(){
 
 }
-leon3_funclt_trap::ICC_writeSub_op::ICC_writeSub_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
-
-}
-
-leon3_funclt_trap::WB_yicc_op::~WB_yicc_op(){
-
-}
-leon3_funclt_trap::WB_yicc_op::WB_yicc_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
-
-}
-
-leon3_funclt_trap::WB_yasr_op::~WB_yasr_op(){
-
-}
-leon3_funclt_trap::WB_yasr_op::WB_yasr_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
-
-}
-
-leon3_funclt_trap::WB_y_op::~WB_y_op(){
-
-}
-leon3_funclt_trap::WB_y_op::WB_y_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
-    & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
+leon3_funclt_trap::ICC_writeSub_op::ICC_writeSub_op( Reg32_0 & PSR, Reg32_1 & WIM, \
+    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, \
+    Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, \
+    Alias * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) \
+    : Instruction(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
     instrMem, dataMem, irqAck){
 
 }
@@ -423,63 +409,58 @@ leon3_funclt_trap::WB_y_op::WB_y_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WI
 leon3_funclt_trap::ICC_writeTAdd_op::~ICC_writeTAdd_op(){
 
 }
-leon3_funclt_trap::ICC_writeTAdd_op::ICC_writeTAdd_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::ICC_writeTAdd_op::ICC_writeTAdd_op( Reg32_0 & PSR, Reg32_1 & WIM, \
+    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, \
+    Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, \
+    Alias * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) \
+    : Instruction(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
+    instrMem, dataMem, irqAck){
 
 }
 
 leon3_funclt_trap::ICC_writeTVSub_op::~ICC_writeTVSub_op(){
 
 }
-leon3_funclt_trap::ICC_writeTVSub_op::ICC_writeTVSub_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+leon3_funclt_trap::ICC_writeTVSub_op::ICC_writeTVSub_op( Reg32_0 & PSR, Reg32_1 & \
+    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & \
+    GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias \
+    & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck \
+    ) : Instruction(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
     REGS, instrMem, dataMem, irqAck){
 
 }
 
-leon3_funclt_trap::WB_icctv_op::~WB_icctv_op(){
+leon3_funclt_trap::WB_tv_op::~WB_tv_op(){
 
 }
-leon3_funclt_trap::WB_icctv_op::WB_icctv_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::WB_tv_op::WB_tv_op( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
+    & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
 leon3_funclt_trap::ICC_writeTVAdd_op::~ICC_writeTVAdd_op(){
 
 }
-leon3_funclt_trap::ICC_writeTVAdd_op::ICC_writeTVAdd_op( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+leon3_funclt_trap::ICC_writeTVAdd_op::ICC_writeTVAdd_op( Reg32_0 & PSR, Reg32_1 & \
+    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & \
+    GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias \
+    & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck \
+    ) : Instruction(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
     REGS, instrMem, dataMem, irqAck){
 
 }
 
 unsigned int leon3_funclt_trap::InvalidInstr::behavior(){
-    THROW_EXCEPTION("Unknown Instruction at PC: " << this->PC-4);
+    THROW_EXCEPTION("Unknown Instruction at PC: " << std::hex << std::showbase << this->PC+0);
     return 0;
 }
 
 Instruction * leon3_funclt_trap::InvalidInstr::replicate() const throw(){
-    return new InvalidInstr(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new InvalidInstr(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+        SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 void leon3_funclt_trap::InvalidInstr::setParams( const unsigned int & bitString ) \
@@ -499,13 +480,12 @@ unsigned int leon3_funclt_trap::InvalidInstr::getId() const throw(){
     return 144;
 }
 
-leon3_funclt_trap::InvalidInstr::InvalidInstr( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::InvalidInstr::InvalidInstr( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -523,8 +503,8 @@ unsigned int leon3_funclt_trap::READasr::behavior(){
 }
 
 Instruction * leon3_funclt_trap::READasr::replicate() const throw(){
-    return new READasr(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new READasr(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::READasr::getInstructionName() const throw(){
@@ -550,14 +530,11 @@ std::string leon3_funclt_trap::READasr::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::READasr::READasr( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::READasr::READasr( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -570,15 +547,13 @@ unsigned int leon3_funclt_trap::WRITEY_reg::behavior(){
 
     result = rs1 ^ rs2;
 
-    Ybp = result;
-
     Y = result;
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::WRITEY_reg::replicate() const throw(){
-    return new WRITEY_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new WRITEY_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::WRITEY_reg::getInstructionName() const throw(){
@@ -606,14 +581,12 @@ std::string leon3_funclt_trap::WRITEY_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::WRITEY_reg::WRITEY_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::WRITEY_reg::WRITEY_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -633,8 +606,8 @@ unsigned int leon3_funclt_trap::XNOR_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::XNOR_reg::replicate() const throw(){
-    return new XNOR_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new XNOR_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::XNOR_reg::getInstructionName() const throw(){
@@ -665,16 +638,13 @@ std::string leon3_funclt_trap::XNOR_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::XNOR_reg::XNOR_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::XNOR_reg::XNOR_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -690,13 +660,13 @@ unsigned int leon3_funclt_trap::ANDNcc_reg::behavior(){
 
     result = rs1_op & ~rs2_op;
     this->ICC_writeLogic(this->result);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::ANDNcc_reg::replicate() const throw(){
-    return new ANDNcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ANDNcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ANDNcc_reg::getInstructionName() const throw(){
@@ -727,18 +697,14 @@ std::string leon3_funclt_trap::ANDNcc_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ANDNcc_reg::ANDNcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::ANDNcc_reg::ANDNcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -758,8 +724,8 @@ unsigned int leon3_funclt_trap::LDSB_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LDSB_imm::replicate() const throw(){
-    return new LDSB_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LDSB_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LDSB_imm::getInstructionName() const throw(){
@@ -789,14 +755,11 @@ std::string leon3_funclt_trap::LDSB_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LDSB_imm::LDSB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::LDSB_imm::LDSB_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -805,6 +768,9 @@ leon3_funclt_trap::LDSB_imm::~LDSB_imm(){
 }
 unsigned int leon3_funclt_trap::WRITEpsr_imm::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     // Note how we filter writes to EF and EC fields since we do not
@@ -814,23 +780,21 @@ unsigned int leon3_funclt_trap::WRITEpsr_imm::behavior(){
     illegalCWP = (result & 0x0000001f) >= NUM_REG_WIN;
 
     if(!(supervisorException || illegalCWP)){
-        PSRbp = result;
+        PSR = result;
     }
 
     if(supervisorException){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
     if(illegalCWP){
-        RaiseException(ILLEGAL_INSTR);
+        RaiseException(pcounter, npcounter, ILLEGAL_INSTR);
     }
-
-    PSR = result;
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::WRITEpsr_imm::replicate() const throw(){
-    return new WRITEpsr_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new WRITEpsr_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+        SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::WRITEpsr_imm::getInstructionName() const throw(){
@@ -859,14 +823,12 @@ std::string leon3_funclt_trap::WRITEpsr_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::WRITEpsr_imm::WRITEpsr_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::WRITEpsr_imm::WRITEpsr_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -884,8 +846,8 @@ unsigned int leon3_funclt_trap::READy::behavior(){
 }
 
 Instruction * leon3_funclt_trap::READy::replicate() const throw(){
-    return new READy(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new READy(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::READy::getInstructionName() const throw(){
@@ -910,14 +872,11 @@ std::string leon3_funclt_trap::READy::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::READy::READy( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 \
-    & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & \
-    Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::READy::READy( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 \
+    & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -933,13 +892,13 @@ unsigned int leon3_funclt_trap::XNORcc_reg::behavior(){
 
     result = rs1_op ^ ~rs2_op;
     this->ICC_writeLogic(this->result);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::XNORcc_reg::replicate() const throw(){
-    return new XNORcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new XNORcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::XNORcc_reg::getInstructionName() const throw(){
@@ -970,18 +929,14 @@ std::string leon3_funclt_trap::XNORcc_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::XNORcc_reg::XNORcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::XNORcc_reg::XNORcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -990,13 +945,20 @@ leon3_funclt_trap::XNORcc_reg::~XNORcc_reg(){
 }
 unsigned int leon3_funclt_trap::READpsr::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
+    #ifdef ACC_MODEL
+    psr_temp = PSR_execute;
+    #else
     psr_temp = PSR;
+    #endif
     supervisor = (psr_temp & 0x00000080) != 0;
 
     if(!supervisor){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
 
     rd = psr_temp;
@@ -1004,8 +966,8 @@ unsigned int leon3_funclt_trap::READpsr::behavior(){
 }
 
 Instruction * leon3_funclt_trap::READpsr::replicate() const throw(){
-    return new READpsr(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new READpsr(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::READpsr::getInstructionName() const throw(){
@@ -1030,14 +992,11 @@ std::string leon3_funclt_trap::READpsr::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::READpsr::READpsr( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::READpsr::READpsr( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -1056,8 +1015,8 @@ unsigned int leon3_funclt_trap::ANDN_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::ANDN_imm::replicate() const throw(){
-    return new ANDN_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ANDN_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ANDN_imm::getInstructionName() const throw(){
@@ -1087,16 +1046,13 @@ std::string leon3_funclt_trap::ANDN_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ANDN_imm::ANDN_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::ANDN_imm::ANDN_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -1112,13 +1068,13 @@ unsigned int leon3_funclt_trap::ANDcc_reg::behavior(){
 
     result = rs1_op & rs2_op;
     this->ICC_writeLogic(this->result);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::ANDcc_reg::replicate() const throw(){
-    return new ANDcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ANDcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ANDcc_reg::getInstructionName() const throw(){
@@ -1149,18 +1105,14 @@ std::string leon3_funclt_trap::ANDcc_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ANDcc_reg::ANDcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
-    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::ANDcc_reg::ANDcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & \
+    TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -1181,13 +1133,13 @@ unsigned int leon3_funclt_trap::TSUBcc_imm::behavior(){
         temp_V = 1;
     }
     this->ICC_writeTSub(this->result, this->temp_V, this->rs1_op, this->rs2_op);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::TSUBcc_imm::replicate() const throw(){
-    return new TSUBcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new TSUBcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::TSUBcc_imm::getInstructionName() const throw(){
@@ -1217,18 +1169,14 @@ std::string leon3_funclt_trap::TSUBcc_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::TSUBcc_imm::TSUBcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeTSub_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::TSUBcc_imm::TSUBcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeTSub_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -1237,24 +1185,33 @@ leon3_funclt_trap::TSUBcc_imm::~TSUBcc_imm(){
 }
 unsigned int leon3_funclt_trap::LDSBA_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + rs2;
     supervisor = PSR[key_S];
 
+    #ifdef ACC_MODEL
     if(!supervisor){
         flush();
     }
+    #endif
 
+    #ifdef ACC_MODEL
     if(!supervisor){
         flush();
     }
     else{
+        #endif
         readValue = SignExtend(dataMem.read_byte(address), 8);
+        #ifdef ACC_MODEL
     }
+    #endif
 
     if(!supervisor){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
 
     rd = readValue;
@@ -1262,8 +1219,8 @@ unsigned int leon3_funclt_trap::LDSBA_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LDSBA_reg::replicate() const throw(){
-    return new LDSBA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LDSBA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LDSBA_reg::getInstructionName() const throw(){
@@ -1297,14 +1254,12 @@ std::string leon3_funclt_trap::LDSBA_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LDSBA_reg::LDSBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
-    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::LDSBA_reg::LDSBA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & \
+    TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -1313,19 +1268,24 @@ leon3_funclt_trap::LDSBA_reg::~LDSBA_reg(){
 }
 unsigned int leon3_funclt_trap::LDUH_imm::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + SignExtend(simm13, 13);
 
     notAligned = (address & 0x00000001) != 0;
+    #ifdef ACC_MODEL
     if(notAligned){
         flush();
     }
+    #endif
 
     readValue = dataMem.read_half(address);
 
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
 
     rd = readValue;
@@ -1333,8 +1293,8 @@ unsigned int leon3_funclt_trap::LDUH_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LDUH_imm::replicate() const throw(){
-    return new LDUH_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LDUH_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LDUH_imm::getInstructionName() const throw(){
@@ -1364,14 +1324,11 @@ std::string leon3_funclt_trap::LDUH_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LDUH_imm::LDUH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::LDUH_imm::LDUH_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -1380,6 +1337,9 @@ leon3_funclt_trap::LDUH_imm::~LDUH_imm(){
 }
 unsigned int leon3_funclt_trap::STA_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + rs2;
@@ -1387,9 +1347,11 @@ unsigned int leon3_funclt_trap::STA_reg::behavior(){
     supervisor = PSR[key_S];
 
     notAligned = (address & 0x00000003) != 0;
+    #ifdef ACC_MODEL
     if(!supervisor || notAligned){
         flush();
     }
+    #endif
 
     if(supervisor || !notAligned){
         dataMem.write_word(address, toWrite);
@@ -1400,17 +1362,17 @@ unsigned int leon3_funclt_trap::STA_reg::behavior(){
     stall(1);
 
     if(!supervisor){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::STA_reg::replicate() const throw(){
-    return new STA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new STA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::STA_reg::getInstructionName() const throw(){
@@ -1444,14 +1406,11 @@ std::string leon3_funclt_trap::STA_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::STA_reg::STA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::STA_reg::STA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -1471,8 +1430,8 @@ unsigned int leon3_funclt_trap::ORN_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::ORN_reg::replicate() const throw(){
-    return new ORN_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ORN_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ORN_reg::getInstructionName() const throw(){
@@ -1503,16 +1462,13 @@ std::string leon3_funclt_trap::ORN_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ORN_reg::ORN_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::ORN_reg::ORN_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -1521,28 +1477,37 @@ leon3_funclt_trap::ORN_reg::~ORN_reg(){
 }
 unsigned int leon3_funclt_trap::LDSHA_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + rs2;
     supervisor = PSR[key_S];
 
     notAligned = (address & 0x00000001) != 0;
+    #ifdef ACC_MODEL
     if(notAligned || !supervisor){
         flush();
     }
+    #endif
 
+    #ifdef ACC_MODEL
     if(notAligned || !supervisor){
         flush();
     }
     else{
+        #endif
         readValue = SignExtend(dataMem.read_half(address), 16);
+        #ifdef ACC_MODEL
     }
+    #endif
 
     if(!supervisor){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
 
     rd = readValue;
@@ -1550,8 +1515,8 @@ unsigned int leon3_funclt_trap::LDSHA_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LDSHA_reg::replicate() const throw(){
-    return new LDSHA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LDSHA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LDSHA_reg::getInstructionName() const throw(){
@@ -1585,14 +1550,12 @@ std::string leon3_funclt_trap::LDSHA_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LDSHA_reg::LDSHA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
-    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::LDSHA_reg::LDSHA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & \
+    TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -1601,15 +1564,20 @@ leon3_funclt_trap::LDSHA_reg::~LDSHA_reg(){
 }
 unsigned int leon3_funclt_trap::STBA_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + rs2;
     toWrite = (unsigned char)(rd & 0x000000FF);
     supervisor = PSR[key_S];
 
+    #ifdef ACC_MODEL
     if(!supervisor){
         flush();
     }
+    #endif
 
     if(supervisor){
         dataMem.write_byte(address, toWrite);
@@ -1620,14 +1588,14 @@ unsigned int leon3_funclt_trap::STBA_reg::behavior(){
     stall(1);
 
     if(!supervisor){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::STBA_reg::replicate() const throw(){
-    return new STBA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new STBA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::STBA_reg::getInstructionName() const throw(){
@@ -1661,14 +1629,11 @@ std::string leon3_funclt_trap::STBA_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::STBA_reg::STBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::STBA_reg::STBA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -1677,15 +1642,20 @@ leon3_funclt_trap::STBA_reg::~STBA_reg(){
 }
 unsigned int leon3_funclt_trap::ST_imm::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + SignExtend(simm13, 13);
     toWrite = rd;
 
     notAligned = (address & 0x00000003) != 0;
+    #ifdef ACC_MODEL
     if(notAligned){
         flush();
     }
+    #endif
 
     if(!notAligned){
         dataMem.write_word(address, toWrite);
@@ -1696,14 +1666,14 @@ unsigned int leon3_funclt_trap::ST_imm::behavior(){
     stall(1);
 
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::ST_imm::replicate() const throw(){
-    return new ST_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ST_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ST_imm::getInstructionName() const throw(){
@@ -1733,14 +1703,11 @@ std::string leon3_funclt_trap::ST_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ST_imm::ST_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::ST_imm::ST_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 \
+    & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -1749,13 +1716,16 @@ leon3_funclt_trap::ST_imm::~ST_imm(){
 }
 unsigned int leon3_funclt_trap::READtbr::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     tbr_temp = TBR;
     supervisor = PSR[key_S];
 
     if(!supervisor){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
 
     rd = tbr_temp;
@@ -1763,8 +1733,8 @@ unsigned int leon3_funclt_trap::READtbr::behavior(){
 }
 
 Instruction * leon3_funclt_trap::READtbr::replicate() const throw(){
-    return new READtbr(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new READtbr(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::READtbr::getInstructionName() const throw(){
@@ -1789,14 +1759,11 @@ std::string leon3_funclt_trap::READtbr::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::READtbr::READtbr( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::READtbr::READtbr( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -1805,6 +1772,9 @@ leon3_funclt_trap::READtbr::~READtbr(){
 }
 unsigned int leon3_funclt_trap::UDIVcc_imm::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     rs1_op = rs1;
@@ -1812,8 +1782,13 @@ unsigned int leon3_funclt_trap::UDIVcc_imm::behavior(){
 
     exception = rs2_op == 0;
     if(!exception){
-        unsigned long long res64 = ((unsigned long long)((((unsigned long long)Ybp) << 32) \
+        #ifndef ACC_MODEL
+        unsigned long long res64 = ((unsigned long long)((((unsigned long long)Y) << 32) \
             | (unsigned long long)rs1_op))/(unsigned long long)rs2_op;
+        #else
+        unsigned long long res64 = ((unsigned long long)((((unsigned long long)Y_execute) \
+            << 32) | (unsigned long long)rs1_op))/(unsigned long long)rs2_op;
+        #endif
         temp_V = (res64 & 0xFFFFFFFF00000000LL) != 0;
         if(temp_V){
             result = 0xFFFFFFFF;
@@ -1823,18 +1798,18 @@ unsigned int leon3_funclt_trap::UDIVcc_imm::behavior(){
         }
     }
     stall(35);
-    this->ICC_writeDiv(this->result, this->temp_V, this->rs1_op, this->rs2_op);
+    this->ICC_writeDiv(this->exception, this->result, this->temp_V);
 
     if(exception){
-        RaiseException(DIV_ZERO);
+        RaiseException(pcounter, npcounter, DIV_ZERO);
     }
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::UDIVcc_imm::replicate() const throw(){
-    return new UDIVcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new UDIVcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::UDIVcc_imm::getInstructionName() const throw(){
@@ -1864,18 +1839,14 @@ std::string leon3_funclt_trap::UDIVcc_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::UDIVcc_imm::UDIVcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeDiv_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, \
-    FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), WB_icc_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::UDIVcc_imm::UDIVcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeDiv_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -1884,6 +1855,9 @@ leon3_funclt_trap::UDIVcc_imm::~UDIVcc_imm(){
 }
 unsigned int leon3_funclt_trap::SWAPA_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + rs2;
@@ -1891,10 +1865,10 @@ unsigned int leon3_funclt_trap::SWAPA_reg::behavior(){
     supervisor = PSR[key_S];
 
     if(!supervisor){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
 
     if(!supervisor || notAligned){
@@ -1907,17 +1881,19 @@ unsigned int leon3_funclt_trap::SWAPA_reg::behavior(){
     stall(2);
 
     notAligned = (address & 0x00000003) != 0;
+    #ifdef ACC_MODEL
     if(!supervisor || notAligned){
         flush();
     }
+    #endif
 
     rd = readValue;
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SWAPA_reg::replicate() const throw(){
-    return new SWAPA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SWAPA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SWAPA_reg::getInstructionName() const throw(){
@@ -1951,14 +1927,12 @@ std::string leon3_funclt_trap::SWAPA_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SWAPA_reg::SWAPA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
-    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::SWAPA_reg::SWAPA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & \
+    TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -1972,15 +1946,21 @@ unsigned int leon3_funclt_trap::ADDXcc_imm::behavior(){
     rs1_op = rs1;
     rs2_op = SignExtend(simm13, 13);
 
-    result = rs1_op + rs2_op + PSRbp[key_ICC_c];
+    #ifndef ACC_MODEL
+    result = rs1_op + rs2_op + PSR[key_ICC_c];
+    #else
+    //I read the register of the execute stage since this
+    //is the one containing the bypass value
+    result = rs1_op + rs2_op + PSR_execute[key_ICC_c];
+    #endif
     this->ICC_writeAdd(this->result, this->rs1_op, this->rs2_op);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::ADDXcc_imm::replicate() const throw(){
-    return new ADDXcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ADDXcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ADDXcc_imm::getInstructionName() const throw(){
@@ -2010,18 +1990,14 @@ std::string leon3_funclt_trap::ADDXcc_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ADDXcc_imm::ADDXcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeAdd_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::ADDXcc_imm::ADDXcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeAdd_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -2041,8 +2017,8 @@ unsigned int leon3_funclt_trap::STB_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::STB_imm::replicate() const throw(){
-    return new STB_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new STB_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::STB_imm::getInstructionName() const throw(){
@@ -2072,14 +2048,11 @@ std::string leon3_funclt_trap::STB_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::STB_imm::STB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::STB_imm::STB_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -2093,15 +2066,19 @@ unsigned int leon3_funclt_trap::SUBXcc_imm::behavior(){
     rs1_op = rs1;
     rs2_op = SignExtend(simm13, 13);
 
-    result = rs1_op - rs2_op - PSRbp[key_ICC_c];
+    #ifndef ACC_MODEL
+    result = rs1_op - rs2_op - PSR[key_ICC_c];
+    #else
+    result = rs1_op - rs2_op - PSR_execute[key_ICC_c];
+    #endif
     this->ICC_writeSub(this->result, this->rs1_op, this->rs2_op);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SUBXcc_imm::replicate() const throw(){
-    return new SUBXcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SUBXcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SUBXcc_imm::getInstructionName() const throw(){
@@ -2131,18 +2108,14 @@ std::string leon3_funclt_trap::SUBXcc_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SUBXcc_imm::SUBXcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeSub_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::SUBXcc_imm::SUBXcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeSub_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -2151,15 +2124,20 @@ leon3_funclt_trap::SUBXcc_imm::~SUBXcc_imm(){
 }
 unsigned int leon3_funclt_trap::STH_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + rs2;
     toWrite = (unsigned short int)(rd & 0x0000FFFF);
 
     notAligned = (address & 0x00000001) != 0;
+    #ifdef ACC_MODEL
     if(notAligned){
         flush();
     }
+    #endif
 
     if(!notAligned){
         dataMem.write_half(address, toWrite);
@@ -2170,14 +2148,14 @@ unsigned int leon3_funclt_trap::STH_reg::behavior(){
     stall(1);
 
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::STH_reg::replicate() const throw(){
-    return new STH_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new STH_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::STH_reg::getInstructionName() const throw(){
@@ -2209,14 +2187,11 @@ std::string leon3_funclt_trap::STH_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::STH_reg::STH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::STH_reg::STH_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -2235,8 +2210,8 @@ unsigned int leon3_funclt_trap::SRL_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::SRL_imm::replicate() const throw(){
-    return new SRL_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SRL_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SRL_imm::getInstructionName() const throw(){
@@ -2266,16 +2241,13 @@ std::string leon3_funclt_trap::SRL_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SRL_imm::SRL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SRL_imm::SRL_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -2288,17 +2260,15 @@ unsigned int leon3_funclt_trap::WRITEasr_imm::behavior(){
 
     result = rs1 ^ SignExtend(simm13, 13);
 
-    if(rd == 18){
-        ASR18bp = result;
-    }
+    Y = result;
 
     ASR[rd] = result;
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::WRITEasr_imm::replicate() const throw(){
-    return new WRITEasr_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new WRITEasr_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+        SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::WRITEasr_imm::getInstructionName() const throw(){
@@ -2328,14 +2298,12 @@ std::string leon3_funclt_trap::WRITEasr_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::WRITEasr_imm::WRITEasr_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::WRITEasr_imm::WRITEasr_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -2351,17 +2319,17 @@ unsigned int leon3_funclt_trap::UMULcc_reg::behavior(){
 
     unsigned long long resultTemp = (unsigned long long)(((unsigned long long)((unsigned \
         int)rs1_op))*((unsigned long long)((unsigned int)rs2_op)));
-    Ybp = resultTemp >> 32;
+    Y = resultTemp >> 32;
     result = resultTemp & 0x00000000FFFFFFFF;
     stall(2);
     this->ICC_writeLogic(this->result);
-    this->WB_yicc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::UMULcc_reg::replicate() const throw(){
-    return new UMULcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new UMULcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::UMULcc_reg::getInstructionName() const throw(){
@@ -2392,18 +2360,14 @@ std::string leon3_funclt_trap::UMULcc_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::UMULcc_reg::UMULcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_yicc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, \
-    FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, \
-    Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::UMULcc_reg::UMULcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -2425,8 +2389,8 @@ unsigned int leon3_funclt_trap::LDSTUB_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LDSTUB_reg::replicate() const throw(){
-    return new LDSTUB_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LDSTUB_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LDSTUB_reg::getInstructionName() const throw(){
@@ -2458,14 +2422,12 @@ std::string leon3_funclt_trap::LDSTUB_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LDSTUB_reg::LDSTUB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::LDSTUB_reg::LDSTUB_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -2484,8 +2446,8 @@ unsigned int leon3_funclt_trap::XOR_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::XOR_imm::replicate() const throw(){
-    return new XOR_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new XOR_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::XOR_imm::getInstructionName() const throw(){
@@ -2515,16 +2477,13 @@ std::string leon3_funclt_trap::XOR_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::XOR_imm::XOR_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::XOR_imm::XOR_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -2540,19 +2499,23 @@ unsigned int leon3_funclt_trap::SMAC_reg::behavior(){
 
     int resultTemp = ((int)SignExtend(rs1_op & 0x0000ffff, 16))*((int)SignExtend(rs2_op \
         & 0x0000ffff, 16));
-    long long resultAcc = ((((long long)(Ybp & 0x000000ff)) << 32) | (int)ASR18bp) + \
-        resultTemp;
-    Ybp = (resultAcc & 0x000000ff00000000LL) >> 32;
-    ASR18bp = resultAcc & 0x00000000FFFFFFFFLL;
+    #ifndef ACC_MODEL
+    long long resultAcc = ((((long long)(Y & 0x000000ff)) << 32) | (int)ASR[18]) + resultTemp;
+    #else
+    long long resultAcc = ((((long long)(Y_execute & 0x000000ff)) << 32) | (int)ASR_execute[18]) \
+        + resultTemp;
+    #endif
+    Y = (resultAcc & 0x000000ff00000000LL) >> 32;
+    ASR[18] = resultAcc & 0x00000000FFFFFFFFLL;
     result = resultAcc & 0x00000000FFFFFFFFLL;
     stall(1);
-    this->WB_yasr(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SMAC_reg::replicate() const throw(){
-    return new SMAC_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SMAC_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SMAC_reg::getInstructionName() const throw(){
@@ -2583,16 +2546,13 @@ std::string leon3_funclt_trap::SMAC_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SMAC_reg::SMAC_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SMAC_reg::SMAC_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_yasr_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -2605,17 +2565,15 @@ unsigned int leon3_funclt_trap::WRITEasr_reg::behavior(){
 
     result = rs1 ^ rs2;
 
-    if(rd == 18){
-        ASR18bp = result;
-    }
+    Y = result;
 
     ASR[rd] = result;
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::WRITEasr_reg::replicate() const throw(){
-    return new WRITEasr_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new WRITEasr_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+        SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::WRITEasr_reg::getInstructionName() const throw(){
@@ -2646,14 +2604,12 @@ std::string leon3_funclt_trap::WRITEasr_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::WRITEasr_reg::WRITEasr_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::WRITEasr_reg::WRITEasr_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -2662,19 +2618,24 @@ leon3_funclt_trap::WRITEasr_reg::~WRITEasr_reg(){
 }
 unsigned int leon3_funclt_trap::LD_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + rs2;
 
     notAligned = (address & 0x00000003) != 0;
+    #ifdef ACC_MODEL
     if(notAligned){
         flush();
     }
+    #endif
 
     readValue = dataMem.read_word(address);
 
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
 
     rd = readValue;
@@ -2682,8 +2643,8 @@ unsigned int leon3_funclt_trap::LD_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LD_reg::replicate() const throw(){
-    return new LD_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LD_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LD_reg::getInstructionName() const throw(){
@@ -2715,14 +2676,11 @@ std::string leon3_funclt_trap::LD_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LD_reg::LD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::LD_reg::LD_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 \
+    & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -2731,15 +2689,20 @@ leon3_funclt_trap::LD_reg::~LD_reg(){
 }
 unsigned int leon3_funclt_trap::ST_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + rs2;
     toWrite = rd;
 
     notAligned = (address & 0x00000003) != 0;
+    #ifdef ACC_MODEL
     if(notAligned){
         flush();
     }
+    #endif
 
     if(!notAligned){
         dataMem.write_word(address, toWrite);
@@ -2750,14 +2713,14 @@ unsigned int leon3_funclt_trap::ST_reg::behavior(){
     stall(1);
 
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::ST_reg::replicate() const throw(){
-    return new ST_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ST_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ST_reg::getInstructionName() const throw(){
@@ -2789,14 +2752,11 @@ std::string leon3_funclt_trap::ST_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ST_reg::ST_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::ST_reg::ST_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 \
+    & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -2812,13 +2772,13 @@ unsigned int leon3_funclt_trap::SUBcc_reg::behavior(){
 
     result = rs1_op - rs2_op;
     this->ICC_writeSub(this->result, this->rs1_op, this->rs2_op);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SUBcc_reg::replicate() const throw(){
-    return new SUBcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SUBcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SUBcc_reg::getInstructionName() const throw(){
@@ -2849,18 +2809,14 @@ std::string leon3_funclt_trap::SUBcc_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SUBcc_reg::SUBcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
-    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeSub_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::SUBcc_reg::SUBcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & \
+    TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeSub_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -2869,6 +2825,9 @@ leon3_funclt_trap::SUBcc_reg::~SUBcc_reg(){
 }
 unsigned int leon3_funclt_trap::LDD_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     #ifdef ACC_MODEL
@@ -2878,18 +2837,20 @@ unsigned int leon3_funclt_trap::LDD_reg::behavior(){
     address = rs1 + rs2;
 
     notAligned = (address & 0x00000007) != 0;
+    #ifdef ACC_MODEL
     if(notAligned){
-        #ifdef ACC_MODEL
         REGS[rd_bit | 0x1].unlock();
-        #endif
         flush();
     }
+    #endif
 
-    readValue = dataMem.read_dword(address);
-    stall(1);
+    if(!notAligned){
+        readValue = dataMem.read_dword(address);
+        stall(1);
+    }
 
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
 
     if(rd_bit % 2 == 0){
@@ -2910,8 +2871,8 @@ unsigned int leon3_funclt_trap::LDD_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LDD_reg::replicate() const throw(){
-    return new LDD_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LDD_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LDD_reg::getInstructionName() const throw(){
@@ -2943,14 +2904,11 @@ std::string leon3_funclt_trap::LDD_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LDD_reg::LDD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::LDD_reg::LDD_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -2966,13 +2924,13 @@ unsigned int leon3_funclt_trap::ADDcc_imm::behavior(){
 
     result = rs1_op + rs2_op;
     this->ICC_writeAdd(this->result, this->rs1_op, this->rs2_op);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::ADDcc_imm::replicate() const throw(){
-    return new ADDcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ADDcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ADDcc_imm::getInstructionName() const throw(){
@@ -3002,18 +2960,14 @@ std::string leon3_funclt_trap::ADDcc_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ADDcc_imm::ADDcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
-    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeAdd_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::ADDcc_imm::ADDcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & \
+    TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeAdd_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -3022,19 +2976,24 @@ leon3_funclt_trap::ADDcc_imm::~ADDcc_imm(){
 }
 unsigned int leon3_funclt_trap::LDUH_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + rs2;
 
     notAligned = (address & 0x00000001) != 0;
+    #ifdef ACC_MODEL
     if(notAligned){
         flush();
     }
+    #endif
 
     readValue = dataMem.read_half(address);
 
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
 
     rd = readValue;
@@ -3042,8 +3001,8 @@ unsigned int leon3_funclt_trap::LDUH_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LDUH_reg::replicate() const throw(){
-    return new LDUH_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LDUH_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LDUH_reg::getInstructionName() const throw(){
@@ -3075,14 +3034,11 @@ std::string leon3_funclt_trap::LDUH_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LDUH_reg::LDUH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::LDUH_reg::LDUH_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -3102,8 +3058,8 @@ unsigned int leon3_funclt_trap::SRL_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::SRL_reg::replicate() const throw(){
-    return new SRL_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SRL_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SRL_reg::getInstructionName() const throw(){
@@ -3134,16 +3090,13 @@ std::string leon3_funclt_trap::SRL_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SRL_reg::SRL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SRL_reg::SRL_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -3152,27 +3105,56 @@ leon3_funclt_trap::SRL_reg::~SRL_reg(){
 }
 unsigned int leon3_funclt_trap::SAVE_imm::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
+    result = rs1 + SignExtend(simm13, 13);
 
-    rs1_op = rs1;
-    rs2_op = SignExtend(simm13, 13);
-
-    result = rs1_op + rs2_op;
     okNewWin = DecrementRegWindow();
+    #ifdef ACC_MODEL
+    if(!okNewWin){
+        flush();
+    }
+    else{
+        rd.lock();
+    }
+    #endif
+
+    #ifdef ACC_MODEL
+    if(!okNewWin){
+        flush();
+    }
+    #endif
+
+    #ifdef ACC_MODEL
+    if(!okNewWin){
+        flush();
+    }
+    #endif
+
+    #ifdef ACC_MODEL
+    if(!okNewWin){
+        flush();
+    }
+    #endif
 
     if(!okNewWin){
-        RaiseException(WINDOW_OVERFLOW);
+        RaiseException(pcounter, npcounter, WINDOW_OVERFLOW);
     }
 
     if(okNewWin){
         rd = result;
+        #ifdef ACC_MODEL
+        unlockQueue[0].push_back(rd.getPipeReg());
+        #endif
     }
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SAVE_imm::replicate() const throw(){
-    return new SAVE_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SAVE_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SAVE_imm::getInstructionName() const throw(){
@@ -3203,14 +3185,11 @@ std::string leon3_funclt_trap::SAVE_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SAVE_imm::SAVE_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SAVE_imm::SAVE_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -3224,24 +3203,33 @@ unsigned int leon3_funclt_trap::MULScc_reg::behavior(){
     rs1_op = rs1;
     rs2_op = rs2;
 
-    unsigned int yNew = (((unsigned int)Ybp) >> 1) | (rs1_op << 31);
-    rs1_op = ((PSRbp[key_ICC_n] ^ PSRbp[key_ICC_v]) << 31) | (((unsigned int)rs1_op) >> 1);
+    #ifndef ACC_MODEL
+    unsigned int yNew = (((unsigned int)Y) >> 1) | (rs1_op << 31);
+    #else
+    unsigned int yNew = (((unsigned int)Y_execute) >> 1) | (rs1_op << 31);
+    #endif
+    rs1_op = ((PSR[key_ICC_n] ^ PSR[key_ICC_v]) << 31) | (((unsigned int)rs1_op) >> 1);
     result = rs1_op;
-    if((Ybp & 0x00000001) != 0){
+    #ifndef ACC_MODEL
+    unsigned int yOld = Y;
+    #else
+    unsigned int yOld = Y_execute;
+    #endif
+    if((yOld & 0x00000001) != 0){
         result += rs2_op;
     }
     else{
         rs2_op = 0;
     }
-    Ybp = yNew;
+    Y = yNew;
     this->ICC_writeAdd(this->result, this->rs1_op, this->rs2_op);
-    this->WB_yicc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::MULScc_reg::replicate() const throw(){
-    return new MULScc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new MULScc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::MULScc_reg::getInstructionName() const throw(){
@@ -3272,18 +3260,14 @@ std::string leon3_funclt_trap::MULScc_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::MULScc_reg::MULScc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeAdd_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_yicc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, \
-    FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, \
-    Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::MULScc_reg::MULScc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeAdd_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -3302,8 +3286,8 @@ unsigned int leon3_funclt_trap::OR_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::OR_imm::replicate() const throw(){
-    return new OR_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new OR_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::OR_imm::getInstructionName() const throw(){
@@ -3333,16 +3317,13 @@ std::string leon3_funclt_trap::OR_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::OR_imm::OR_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::OR_imm::OR_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 \
+    & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -3351,6 +3332,9 @@ leon3_funclt_trap::OR_imm::~OR_imm(){
 }
 unsigned int leon3_funclt_trap::STD_imm::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + SignExtend(simm13, 13);
@@ -3362,9 +3346,11 @@ unsigned int leon3_funclt_trap::STD_imm::behavior(){
     }
 
     notAligned = (address & 0x00000007) != 0;
+    #ifdef ACC_MODEL
     if(notAligned){
         flush();
     }
+    #endif
 
     if(!notAligned){
         dataMem.write_dword(address, toWrite);
@@ -3375,14 +3361,14 @@ unsigned int leon3_funclt_trap::STD_imm::behavior(){
     stall(2);
 
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::STD_imm::replicate() const throw(){
-    return new STD_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new STD_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::STD_imm::getInstructionName() const throw(){
@@ -3412,14 +3398,11 @@ std::string leon3_funclt_trap::STD_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::STD_imm::STD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::STD_imm::STD_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -3433,15 +3416,19 @@ unsigned int leon3_funclt_trap::SUBXcc_reg::behavior(){
     rs1_op = rs1;
     rs2_op = rs2;
 
-    result = rs1_op - rs2_op - PSRbp[key_ICC_c];
+    #ifndef ACC_MODEL
+    result = rs1_op - rs2_op - PSR[key_ICC_c];
+    #else
+    result = rs1_op - rs2_op - PSR_execute[key_ICC_c];
+    #endif
     this->ICC_writeSub(this->result, this->rs1_op, this->rs2_op);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SUBXcc_reg::replicate() const throw(){
-    return new SUBXcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SUBXcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SUBXcc_reg::getInstructionName() const throw(){
@@ -3472,18 +3459,14 @@ std::string leon3_funclt_trap::SUBXcc_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SUBXcc_reg::SUBXcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeSub_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::SUBXcc_reg::SUBXcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeSub_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -3497,14 +3480,20 @@ unsigned int leon3_funclt_trap::ADDX_imm::behavior(){
     rs1_op = rs1;
     rs2_op = SignExtend(simm13, 13);
 
-    result = rs1_op + rs2_op + PSRbp[key_ICC_c];
+    #ifndef ACC_MODEL
+    result = rs1_op + rs2_op + PSR[key_ICC_c];
+    #else
+    //I read the register of the execute stage since this
+    //is the one containing the bypass value
+    result = rs1_op + rs2_op + PSR_execute[key_ICC_c];
+    #endif
     this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::ADDX_imm::replicate() const throw(){
-    return new ADDX_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ADDX_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ADDX_imm::getInstructionName() const throw(){
@@ -3534,16 +3523,13 @@ std::string leon3_funclt_trap::ADDX_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ADDX_imm::ADDX_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::ADDX_imm::ADDX_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -3552,13 +3538,16 @@ leon3_funclt_trap::ADDX_imm::~ADDX_imm(){
 }
 unsigned int leon3_funclt_trap::SWAP_imm::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + SignExtend(simm13, 13);
     toWrite = rd;
 
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
 
     if(notAligned){
@@ -3571,17 +3560,19 @@ unsigned int leon3_funclt_trap::SWAP_imm::behavior(){
     stall(2);
 
     notAligned = (address & 0x00000003) != 0;
+    #ifdef ACC_MODEL
     if(notAligned){
         flush();
     }
+    #endif
 
     rd = readValue;
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SWAP_imm::replicate() const throw(){
-    return new SWAP_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SWAP_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SWAP_imm::getInstructionName() const throw(){
@@ -3611,14 +3602,11 @@ std::string leon3_funclt_trap::SWAP_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SWAP_imm::SWAP_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SWAP_imm::SWAP_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -3634,16 +3622,16 @@ unsigned int leon3_funclt_trap::UMUL_reg::behavior(){
 
     unsigned long long resultTemp = (unsigned long long)(((unsigned long long)((unsigned \
         int)rs1_op))*((unsigned long long)((unsigned int)rs2_op)));
-    Ybp = resultTemp >> 32;
+    Y = resultTemp >> 32;
     result = resultTemp & 0x00000000FFFFFFFF;
     stall(2);
-    this->WB_y(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::UMUL_reg::replicate() const throw(){
-    return new UMUL_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new UMUL_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::UMUL_reg::getInstructionName() const throw(){
@@ -3674,16 +3662,13 @@ std::string leon3_funclt_trap::UMUL_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::UMUL_reg::UMUL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::UMUL_reg::UMUL_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_y_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -3696,15 +3681,13 @@ unsigned int leon3_funclt_trap::WRITEY_imm::behavior(){
 
     result = rs1 ^ SignExtend(simm13, 13);
 
-    Ybp = result;
-
     Y = result;
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::WRITEY_imm::replicate() const throw(){
-    return new WRITEY_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new WRITEY_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::WRITEY_imm::getInstructionName() const throw(){
@@ -3731,14 +3714,12 @@ std::string leon3_funclt_trap::WRITEY_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::WRITEY_imm::WRITEY_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::WRITEY_imm::WRITEY_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -3758,8 +3739,8 @@ unsigned int leon3_funclt_trap::AND_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::AND_reg::replicate() const throw(){
-    return new AND_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new AND_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::AND_reg::getInstructionName() const throw(){
@@ -3790,16 +3771,13 @@ std::string leon3_funclt_trap::AND_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::AND_reg::AND_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::AND_reg::AND_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -3814,8 +3792,8 @@ unsigned int leon3_funclt_trap::FLUSH_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::FLUSH_imm::replicate() const throw(){
-    return new FLUSH_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new FLUSH_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::FLUSH_imm::getInstructionName() const throw(){
@@ -3843,14 +3821,12 @@ std::string leon3_funclt_trap::FLUSH_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::FLUSH_imm::FLUSH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
-    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::FLUSH_imm::FLUSH_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & \
+    TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -3870,8 +3846,8 @@ unsigned int leon3_funclt_trap::SRA_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::SRA_reg::replicate() const throw(){
-    return new SRA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SRA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SRA_reg::getInstructionName() const throw(){
@@ -3902,16 +3878,13 @@ std::string leon3_funclt_trap::SRA_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SRA_reg::SRA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SRA_reg::SRA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -3920,15 +3893,20 @@ leon3_funclt_trap::SRA_reg::~SRA_reg(){
 }
 unsigned int leon3_funclt_trap::STH_imm::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + SignExtend(simm13, 13);
     toWrite = (unsigned short int)(rd & 0x0000FFFF);
 
     notAligned = (address & 0x00000001) != 0;
+    #ifdef ACC_MODEL
     if(notAligned){
         flush();
     }
+    #endif
 
     if(!notAligned){
         dataMem.write_half(address, toWrite);
@@ -3939,14 +3917,14 @@ unsigned int leon3_funclt_trap::STH_imm::behavior(){
     stall(1);
 
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::STH_imm::replicate() const throw(){
-    return new STH_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new STH_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::STH_imm::getInstructionName() const throw(){
@@ -3976,14 +3954,11 @@ std::string leon3_funclt_trap::STH_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::STH_imm::STH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::STH_imm::STH_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -3992,13 +3967,16 @@ leon3_funclt_trap::STH_imm::~STH_imm(){
 }
 unsigned int leon3_funclt_trap::WRITEwim_imm::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     result = rs1 ^ SignExtend(simm13, 13);
     raiseException = (PSR[key_S] == 0);
 
     if(raiseException){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
 
     if(!raiseException){
@@ -4008,8 +3986,8 @@ unsigned int leon3_funclt_trap::WRITEwim_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::WRITEwim_imm::replicate() const throw(){
-    return new WRITEwim_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new WRITEwim_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+        SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::WRITEwim_imm::getInstructionName() const throw(){
@@ -4038,14 +4016,12 @@ std::string leon3_funclt_trap::WRITEwim_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::WRITEwim_imm::WRITEwim_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::WRITEwim_imm::WRITEwim_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -4054,6 +4030,9 @@ leon3_funclt_trap::WRITEwim_imm::~WRITEwim_imm(){
 }
 unsigned int leon3_funclt_trap::LDD_imm::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     #ifdef ACC_MODEL
@@ -4063,18 +4042,20 @@ unsigned int leon3_funclt_trap::LDD_imm::behavior(){
     address = rs1 + SignExtend(simm13, 13);
 
     notAligned = (address & 0x00000007) != 0;
+    #ifdef ACC_MODEL
     if(notAligned){
-        #ifdef ACC_MODEL
         REGS[rd_bit | 0x1].unlock();
-        #endif
         flush();
     }
+    #endif
 
-    readValue = dataMem.read_dword(address);
-    stall(1);
+    if(!notAligned){
+        readValue = dataMem.read_dword(address);
+        stall(1);
+    }
 
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
 
     if(rd_bit % 2 == 0){
@@ -4095,8 +4076,8 @@ unsigned int leon3_funclt_trap::LDD_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LDD_imm::replicate() const throw(){
-    return new LDD_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LDD_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LDD_imm::getInstructionName() const throw(){
@@ -4126,14 +4107,11 @@ std::string leon3_funclt_trap::LDD_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LDD_imm::LDD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::LDD_imm::LDD_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -4152,8 +4130,8 @@ unsigned int leon3_funclt_trap::SLL_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::SLL_imm::replicate() const throw(){
-    return new SLL_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SLL_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SLL_imm::getInstructionName() const throw(){
@@ -4183,16 +4161,13 @@ std::string leon3_funclt_trap::SLL_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SLL_imm::SLL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SLL_imm::SLL_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -4201,28 +4176,37 @@ leon3_funclt_trap::SLL_imm::~SLL_imm(){
 }
 unsigned int leon3_funclt_trap::LDUHA_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + rs2;
     supervisor = PSR[key_S];
 
     notAligned = (address & 0x00000001) != 0;
+    #ifdef ACC_MODEL
     if(notAligned || !supervisor){
         flush();
     }
+    #endif
 
+    #ifdef ACC_MODEL
     if(notAligned || !supervisor){
         flush();
     }
     else{
+        #endif
         readValue = dataMem.read_half(address);
+        #ifdef ACC_MODEL
     }
+    #endif
 
     if(!supervisor){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
 
     rd = readValue;
@@ -4230,8 +4214,8 @@ unsigned int leon3_funclt_trap::LDUHA_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LDUHA_reg::replicate() const throw(){
-    return new LDUHA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LDUHA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LDUHA_reg::getInstructionName() const throw(){
@@ -4265,14 +4249,12 @@ std::string leon3_funclt_trap::LDUHA_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LDUHA_reg::LDUHA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
-    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::LDUHA_reg::LDUHA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & \
+    TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -4293,13 +4275,13 @@ unsigned int leon3_funclt_trap::TADDcc_reg::behavior(){
         temp_V = 1;
     }
     this->ICC_writeTAdd(this->result, this->temp_V, this->rs1_op, this->rs2_op);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::TADDcc_reg::replicate() const throw(){
-    return new TADDcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new TADDcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::TADDcc_reg::getInstructionName() const throw(){
@@ -4330,18 +4312,14 @@ std::string leon3_funclt_trap::TADDcc_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::TADDcc_reg::TADDcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeTAdd_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::TADDcc_reg::TADDcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeTAdd_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -4362,13 +4340,13 @@ unsigned int leon3_funclt_trap::TADDcc_imm::behavior(){
         temp_V = 1;
     }
     this->ICC_writeTAdd(this->result, this->temp_V, this->rs1_op, this->rs2_op);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::TADDcc_imm::replicate() const throw(){
-    return new TADDcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new TADDcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::TADDcc_imm::getInstructionName() const throw(){
@@ -4398,18 +4376,14 @@ std::string leon3_funclt_trap::TADDcc_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::TADDcc_imm::TADDcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeTAdd_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::TADDcc_imm::TADDcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeTAdd_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -4418,6 +4392,9 @@ leon3_funclt_trap::TADDcc_imm::~TADDcc_imm(){
 }
 unsigned int leon3_funclt_trap::SDIV_imm::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     rs1_op = rs1;
@@ -4425,8 +4402,13 @@ unsigned int leon3_funclt_trap::SDIV_imm::behavior(){
 
     exception = rs2_op == 0;
     if(!exception){
-        long long res64 = ((long long)((((unsigned long long)Ybp) << 32) | (unsigned long \
-            long)rs1_op))/((long long)((int)rs2_op));
+        #ifndef ACC_MODEL
+        long long res64 = ((long long)((((unsigned long long)Y) << 32) | (unsigned long long)rs1_op))/((long \
+            long)((int)rs2_op));
+        #else
+        long long res64 = ((long long)((((unsigned long long)Y_execute) << 32) | (unsigned \
+            long long)rs1_op))/((long long)((int)rs2_op));
+        #endif
         temp_V = (res64 & 0xFFFFFFFF80000000LL) != 0 && (res64 & 0xFFFFFFFF80000000LL) != \
             0xFFFFFFFF80000000LL;
         if(temp_V){
@@ -4444,15 +4426,15 @@ unsigned int leon3_funclt_trap::SDIV_imm::behavior(){
     stall(2);
 
     if(exception){
-        RaiseException(DIV_ZERO);
+        RaiseException(pcounter, npcounter, DIV_ZERO);
     }
     this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SDIV_imm::replicate() const throw(){
-    return new SDIV_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SDIV_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SDIV_imm::getInstructionName() const throw(){
@@ -4482,16 +4464,13 @@ std::string leon3_funclt_trap::SDIV_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SDIV_imm::SDIV_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SDIV_imm::SDIV_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, \
-    FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -4500,6 +4479,9 @@ leon3_funclt_trap::SDIV_imm::~SDIV_imm(){
 }
 unsigned int leon3_funclt_trap::TSUBccTV_imm::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     rs1_op = rs1;
@@ -4514,15 +4496,15 @@ unsigned int leon3_funclt_trap::TSUBccTV_imm::behavior(){
     this->ICC_writeTVSub(this->result, this->temp_V, this->rs1_op, this->rs2_op);
 
     if(temp_V){
-        RaiseException(TAG_OVERFLOW);
+        RaiseException(pcounter, npcounter, TAG_OVERFLOW);
     }
-    this->WB_icctv(this->rd, this->rd_bit, this->result, this->temp_V);
+    this->WB_tv(this->rd, this->rd_bit, this->result, this->temp_V);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::TSUBccTV_imm::replicate() const throw(){
-    return new TSUBccTV_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new TSUBccTV_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+        SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::TSUBccTV_imm::getInstructionName() const throw(){
@@ -4553,18 +4535,14 @@ std::string leon3_funclt_trap::TSUBccTV_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::TSUBccTV_imm::TSUBccTV_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeTVSub_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icctv_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, \
-    FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, \
-    Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::TSUBccTV_imm::TSUBccTV_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeTVSub_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_tv_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, \
+    WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -4579,8 +4557,8 @@ unsigned int leon3_funclt_trap::FLUSH_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::FLUSH_reg::replicate() const throw(){
-    return new FLUSH_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new FLUSH_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::FLUSH_reg::getInstructionName() const throw(){
@@ -4609,14 +4587,12 @@ std::string leon3_funclt_trap::FLUSH_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::FLUSH_reg::FLUSH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
-    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::FLUSH_reg::FLUSH_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & \
+    TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -4632,13 +4608,13 @@ unsigned int leon3_funclt_trap::ORNcc_reg::behavior(){
 
     result = rs1_op | ~rs2_op;
     this->ICC_writeLogic(this->result);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::ORNcc_reg::replicate() const throw(){
-    return new ORNcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ORNcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ORNcc_reg::getInstructionName() const throw(){
@@ -4669,18 +4645,14 @@ std::string leon3_funclt_trap::ORNcc_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ORNcc_reg::ORNcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
-    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::ORNcc_reg::ORNcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & \
+    TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -4689,45 +4661,91 @@ leon3_funclt_trap::ORNcc_reg::~ORNcc_reg(){
 }
 unsigned int leon3_funclt_trap::RETT_imm::behavior(){
     this->totalInstrCycles = 0;
-    this->IncrementPC();
 
-    rs1_op = rs1;
-    rs2_op = SignExtend(simm13, 13);
+    pcounter = PC;
+    npcounter = NPC;
+    this->IncrementPC();
+    targetAddr = rs1 + SignExtend(simm13, 13);
+    newCwp = ((unsigned int)(PSR[key_CWP] + 1)) % NUM_REG_WIN;
     exceptionEnabled = PSR[key_ET];
     supervisor = PSR[key_S];
+    invalidWin = ((0x01 << (newCwp)) & WIM) != 0;
+    notAligned = (targetAddr & 0x00000003) != 0;
+    if(!exceptionEnabled && supervisor && !invalidWin && !notAligned){
+        #ifdef ACC_MODEL
+        PC = targetAddr;
+        NPC = targetAddr + 4;
+        #else
+        PC = npcounter;
+        NPC = targetAddr;
+        #endif
+    }
 
-    targetAddr = rs1_op + rs2_op;
-    newCwp = ((unsigned int)(PSR[key_CWP] + 1)) % NUM_REG_WIN;
-    stall(2);
+    #ifdef ACC_MODEL
+    if(exceptionEnabled || !supervisor || invalidWin || notAligned){
+        flush();
+    }
+    #endif
+
+    if(exceptionEnabled || !supervisor || invalidWin || notAligned){
+        flush();
+    }
+    else{
+        PSR.immediateWrite((PSR & 0xFFFFFF40) | (newCwp | 0x20 | (PSR[key_PS] << 7)));
+        stall(2);
+    }
+
+    #ifdef ACC_MODEL
+    if(exceptionEnabled || !supervisor || invalidWin || notAligned){
+        flush();
+    }
+    #endif
 
     if(exceptionEnabled){
         if(supervisor){
-            RaiseException(ILLEGAL_INSTR);
+            RaiseException(pcounter, npcounter, ILLEGAL_INSTR);
         }
         else{
-            RaiseException(PRIVILEDGE_INSTR);
+            RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
         }
     }
-    else if(!supervisor || ((0x01 << (newCwp)) & WIM) != 0 || (targetAddr & 0x00000003) \
-        != 0){
+    else if(!supervisor || invalidWin || notAligned){
         THROW_EXCEPTION("Invalid processor mode during execution of the RETT instruction \
             - supervisor: " << supervisor << " newCwp: " << std::hex << std::showbase << newCwp \
             << " targetAddr: " << std::hex << std::showbase << targetAddr);
     }
-    for(int i = 8; i < 32; i++){
-        REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (16*NUM_REG_WIN)]);
-    }
+    else{
+        #ifndef ACC_MODEL
+        //Functional model: we simply immediately update the alias
+        for(int i = 8; i < 32; i++){
+            REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (128)]);
+        }
+        #else
+        //Cycle accurate model: we have to update the alias using the pipeline register
+        //We update the aliases for this stage and for all the preceding ones (we are in the
+        //execute stage and we need to update fetch, decode, and register read and execute)
+        for(int i = 8; i < 32; i++){
+            REGS_fetch[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_decode[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_regs[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_execute[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_memory[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_exception[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+        }
+        #endif
 
-    PSRbp = (PSR & 0xFFFFFF40) | (newCwp | 0x20 | (PSR[key_PS] << 7));
-    PSR.immediateWrite(PSRbp);
-    PC = NPC;
-    NPC = targetAddr;
+    }
+    #ifdef ACC_MODEL
+    if(exceptionEnabled || !supervisor || invalidWin || notAligned){
+        flush();
+    }
+    #endif
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::RETT_imm::replicate() const throw(){
-    return new RETT_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new RETT_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::RETT_imm::getInstructionName() const throw(){
@@ -4755,14 +4773,11 @@ std::string leon3_funclt_trap::RETT_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::RETT_imm::RETT_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::RETT_imm::RETT_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -4771,6 +4786,9 @@ leon3_funclt_trap::RETT_imm::~RETT_imm(){
 }
 unsigned int leon3_funclt_trap::SDIVcc_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     rs1_op = rs1;
@@ -4778,8 +4796,13 @@ unsigned int leon3_funclt_trap::SDIVcc_reg::behavior(){
 
     exception = rs2_op == 0;
     if(!exception){
-        long long res64 = ((long long)((((unsigned long long)Ybp) << 32) | (unsigned long \
-            long)rs1_op))/((long long)((int)rs2_op));
+        #ifndef ACC_MODEL
+        long long res64 = ((long long)((((unsigned long long)Y) << 32) | (unsigned long long)rs1_op))/((long \
+            long)((int)rs2_op));
+        #else
+        long long res64 = ((long long)((((unsigned long long)Y_execute) << 32) | (unsigned \
+            long long)rs1_op))/((long long)((int)rs2_op));
+        #endif
         temp_V = (res64 & 0xFFFFFFFF80000000LL) != 0 && (res64 & 0xFFFFFFFF80000000LL) != \
             0xFFFFFFFF80000000LL;
         if(temp_V){
@@ -4795,18 +4818,18 @@ unsigned int leon3_funclt_trap::SDIVcc_reg::behavior(){
         }
     }
     stall(2);
-    this->ICC_writeDiv(this->result, this->temp_V, this->rs1_op, this->rs2_op);
+    this->ICC_writeDiv(this->exception, this->result, this->temp_V);
 
     if(exception){
-        RaiseException(DIV_ZERO);
+        RaiseException(pcounter, npcounter, DIV_ZERO);
     }
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SDIVcc_reg::replicate() const throw(){
-    return new SDIVcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SDIVcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SDIVcc_reg::getInstructionName() const throw(){
@@ -4837,18 +4860,14 @@ std::string leon3_funclt_trap::SDIVcc_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SDIVcc_reg::SDIVcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeDiv_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, \
-    FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), WB_icc_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::SDIVcc_reg::SDIVcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeDiv_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -4868,8 +4887,8 @@ unsigned int leon3_funclt_trap::ADD_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::ADD_reg::replicate() const throw(){
-    return new ADD_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ADD_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ADD_reg::getInstructionName() const throw(){
@@ -4900,16 +4919,13 @@ std::string leon3_funclt_trap::ADD_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ADD_reg::ADD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::ADD_reg::ADD_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -4919,39 +4935,53 @@ leon3_funclt_trap::ADD_reg::~ADD_reg(){
 unsigned int leon3_funclt_trap::TRAP_imm::behavior(){
     this->totalInstrCycles = 0;
 
-    // All the other non-special situations
+    pcounter = PC;
+    npcounter = NPC;
+
+    #ifndef ACC_MODEL
+    bool icc_z = PSR[key_ICC_z];
+    bool icc_n = PSR[key_ICC_n];
+    bool icc_v = PSR[key_ICC_v];
+    bool icc_c = PSR[key_ICC_c];
+    #else
+    bool icc_z = PSR_execute[key_ICC_z];
+    bool icc_n = PSR_execute[key_ICC_n];
+    bool icc_v = PSR_execute[key_ICC_v];
+    bool icc_c = PSR_execute[key_ICC_c];
+    #endif
     raiseException = (cond == 0x8) ||
-    ((cond == 0x9) && PSRbp[key_ICC_z] == 0) ||
-    ((cond == 0x1) && PSRbp[key_ICC_z] != 0) ||
-    ((cond == 0xa) && (PSRbp[key_ICC_z] == 0) && (PSRbp[key_ICC_n] == PSRbp[key_ICC_v])) ||
-    ((cond == 0x2) && ((PSRbp[key_ICC_z] != 0) || (PSRbp[key_ICC_n] != PSRbp[key_ICC_v]))) ||
-    ((cond == 0xb) && PSRbp[key_ICC_n] == PSRbp[key_ICC_v]) ||
-    ((cond == 0x3) && PSRbp[key_ICC_n] != PSRbp[key_ICC_v]) ||
-    ((cond == 0xc) && (PSRbp[key_ICC_c] + PSRbp[key_ICC_z]) == 0) ||
-    ((cond == 0x4) && (PSRbp[key_ICC_c] + PSRbp[key_ICC_z]) > 0) ||
-    ((cond == 0xd) && PSRbp[key_ICC_c] == 0) ||
-    ((cond == 0x5) && PSRbp[key_ICC_c] != 0) ||
-    ((cond == 0xe) && PSRbp[key_ICC_n] == 0) ||
-    ((cond == 0x6) && PSRbp[key_ICC_n] != 0) ||
-    ((cond == 0xf) && PSRbp[key_ICC_v] == 0) ||
-    ((cond == 0x7) && PSRbp[key_ICC_v] != 0);
+    ((cond == 0x9) && !icc_z) ||
+    ((cond == 0x1) && icc_z) ||
+    ((cond == 0xa) && !icc_z && (icc_n == icc_v)) ||
+    ((cond == 0x2) && (icc_z || (icc_n != icc_v))) ||
+    ((cond == 0xb) && (icc_n == icc_v)) ||
+    ((cond == 0x3) && (icc_n != icc_v)) ||
+    ((cond == 0xc) && !icc_c && !icc_z) ||
+    ((cond == 0x4) && (icc_c || icc_z)) ||
+    ((cond == 0xd) && !icc_c) ||
+    ((cond == 0x5) && icc_c) ||
+    ((cond == 0xe) && !icc_n) ||
+    ((cond == 0x6) && icc_n) ||
+    ((cond == 0xf) && !icc_v) ||
+    ((cond == 0x7) && icc_v);
 
     if(raiseException){
         stall(4);
-        RaiseException(TRAP_INSTRUCTION, (rs1 + SignExtend(imm7, 7)) & 0x0000007F);
+        RaiseException(pcounter, npcounter, TRAP_INSTRUCTION, (rs1 + SignExtend(imm7, 7)) \
+            & 0x0000007F);
     }
     #ifndef ACC_MODEL
     else{
-        PC = NPC;
-        NPC += 4;
+        PC = npcounter;
+        NPC = npcounter + 4;
     }
     #endif
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::TRAP_imm::replicate() const throw(){
-    return new TRAP_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new TRAP_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::TRAP_imm::getInstructionName() const throw(){
@@ -5030,13 +5060,11 @@ std::string leon3_funclt_trap::TRAP_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::TRAP_imm::TRAP_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::TRAP_imm::TRAP_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -5045,13 +5073,16 @@ leon3_funclt_trap::TRAP_imm::~TRAP_imm(){
 }
 unsigned int leon3_funclt_trap::WRITEtbr_imm::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     result = rs1 ^ SignExtend(simm13, 13);
     raiseException = (PSR[key_S] == 0);
 
     if(raiseException){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
 
     if(!raiseException){
@@ -5061,8 +5092,8 @@ unsigned int leon3_funclt_trap::WRITEtbr_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::WRITEtbr_imm::replicate() const throw(){
-    return new WRITEtbr_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new WRITEtbr_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+        SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::WRITEtbr_imm::getInstructionName() const throw(){
@@ -5091,14 +5122,12 @@ std::string leon3_funclt_trap::WRITEtbr_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::WRITEtbr_imm::WRITEtbr_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::WRITEtbr_imm::WRITEtbr_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -5118,8 +5147,8 @@ unsigned int leon3_funclt_trap::LDUB_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LDUB_reg::replicate() const throw(){
-    return new LDUB_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LDUB_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LDUB_reg::getInstructionName() const throw(){
@@ -5151,14 +5180,11 @@ std::string leon3_funclt_trap::LDUB_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LDUB_reg::LDUB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::LDUB_reg::LDUB_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -5167,27 +5193,56 @@ leon3_funclt_trap::LDUB_reg::~LDUB_reg(){
 }
 unsigned int leon3_funclt_trap::RESTORE_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
+    result = rs1 + rs2;
 
-    rs1_op = rs1;
-    rs2_op = rs2;
-
-    result = rs1_op + rs2_op;
     okNewWin = IncrementRegWindow();
+    #ifdef ACC_MODEL
+    if(!okNewWin){
+        flush();
+    }
+    else{
+        rd.lock();
+    }
+    #endif
+
+    #ifdef ACC_MODEL
+    if(!okNewWin){
+        flush();
+    }
+    #endif
+
+    #ifdef ACC_MODEL
+    if(!okNewWin){
+        flush();
+    }
+    #endif
+
+    #ifdef ACC_MODEL
+    if(!okNewWin){
+        flush();
+    }
+    #endif
 
     if(!okNewWin){
-        RaiseException(WINDOW_UNDERFLOW);
+        RaiseException(pcounter, npcounter, WINDOW_UNDERFLOW);
     }
 
     if(okNewWin){
         rd = result;
+        #ifdef ACC_MODEL
+        unlockQueue[0].push_back(rd.getPipeReg());
+        #endif
     }
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::RESTORE_reg::replicate() const throw(){
-    return new RESTORE_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new RESTORE_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::RESTORE_reg::getInstructionName() const throw(){
@@ -5219,14 +5274,12 @@ std::string leon3_funclt_trap::RESTORE_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::RESTORE_reg::RESTORE_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::RESTORE_reg::RESTORE_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -5240,15 +5293,21 @@ unsigned int leon3_funclt_trap::ADDXcc_reg::behavior(){
     rs1_op = rs1;
     rs2_op = rs2;
 
-    result = rs1_op + rs2_op + PSRbp[key_ICC_c];
+    #ifndef ACC_MODEL
+    result = rs1_op + rs2_op + PSR[key_ICC_c];
+    #else
+    //I read the register of the execute stage since this
+    //is the one containing the bypass value
+    result = rs1_op + rs2_op + PSR_execute[key_ICC_c];
+    #endif
     this->ICC_writeAdd(this->result, this->rs1_op, this->rs2_op);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::ADDXcc_reg::replicate() const throw(){
-    return new ADDXcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ADDXcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ADDXcc_reg::getInstructionName() const throw(){
@@ -5279,18 +5338,14 @@ std::string leon3_funclt_trap::ADDXcc_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ADDXcc_reg::ADDXcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeAdd_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::ADDXcc_reg::ADDXcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeAdd_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -5310,8 +5365,8 @@ unsigned int leon3_funclt_trap::STB_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::STB_reg::replicate() const throw(){
-    return new STB_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new STB_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::STB_reg::getInstructionName() const throw(){
@@ -5343,14 +5398,11 @@ std::string leon3_funclt_trap::STB_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::STB_reg::STB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::STB_reg::STB_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -5369,8 +5421,8 @@ unsigned int leon3_funclt_trap::AND_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::AND_imm::replicate() const throw(){
-    return new AND_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new AND_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::AND_imm::getInstructionName() const throw(){
@@ -5400,16 +5452,13 @@ std::string leon3_funclt_trap::AND_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::AND_imm::AND_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::AND_imm::AND_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -5424,16 +5473,16 @@ unsigned int leon3_funclt_trap::SMUL_imm::behavior(){
     rs2_op = SignExtend(simm13, 13);
 
     long long resultTemp = (long long)(((long long)((int)rs1_op))*((long long)((int)rs2_op)));
-    Ybp = ((unsigned long long)resultTemp) >> 32;
+    Y = ((unsigned long long)resultTemp) >> 32;
     result = resultTemp & 0x00000000FFFFFFFF;
     stall(2);
-    this->WB_y(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SMUL_imm::replicate() const throw(){
-    return new SMUL_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SMUL_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SMUL_imm::getInstructionName() const throw(){
@@ -5463,16 +5512,13 @@ std::string leon3_funclt_trap::SMUL_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SMUL_imm::SMUL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SMUL_imm::SMUL_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_y_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -5492,8 +5538,8 @@ unsigned int leon3_funclt_trap::ADD_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::ADD_imm::replicate() const throw(){
-    return new ADD_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ADD_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ADD_imm::getInstructionName() const throw(){
@@ -5523,16 +5569,13 @@ std::string leon3_funclt_trap::ADD_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ADD_imm::ADD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::ADD_imm::ADD_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -5548,16 +5591,16 @@ unsigned int leon3_funclt_trap::UMUL_imm::behavior(){
 
     unsigned long long resultTemp = (unsigned long long)(((unsigned long long)((unsigned \
         int)rs1_op))*((unsigned long long)((unsigned int)rs2_op)));
-    Ybp = resultTemp >> 32;
+    Y = resultTemp >> 32;
     result = resultTemp & 0x00000000FFFFFFFF;
     stall(2);
-    this->WB_y(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::UMUL_imm::replicate() const throw(){
-    return new UMUL_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new UMUL_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::UMUL_imm::getInstructionName() const throw(){
@@ -5587,16 +5630,13 @@ std::string leon3_funclt_trap::UMUL_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::UMUL_imm::UMUL_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::UMUL_imm::UMUL_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_y_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -5605,13 +5645,16 @@ leon3_funclt_trap::UMUL_imm::~UMUL_imm(){
 }
 unsigned int leon3_funclt_trap::READwim::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     wim_temp = WIM;
     supervisor = PSR[key_S];
 
     if(!supervisor){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
 
     rd = wim_temp;
@@ -5619,8 +5662,8 @@ unsigned int leon3_funclt_trap::READwim::behavior(){
 }
 
 Instruction * leon3_funclt_trap::READwim::replicate() const throw(){
-    return new READwim(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new READwim(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::READwim::getInstructionName() const throw(){
@@ -5645,14 +5688,11 @@ std::string leon3_funclt_trap::READwim::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::READwim::READwim( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::READwim::READwim( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -5674,8 +5714,8 @@ unsigned int leon3_funclt_trap::LDSTUB_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LDSTUB_imm::replicate() const throw(){
-    return new LDSTUB_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LDSTUB_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LDSTUB_imm::getInstructionName() const throw(){
@@ -5705,14 +5745,12 @@ std::string leon3_funclt_trap::LDSTUB_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LDSTUB_imm::LDSTUB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::LDSTUB_imm::LDSTUB_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -5728,19 +5766,23 @@ unsigned int leon3_funclt_trap::SMAC_imm::behavior(){
 
     int resultTemp = ((int)SignExtend(rs1_op & 0x0000ffff, 16))*((int)SignExtend(rs2_op \
         & 0x0000ffff, 16));
-    long long resultAcc = ((((long long)(Ybp & 0x000000ff)) << 32) | (int)ASR18bp) + \
-        resultTemp;
-    Ybp = (resultAcc & 0x000000ff00000000LL) >> 32;
-    ASR18bp = resultAcc & 0x00000000FFFFFFFFLL;
+    #ifndef ACC_MODEL
+    long long resultAcc = ((((long long)(Y & 0x000000ff)) << 32) | (int)ASR[18]) + resultTemp;
+    #else
+    long long resultAcc = ((((long long)(Y_execute & 0x000000ff)) << 32) | (int)ASR_execute[18]) \
+        + resultTemp;
+    #endif
+    Y = (resultAcc & 0x000000ff00000000LL) >> 32;
+    ASR[18] = resultAcc & 0x00000000FFFFFFFFLL;
     result = resultAcc & 0x00000000FFFFFFFFLL;
     stall(1);
-    this->WB_yasr(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SMAC_imm::replicate() const throw(){
-    return new SMAC_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SMAC_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SMAC_imm::getInstructionName() const throw(){
@@ -5770,16 +5812,13 @@ std::string leon3_funclt_trap::SMAC_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SMAC_imm::SMAC_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SMAC_imm::SMAC_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_yasr_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -5799,8 +5838,8 @@ unsigned int leon3_funclt_trap::LDSB_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LDSB_reg::replicate() const throw(){
-    return new LDSB_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LDSB_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LDSB_reg::getInstructionName() const throw(){
@@ -5832,14 +5871,11 @@ std::string leon3_funclt_trap::LDSB_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LDSB_reg::LDSB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::LDSB_reg::LDSB_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -5859,8 +5895,8 @@ unsigned int leon3_funclt_trap::ANDN_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::ANDN_reg::replicate() const throw(){
-    return new ANDN_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ANDN_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ANDN_reg::getInstructionName() const throw(){
@@ -5891,16 +5927,13 @@ std::string leon3_funclt_trap::ANDN_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ANDN_reg::ANDN_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::ANDN_reg::ANDN_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -5909,6 +5942,9 @@ leon3_funclt_trap::ANDN_reg::~ANDN_reg(){
 }
 unsigned int leon3_funclt_trap::TSUBccTV_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     rs1_op = rs1;
@@ -5923,15 +5959,15 @@ unsigned int leon3_funclt_trap::TSUBccTV_reg::behavior(){
     this->ICC_writeTVSub(this->result, this->temp_V, this->rs1_op, this->rs2_op);
 
     if(temp_V){
-        RaiseException(TAG_OVERFLOW);
+        RaiseException(pcounter, npcounter, TAG_OVERFLOW);
     }
-    this->WB_icctv(this->rd, this->rd_bit, this->result, this->temp_V);
+    this->WB_tv(this->rd, this->rd_bit, this->result, this->temp_V);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::TSUBccTV_reg::replicate() const throw(){
-    return new TSUBccTV_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new TSUBccTV_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+        SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::TSUBccTV_reg::getInstructionName() const throw(){
@@ -5963,18 +5999,14 @@ std::string leon3_funclt_trap::TSUBccTV_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::TSUBccTV_reg::TSUBccTV_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeTVSub_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icctv_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, \
-    FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, \
-    Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::TSUBccTV_reg::TSUBccTV_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeTVSub_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_tv_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, \
+    WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -5991,8 +6023,8 @@ unsigned int leon3_funclt_trap::SETHI::behavior(){
 }
 
 Instruction * leon3_funclt_trap::SETHI::replicate() const throw(){
-    return new SETHI(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SETHI(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SETHI::getInstructionName() const throw(){
@@ -6018,16 +6050,13 @@ std::string leon3_funclt_trap::SETHI::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SETHI::SETHI( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 \
-    & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & \
-    Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SETHI::SETHI( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 \
+    & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -6046,8 +6075,8 @@ unsigned int leon3_funclt_trap::SRA_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::SRA_imm::replicate() const throw(){
-    return new SRA_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SRA_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SRA_imm::getInstructionName() const throw(){
@@ -6077,16 +6106,13 @@ std::string leon3_funclt_trap::SRA_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SRA_imm::SRA_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SRA_imm::SRA_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -6095,24 +6121,31 @@ leon3_funclt_trap::SRA_imm::~SRA_imm(){
 }
 unsigned int leon3_funclt_trap::LDSH_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + rs2;
 
     notAligned = (address & 0x00000001) != 0;
+    #ifdef ACC_MODEL
     if(notAligned){
         flush();
     }
+    #endif
 
     if(!notAligned){
         readValue = SignExtend(dataMem.read_half(address), 16);
     }
+    #ifdef ACC_MODEL
     else{
         flush();
     }
+    #endif
 
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
 
     rd = readValue;
@@ -6120,8 +6153,8 @@ unsigned int leon3_funclt_trap::LDSH_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LDSH_reg::replicate() const throw(){
-    return new LDSH_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LDSH_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LDSH_reg::getInstructionName() const throw(){
@@ -6153,14 +6186,11 @@ std::string leon3_funclt_trap::LDSH_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LDSH_reg::LDSH_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::LDSH_reg::LDSH_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -6169,6 +6199,9 @@ leon3_funclt_trap::LDSH_reg::~LDSH_reg(){
 }
 unsigned int leon3_funclt_trap::UDIVcc_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     rs1_op = rs1;
@@ -6176,8 +6209,13 @@ unsigned int leon3_funclt_trap::UDIVcc_reg::behavior(){
 
     exception = rs2_op == 0;
     if(!exception){
-        unsigned long long res64 = ((unsigned long long)((((unsigned long long)Ybp) << 32) \
+        #ifndef ACC_MODEL
+        unsigned long long res64 = ((unsigned long long)((((unsigned long long)Y) << 32) \
             | (unsigned long long)rs1_op))/(unsigned long long)rs2_op;
+        #else
+        unsigned long long res64 = ((unsigned long long)((((unsigned long long)Y_execute) \
+            << 32) | (unsigned long long)rs1_op))/(unsigned long long)rs2_op;
+        #endif
         temp_V = (res64 & 0xFFFFFFFF00000000LL) != 0;
         if(temp_V){
             result = 0xFFFFFFFF;
@@ -6187,18 +6225,18 @@ unsigned int leon3_funclt_trap::UDIVcc_reg::behavior(){
         }
     }
     stall(35);
-    this->ICC_writeDiv(this->result, this->temp_V, this->rs1_op, this->rs2_op);
+    this->ICC_writeDiv(this->exception, this->result, this->temp_V);
 
     if(exception){
-        RaiseException(DIV_ZERO);
+        RaiseException(pcounter, npcounter, DIV_ZERO);
     }
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::UDIVcc_reg::replicate() const throw(){
-    return new UDIVcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new UDIVcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::UDIVcc_reg::getInstructionName() const throw(){
@@ -6229,18 +6267,14 @@ std::string leon3_funclt_trap::UDIVcc_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::UDIVcc_reg::UDIVcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeDiv_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, \
-    FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), WB_icc_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::UDIVcc_reg::UDIVcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeDiv_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -6259,8 +6293,8 @@ unsigned int leon3_funclt_trap::ORN_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::ORN_imm::replicate() const throw(){
-    return new ORN_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ORN_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ORN_imm::getInstructionName() const throw(){
@@ -6290,16 +6324,13 @@ std::string leon3_funclt_trap::ORN_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ORN_imm::ORN_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::ORN_imm::ORN_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -6308,6 +6339,9 @@ leon3_funclt_trap::ORN_imm::~ORN_imm(){
 }
 unsigned int leon3_funclt_trap::STD_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + rs2;
@@ -6319,9 +6353,11 @@ unsigned int leon3_funclt_trap::STD_reg::behavior(){
     }
 
     notAligned = (address & 0x00000007) != 0;
+    #ifdef ACC_MODEL
     if(notAligned){
         flush();
     }
+    #endif
 
     if(!notAligned){
         dataMem.write_dword(address, toWrite);
@@ -6332,14 +6368,14 @@ unsigned int leon3_funclt_trap::STD_reg::behavior(){
     stall(2);
 
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::STD_reg::replicate() const throw(){
-    return new STD_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new STD_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::STD_reg::getInstructionName() const throw(){
@@ -6371,14 +6407,11 @@ std::string leon3_funclt_trap::STD_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::STD_reg::STD_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::STD_reg::STD_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -6393,13 +6426,13 @@ unsigned int leon3_funclt_trap::ANDNcc_imm::behavior(){
 
     result = rs1_op & ~(SignExtend(simm13, 13));
     this->ICC_writeLogic(this->result);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::ANDNcc_imm::replicate() const throw(){
-    return new ANDNcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ANDNcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ANDNcc_imm::getInstructionName() const throw(){
@@ -6429,18 +6462,14 @@ std::string leon3_funclt_trap::ANDNcc_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ANDNcc_imm::ANDNcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::ANDNcc_imm::ANDNcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -6449,6 +6478,9 @@ leon3_funclt_trap::ANDNcc_imm::~ANDNcc_imm(){
 }
 unsigned int leon3_funclt_trap::TADDccTV_imm::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     rs1_op = rs1;
@@ -6463,15 +6495,15 @@ unsigned int leon3_funclt_trap::TADDccTV_imm::behavior(){
     this->ICC_writeTVAdd(this->result, this->temp_V, this->rs1_op, this->rs2_op);
 
     if(temp_V){
-        RaiseException(TAG_OVERFLOW);
+        RaiseException(pcounter, npcounter, TAG_OVERFLOW);
     }
-    this->WB_icctv(this->rd, this->rd_bit, this->result, this->temp_V);
+    this->WB_tv(this->rd, this->rd_bit, this->result, this->temp_V);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::TADDccTV_imm::replicate() const throw(){
-    return new TADDccTV_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new TADDccTV_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+        SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::TADDccTV_imm::getInstructionName() const throw(){
@@ -6502,18 +6534,14 @@ std::string leon3_funclt_trap::TADDccTV_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::TADDccTV_imm::TADDccTV_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeTVAdd_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icctv_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, \
-    FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, \
-    Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::TADDccTV_imm::TADDccTV_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeTVAdd_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_tv_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, \
+    WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -6522,13 +6550,16 @@ leon3_funclt_trap::TADDccTV_imm::~TADDccTV_imm(){
 }
 unsigned int leon3_funclt_trap::WRITEtbr_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     result = rs1 ^ rs2;
     raiseException = (PSR[key_S] == 0);
 
     if(raiseException){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
 
     if(!raiseException){
@@ -6538,8 +6569,8 @@ unsigned int leon3_funclt_trap::WRITEtbr_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::WRITEtbr_reg::replicate() const throw(){
-    return new WRITEtbr_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new WRITEtbr_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+        SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::WRITEtbr_reg::getInstructionName() const throw(){
@@ -6569,14 +6600,12 @@ std::string leon3_funclt_trap::WRITEtbr_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::WRITEtbr_reg::WRITEtbr_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::WRITEtbr_reg::WRITEtbr_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -6590,14 +6619,18 @@ unsigned int leon3_funclt_trap::SUBX_reg::behavior(){
     rs1_op = rs1;
     rs2_op = rs2;
 
-    result = rs1_op - rs2_op - PSRbp[key_ICC_c];
+    #ifndef ACC_MODEL
+    result = rs1_op - rs2_op - PSR[key_ICC_c];
+    #else
+    result = rs1_op - rs2_op - PSR_execute[key_ICC_c];
+    #endif
     this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SUBX_reg::replicate() const throw(){
-    return new SUBX_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SUBX_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SUBX_reg::getInstructionName() const throw(){
@@ -6628,16 +6661,13 @@ std::string leon3_funclt_trap::SUBX_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SUBX_reg::SUBX_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SUBX_reg::SUBX_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -6656,8 +6686,8 @@ unsigned int leon3_funclt_trap::XNOR_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::XNOR_imm::replicate() const throw(){
-    return new XNOR_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new XNOR_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::XNOR_imm::getInstructionName() const throw(){
@@ -6687,16 +6717,13 @@ std::string leon3_funclt_trap::XNOR_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::XNOR_imm::XNOR_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::XNOR_imm::XNOR_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -6705,6 +6732,9 @@ leon3_funclt_trap::XNOR_imm::~XNOR_imm(){
 }
 unsigned int leon3_funclt_trap::UDIV_imm::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     rs1_op = rs1;
@@ -6712,8 +6742,13 @@ unsigned int leon3_funclt_trap::UDIV_imm::behavior(){
 
     exception = rs2_op == 0;
     if(!exception){
-        unsigned long long res64 = ((unsigned long long)((((unsigned long long)Ybp) << 32) \
+        #ifndef ACC_MODEL
+        unsigned long long res64 = ((unsigned long long)((((unsigned long long)Y) << 32) \
             | (unsigned long long)rs1_op))/(unsigned long long)rs2_op;
+        #else
+        unsigned long long res64 = ((unsigned long long)((((unsigned long long)Y_execute) \
+            << 32) | (unsigned long long)rs1_op))/(unsigned long long)rs2_op;
+        #endif
         temp_V = (res64 & 0xFFFFFFFF00000000LL) != 0;
         if(temp_V){
             result = 0xFFFFFFFF;
@@ -6725,15 +6760,15 @@ unsigned int leon3_funclt_trap::UDIV_imm::behavior(){
     stall(35);
 
     if(exception){
-        RaiseException(DIV_ZERO);
+        RaiseException(pcounter, npcounter, DIV_ZERO);
     }
     this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::UDIV_imm::replicate() const throw(){
-    return new UDIV_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new UDIV_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::UDIV_imm::getInstructionName() const throw(){
@@ -6764,16 +6799,13 @@ std::string leon3_funclt_trap::UDIV_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::UDIV_imm::UDIV_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::UDIV_imm::UDIV_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, \
-    FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -6782,24 +6814,31 @@ leon3_funclt_trap::UDIV_imm::~UDIV_imm(){
 }
 unsigned int leon3_funclt_trap::LDSH_imm::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + SignExtend(simm13, 13);
 
     notAligned = (address & 0x00000001) != 0;
+    #ifdef ACC_MODEL
     if(notAligned){
         flush();
     }
+    #endif
 
     if(!notAligned){
         readValue = SignExtend(dataMem.read_half(address), 16);
     }
+    #ifdef ACC_MODEL
     else{
         flush();
     }
+    #endif
 
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
 
     rd = readValue;
@@ -6807,8 +6846,8 @@ unsigned int leon3_funclt_trap::LDSH_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LDSH_imm::replicate() const throw(){
-    return new LDSH_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LDSH_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LDSH_imm::getInstructionName() const throw(){
@@ -6838,14 +6877,11 @@ std::string leon3_funclt_trap::LDSH_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LDSH_imm::LDSH_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::LDSH_imm::LDSH_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -6854,15 +6890,18 @@ leon3_funclt_trap::LDSH_imm::~LDSH_imm(){
 }
 unsigned int leon3_funclt_trap::UNIMP::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
-    RaiseException(ILLEGAL_INSTR);
+    RaiseException(pcounter, npcounter, ILLEGAL_INSTR);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::UNIMP::replicate() const throw(){
-    return new UNIMP(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new UNIMP(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::UNIMP::getInstructionName() const throw(){
@@ -6886,14 +6925,11 @@ std::string leon3_funclt_trap::UNIMP::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::UNIMP::UNIMP( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 \
-    & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & \
-    Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::UNIMP::UNIMP( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 \
+    & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -6902,14 +6938,19 @@ leon3_funclt_trap::UNIMP::~UNIMP(){
 }
 unsigned int leon3_funclt_trap::LDSTUBA_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + rs2;
     supervisor = PSR[key_S];
 
+    #ifdef ACC_MODEL
     if(!supervisor){
         flush();
     }
+    #endif
 
     if(supervisor){
         readValue = dataMem.read_byte(address);
@@ -6921,7 +6962,7 @@ unsigned int leon3_funclt_trap::LDSTUBA_reg::behavior(){
     stall(2);
 
     if(!supervisor){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
 
     rd = readValue;
@@ -6929,8 +6970,8 @@ unsigned int leon3_funclt_trap::LDSTUBA_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LDSTUBA_reg::replicate() const throw(){
-    return new LDSTUBA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LDSTUBA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LDSTUBA_reg::getInstructionName() const throw(){
@@ -6964,14 +7005,12 @@ std::string leon3_funclt_trap::LDSTUBA_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LDSTUBA_reg::LDSTUBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::LDSTUBA_reg::LDSTUBA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -6987,17 +7026,17 @@ unsigned int leon3_funclt_trap::UMULcc_imm::behavior(){
 
     unsigned long long resultTemp = (unsigned long long)(((unsigned long long)((unsigned \
         int)rs1_op))*((unsigned long long)((unsigned int)rs2_op)));
-    Ybp = resultTemp >> 32;
+    Y = resultTemp >> 32;
     result = resultTemp & 0x00000000FFFFFFFF;
     stall(2);
     this->ICC_writeLogic(this->result);
-    this->WB_yicc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::UMULcc_imm::replicate() const throw(){
-    return new UMULcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new UMULcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::UMULcc_imm::getInstructionName() const throw(){
@@ -7027,18 +7066,14 @@ std::string leon3_funclt_trap::UMULcc_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::UMULcc_imm::UMULcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_yicc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, \
-    FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, \
-    Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::UMULcc_imm::UMULcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -7054,13 +7089,13 @@ unsigned int leon3_funclt_trap::ORcc_reg::behavior(){
 
     result = rs1_op | rs2_op;
     this->ICC_writeLogic(this->result);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::ORcc_reg::replicate() const throw(){
-    return new ORcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ORcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ORcc_reg::getInstructionName() const throw(){
@@ -7091,18 +7126,14 @@ std::string leon3_funclt_trap::ORcc_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ORcc_reg::ORcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::ORcc_reg::ORcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -7116,24 +7147,33 @@ unsigned int leon3_funclt_trap::MULScc_imm::behavior(){
     rs1_op = rs1;
     rs2_op = SignExtend(simm13, 13);
 
-    unsigned int yNew = (((unsigned int)Ybp) >> 1) | (rs1_op << 31);
-    rs1_op = ((PSRbp[key_ICC_n] ^ PSRbp[key_ICC_v]) << 31) | (((unsigned int)rs1_op) >> 1);
+    #ifndef ACC_MODEL
+    unsigned int yNew = (((unsigned int)Y) >> 1) | (rs1_op << 31);
+    #else
+    unsigned int yNew = (((unsigned int)Y_execute) >> 1) | (rs1_op << 31);
+    #endif
+    rs1_op = ((PSR[key_ICC_n] ^ PSR[key_ICC_v]) << 31) | (((unsigned int)rs1_op) >> 1);
     result = rs1_op;
-    if((Ybp & 0x00000001) != 0){
+    #ifndef ACC_MODEL
+    unsigned int yOld = Y;
+    #else
+    unsigned int yOld = Y_execute;
+    #endif
+    if((yOld & 0x00000001) != 0){
         result += rs2_op;
     }
     else{
         rs2_op = 0;
     }
-    Ybp = yNew;
+    Y = yNew;
     this->ICC_writeAdd(this->result, this->rs1_op, this->rs2_op);
-    this->WB_yicc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::MULScc_imm::replicate() const throw(){
-    return new MULScc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new MULScc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::MULScc_imm::getInstructionName() const throw(){
@@ -7163,18 +7203,14 @@ std::string leon3_funclt_trap::MULScc_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::MULScc_imm::MULScc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeAdd_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_yicc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, \
-    FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, \
-    Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::MULScc_imm::MULScc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeAdd_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -7190,13 +7226,13 @@ unsigned int leon3_funclt_trap::XORcc_reg::behavior(){
 
     result = rs1_op ^ rs2_op;
     this->ICC_writeLogic(this->result);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::XORcc_reg::replicate() const throw(){
-    return new XORcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new XORcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::XORcc_reg::getInstructionName() const throw(){
@@ -7227,18 +7263,14 @@ std::string leon3_funclt_trap::XORcc_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::XORcc_reg::XORcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
-    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::XORcc_reg::XORcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & \
+    TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -7258,8 +7290,8 @@ unsigned int leon3_funclt_trap::SUB_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::SUB_reg::replicate() const throw(){
-    return new SUB_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SUB_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SUB_reg::getInstructionName() const throw(){
@@ -7290,16 +7322,13 @@ std::string leon3_funclt_trap::SUB_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SUB_reg::SUB_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SUB_reg::SUB_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -7308,13 +7337,16 @@ leon3_funclt_trap::SUB_reg::~SUB_reg(){
 }
 unsigned int leon3_funclt_trap::WRITEwim_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     result = rs1 ^ rs2;
     raiseException = (PSR[key_S] == 0);
 
     if(raiseException){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
 
     if(!raiseException){
@@ -7324,8 +7356,8 @@ unsigned int leon3_funclt_trap::WRITEwim_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::WRITEwim_reg::replicate() const throw(){
-    return new WRITEwim_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new WRITEwim_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+        SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::WRITEwim_reg::getInstructionName() const throw(){
@@ -7355,14 +7387,12 @@ std::string leon3_funclt_trap::WRITEwim_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::WRITEwim_reg::WRITEwim_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::WRITEwim_reg::WRITEwim_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -7378,19 +7408,24 @@ unsigned int leon3_funclt_trap::UMAC_imm::behavior(){
 
     unsigned int resultTemp = ((unsigned int)rs1_op & 0x0000ffff)*((unsigned int)rs2_op \
         & 0x0000ffff);
-    unsigned long long resultAcc = ((((unsigned long long)(Ybp & 0x000000ff)) << 32) \
-        | (unsigned int)ASR18bp) + resultTemp;
-    Ybp = (resultAcc & 0x000000ff00000000LL) >> 32;
-    ASR18bp = resultAcc & 0x00000000FFFFFFFFLL;
+    #ifndef ACC_MODEL
+    unsigned long long resultAcc = ((((unsigned long long)(Y & 0x000000ff)) << 32) | \
+        (unsigned int)ASR[18]) + resultTemp;
+    #else
+    unsigned long long resultAcc = ((((unsigned long long)(Y_execute & 0x000000ff)) << \
+        32) | (unsigned int)ASR_execute[18]) + resultTemp;
+    #endif
+    Y = (resultAcc & 0x000000ff00000000LL) >> 32;
+    ASR[18] = resultAcc & 0x00000000FFFFFFFFLL;
     result = resultAcc & 0x00000000FFFFFFFFLL;
     stall(1);
-    this->WB_yasr(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::UMAC_imm::replicate() const throw(){
-    return new UMAC_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new UMAC_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::UMAC_imm::getInstructionName() const throw(){
@@ -7420,16 +7455,13 @@ std::string leon3_funclt_trap::UMAC_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::UMAC_imm::UMAC_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::UMAC_imm::UMAC_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_yasr_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -7450,13 +7482,13 @@ unsigned int leon3_funclt_trap::TSUBcc_reg::behavior(){
         temp_V = 1;
     }
     this->ICC_writeTSub(this->result, this->temp_V, this->rs1_op, this->rs2_op);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::TSUBcc_reg::replicate() const throw(){
-    return new TSUBcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new TSUBcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::TSUBcc_reg::getInstructionName() const throw(){
@@ -7487,18 +7519,14 @@ std::string leon3_funclt_trap::TSUBcc_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::TSUBcc_reg::TSUBcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeTSub_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::TSUBcc_reg::TSUBcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeTSub_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -7508,10 +7536,13 @@ leon3_funclt_trap::TSUBcc_reg::~TSUBcc_reg(){
 unsigned int leon3_funclt_trap::BRANCH::behavior(){
     this->totalInstrCycles = 0;
 
+    pcounter = PC;
+    npcounter = NPC;
+
     switch(cond){
         case 0x8:{
             // Branch Always
-            unsigned int targetPc = PC + 4*(SignExtend(disp22, 22));
+            unsigned int targetPc = pcounter + 4*(SignExtend(disp22, 22));
             #ifdef ACC_MODEL
             PC = targetPc;
             NPC = targetPc + 4;
@@ -7520,12 +7551,12 @@ unsigned int leon3_funclt_trap::BRANCH::behavior(){
             }
             #else
             if(a == 1){
-                PC = targetPc - 4;
-                NPC = targetPc;
+                PC = targetPc;
+                NPC = targetPc + 4;
             }
             else{
-                PC = NPC;
-                NPC = targetPc - 4;
+                PC = npcounter;
+                NPC = targetPc;
             }
             #endif
         break;}
@@ -7537,43 +7568,50 @@ unsigned int leon3_funclt_trap::BRANCH::behavior(){
             }
             #else
             if(a == 1){
-                PC = NPC + 4;
-                NPC += 8;
+                PC = npcounter + 4;
+                NPC = npcounter + 8;
             }
             else{
-                PC = NPC;
-                NPC += 4;
+                PC = npcounter;
+                NPC = npcounter + 4;
             }
             #endif
         break;}
         default:{
-            bool icc_z = PSRbp[key_ICC_z];
-            bool icc_n = PSRbp[key_ICC_n];
-            bool icc_v = PSRbp[key_ICC_v];
-            bool icc_c = PSRbp[key_ICC_c];
+            #ifndef ACC_MODEL
+            bool icc_z = PSR[key_ICC_z];
+            bool icc_n = PSR[key_ICC_n];
+            bool icc_v = PSR[key_ICC_v];
+            bool icc_c = PSR[key_ICC_c];
+            #else
+            bool icc_z = PSR_execute[key_ICC_z];
+            bool icc_n = PSR_execute[key_ICC_n];
+            bool icc_v = PSR_execute[key_ICC_v];
+            bool icc_c = PSR_execute[key_ICC_c];
+            #endif
             // All the other non-special situations
-            bool exec = ((cond == 0x9) && icc_z == 0) ||
-            ((cond == 0x1) && icc_z != 0) ||
-            ((cond == 0xa) && (icc_z == 0) && (icc_n == icc_v)) ||
-            ((cond == 0x2) && ((icc_z != 0) || (icc_n != icc_v))) ||
-            ((cond == 0xb) && icc_n == icc_v) ||
-            ((cond == 0x3) && icc_n != icc_v) ||
-            ((cond == 0xc) && (icc_c + icc_z) == 0) ||
-            ((cond == 0x4) && (icc_c + icc_z) > 0) ||
-            ((cond == 0xd) && icc_c == 0) ||
-            ((cond == 0x5) && icc_c != 0) ||
-            ((cond == 0xe) && icc_n == 0) ||
-            ((cond == 0x6) && icc_n != 0) ||
-            ((cond == 0xf) && icc_v == 0) ||
-            ((cond == 0x7) && icc_v != 0);
+            bool exec = ((cond == 0x9) && !icc_z) ||
+            ((cond == 0x1) && icc_z) ||
+            ((cond == 0xa) && !icc_z && (icc_n == icc_v)) ||
+            ((cond == 0x2) && (icc_z || (icc_n != icc_v))) ||
+            ((cond == 0xb) && (icc_n == icc_v)) ||
+            ((cond == 0x3) && (icc_n != icc_v)) ||
+            ((cond == 0xc) && !icc_c && !icc_z) ||
+            ((cond == 0x4) && (icc_c || icc_z)) ||
+            ((cond == 0xd) && !icc_c) ||
+            ((cond == 0x5) && icc_c) ||
+            ((cond == 0xe) && !icc_n) ||
+            ((cond == 0x6) && icc_n) ||
+            ((cond == 0xf) && !icc_v) ||
+            ((cond == 0x7) && icc_v);
             if(exec){
-                unsigned int targetPc = PC + 4*(SignExtend(disp22, 22));
+                unsigned int targetPc = pcounter + 4*(SignExtend(disp22, 22));
                 #ifdef ACC_MODEL
                 PC = targetPc;
                 NPC = targetPc + 4;
                 #else
-                PC = NPC;
-                NPC = targetPc - 4;
+                PC = npcounter;
+                NPC = targetPc;
                 #endif
             }
             else{
@@ -7581,14 +7619,14 @@ unsigned int leon3_funclt_trap::BRANCH::behavior(){
                     #ifdef ACC_MODEL
                     flush();
                     #else
-                    PC = NPC + 4;
-                    NPC += 8;
+                    PC = npcounter + 4;
+                    NPC = npcounter + 8;
                     #endif
                 }
                 #ifndef ACC_MODEL
                 else{
-                    PC = NPC;
-                    NPC += 4;
+                    PC = npcounter;
+                    NPC = npcounter + 4;
                 }
                 #endif
             }
@@ -7598,8 +7636,8 @@ unsigned int leon3_funclt_trap::BRANCH::behavior(){
 }
 
 Instruction * leon3_funclt_trap::BRANCH::replicate() const throw(){
-    return new BRANCH(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new BRANCH(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::BRANCH::getInstructionName() const throw(){
@@ -7680,13 +7718,11 @@ std::string leon3_funclt_trap::BRANCH::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::BRANCH::BRANCH( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::BRANCH::BRANCH( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 \
+    & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -7701,17 +7737,17 @@ unsigned int leon3_funclt_trap::SMULcc_reg::behavior(){
     rs2_op = rs2;
 
     long long resultTemp = (long long)(((long long)((int)rs1_op))*((long long)((int)rs2_op)));
-    Ybp = ((unsigned long long)resultTemp) >> 32;
+    Y = ((unsigned long long)resultTemp) >> 32;
     result = resultTemp & 0x00000000FFFFFFFF;
     stall(2);
     this->ICC_writeLogic(this->result);
-    this->WB_yicc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SMULcc_reg::replicate() const throw(){
-    return new SMULcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SMULcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SMULcc_reg::getInstructionName() const throw(){
@@ -7742,18 +7778,14 @@ std::string leon3_funclt_trap::SMULcc_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SMULcc_reg::SMULcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_yicc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, \
-    FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, \
-    Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::SMULcc_reg::SMULcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -7773,8 +7805,8 @@ unsigned int leon3_funclt_trap::SUB_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::SUB_imm::replicate() const throw(){
-    return new SUB_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SUB_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SUB_imm::getInstructionName() const throw(){
@@ -7804,16 +7836,13 @@ std::string leon3_funclt_trap::SUB_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SUB_imm::SUB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SUB_imm::SUB_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -7829,13 +7858,13 @@ unsigned int leon3_funclt_trap::ADDcc_reg::behavior(){
 
     result = rs1_op + rs2_op;
     this->ICC_writeAdd(this->result, this->rs1_op, this->rs2_op);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::ADDcc_reg::replicate() const throw(){
-    return new ADDcc_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ADDcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ADDcc_reg::getInstructionName() const throw(){
@@ -7866,18 +7895,14 @@ std::string leon3_funclt_trap::ADDcc_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ADDcc_reg::ADDcc_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
-    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeAdd_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::ADDcc_reg::ADDcc_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & \
+    TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeAdd_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -7897,8 +7922,8 @@ unsigned int leon3_funclt_trap::XOR_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::XOR_reg::replicate() const throw(){
-    return new XOR_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new XOR_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::XOR_reg::getInstructionName() const throw(){
@@ -7929,16 +7954,13 @@ std::string leon3_funclt_trap::XOR_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::XOR_reg::XOR_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::XOR_reg::XOR_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -7954,13 +7976,13 @@ unsigned int leon3_funclt_trap::SUBcc_imm::behavior(){
 
     result = rs1_op - rs2_op;
     this->ICC_writeSub(this->result, this->rs1_op, this->rs2_op);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SUBcc_imm::replicate() const throw(){
-    return new SUBcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SUBcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SUBcc_imm::getInstructionName() const throw(){
@@ -7990,18 +8012,14 @@ std::string leon3_funclt_trap::SUBcc_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SUBcc_imm::SUBcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
-    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeSub_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::SUBcc_imm::SUBcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & \
+    TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeSub_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -8010,6 +8028,9 @@ leon3_funclt_trap::SUBcc_imm::~SUBcc_imm(){
 }
 unsigned int leon3_funclt_trap::TADDccTV_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     rs1_op = rs1;
@@ -8024,15 +8045,15 @@ unsigned int leon3_funclt_trap::TADDccTV_reg::behavior(){
     this->ICC_writeTVAdd(this->result, this->temp_V, this->rs1_op, this->rs2_op);
 
     if(temp_V){
-        RaiseException(TAG_OVERFLOW);
+        RaiseException(pcounter, npcounter, TAG_OVERFLOW);
     }
-    this->WB_icctv(this->rd, this->rd_bit, this->result, this->temp_V);
+    this->WB_tv(this->rd, this->rd_bit, this->result, this->temp_V);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::TADDccTV_reg::replicate() const throw(){
-    return new TADDccTV_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new TADDccTV_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+        SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::TADDccTV_reg::getInstructionName() const throw(){
@@ -8064,18 +8085,14 @@ std::string leon3_funclt_trap::TADDccTV_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::TADDccTV_reg::TADDccTV_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeTVAdd_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icctv_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, \
-    FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, \
-    Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::TADDccTV_reg::TADDccTV_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeTVAdd_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_tv_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, \
+    WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -8084,6 +8101,9 @@ leon3_funclt_trap::TADDccTV_reg::~TADDccTV_reg(){
 }
 unsigned int leon3_funclt_trap::SDIV_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     rs1_op = rs1;
@@ -8091,8 +8111,13 @@ unsigned int leon3_funclt_trap::SDIV_reg::behavior(){
 
     exception = rs2_op == 0;
     if(!exception){
-        long long res64 = ((long long)((((unsigned long long)Ybp) << 32) | (unsigned long \
-            long)rs1_op))/((long long)((int)rs2_op));
+        #ifndef ACC_MODEL
+        long long res64 = ((long long)((((unsigned long long)Y) << 32) | (unsigned long long)rs1_op))/((long \
+            long)((int)rs2_op));
+        #else
+        long long res64 = ((long long)((((unsigned long long)Y_execute) << 32) | (unsigned \
+            long long)rs1_op))/((long long)((int)rs2_op));
+        #endif
         temp_V = (res64 & 0xFFFFFFFF80000000LL) != 0 && (res64 & 0xFFFFFFFF80000000LL) != \
             0xFFFFFFFF80000000LL;
         if(temp_V){
@@ -8110,15 +8135,15 @@ unsigned int leon3_funclt_trap::SDIV_reg::behavior(){
     stall(2);
 
     if(exception){
-        RaiseException(DIV_ZERO);
+        RaiseException(pcounter, npcounter, DIV_ZERO);
     }
     this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SDIV_reg::replicate() const throw(){
-    return new SDIV_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SDIV_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SDIV_reg::getInstructionName() const throw(){
@@ -8149,16 +8174,13 @@ std::string leon3_funclt_trap::SDIV_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SDIV_reg::SDIV_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SDIV_reg::SDIV_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, \
-    FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -8173,17 +8195,17 @@ unsigned int leon3_funclt_trap::SMULcc_imm::behavior(){
     rs2_op = SignExtend(simm13, 13);
 
     long long resultTemp = (long long)(((long long)((int)rs1_op))*((long long)((int)rs2_op)));
-    Ybp = ((unsigned long long)resultTemp) >> 32;
+    Y = ((unsigned long long)resultTemp) >> 32;
     result = resultTemp & 0x00000000FFFFFFFF;
     stall(2);
     this->ICC_writeLogic(this->result);
-    this->WB_yicc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SMULcc_imm::replicate() const throw(){
-    return new SMULcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SMULcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SMULcc_imm::getInstructionName() const throw(){
@@ -8213,18 +8235,14 @@ std::string leon3_funclt_trap::SMULcc_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SMULcc_imm::SMULcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_yicc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, \
-    FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, \
-    Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::SMULcc_imm::SMULcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -8233,13 +8251,16 @@ leon3_funclt_trap::SMULcc_imm::~SMULcc_imm(){
 }
 unsigned int leon3_funclt_trap::SWAP_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + rs2;
     toWrite = rd;
 
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
 
     if(notAligned){
@@ -8252,17 +8273,19 @@ unsigned int leon3_funclt_trap::SWAP_reg::behavior(){
     stall(2);
 
     notAligned = (address & 0x00000003) != 0;
+    #ifdef ACC_MODEL
     if(notAligned){
         flush();
     }
+    #endif
 
     rd = readValue;
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SWAP_reg::replicate() const throw(){
-    return new SWAP_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SWAP_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SWAP_reg::getInstructionName() const throw(){
@@ -8294,14 +8317,11 @@ std::string leon3_funclt_trap::SWAP_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SWAP_reg::SWAP_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SWAP_reg::SWAP_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -8315,14 +8335,18 @@ unsigned int leon3_funclt_trap::SUBX_imm::behavior(){
     rs1_op = rs1;
     rs2_op = SignExtend(simm13, 13);
 
-    result = rs1_op - rs2_op - PSRbp[key_ICC_c];
+    #ifndef ACC_MODEL
+    result = rs1_op - rs2_op - PSR[key_ICC_c];
+    #else
+    result = rs1_op - rs2_op - PSR_execute[key_ICC_c];
+    #endif
     this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SUBX_imm::replicate() const throw(){
-    return new SUBX_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SUBX_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SUBX_imm::getInstructionName() const throw(){
@@ -8352,16 +8376,13 @@ std::string leon3_funclt_trap::SUBX_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SUBX_imm::SUBX_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SUBX_imm::SUBX_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -8370,6 +8391,9 @@ leon3_funclt_trap::SUBX_imm::~SUBX_imm(){
 }
 unsigned int leon3_funclt_trap::STDA_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + rs2;
@@ -8382,9 +8406,11 @@ unsigned int leon3_funclt_trap::STDA_reg::behavior(){
     supervisor = PSR[key_S];
 
     notAligned = (address & 0x00000003) != 0;
+    #ifdef ACC_MODEL
     if(!supervisor || notAligned){
         flush();
     }
+    #endif
 
     if(supervisor || !notAligned){
         dataMem.write_dword(address, toWrite);
@@ -8395,17 +8421,17 @@ unsigned int leon3_funclt_trap::STDA_reg::behavior(){
     stall(1);
 
     if(!supervisor){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::STDA_reg::replicate() const throw(){
-    return new STDA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new STDA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::STDA_reg::getInstructionName() const throw(){
@@ -8439,14 +8465,11 @@ std::string leon3_funclt_trap::STDA_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::STDA_reg::STDA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::STDA_reg::STDA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -8462,19 +8485,24 @@ unsigned int leon3_funclt_trap::UMAC_reg::behavior(){
 
     unsigned int resultTemp = ((unsigned int)rs1_op & 0x0000ffff)*((unsigned int)rs2_op \
         & 0x0000ffff);
-    unsigned long long resultAcc = ((((unsigned long long)(Ybp & 0x000000ff)) << 32) \
-        | (unsigned int)ASR18bp) + resultTemp;
-    Ybp = (resultAcc & 0x000000ff00000000LL) >> 32;
-    ASR18bp = resultAcc & 0x00000000FFFFFFFFLL;
+    #ifndef ACC_MODEL
+    unsigned long long resultAcc = ((((unsigned long long)(Y & 0x000000ff)) << 32) | \
+        (unsigned int)ASR[18]) + resultTemp;
+    #else
+    unsigned long long resultAcc = ((((unsigned long long)(Y_execute & 0x000000ff)) << \
+        32) | (unsigned int)ASR_execute[18]) + resultTemp;
+    #endif
+    Y = (resultAcc & 0x000000ff00000000LL) >> 32;
+    ASR[18] = resultAcc & 0x00000000FFFFFFFFLL;
     result = resultAcc & 0x00000000FFFFFFFFLL;
     stall(1);
-    this->WB_yasr(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::UMAC_reg::replicate() const throw(){
-    return new UMAC_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new UMAC_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::UMAC_reg::getInstructionName() const throw(){
@@ -8505,16 +8533,13 @@ std::string leon3_funclt_trap::UMAC_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::UMAC_reg::UMAC_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::UMAC_reg::UMAC_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_yasr_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -8524,18 +8549,20 @@ leon3_funclt_trap::UMAC_reg::~UMAC_reg(){
 unsigned int leon3_funclt_trap::JUMP_imm::behavior(){
     this->totalInstrCycles = 0;
 
+    pcounter = PC;
+    npcounter = NPC;
+
     unsigned int jumpAddr = rs1 + SignExtend(simm13, 13);
     if((jumpAddr & 0x00000003) != 0){
         trapNotAligned = true;
     }
     else{
         trapNotAligned = false;
-        oldPC = PC - 4;
         #ifdef ACC_MODEL
         PC = jumpAddr;
         NPC = jumpAddr + 4;
         #else
-        PC = NPC;
+        PC = npcounter;
         NPC = jumpAddr;
         #endif
     }
@@ -8543,18 +8570,18 @@ unsigned int leon3_funclt_trap::JUMP_imm::behavior(){
     stall(2);
 
     if(trapNotAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
 
     if(!trapNotAligned){
-        rd = oldPC;
+        rd = pcounter;
     }
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::JUMP_imm::replicate() const throw(){
-    return new JUMP_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new JUMP_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::JUMP_imm::getInstructionName() const throw(){
@@ -8585,13 +8612,11 @@ std::string leon3_funclt_trap::JUMP_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::JUMP_imm::JUMP_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::JUMP_imm::JUMP_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -8606,16 +8631,16 @@ unsigned int leon3_funclt_trap::SMUL_reg::behavior(){
     rs2_op = rs2;
 
     long long resultTemp = (long long)(((long long)((int)rs1_op))*((long long)((int)rs2_op)));
-    Ybp = ((unsigned long long)resultTemp) >> 32;
+    Y = ((unsigned long long)resultTemp) >> 32;
     result = resultTemp & 0x00000000FFFFFFFF;
     stall(2);
-    this->WB_y(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SMUL_reg::replicate() const throw(){
-    return new SMUL_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SMUL_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SMUL_reg::getInstructionName() const throw(){
@@ -8646,16 +8671,13 @@ std::string leon3_funclt_trap::SMUL_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SMUL_reg::SMUL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SMUL_reg::SMUL_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_y_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -8670,13 +8692,13 @@ unsigned int leon3_funclt_trap::XORcc_imm::behavior(){
 
     result = rs1_op ^ SignExtend(simm13, 13);
     this->ICC_writeLogic(this->result);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::XORcc_imm::replicate() const throw(){
-    return new XORcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new XORcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::XORcc_imm::getInstructionName() const throw(){
@@ -8706,18 +8728,14 @@ std::string leon3_funclt_trap::XORcc_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::XORcc_imm::XORcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
-    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::XORcc_imm::XORcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & \
+    TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -8732,13 +8750,13 @@ unsigned int leon3_funclt_trap::ORNcc_imm::behavior(){
 
     result = rs1_op | ~(SignExtend(simm13, 13));
     this->ICC_writeLogic(this->result);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::ORNcc_imm::replicate() const throw(){
-    return new ORNcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ORNcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ORNcc_imm::getInstructionName() const throw(){
@@ -8768,18 +8786,14 @@ std::string leon3_funclt_trap::ORNcc_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ORNcc_imm::ORNcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
-    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::ORNcc_imm::ORNcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & \
+    TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -8788,24 +8802,33 @@ leon3_funclt_trap::ORNcc_imm::~ORNcc_imm(){
 }
 unsigned int leon3_funclt_trap::LDUBA_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + rs2;
     supervisor = PSR[key_S];
 
+    #ifdef ACC_MODEL
     if(!supervisor){
         flush();
     }
+    #endif
 
+    #ifdef ACC_MODEL
     if(!supervisor){
         flush();
     }
     else{
+        #endif
         readValue = dataMem.read_byte(address);
+        #ifdef ACC_MODEL
     }
+    #endif
 
     if(!supervisor){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
 
     rd = readValue;
@@ -8813,8 +8836,8 @@ unsigned int leon3_funclt_trap::LDUBA_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LDUBA_reg::replicate() const throw(){
-    return new LDUBA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LDUBA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LDUBA_reg::getInstructionName() const throw(){
@@ -8848,14 +8871,12 @@ std::string leon3_funclt_trap::LDUBA_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LDUBA_reg::LDUBA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
-    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::LDUBA_reg::LDUBA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & \
+    TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -8865,18 +8886,20 @@ leon3_funclt_trap::LDUBA_reg::~LDUBA_reg(){
 unsigned int leon3_funclt_trap::JUMP_reg::behavior(){
     this->totalInstrCycles = 0;
 
+    pcounter = PC;
+    npcounter = NPC;
+
     unsigned int jumpAddr = rs1 + rs2;
     if((jumpAddr & 0x00000003) != 0){
         trapNotAligned = true;
     }
     else{
         trapNotAligned = false;
-        oldPC = PC - 4;
         #ifdef ACC_MODEL
         PC = jumpAddr;
         NPC = jumpAddr + 4;
         #else
-        PC = NPC;
+        PC = npcounter;
         NPC = jumpAddr;
         #endif
     }
@@ -8884,18 +8907,18 @@ unsigned int leon3_funclt_trap::JUMP_reg::behavior(){
     stall(2);
 
     if(trapNotAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
 
     if(!trapNotAligned){
-        rd = oldPC;
+        rd = pcounter;
     }
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::JUMP_reg::replicate() const throw(){
-    return new JUMP_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new JUMP_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::JUMP_reg::getInstructionName() const throw(){
@@ -8927,13 +8950,11 @@ std::string leon3_funclt_trap::JUMP_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::JUMP_reg::JUMP_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::JUMP_reg::JUMP_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -8947,14 +8968,20 @@ unsigned int leon3_funclt_trap::ADDX_reg::behavior(){
     rs1_op = rs1;
     rs2_op = rs2;
 
-    result = rs1_op + rs2_op + PSRbp[key_ICC_c];
+    #ifndef ACC_MODEL
+    result = rs1_op + rs2_op + PSR[key_ICC_c];
+    #else
+    //I read the register of the execute stage since this
+    //is the one containing the bypass value
+    result = rs1_op + rs2_op + PSR_execute[key_ICC_c];
+    #endif
     this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::ADDX_reg::replicate() const throw(){
-    return new ADDX_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ADDX_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ADDX_reg::getInstructionName() const throw(){
@@ -8985,16 +9012,13 @@ std::string leon3_funclt_trap::ADDX_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ADDX_reg::ADDX_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::ADDX_reg::ADDX_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -9003,6 +9027,9 @@ leon3_funclt_trap::ADDX_reg::~ADDX_reg(){
 }
 unsigned int leon3_funclt_trap::UDIV_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     rs1_op = rs1;
@@ -9010,8 +9037,13 @@ unsigned int leon3_funclt_trap::UDIV_reg::behavior(){
 
     exception = rs2_op == 0;
     if(!exception){
-        unsigned long long res64 = ((unsigned long long)((((unsigned long long)Ybp) << 32) \
+        #ifndef ACC_MODEL
+        unsigned long long res64 = ((unsigned long long)((((unsigned long long)Y) << 32) \
             | (unsigned long long)rs1_op))/(unsigned long long)rs2_op;
+        #else
+        unsigned long long res64 = ((unsigned long long)((((unsigned long long)Y_execute) \
+            << 32) | (unsigned long long)rs1_op))/(unsigned long long)rs2_op;
+        #endif
         temp_V = (res64 & 0xFFFFFFFF00000000LL) != 0;
         if(temp_V){
             result = 0xFFFFFFFF;
@@ -9023,15 +9055,15 @@ unsigned int leon3_funclt_trap::UDIV_reg::behavior(){
     stall(35);
 
     if(exception){
-        RaiseException(DIV_ZERO);
+        RaiseException(pcounter, npcounter, DIV_ZERO);
     }
     this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::UDIV_reg::replicate() const throw(){
-    return new UDIV_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new UDIV_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::UDIV_reg::getInstructionName() const throw(){
@@ -9063,16 +9095,13 @@ std::string leon3_funclt_trap::UDIV_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::UDIV_reg::UDIV_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::UDIV_reg::UDIV_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, \
-    FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -9087,13 +9116,13 @@ unsigned int leon3_funclt_trap::XNORcc_imm::behavior(){
 
     result = rs1_op ^ ~(SignExtend(simm13, 13));
     this->ICC_writeLogic(this->result);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::XNORcc_imm::replicate() const throw(){
-    return new XNORcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new XNORcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::XNORcc_imm::getInstructionName() const throw(){
@@ -9123,18 +9152,14 @@ std::string leon3_funclt_trap::XNORcc_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::XNORcc_imm::XNORcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::XNORcc_imm::XNORcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -9143,13 +9168,14 @@ leon3_funclt_trap::XNORcc_imm::~XNORcc_imm(){
 }
 unsigned int leon3_funclt_trap::STBAR::behavior(){
     this->totalInstrCycles = 0;
+    this->IncrementPC();
 
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::STBAR::replicate() const throw(){
-    return new STBAR(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new STBAR(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::STBAR::getInstructionName() const throw(){
@@ -9174,13 +9200,11 @@ std::string leon3_funclt_trap::STBAR::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::STBAR::STBAR( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 \
-    & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & \
-    Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::STBAR::STBAR( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 \
+    & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -9189,28 +9213,37 @@ leon3_funclt_trap::STBAR::~STBAR(){
 }
 unsigned int leon3_funclt_trap::LDA_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + rs2;
     supervisor = PSR[key_S];
 
     notAligned = (address & 0x00000003) != 0;
+    #ifdef ACC_MODEL
     if(notAligned || !supervisor){
         flush();
     }
+    #endif
 
+    #ifdef ACC_MODEL
     if(notAligned || !supervisor){
         flush();
     }
     else{
+        #endif
         readValue = dataMem.read_word(address);
+        #ifdef ACC_MODEL
     }
+    #endif
 
     if(!supervisor){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
 
     rd = readValue;
@@ -9218,8 +9251,8 @@ unsigned int leon3_funclt_trap::LDA_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LDA_reg::replicate() const throw(){
-    return new LDA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LDA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LDA_reg::getInstructionName() const throw(){
@@ -9253,14 +9286,11 @@ std::string leon3_funclt_trap::LDA_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LDA_reg::LDA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::LDA_reg::LDA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -9269,6 +9299,9 @@ leon3_funclt_trap::LDA_reg::~LDA_reg(){
 }
 unsigned int leon3_funclt_trap::STHA_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + rs2;
@@ -9276,9 +9309,11 @@ unsigned int leon3_funclt_trap::STHA_reg::behavior(){
     supervisor = PSR[key_S];
 
     notAligned = (address & 0x00000001) != 0;
+    #ifdef ACC_MODEL
     if(!supervisor || notAligned){
         flush();
     }
+    #endif
 
     if(supervisor || !notAligned){
         dataMem.write_half(address, toWrite);
@@ -9289,17 +9324,17 @@ unsigned int leon3_funclt_trap::STHA_reg::behavior(){
     stall(1);
 
     if(!supervisor){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::STHA_reg::replicate() const throw(){
-    return new STHA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new STHA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::STHA_reg::getInstructionName() const throw(){
@@ -9333,14 +9368,11 @@ std::string leon3_funclt_trap::STHA_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::STHA_reg::STHA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::STHA_reg::STHA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -9349,6 +9381,9 @@ leon3_funclt_trap::STHA_reg::~STHA_reg(){
 }
 unsigned int leon3_funclt_trap::LDDA_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     #ifdef ACC_MODEL
@@ -9359,25 +9394,29 @@ unsigned int leon3_funclt_trap::LDDA_reg::behavior(){
     supervisor = PSR[key_S];
 
     notAligned = (address & 0x00000007) != 0;
+    #ifdef ACC_MODEL
     if(notAligned || !supervisor){
-        #ifdef ACC_MODEL
         REGS[rd_bit | 0x1].unlock();
-        #endif
         flush();
     }
+    #endif
 
+    #ifdef ACC_MODEL
     if(notAligned || !supervisor){
         flush();
     }
     else{
+        #endif
         readValue = dataMem.read_dword(address);
+        #ifdef ACC_MODEL
     }
+    #endif
 
     if(!supervisor){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
 
     if(rd_bit % 2 == 0){
@@ -9398,8 +9437,8 @@ unsigned int leon3_funclt_trap::LDDA_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LDDA_reg::replicate() const throw(){
-    return new LDDA_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LDDA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LDDA_reg::getInstructionName() const throw(){
@@ -9433,14 +9472,11 @@ std::string leon3_funclt_trap::LDDA_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LDDA_reg::LDDA_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::LDDA_reg::LDDA_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -9460,8 +9496,8 @@ unsigned int leon3_funclt_trap::SLL_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::SLL_reg::replicate() const throw(){
-    return new SLL_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SLL_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SLL_reg::getInstructionName() const throw(){
@@ -9492,16 +9528,13 @@ std::string leon3_funclt_trap::SLL_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SLL_reg::SLL_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SLL_reg::SLL_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -9510,27 +9543,56 @@ leon3_funclt_trap::SLL_reg::~SLL_reg(){
 }
 unsigned int leon3_funclt_trap::RESTORE_imm::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
+    result = rs1 + SignExtend(simm13, 13);
 
-    rs1_op = rs1;
-    rs2_op = SignExtend(simm13, 13);
-
-    result = rs1_op + rs2_op;
     okNewWin = IncrementRegWindow();
+    #ifdef ACC_MODEL
+    if(!okNewWin){
+        flush();
+    }
+    else{
+        rd.lock();
+    }
+    #endif
+
+    #ifdef ACC_MODEL
+    if(!okNewWin){
+        flush();
+    }
+    #endif
+
+    #ifdef ACC_MODEL
+    if(!okNewWin){
+        flush();
+    }
+    #endif
+
+    #ifdef ACC_MODEL
+    if(!okNewWin){
+        flush();
+    }
+    #endif
 
     if(!okNewWin){
-        RaiseException(WINDOW_UNDERFLOW);
+        RaiseException(pcounter, npcounter, WINDOW_UNDERFLOW);
     }
 
     if(okNewWin){
         rd = result;
+        #ifdef ACC_MODEL
+        unlockQueue[0].push_back(rd.getPipeReg());
+        #endif
     }
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::RESTORE_imm::replicate() const throw(){
-    return new RESTORE_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new RESTORE_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::RESTORE_imm::getInstructionName() const throw(){
@@ -9561,14 +9623,12 @@ std::string leon3_funclt_trap::RESTORE_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::RESTORE_imm::RESTORE_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::RESTORE_imm::RESTORE_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -9577,19 +9637,24 @@ leon3_funclt_trap::RESTORE_imm::~RESTORE_imm(){
 }
 unsigned int leon3_funclt_trap::LD_imm::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     address = rs1 + SignExtend(simm13, 13);
 
     notAligned = (address & 0x00000003) != 0;
+    #ifdef ACC_MODEL
     if(notAligned){
         flush();
     }
+    #endif
 
     readValue = dataMem.read_word(address);
 
     if(notAligned){
-        RaiseException(MEM_ADDR_NOT_ALIGNED);
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
 
     rd = readValue;
@@ -9597,8 +9662,8 @@ unsigned int leon3_funclt_trap::LD_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LD_imm::replicate() const throw(){
-    return new LD_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LD_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LD_imm::getInstructionName() const throw(){
@@ -9628,14 +9693,11 @@ std::string leon3_funclt_trap::LD_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LD_imm::LD_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::LD_imm::LD_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 \
+    & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -9645,39 +9707,52 @@ leon3_funclt_trap::LD_imm::~LD_imm(){
 unsigned int leon3_funclt_trap::TRAP_reg::behavior(){
     this->totalInstrCycles = 0;
 
-    // All the other non-special situations
+    pcounter = PC;
+    npcounter = NPC;
+
+    #ifndef ACC_MODEL
+    bool icc_z = PSR[key_ICC_z];
+    bool icc_n = PSR[key_ICC_n];
+    bool icc_v = PSR[key_ICC_v];
+    bool icc_c = PSR[key_ICC_c];
+    #else
+    bool icc_z = PSR_execute[key_ICC_z];
+    bool icc_n = PSR_execute[key_ICC_n];
+    bool icc_v = PSR_execute[key_ICC_v];
+    bool icc_c = PSR_execute[key_ICC_c];
+    #endif
     raiseException = (cond == 0x8) ||
-    ((cond == 0x9) && PSRbp[key_ICC_z] == 0) ||
-    ((cond == 0x1) && PSRbp[key_ICC_z] != 0) ||
-    ((cond == 0xa) && (PSRbp[key_ICC_z] == 0) && (PSRbp[key_ICC_n] == PSRbp[key_ICC_v])) ||
-    ((cond == 0x2) && ((PSRbp[key_ICC_z] != 0) || (PSRbp[key_ICC_n] != PSRbp[key_ICC_v]))) ||
-    ((cond == 0xb) && PSRbp[key_ICC_n] == PSRbp[key_ICC_v]) ||
-    ((cond == 0x3) && PSRbp[key_ICC_n] != PSRbp[key_ICC_v]) ||
-    ((cond == 0xc) && (PSRbp[key_ICC_c] + PSRbp[key_ICC_z]) == 0) ||
-    ((cond == 0x4) && (PSRbp[key_ICC_c] + PSRbp[key_ICC_z]) > 0) ||
-    ((cond == 0xd) && PSRbp[key_ICC_c] == 0) ||
-    ((cond == 0x5) && PSRbp[key_ICC_c] != 0) ||
-    ((cond == 0xe) && PSRbp[key_ICC_n] == 0) ||
-    ((cond == 0x6) && PSRbp[key_ICC_n] != 0) ||
-    ((cond == 0xf) && PSRbp[key_ICC_v] == 0) ||
-    ((cond == 0x7) && PSRbp[key_ICC_v] != 0);
+    ((cond == 0x9) && !icc_z) ||
+    ((cond == 0x1) && icc_z) ||
+    ((cond == 0xa) && !icc_z && (icc_n == icc_v)) ||
+    ((cond == 0x2) && (icc_z || (icc_n != icc_v))) ||
+    ((cond == 0xb) && (icc_n == icc_v)) ||
+    ((cond == 0x3) && (icc_n != icc_v)) ||
+    ((cond == 0xc) && !icc_c && !icc_z) ||
+    ((cond == 0x4) && (icc_c || icc_z)) ||
+    ((cond == 0xd) && !icc_c) ||
+    ((cond == 0x5) && icc_c) ||
+    ((cond == 0xe) && !icc_n) ||
+    ((cond == 0x6) && icc_n) ||
+    ((cond == 0xf) && !icc_v) ||
+    ((cond == 0x7) && icc_v);
 
     if(raiseException){
         stall(4);
-        RaiseException(TRAP_INSTRUCTION, (rs1 + rs2) & 0x0000007F);
+        RaiseException(pcounter, npcounter, TRAP_INSTRUCTION, (rs1 + rs2) & 0x0000007F);
     }
     #ifndef ACC_MODEL
     else{
-        PC = NPC;
-        NPC += 4;
+        PC = npcounter;
+        NPC = npcounter + 4;
     }
     #endif
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::TRAP_reg::replicate() const throw(){
-    return new TRAP_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new TRAP_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::TRAP_reg::getInstructionName() const throw(){
@@ -9757,13 +9832,11 @@ std::string leon3_funclt_trap::TRAP_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::TRAP_reg::TRAP_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::TRAP_reg::TRAP_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -9783,8 +9856,8 @@ unsigned int leon3_funclt_trap::LDUB_imm::behavior(){
 }
 
 Instruction * leon3_funclt_trap::LDUB_imm::replicate() const throw(){
-    return new LDUB_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new LDUB_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::LDUB_imm::getInstructionName() const throw(){
@@ -9814,14 +9887,11 @@ std::string leon3_funclt_trap::LDUB_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::LDUB_imm::LDUB_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::LDUB_imm::LDUB_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -9830,45 +9900,91 @@ leon3_funclt_trap::LDUB_imm::~LDUB_imm(){
 }
 unsigned int leon3_funclt_trap::RETT_reg::behavior(){
     this->totalInstrCycles = 0;
-    this->IncrementPC();
 
-    rs1_op = rs1;
-    rs2_op = rs2;
+    pcounter = PC;
+    npcounter = NPC;
+    this->IncrementPC();
+    targetAddr = rs1 + rs2;
+    newCwp = ((unsigned int)(PSR[key_CWP] + 1)) % NUM_REG_WIN;
     exceptionEnabled = PSR[key_ET];
     supervisor = PSR[key_S];
+    invalidWin = ((0x01 << (newCwp)) & WIM) != 0;
+    notAligned = (targetAddr & 0x00000003) != 0;
+    if(!exceptionEnabled && supervisor && !invalidWin && !notAligned){
+        #ifdef ACC_MODEL
+        PC = targetAddr;
+        NPC = targetAddr + 4;
+        #else
+        PC = npcounter;
+        NPC = targetAddr;
+        #endif
+    }
 
-    targetAddr = rs1_op + rs2_op;
-    newCwp = ((unsigned int)(PSR[key_CWP] + 1)) % NUM_REG_WIN;
-    stall(2);
+    #ifdef ACC_MODEL
+    if(exceptionEnabled || !supervisor || invalidWin || notAligned){
+        flush();
+    }
+    #endif
+
+    if(exceptionEnabled || !supervisor || invalidWin || notAligned){
+        flush();
+    }
+    else{
+        PSR.immediateWrite((PSR & 0xFFFFFF40) | (newCwp | 0x20 | (PSR[key_PS] << 7)));
+        stall(2);
+    }
+
+    #ifdef ACC_MODEL
+    if(exceptionEnabled || !supervisor || invalidWin || notAligned){
+        flush();
+    }
+    #endif
 
     if(exceptionEnabled){
         if(supervisor){
-            RaiseException(ILLEGAL_INSTR);
+            RaiseException(pcounter, npcounter, ILLEGAL_INSTR);
         }
         else{
-            RaiseException(PRIVILEDGE_INSTR);
+            RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
         }
     }
-    else if(!supervisor || ((0x01 << (newCwp)) & WIM) != 0 || (targetAddr & 0x00000003) \
-        != 0){
+    else if(!supervisor || invalidWin || notAligned){
         THROW_EXCEPTION("Invalid processor mode during execution of the RETT instruction \
             - supervisor: " << supervisor << " newCwp: " << std::hex << std::showbase << newCwp \
             << " targetAddr: " << std::hex << std::showbase << targetAddr);
     }
-    for(int i = 8; i < 32; i++){
-        REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (16*NUM_REG_WIN)]);
-    }
+    else{
+        #ifndef ACC_MODEL
+        //Functional model: we simply immediately update the alias
+        for(int i = 8; i < 32; i++){
+            REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (128)]);
+        }
+        #else
+        //Cycle accurate model: we have to update the alias using the pipeline register
+        //We update the aliases for this stage and for all the preceding ones (we are in the
+        //execute stage and we need to update fetch, decode, and register read and execute)
+        for(int i = 8; i < 32; i++){
+            REGS_fetch[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_decode[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_regs[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_execute[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_memory[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_exception[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+        }
+        #endif
 
-    PSRbp = (PSR & 0xFFFFFF40) | (newCwp | 0x20 | (PSR[key_PS] << 7));
-    PSR.immediateWrite(PSRbp);
-    PC = NPC;
-    NPC = targetAddr;
+    }
+    #ifdef ACC_MODEL
+    if(exceptionEnabled || !supervisor || invalidWin || notAligned){
+        flush();
+    }
+    #endif
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::RETT_reg::replicate() const throw(){
-    return new RETT_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new RETT_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::RETT_reg::getInstructionName() const throw(){
@@ -9897,14 +10013,11 @@ std::string leon3_funclt_trap::RETT_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::RETT_reg::RETT_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::RETT_reg::RETT_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -9913,6 +10026,9 @@ leon3_funclt_trap::RETT_reg::~RETT_reg(){
 }
 unsigned int leon3_funclt_trap::SDIVcc_imm::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     rs1_op = rs1;
@@ -9920,8 +10036,13 @@ unsigned int leon3_funclt_trap::SDIVcc_imm::behavior(){
 
     exception = rs2_op == 0;
     if(!exception){
-        long long res64 = ((long long)((((unsigned long long)Ybp) << 32) | (unsigned long \
-            long)rs1_op))/((long long)((int)rs2_op));
+        #ifndef ACC_MODEL
+        long long res64 = ((long long)((((unsigned long long)Y) << 32) | (unsigned long long)rs1_op))/((long \
+            long)((int)rs2_op));
+        #else
+        long long res64 = ((long long)((((unsigned long long)Y_execute) << 32) | (unsigned \
+            long long)rs1_op))/((long long)((int)rs2_op));
+        #endif
         temp_V = (res64 & 0xFFFFFFFF80000000LL) != 0 && (res64 & 0xFFFFFFFF80000000LL) != \
             0xFFFFFFFF80000000LL;
         if(temp_V){
@@ -9937,18 +10058,18 @@ unsigned int leon3_funclt_trap::SDIVcc_imm::behavior(){
         }
     }
     stall(2);
-    this->ICC_writeDiv(this->result, this->temp_V, this->rs1_op, this->rs2_op);
+    this->ICC_writeDiv(this->exception, this->result, this->temp_V);
 
     if(exception){
-        RaiseException(DIV_ZERO);
+        RaiseException(pcounter, npcounter, DIV_ZERO);
     }
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SDIVcc_imm::replicate() const throw(){
-    return new SDIVcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SDIVcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SDIVcc_imm::getInstructionName() const throw(){
@@ -9978,18 +10099,14 @@ std::string leon3_funclt_trap::SDIVcc_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SDIVcc_imm::SDIVcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeDiv_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, \
-    FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), WB_icc_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::SDIVcc_imm::SDIVcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeDiv_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -9998,27 +10115,56 @@ leon3_funclt_trap::SDIVcc_imm::~SDIVcc_imm(){
 }
 unsigned int leon3_funclt_trap::SAVE_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
+    result = rs1 + rs2;
 
-    rs1_op = rs1;
-    rs2_op = rs2;
-
-    result = rs1_op + rs2_op;
     okNewWin = DecrementRegWindow();
+    #ifdef ACC_MODEL
+    if(!okNewWin){
+        flush();
+    }
+    else{
+        rd.lock();
+    }
+    #endif
+
+    #ifdef ACC_MODEL
+    if(!okNewWin){
+        flush();
+    }
+    #endif
+
+    #ifdef ACC_MODEL
+    if(!okNewWin){
+        flush();
+    }
+    #endif
+
+    #ifdef ACC_MODEL
+    if(!okNewWin){
+        flush();
+    }
+    #endif
 
     if(!okNewWin){
-        RaiseException(WINDOW_OVERFLOW);
+        RaiseException(pcounter, npcounter, WINDOW_OVERFLOW);
     }
 
     if(okNewWin){
         rd = result;
+        #ifdef ACC_MODEL
+        unlockQueue[0].push_back(rd.getPipeReg());
+        #endif
     }
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::SAVE_reg::replicate() const throw(){
-    return new SAVE_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new SAVE_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::SAVE_reg::getInstructionName() const throw(){
@@ -10050,14 +10196,11 @@ std::string leon3_funclt_trap::SAVE_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::SAVE_reg::SAVE_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::SAVE_reg::SAVE_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -10077,8 +10220,8 @@ unsigned int leon3_funclt_trap::OR_reg::behavior(){
 }
 
 Instruction * leon3_funclt_trap::OR_reg::replicate() const throw(){
-    return new OR_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new OR_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::OR_reg::getInstructionName() const throw(){
@@ -10109,16 +10252,13 @@ std::string leon3_funclt_trap::OR_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::OR_reg::OR_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::OR_reg::OR_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 \
+    & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+    PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -10133,13 +10273,13 @@ unsigned int leon3_funclt_trap::ORcc_imm::behavior(){
 
     result = rs1_op | SignExtend(simm13, 13);
     this->ICC_writeLogic(this->result);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::ORcc_imm::replicate() const throw(){
-    return new ORcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ORcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ORcc_imm::getInstructionName() const throw(){
@@ -10169,18 +10309,14 @@ std::string leon3_funclt_trap::ORcc_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ORcc_imm::ORcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, \
-    Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 \
-    & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::ORcc_imm::ORcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, \
+    Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, \
-    ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -10190,24 +10326,25 @@ leon3_funclt_trap::ORcc_imm::~ORcc_imm(){
 unsigned int leon3_funclt_trap::CALL::behavior(){
     this->totalInstrCycles = 0;
 
-    unsigned int curPC = PC;
-    unsigned int target = curPC + (disp30 << 2);
-    oldPC = curPC - 4;
+    pcounter = PC;
+    npcounter = NPC;
+
+    unsigned int target = pcounter + (disp30 << 2);
     #ifdef ACC_MODEL
     PC = target;
     NPC = target + 4;
     #else
-    PC = NPC;
-    NPC = target - 4;
+    PC = npcounter;
+    NPC = target;
     #endif
 
-    REGS[15] = oldPC;
+    REGS[15] = pcounter;
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::CALL::replicate() const throw(){
-    return new CALL(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new CALL(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
+        REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::CALL::getInstructionName() const throw(){
@@ -10229,13 +10366,11 @@ std::string leon3_funclt_trap::CALL::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::CALL::CALL( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 \
-    & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & \
-    Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 \
-    * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, TLMMemory \
+leon3_funclt_trap::CALL::CALL( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 \
+    & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, \
+    Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, TLMMemory \
     & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, WIM, \
-    TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, \
-    instrMem, dataMem, irqAck){
+    TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -10244,6 +10379,9 @@ leon3_funclt_trap::CALL::~CALL(){
 }
 unsigned int leon3_funclt_trap::WRITEpsr_reg::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    npcounter = NPC;
     this->IncrementPC();
 
     // Note how we filter writes to EF and EC fields since we do not
@@ -10253,23 +10391,21 @@ unsigned int leon3_funclt_trap::WRITEpsr_reg::behavior(){
     illegalCWP = (result & 0x0000001f) >= NUM_REG_WIN;
 
     if(!(supervisorException || illegalCWP)){
-        PSRbp = result;
+        PSR = result;
     }
 
     if(supervisorException){
-        RaiseException(PRIVILEDGE_INSTR);
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
     if(illegalCWP){
-        RaiseException(ILLEGAL_INSTR);
+        RaiseException(pcounter, npcounter, ILLEGAL_INSTR);
     }
-
-    PSR = result;
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::WRITEpsr_reg::replicate() const throw(){
-    return new WRITEpsr_reg(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new WRITEpsr_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+        SP, PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::WRITEpsr_reg::getInstructionName() const throw(){
@@ -10299,14 +10435,12 @@ std::string leon3_funclt_trap::WRITEpsr_reg::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::WRITEpsr_reg::WRITEpsr_reg( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 \
-    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
+leon3_funclt_trap::WRITEpsr_reg::WRITEpsr_reg( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 \
+    & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck){
 
 }
 
@@ -10321,13 +10455,13 @@ unsigned int leon3_funclt_trap::ANDcc_imm::behavior(){
 
     result = rs1_op & SignExtend(simm13, 13);
     this->ICC_writeLogic(this->result);
-    this->WB_icc(this->rd, this->rd_bit, this->result);
+    this->WB_plain(this->rd, this->rd_bit, this->result);
     return this->totalInstrCycles;
 }
 
 Instruction * leon3_funclt_trap::ANDcc_imm::replicate() const throw(){
-    return new ANDcc_imm(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, \
-        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    return new ANDcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, \
+        PCR, REGS, instrMem, dataMem, irqAck);
 }
 
 std::string leon3_funclt_trap::ANDcc_imm::getInstructionName() const throw(){
@@ -10357,18 +10491,14 @@ std::string leon3_funclt_trap::ANDcc_imm::getMnemonic() const throw(){
     return oss.str();
 }
 
-leon3_funclt_trap::ANDcc_imm::ANDcc_imm( Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & \
-    WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, \
-    Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, \
-    Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * & REGS, \
-    TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
-    WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, \
-    REGS, instrMem, dataMem, irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, \
-    Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), \
-    WB_icc_op(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, \
-    LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IncrementPC_op(PSR, WIM, TBR, Y, PC, \
-    NPC, PSRbp, Ybp, ASR18bp, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, \
-    dataMem, irqAck){
+leon3_funclt_trap::ANDcc_imm::ANDcc_imm( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & \
+    TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 \
+    * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias \
+    * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck ) : Instruction(PSR, \
+    WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, \
+    irqAck), ICC_writeLogic_op(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, LR, \
+    SP, PCR, REGS, instrMem, dataMem, irqAck), WB_plain_op(PSR, WIM, TBR, Y, PC, NPC, \
+    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck){
 
 }
 
@@ -10383,12 +10513,26 @@ unsigned int leon3_funclt_trap::IRQ_IRQ_Instruction::behavior(){
     //(valid interrupt level). The we simply raise an exception and
     //acknowledge the IRQ on the irqAck port.
     // First of all I have to move to a new register window
-    unsigned int newCwp = ((unsigned int)(PSR[key_CWP] - 1)) % NUM_REG_WIN;
-    PSRbp = (PSR & 0xFFFFFFE0) | newCwp;
-    PSR.immediateWrite(PSRbp);
+    unsigned int newCwp = ((unsigned int)(PSR[key_CWP] - 1)) % 8;
+    PSR.immediateWrite((PSR & 0xFFFFFFE0) | newCwp);
+    #ifndef ACC_MODEL
+    //Functional model: we simply immediately update the alias
     for(int i = 8; i < 32; i++){
         REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (128)]);
     }
+    #else
+    //Cycle accurate model: we have to update the alias using the pipeline register
+    //We update the aliases for this stage and for all the preceding ones (we are in the
+    //execute stage and we need to update fetch, decode, and register read and execute)
+    for(int i = 8; i < 32; i++){
+        REGS_fetch[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+        REGS_decode[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+        REGS_regs[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+        REGS_execute[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+        REGS_memory[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+        REGS_exception[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+    }
+    #endif
 
     // Now I set the TBR
     TBR[key_TT] = 0x10 + IRQ;
@@ -10401,8 +10545,8 @@ unsigned int leon3_funclt_trap::IRQ_IRQ_Instruction::behavior(){
 }
 
 Instruction * leon3_funclt_trap::IRQ_IRQ_Instruction::replicate() const throw(){
-    return new IRQ_IRQ_Instruction(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, GLOBAL, \
-        WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck, this->IRQ);
+    return new IRQ_IRQ_Instruction(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, FP, \
+        LR, SP, PCR, REGS, instrMem, dataMem, irqAck, this->IRQ);
 }
 
 void leon3_funclt_trap::IRQ_IRQ_Instruction::setParams( const unsigned int & bitString \
@@ -10422,13 +10566,12 @@ unsigned int leon3_funclt_trap::IRQ_IRQ_Instruction::getId() const throw(){
     return (unsigned int)-1;
 }
 
-leon3_funclt_trap::IRQ_IRQ_Instruction::IRQ_IRQ_Instruction( Reg32_0_delay_3 & PSR, \
-    Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3_off_4 & PC, Reg32_3 & \
-    NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, RegisterBankClass & GLOBAL, \
-    Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias & LR, Alias & SP, Alias & \
-    PCR, Alias * & REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck, \
-    unsigned int & IRQ ) : Instruction(PSR, WIM, TBR, Y, PC, NPC, PSRbp, Ybp, ASR18bp, \
-    GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IRQ(IRQ){
+leon3_funclt_trap::IRQ_IRQ_Instruction::IRQ_IRQ_Instruction( Reg32_0 & PSR, Reg32_1 \
+    & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, Reg32_3 & NPC, RegisterBankClass \
+    & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias & FP, Alias & LR, Alias & SP, Alias \
+    & PCR, Alias * REGS, TLMMemory & instrMem, TLMMemory & dataMem, PinTLM_out_32 & irqAck, \
+    unsigned int & IRQ ) : Instruction(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, \
+    FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck), IRQ(IRQ){
 
 }
 

@@ -48,6 +48,8 @@
 #include <ToolsIf.hpp>
 #include <trap_utils.hpp>
 
+#define FUNC_MODEL
+#define LT_IF
 using namespace trap;
 namespace leon3_funclt_trap{
 

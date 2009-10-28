@@ -76,8 +76,9 @@ void leon3_funclt_trap::LEON3_ABIIf::waitInstrEnd() const throw(){
 void leon3_funclt_trap::LEON3_ABIIf::preCall() throw(){
 
     unsigned int newCwp = ((unsigned int)(PSR[key_CWP] - 1)) % 8;
-    PSRbp = (PSR & 0xFFFFFFE0) | newCwp;
-    PSR.immediateWrite(PSRbp);
+    PSR.immediateWrite((PSR & 0xFFFFFFE0) | newCwp);
+
+    //ABI model: we simply immediately update the alias
     for(int i = 8; i < 32; i++){
         REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (128)]);
     }
@@ -86,8 +87,9 @@ void leon3_funclt_trap::LEON3_ABIIf::preCall() throw(){
 void leon3_funclt_trap::LEON3_ABIIf::postCall() throw(){
 
     unsigned int newCwp = ((unsigned int)(PSR[key_CWP] + 1)) % 8;
-    PSRbp = (PSR & 0xFFFFFFE0) | newCwp;
-    PSR.immediateWrite(PSRbp);
+    PSR.immediateWrite((PSR & 0xFFFFFFE0) | newCwp);
+
+    //ABI model: we simply immediately update the alias
     for(int i = 8; i < 32; i++){
         REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (128)]);
     }
@@ -139,7 +141,7 @@ bool leon3_funclt_trap::LEON3_ABIIf::isRoutineExit( const InstructionBase * inst
 }
 
 unsigned char * leon3_funclt_trap::LEON3_ABIIf::getState() const throw(){
-    unsigned char * curState = new unsigned char[708];
+    unsigned char * curState = new unsigned char[696];
     unsigned char * curStateTemp = curState;
     *((unsigned int *)curStateTemp) = this->PSR.readNewValue();
     curStateTemp += 4;
@@ -152,12 +154,6 @@ unsigned char * leon3_funclt_trap::LEON3_ABIIf::getState() const throw(){
     *((unsigned int *)curStateTemp) = this->PC.readNewValue();
     curStateTemp += 4;
     *((unsigned int *)curStateTemp) = this->NPC.readNewValue();
-    curStateTemp += 4;
-    *((unsigned int *)curStateTemp) = this->PSRbp.readNewValue();
-    curStateTemp += 4;
-    *((unsigned int *)curStateTemp) = this->Ybp.readNewValue();
-    curStateTemp += 4;
-    *((unsigned int *)curStateTemp) = this->ASR18bp.readNewValue();
     curStateTemp += 4;
     *((unsigned int *)curStateTemp) = this->GLOBAL[0].readNewValue();
     curStateTemp += 4;
@@ -512,12 +508,6 @@ void leon3_funclt_trap::LEON3_ABIIf::setState( unsigned char * state ) throw(){
     curStateTemp += 4;
     this->NPC.immediateWrite(*((unsigned int *)curStateTemp));
     curStateTemp += 4;
-    this->PSRbp.immediateWrite(*((unsigned int *)curStateTemp));
-    curStateTemp += 4;
-    this->Ybp.immediateWrite(*((unsigned int *)curStateTemp));
-    curStateTemp += 4;
-    this->ASR18bp.immediateWrite(*((unsigned int *)curStateTemp));
-    curStateTemp += 4;
     this->GLOBAL[0].immediateWrite(*((unsigned int *)curStateTemp));
     curStateTemp += 4;
     this->GLOBAL[1].immediateWrite(*((unsigned int *)curStateTemp));
@@ -869,7 +859,7 @@ void leon3_funclt_trap::LEON3_ABIIf::setLR( const unsigned int & newValue ) thro
 }
 
 unsigned int leon3_funclt_trap::LEON3_ABIIf::readPC() const throw(){
-    return this->PC + -4;
+    return this->PC;
 }
 
 void leon3_funclt_trap::LEON3_ABIIf::setPC( const unsigned int & newValue ) throw(){
@@ -1056,7 +1046,7 @@ unsigned int leon3_funclt_trap::LEON3_ABIIf::readGDBReg( const unsigned int & gd
             return TBR;
         break;}
         case 68:{
-            return PC + -4;
+            return PC;
         break;}
         case 69:{
             return NPC;
@@ -1217,14 +1207,12 @@ leon3_funclt_trap::LEON3_ABIIf::~LEON3_ABIIf(){
 
 }
 leon3_funclt_trap::LEON3_ABIIf::LEON3_ABIIf( unsigned int & PROGRAM_LIMIT, MemoryInterface \
-    & dataMem, Reg32_0_delay_3 & PSR, Reg32_1_delay_3 & WIM, Reg32_2 & TBR, Reg32_3 & \
-    Y, Reg32_3_off_4 & PC, Reg32_3 & NPC, Reg32_0 & PSRbp, Reg32_3 & Ybp, Reg32_3 & ASR18bp, \
-    RegisterBankClass & GLOBAL, Reg32_3 * & WINREGS, Reg32_3 * & ASR, Alias & FP, Alias \
-    & LR, Alias & SP, Alias & PCR, Alias * & REGS, bool & instrExecuting, sc_event & \
-    instrEndEvent ) : PROGRAM_LIMIT(PROGRAM_LIMIT), dataMem(dataMem), PSR(PSR), WIM(WIM), \
-    TBR(TBR), Y(Y), PC(PC), NPC(NPC), PSRbp(PSRbp), Ybp(Ybp), ASR18bp(ASR18bp), GLOBAL(GLOBAL), \
-    WINREGS(WINREGS), ASR(ASR), FP(FP), LR(LR), SP(SP), PCR(PCR), REGS(REGS), instrExecuting(instrExecuting), \
-    instrEndEvent(instrEndEvent){
+    & dataMem, Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
+    Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
+    & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, bool & instrExecuting, sc_event \
+    & instrEndEvent ) : PROGRAM_LIMIT(PROGRAM_LIMIT), dataMem(dataMem), PSR(PSR), WIM(WIM), \
+    TBR(TBR), Y(Y), PC(PC), NPC(NPC), GLOBAL(GLOBAL), WINREGS(WINREGS), ASR(ASR), FP(FP), \
+    LR(LR), SP(SP), PCR(PCR), REGS(REGS), instrExecuting(instrExecuting), instrEndEvent(instrEndEvent){
     this->routineExitState = 0;
     this->routineEntryState = 0;
     std::vector<std::string> tempVec;

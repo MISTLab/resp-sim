@@ -48,6 +48,8 @@
 #include <ostream>
 #include <set>
 
+#define FUNC_MODEL
+#define LT_IF
 namespace leon3_funclt_trap{
 
     class Alias{
@@ -68,6 +70,9 @@ namespace leon3_funclt_trap{
         }
         void immediateWrite( const unsigned int & value ) throw();
         unsigned int readNewValue() throw();
+        inline Register * getReg() throw(){
+            return this->reg;
+        }
         unsigned int operator ~() throw();
         inline Alias & operator =( const unsigned int & other ) throw(){
             *this->reg = other;
