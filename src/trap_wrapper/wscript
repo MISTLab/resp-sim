@@ -96,6 +96,6 @@ for cur_namespace in trap_names:
     obj.uselib_local = 'systemc binutils'
     obj.include = 'scwrapper tlmwrapper'
     obj.templates = [
-        'trap::OSEmulator< unsigned int, 0 >'
+        'trap::OSEmulator< unsigned int>'
         ,'trap::ABIIf< unsigned int >'
     ]

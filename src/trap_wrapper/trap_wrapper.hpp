@@ -47,7 +47,6 @@
 
 #include <ToolsIf.hpp>
 #include <osEmulator.hpp>
-#include <osEmulatorCA.hpp>
 #include <syscCallB.hpp>
 
 #endif
