@@ -95,6 +95,7 @@ resp::ConcurrencyManager::ConcurrencyManager(std::string execName) : execName(ex
     //Constructor: there is not much to do
     //a part from se-setting the reentracy
     //variables
+    this->keys = -1;
     this->mallocMutex = -1;
     this->sfpMutex = -1;
     this->sinitMutex = -1;
@@ -124,6 +125,7 @@ void resp::ConcurrencyManager::reset(){
         resp::ConcurrencyManager::tlsData = NULL;
     }
     //Resetting instance variables
+    this->keys = -1;
     this->mallocMutex = -1;
     this->sfpMutex = -1;
     this->sinitMutex = -1;
@@ -132,6 +134,9 @@ void resp::ConcurrencyManager::reset(){
     this->existingAttr.clear();
     this->managedProc.clear();
     this->stacks.clear();
+    for(int i = 0; i < resp::ConcurrencyManager::SYSC_PRIO_MAX + 2; i++){
+        this->readyQueue[i].clear();
+    }
 }
 
 ///*******************************************************************
@@ -556,7 +561,7 @@ void resp::ConcurrencyManager::setStackSize(int attr, int stackSize){
 
     foundAttr->second->stackSize = stackSize;
 }
-unsigned int resp::ConcurrencyManager::getStackSize(int attr){
+unsigned int resp::ConcurrencyManager::getStackSize(int attr) const{
     std::map<int, AttributeEmu *>::const_iterator foundAttr = this->existingAttr.find(attr);
     if(foundAttr == this->existingAttr.end()){
         THROW_EXCEPTION("Cannot get stack for attribute " << attr << " unable to find it");
@@ -577,7 +582,7 @@ void resp::ConcurrencyManager::setPreemptive(int attr, int isPreemptive){
 
     foundAttr->second->preemptive = (isPreemptive == resp::ConcurrencyManager::SYSC_PREEMPTIVE);
 }
-int resp::ConcurrencyManager::getPreemptive(int attr){
+int resp::ConcurrencyManager::getPreemptive(int attr) const{
     std::map<int, AttributeEmu *>::const_iterator foundAttr = this->existingAttr.find(attr);
     if(foundAttr == this->existingAttr.end()){
         THROW_EXCEPTION("Cannot get stack for attribute " << attr << " unable to find it");
@@ -598,8 +603,8 @@ void resp::ConcurrencyManager::setSchedDeadline(int attr, unsigned int deadline)
 
     foundAttr->second->deadline = deadline;
 }
-unsigned int resp::ConcurrencyManager::getSchedDeadline(int attr){
-    std::map<int, AttributeEmu *>::iterator foundAttr = this->existingAttr.find(attr);
+unsigned int resp::ConcurrencyManager::getSchedDeadline(int attr) const{
+    std::map<int, AttributeEmu *>::const_iterator foundAttr = this->existingAttr.find(attr);
     if(foundAttr == this->existingAttr.end()){
         THROW_EXCEPTION("Cannot get scheduling deadline for attribute " << attr << " unable to find it");
     }
@@ -619,8 +624,8 @@ void resp::ConcurrencyManager::setSchedPrio(int attr, int priority){
 
     foundAttr->second->priority = priority;
 }
-int resp::ConcurrencyManager::getSchedPrio(int attr){
-    std::map<int, AttributeEmu *>::iterator foundAttr = this->existingAttr.find(attr);
+int resp::ConcurrencyManager::getSchedPrio(int attr) const{
+    std::map<int, AttributeEmu *>::const_iterator foundAttr = this->existingAttr.find(attr);
     if(foundAttr == this->existingAttr.end()){
         THROW_EXCEPTION("Cannot get priority for attribute " << attr << " unable to find it");
     }
@@ -640,8 +645,8 @@ void resp::ConcurrencyManager::setSchedPolicy(int attr, int policy){
 
     foundAttr->second->schedPolicy = policy;
 }
-int resp::ConcurrencyManager::getSchedPolicy(int attr){
-    std::map<int, AttributeEmu *>::iterator foundAttr = this->existingAttr.find(attr);
+int resp::ConcurrencyManager::getSchedPolicy(int attr) const{
+    std::map<int, AttributeEmu *>::const_iterator foundAttr = this->existingAttr.find(attr);
     if(foundAttr == this->existingAttr.end()){
         THROW_EXCEPTION("Cannot get scheduling policy for attribute " << attr << " unable to find it");
     }
@@ -649,29 +654,121 @@ int resp::ConcurrencyManager::getSchedPolicy(int attr){
     return foundAttr->second->schedPolicy;
 }
 
-int resp::ConcurrencyManager::getThreadSchePolicy(int threadId){
+int resp::ConcurrencyManager::getThreadSchePolicy(int threadId) const{
+    std::map<int, ThreadEmu *>::const_iterator foundThread = this->existingThreads.find(threadId);
+    if(foundThread == this->existingThreads.end()){
+        THROW_EXCEPTION("Cannot get scheduler policy for thread " << threadId << " unable to find it");
+    }
+    if(foundThread->second->attr != NULL){
+        return foundThread->second->attr->schedPolicy;
+    }
+    else{
+        return resp::ConcurrencyManager::SYSC_SCHED_RR;
+    }
 }
 void resp::ConcurrencyManager::setThreadSchePolicy(int threadId, int policy){
+    std::map<int, ThreadEmu *>::iterator foundThread = this->existingThreads.find(threadId);
+    if(foundThread == this->existingThreads.end()){
+        THROW_EXCEPTION("Cannot set scheduler policy for thread " << threadId << " unable to find it");
+    }
+    if(foundThread->second->attr != NULL){
+        foundThread->second->attr->schedPolicy = policy;
+    }
+    else{
+        // I have to create a new attribute and then I can set the scheduling
+        // policy
+        int newAttrId = 0;
+        if(this->existingAttr.size() > 0)
+            newAttrId = this->existingAttr.rbegin()->first + 1;
+        AttributeEmu * newAttr = new AttributeEmu();
+        foundThread->second->attr = newAttr;
+        newAttr->schedPolicy = policy;
+        this->existingAttr[newAttrId] = newAttr;
+    }
 }
 
-int resp::ConcurrencyManager::getThreadSchedPrio(int threadId){
+int resp::ConcurrencyManager::getThreadSchedPrio(int threadId) const{
+    std::map<int, ThreadEmu *>::const_iterator foundThread = this->existingThreads.find(threadId);
+    if(foundThread == this->existingThreads.end()){
+        THROW_EXCEPTION("Cannot get scheduler priority for thread " << threadId << " unable to find it");
+    }
+    if(foundThread->second->attr != NULL){
+        return foundThread->second->attr->priority;
+    }
+    else{
+        return resp::ConcurrencyManager::SYSC_PRIO_MIN;
+    }
 }
 void resp::ConcurrencyManager::setThreadSchedPrio(int threadId, int priority){
+    std::map<int, ThreadEmu *>::iterator foundThread = this->existingThreads.find(threadId);
+    if(foundThread == this->existingThreads.end()){
+        THROW_EXCEPTION("Cannot set scheduler priority for thread " << threadId << " unable to find it");
+    }
+    if(foundThread->second->attr != NULL){
+        foundThread->second->attr->priority = priority;
+    }
+    else{
+        // I have to create a new attribute and then I can set the scheduling
+        // priority
+        int newAttrId = 0;
+        if(this->existingAttr.size() > 0)
+            newAttrId = this->existingAttr.rbegin()->first + 1;
+        AttributeEmu * newAttr = new AttributeEmu();
+        foundThread->second->attr = newAttr;
+        newAttr->priority = priority;
+        this->existingAttr[newAttrId] = newAttr;
+    }
 }
 
-unsigned int resp::ConcurrencyManager::getThreadSchedDeadline(int threadId){
+unsigned int resp::ConcurrencyManager::getThreadSchedDeadline(int threadId) const{
+    std::map<int, ThreadEmu *>::const_iterator foundThread = this->existingThreads.find(threadId);
+    if(foundThread == this->existingThreads.end()){
+        THROW_EXCEPTION("Cannot get deadline for thread " << threadId << " unable to find it");
+    }
+    if(foundThread->second->attr != NULL){
+        return foundThread->second->attr->deadline;
+    }
+    else{
+        return 0;
+    }
 }
 void resp::ConcurrencyManager::setThreadSchedDeadline(int threadId, unsigned int deadline){
+    std::map<int, ThreadEmu *>::iterator foundThread = this->existingThreads.find(threadId);
+    if(foundThread == this->existingThreads.end()){
+        THROW_EXCEPTION("Cannot set scheduler deadline for thread " << threadId << " unable to find it");
+    }
+    if(foundThread->second->attr != NULL){
+        foundThread->second->attr->deadline = deadline;
+    }
+    else{
+        // I have to create a new attribute and then I can set the scheduling
+        // deadline
+        int newAttrId = 0;
+        if(this->existingAttr.size() > 0)
+            newAttrId = this->existingAttr.rbegin()->first + 1;
+        AttributeEmu * newAttr = new AttributeEmu();
+        foundThread->second->attr = newAttr;
+        newAttr->deadline = deadline;
+        this->existingAttr[newAttrId] = newAttr;
+    }
 }
 
-int resp::ConcurrencyManager::getThreadId(unsigned int procId){
+int resp::ConcurrencyManager::getThreadId(unsigned int procId) const{
+    std::map<unsigned int, Processor<unsigned int> >::const_iterator curProcIter = this->managedProc.find(procId);
+    if(curProcIter == this->managedProc.end())
+        THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
+
+    return curProcIter->second.runThread->id;
 }
 
 int resp::ConcurrencyManager::createKey(){
+    //TODO: per key destructors are not yet considered!!!!!!!
+    this->keys++;
+    return this->keys;
 }
 void resp::ConcurrencyManager::setSpecific(unsigned int procId, int key, unsigned int memArea){
 }
-unsigned int resp::ConcurrencyManager::getSpecific(unsigned int procId, int key){
+unsigned int resp::ConcurrencyManager::getSpecific(unsigned int procId, int key) const{
 }
 
 void resp::ConcurrencyManager::join(int thId, unsigned int procId, int curThread_){
@@ -679,16 +776,19 @@ void resp::ConcurrencyManager::join(int thId, unsigned int procId, int curThread
 void resp::ConcurrencyManager::joinAll(unsigned int procId){
 }
 
-std::pair<unsigned int, unsigned int> resp::ConcurrencyManager::readTLS(unsigned int procId){
+std::pair<unsigned int, unsigned int> resp::ConcurrencyManager::readTLS(unsigned int procId) const{
 }
 void resp::ConcurrencyManager::idleLoop(unsigned int procId){
 }
 
 void resp::ConcurrencyManager::pushCleanupHandler(unsigned int procId, unsigned int routineAddress, unsigned int arg){
+    THROW_EXCEPTION("Error function " << __PRETTY_FUNCTION__ << " not yet implemented");
 }
 void resp::ConcurrencyManager::popCleanupHandler(unsigned int procId, bool execute){
+    THROW_EXCEPTION("Error function " << __PRETTY_FUNCTION__ << " not yet implemented");
 }
 void resp::ConcurrencyManager::execCleanupHandlerTop(unsigned int procId){
+    THROW_EXCEPTION("Error function " << __PRETTY_FUNCTION__ << " not yet implemented");
 }
 
 ///*********** Mutex related routines *******************

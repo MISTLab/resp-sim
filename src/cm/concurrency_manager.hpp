@@ -191,6 +191,8 @@ class ConcurrencyManager{
         ///Stard address and size of the thread stacks (of course there is no
         ///way of determining if a thread has grown over its stack)
         std::map<unsigned int, unsigned int> stacks;
+        ///Keeps track of all the keys used to associate a memory area with each thread (if needed)
+        int keys;
         ///SystemC mutex variables used to maintain synchronization
         ///among the different sc_treads
         SysCLock schedLock;
@@ -287,39 +289,39 @@ class ConcurrencyManager{
         void deleteThreadAttr(int attr);
 
         void setStackSize(int attr, int stackSize);
-        unsigned int getStackSize(int attr);
+        unsigned int getStackSize(int attr) const;
 
         void setPreemptive(int attr, int isPreemptive);
-        int getPreemptive(int attr);
+        int getPreemptive(int attr) const;
 
         void setSchedDeadline(int attr, unsigned int deadline);
-        unsigned int getSchedDeadline(int attr);
+        unsigned int getSchedDeadline(int attr) const;
 
         void setSchedPrio(int attr, int priority);
-        int getSchedPrio(int attr);
+        int getSchedPrio(int attr) const;
 
         void setSchedPolicy(int attr, int policy);
-        int getSchedPolicy(int attr);
+        int getSchedPolicy(int attr) const;
 
-        int getThreadSchePolicy(int threadId);
+        int getThreadSchePolicy(int threadId) const;
         void setThreadSchePolicy(int threadId, int policy);
 
-        int getThreadSchedPrio(int threadId);
+        int getThreadSchedPrio(int threadId) const;
         void setThreadSchedPrio(int threadId, int priority);
 
-        unsigned int getThreadSchedDeadline(int threadId);
+        unsigned int getThreadSchedDeadline(int threadId) const;
         void setThreadSchedDeadline(int threadId, unsigned int deadline);
 
-        int getThreadId(unsigned int procId);
+        int getThreadId(unsigned int procId) const;
 
         int createKey();
         void setSpecific(unsigned int procId, int key, unsigned int memArea);
-        unsigned int getSpecific(unsigned int procId, int key);
+        unsigned int getSpecific(unsigned int procId, int key) const;
 
         void join(int thId, unsigned int procId, int curThread_ = -1);
         void joinAll(unsigned int procId);
 
-        std::pair<unsigned int, unsigned int> readTLS(unsigned int procId);
+        std::pair<unsigned int, unsigned int> readTLS(unsigned int procId) const;
         void idleLoop(unsigned int procId);
 
         void pushCleanupHandler(unsigned int procId, unsigned int routineAddress, unsigned int arg);
