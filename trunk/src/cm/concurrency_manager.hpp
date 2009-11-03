@@ -191,6 +191,8 @@ class ConcurrencyManager{
         ///Stard address and size of the thread stacks (of course there is no
         ///way of determining if a thread has grown over its stack)
         std::map<unsigned int, unsigned int> stacks;
+        ///Associates thread specific information with the threads
+        std::map<std::pair<int, ThreadEmu *>, unsigned int> threadSpecific;
         ///Keeps track of all the keys used to associate a memory area with each thread (if needed)
         int keys;
         ///SystemC mutex variables used to maintain synchronization
@@ -318,8 +320,7 @@ class ConcurrencyManager{
         void setSpecific(unsigned int procId, int key, unsigned int memArea);
         unsigned int getSpecific(unsigned int procId, int key) const;
 
-        void join(int thId, unsigned int procId, int curThread_ = -1);
-        void joinAll(unsigned int procId);
+        void join(int thId, unsigned int procId);
 
         std::pair<unsigned int, unsigned int> readTLS(unsigned int procId) const;
         void idleLoop(unsigned int procId);
