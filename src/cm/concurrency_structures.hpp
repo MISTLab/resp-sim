@@ -92,8 +92,9 @@ struct ThreadEmu{
     bool setSyscRetVal;
 
     unsigned int retVal;
+    unsigned int joinedRetVal;
+    unsigned int joiningRetValAddr;
     std::vector<ThreadEmu *> joining;
-    int numJoined;
     std::vector<ExecutionTrace> execTrace;
     ExecutionTrace curTraceElem;
     //These two variables contains the value of the link register and the program counter when

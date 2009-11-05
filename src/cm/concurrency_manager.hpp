@@ -104,6 +104,8 @@ template <class wordSize> struct Processor{
     }
 
     void schedule(ThreadEmu * thread){
+        //TODO: ok, here, when scheduling the thread, we also have to remeber to
+        //set the thread returtn value in case it was joined!!
     }
     int deSchedule(bool saveStatus = true){
     }
@@ -320,7 +322,7 @@ class ConcurrencyManager{
         void setSpecific(unsigned int procId, int key, unsigned int memArea);
         unsigned int getSpecific(unsigned int procId, int key) const;
 
-        void join(int thId, unsigned int procId);
+        void join(int thId, unsigned int procId, unsigned int retValAddr);
 
         std::pair<unsigned int, unsigned int> readTLS(unsigned int procId) const;
         void idleLoop(unsigned int procId);
