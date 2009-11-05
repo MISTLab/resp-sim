@@ -489,37 +489,25 @@ void resp::ConcurrencyManager::exitThread(unsigned int procId, unsigned int retV
         //Finally I have to awake all the threads which were wating on a join on this thread
         std::vector<ThreadEmu *>::iterator joinIter, joinEnd;
         for(joinIter = this->existingThreads[th]->joining.begin(), joinEnd = this->existingThreads[th]->joining.end(); joinIter != joinEnd; joinIter++){
-            #ifndef NDEBUG
-            std::cerr << "Checking joined " << (*joinIter)->id << " joined on " << th << " waiting for the end of " << (*joinIter)->numJoined-1 << " others" << std::endl;
-            #endif
-            (*joinIter)->numJoined--;
-            if((*joinIter)->numJoined == 0){
-                (*joinIter)->status = ThreadEmu::READY;
-                //I add the thread to the queue of ready threads
-                int curPrio = 0;
-                if((*joinIter)->attr != NULL){
-                    if((*joinIter)->attr->schedPolicy == resp::ConcurrencyManager::SYSC_SCHED_EDF)
-                        curPrio = resp::ConcurrencyManager::SYSC_PRIO_MAX + 1;
-                    else
-                        curPrio = (*joinIter)->attr->priority;
-                }
-                this->readyQueue[curPrio].push_back(*joinIter);
-                if(curPrio == resp::ConcurrencyManager::SYSC_PRIO_MAX + 1)
-                    std::sort(this->readyQueue[curPrio].begin(), this->readyQueue[curPrio].end(), deadlineSort);
+            (*joinIter)->status = joinedRetVal = retVal;
+            (*joinIter)->status = ThreadEmu::READY;
+            //I add the thread to the queue of ready threads
+            int curPrio = 0;
+            if((*joinIter)->attr != NULL){
+                if((*joinIter)->attr->schedPolicy == resp::ConcurrencyManager::SYSC_SCHED_EDF)
+                    curPrio = resp::ConcurrencyManager::SYSC_PRIO_MAX + 1;
+                else
+                    curPrio = (*joinIter)->attr->priority;
             }
+            this->readyQueue[curPrio].push_back(*joinIter);
+            if(curPrio == resp::ConcurrencyManager::SYSC_PRIO_MAX + 1)
+                std::sort(this->readyQueue[curPrio].begin(), this->readyQueue[curPrio].end(), deadlineSort);
         }
         this->existingThreads[th]->joining.clear();
-
-        #ifndef NDEBUG
-        std::cerr << "Exiting thread " << th << " Return Value " << retVal << std::endl;
-        #endif
     }
     else{
         //It is an IRQ thread, so I can freely deallocate it and the corresponding attribute
         this->deleteThreadAttr(this->existingThreads[th]->attr->id);
-        #ifndef NDEBUG
-        std::cerr << "Exiting IRQ thread " << th << std::endl;
-        #endif
     }
 
     //Now I have to schedule a new thread on the just freed processor
@@ -798,24 +786,23 @@ unsigned int resp::ConcurrencyManager::getSpecific(unsigned int procId, int key)
     }
 }
 
-void resp::ConcurrencyManager::join(int thId, unsigned int procId){
-    //TODO: thread return values are not considered yet: join simply waits for the
-    //TODO: termination of a thread, but it does not manage its return value
-
+void resp::ConcurrencyManager::join(int thId, unsigned int procId, unsigned int retValAddr){
     //I have to check that thId has finished; in case I immediately return,  otherwise
     //I have to deschedule myself
     this->schedLock.lock();
 
+    std::map<unsigned int, Processor<unsigned int> >::iterator curProcIter = this->managedProc.find(procId);
+    if(curProcIter == this->managedProc.end())
+        THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
+
     if(this->existingThreads[thId]->status == ThreadEmu::DEAD){
-        //There is nothing to do since I do not consider the return value so far
-        ;
+        //There is nothing to do only set the thread return value
+        if(retValParam != 0){
+            curProcIter->second.processorInstance.writeMem(retValAddr, this->existingThreads[thId]->retVal);
+        }
     }
     else{
         //I have to deschedule this thread
-        std::map<unsigned int, Processor<unsigned int> >::iterator curProcIter = this->managedProc.find(procId);
-        if(curProcIter == this->managedProc.end())
-            THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
-
         int curThread = curProcIter->second.deSchedule();
         //Now I have to reschedule the other threads in the system
         ThreadEmu * readTh = this->findReadyThread();
@@ -824,6 +811,7 @@ void resp::ConcurrencyManager::join(int thId, unsigned int procId){
         }
         this->existingThreads[thId]->joining.push_back(this->existingThreads[curThread]);
         this->existingThreads[curThread]->numJoined++;
+        this->existingThreads[curThread]->joiningRetValAddr = retValAddr;
     }
 
     this->schedLock.unlock();
