@@ -489,7 +489,7 @@ void resp::ConcurrencyManager::exitThread(unsigned int procId, unsigned int retV
         //Finally I have to awake all the threads which were wating on a join on this thread
         std::vector<ThreadEmu *>::iterator joinIter, joinEnd;
         for(joinIter = this->existingThreads[th]->joining.begin(), joinEnd = this->existingThreads[th]->joining.end(); joinIter != joinEnd; joinIter++){
-            (*joinIter)->status = joinedRetVal = retVal;
+            (*joinIter)->joinedRetVal = retVal;
             (*joinIter)->status = ThreadEmu::READY;
             //I add the thread to the queue of ready threads
             int curPrio = 0;
@@ -797,7 +797,7 @@ void resp::ConcurrencyManager::join(int thId, unsigned int procId, unsigned int 
 
     if(this->existingThreads[thId]->status == ThreadEmu::DEAD){
         //There is nothing to do only set the thread return value
-        if(retValParam != 0){
+        if(retValAddr != 0){
             curProcIter->second.processorInstance.writeMem(retValAddr, this->existingThreads[thId]->retVal);
         }
     }
@@ -810,7 +810,6 @@ void resp::ConcurrencyManager::join(int thId, unsigned int procId, unsigned int 
             curProcIter->second.schedule(readTh);
         }
         this->existingThreads[thId]->joining.push_back(this->existingThreads[curThread]);
-        this->existingThreads[curThread]->numJoined++;
         this->existingThreads[curThread]->joiningRetValAddr = retValAddr;
     }
 
