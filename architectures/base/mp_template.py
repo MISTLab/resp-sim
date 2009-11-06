@@ -49,7 +49,7 @@ except:
 
 # Memory/bus
 MEMORY_SIZE       = 256           # MBytes
-MEM_LATENCY       = 10            # ns
+MEM_LATENCY       = 10.0            # ns
 
 
 # Software
