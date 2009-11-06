@@ -59,14 +59,19 @@ def build(bld):
     obj.custom_code = """
 OSEmulatorBase = mb.global_ns.class_('OSEmulatorBase')
 OSEmulatorBase.include()
+for attrName in ['env', 'heapPointer', 'programArgs', 'sysconfmap']:
+    OSEmulatorBase.variables(lambda decl: attrName in decl.name).exclude()
 tcls = mb.global_ns.classes(lambda decl: decl.name.startswith('ToolsIf'), allow_empty=True)
 for i in tcls:
     i.include()
-ocls = mb.global_ns.classes(lambda decl: decl.name.startswith('OSEmulator'), allow_empty=True)
+ocls = mb.global_ns.classes(lambda decl: decl.name.startswith('OSEmulator<'), allow_empty=True)
 for i in ocls:
     i.include()
     if i.name == 'OSEmulator<unsigned int>':
         i.alias = 'OSEmulator32'
+    for j in i.member_functions('initSysCalls'):
+        if len(j.arguments) > 2:
+            j.exclude()
 mb.global_ns.class_('ABIIf<unsigned int>').include()
 
 mb.global_ns.classes(lambda decl: decl.name.startswith('ToolsManager'), allow_empty=True).include()

@@ -299,7 +299,13 @@ class RespKernel:
         # and, at then end, I can instantiate controller and register the
         # callback for the end of simulation
         global controller
-        self.controller = sc_controller_wrapper.sc_controller.getController(interaction)
+        try:
+            self.controller = sc_controller_wrapper.sc_controller.getController(interaction)
+        except:
+            if interaction:
+                self.controller = sc_controller_wrapper.sc_controller.getController()
+            else:
+                self.controller = sc_controller_wrapper.sc_controller.getController(None)
         controller = self.controller
         from print_stats import print_stats_cb
         global eosCb
