@@ -49,7 +49,7 @@ import respkernel
 
 ####################      PROBES      ####################
 
-class probe():
+class probe:
     """ Probe
 
         A basic connection between variables and power models
