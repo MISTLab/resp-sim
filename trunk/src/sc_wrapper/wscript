@@ -59,46 +59,38 @@ def build(bld):
     obj.custom_declaration_code = '''
 namespace sandbox { namespace {
 
-    struct sc_module_name_to_python_str
-    {
-        static PyObject* convert(sc_module_name const& s)
-    {
-        return boost::python::incref(boost::python::object(std::string(s)).ptr());
-    }
-    };
-
-    struct sc_module_name_from_python_str
-    {
-        sc_module_name_from_python_str()
-    {
-    boost::python::converter::registry::push_back(
+    struct sc_module_name_from_python_str{
+        sc_module_name_from_python_str(){
+            boost::python::converter::registry::push_back(
                 &convertible,
                 &construct,
-                boost::python::type_id<sc_module_name>());
-    }
+                boost::python::type_id<sc_core::sc_module_name>());
+        }
 
-    static void* convertible(PyObject* obj_ptr)
-    {
-        if (!PyString_Check(obj_ptr)) return 0;
-        return obj_ptr;
-    }
+        static void* convertible(PyObject* obj_ptr){
+            if (PyString_CheckExact(obj_ptr) == 0 && PyString_Check(obj_ptr) == 0){
+                PyErr_Clear();
+                return 0;
+            }
+            return obj_ptr;
+        }
 
-    static void construct(
-    PyObject* obj_ptr,
-    boost::python::converter::rvalue_from_python_stage1_data* data)
-    {
-        const char* value = PyString_AsString(obj_ptr);
-        if (value == 0) boost::python::throw_error_already_set();
-        void* storage = (
-                        (boost::python::converter::rvalue_from_python_storage<sc_module_name>*)
+        static void construct(PyObject* obj_ptr,
+                        boost::python::converter::rvalue_from_python_stage1_data* data){
+            const char* value = PyString_AsString(obj_ptr);
+            if (value == 0){
+                boost::python::throw_error_already_set();
+            }
+            void* storage = (
+                        (boost::python::converter::rvalue_from_python_storage<sc_core::sc_module_name>*)
                         data)->storage.bytes;
-        new (storage) sc_module_name(value);
-        data->convertible = storage;
-    }
+            new (storage) sc_core::sc_module_name(value);
+            data->convertible = storage;
+        }
     };
 
-    void init_module()
-    {
+
+    void init_module(){
         using namespace boost::python;
         sc_module_name_from_python_str();
     }
@@ -121,6 +113,9 @@ for i in sc_classes:
 sc_enums = mb.global_ns.enumerations(lambda decl: decl.name.startswith('sc_'), allow_empty=True)
 for i in sc_enums:
     i.include()
+
+sc_module_name = mb.global_ns.class_('sc_module_name')
+sc_module_name.include()
 
 sc_module_decl = mb.global_ns.class_('sc_module')
 sc_module_decl.include()
