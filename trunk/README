@@ -1,15 +1,15 @@
-      ___           ___           ___           ___   
-     /  /\         /  /\         /  /\         /  /\  
-    /  /::\       /  /:/_       /  /:/_       /  /::\ 
+      ___           ___           ___           ___
+     /  /\         /  /\         /  /\         /  /\
+    /  /::\       /  /:/_       /  /:/_       /  /::\
    /  /:/\:\     /  /:/ /\     /  /:/ /\     /  /:/\:\
   /  /:/~/:/    /  /:/ /:/_   /  /:/ /::\   /  /:/~/:/
- /__/:/ /:/___ /__/:/ /:/ /\ /__/:/ /:/\:\ /__/:/ /:/ 
- \  \:\/:::::/ \  \:\/:/ /:/ \  \:\/:/~/:/ \  \:\/:/  
-  \  \::/~~~~   \  \::/ /:/   \  \::/ /:/   \  \::/   
-   \  \:\        \  \:\/:/     \__\/ /:/     \  \:\   
-    \  \:\        \  \::/        /__/:/       \  \:\  
-     \__\/         \__\/         \__\/         \__\/  
-     
+ /__/:/ /:/___ /__/:/ /:/ /\ /__/:/ /:/\:\ /__/:/ /:/
+ \  \:\/:::::/ \  \:\/:/ /:/ \  \:\/:/~/:/ \  \:\/:/
+  \  \::/~~~~   \  \::/ /:/   \  \::/ /:/   \  \::/
+   \  \:\        \  \:\/:/     \__\/ /:/     \  \:\
+    \  \:\        \  \::/        /__/:/       \  \:\
+     \__\/         \__\/         \__\/         \__\/
+
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -29,16 +29,17 @@
 
 Required Libraries/Languages:
  SystemC >= 2.2
- TLM = 2.0 Draft1
- Boost Libraries >= 1.33.1
- Boost.Python >= 1.33.1
+ TLM = 2.0
+ Boost Libraries >= 1.35
  Python >= 2.4
- gccxml >= 0.9.0
- Py++ >= 0.9.5
- pygccxml >= 0.9.5
+ gccxml >= 0.9 (CVS version preferred)
+ Py++ >= 1.5
+ pygccxml >= 1.5
+ TRAP (svn version, from http://code.google.com/p/trap-gen)
 
 
-In order to start the ReSP setup process, type "./setup.py" at the command prompt: this should start the installation wizard
-After ReSP is correctly installed, simply type "./startSim" at the command prompt.
+In order to start the ReSP setup process, type
+./waf configure --with-systemc=YOUR_SYSTEMC_FOLDER --with-tlm=YOUR_TLM_FOLDER --with-trap=YOUR_TRAP_FOLDER
 
-For more details on ReSP and on the installation process refer to https://trac.elet.polimi.it/resp/trac.cgi/downloader/download/file/29/ReSP-Overview.pdf
+For more details on ReSP and on the installation process refer to
+http://code.google.com/p/resp-sim/wiki/Setup
