@@ -106,7 +106,8 @@ public:
 
     /// Static method for the creation of the controller class; note that this is the only way
     ///of creating a controller since the real constructor is private
-    static sc_controller & getController(bool interactive = true);
+    static sc_controller & getController();
+    static sc_controller & getController(bool interactive);
 
     ///Resets the controller, destroying any object
     ///associated to it.

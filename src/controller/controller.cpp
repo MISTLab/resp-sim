@@ -166,6 +166,9 @@ sc_controller::~sc_controller(){
 
 /// Static method for the creation of the controller class; note that this is the only way
 ///of creating a controller since the real constructor is private
+sc_controller & sc_controller::getController(){
+    return sc_controller::getController(true);
+}
 sc_controller & sc_controller::getController(bool interactive){
     if(sc_controller::controllerInstance == NULL){
         sc_controller::controllerInstance = new sc_controller(interactive);
