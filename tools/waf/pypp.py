@@ -348,7 +348,11 @@ def detect(conf):
     try:
         if gccxml:
             #Now I check the version
-            version = os.popen(gccxml + ' 2>&1').readline().split()[2]
+            checkProgPipe = os.popen(gccxml + ' 2>&1')
+            version = checkProgPipe.readline().split()[2]
+            if checkProgPipe.close():
+                conf.check_message_custom('gccxml', '', 'Error in the setup, gccxml program does not run correctly', color='YELLOW')
+                conf.fatal("Configure Failed, please correctly re-install gccxml")            
             if int(version.split('.')[1]) < 9 and int(version.split('.')[0]) == 0:
                 conf.check_message_custom('gccxml version', '', 'Version ' + version, color='YELLOW')
                 conf.fatal("Configure Failed, please install at least version 0.9.0 of gccxml as described in the online documentation")
@@ -361,7 +365,11 @@ def detect(conf):
         conf.fatal("Configure Failed, please install gccxml as described in the online documentation")
     gccxmlpp = conf.find_program('gccxml_cc1plus', mandatory = 1)
     if gccxmlpp:
-        callResult = os.popen("echo \'int temp = 0;\' | " + gccxmlpp + ' 2>&1').read()
+        checkProgPipe = os.popen("echo \'int temp = 0;\' | " + gccxmlpp + ' 2>&1')
+        callResult = checkProgPipe.read()
+        if checkProgPipe.close():
+            conf.check_message_custom('gccxml_cc1plus', '', 'Error in the setup, gccxml_cc1plus program does not run correctly', color='YELLOW')
+            conf.fatal("Configure Failed, please correctly re-install gccxml")
         if 'Could not determine GCCXML_EXECUTABLE setting' in callResult:
             conf.check_message_custom('gccxml_cc1plus', '', 'Error in the setup, gccxml_cc1plus program does not run correctly', color='YELLOW')
             conf.fatal("Configure Failed, please correctly re-install gccxml")
