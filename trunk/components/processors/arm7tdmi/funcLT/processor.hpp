@@ -77,15 +77,13 @@
 #endif
 #endif
 
-#include <irqPorts.hpp>
-#include <externalPins.hpp>
 
 #define FUNC_MODEL
 #define LT_IF
 using namespace trap;
-namespace leon3_funclt_trap{
+namespace arm7tdmi_funclt_trap{
 
-    class LEON3Processor : public sc_module{
+    class ARM7Processor : public sc_module{
         private:
         Decoder decoder;
         tlm_utils::tlm_quantumkeeper quantKeeper;
@@ -94,32 +92,30 @@ namespace leon3_funclt_trap{
         static Instruction * * INSTRUCTIONS;
         template_map< unsigned int, CacheElem > instrCache;
         static int numInstances;
-        unsigned int IRQ;
 
         public:
-        SC_HAS_PROCESS( LEON3Processor );
-        LEON3Processor( sc_module_name name, sc_time latency );
+        SC_HAS_PROCESS( ARM7Processor );
+        ARM7Processor( sc_module_name name, sc_time latency );
         void mainLoop();
         void resetOp();
         void end_of_elaboration();
         Instruction * decode( unsigned int bitString );
-        LEON3_ABIIf * abiIf;
-        LEON3_ABIIf & getInterface();
+        ARM7TDMI_ABIIf * abiIf;
+        ARM7TDMI_ABIIf & getInterface();
         ToolsManager< unsigned int > toolManager;
-        Reg32_0 PSR;
-        Reg32_1 WIM;
-        Reg32_2 TBR;
-        Reg32_3 Y;
-        Reg32_3 PC;
-        Reg32_3 NPC;
-        RegisterBankClass GLOBAL;
-        Reg32_3 WINREGS[128];
-        Reg32_3 ASR[32];
+        Reg32_0 CPSR;
+        Reg32_1 MP_ID;
+        Reg32_1 RB[30];
+        Reg32_0 SPSR[5];
         Alias FP;
-        Alias LR;
-        Alias SP;
-        Alias PCR;
-        Alias REGS[32];
+        Alias SPTR;
+        Alias LINKR;
+        Alias SP_IRQ;
+        Alias LR_IRQ;
+        Alias SP_FIQ;
+        Alias LR_FIQ;
+        Alias PC;
+        Alias REGS[16];
         TLMMemory instrMem;
         TLMMemory dataMem;
         sc_time latency;
@@ -127,10 +123,7 @@ namespace leon3_funclt_trap{
         unsigned int ENTRY_POINT;
         unsigned int PROGRAM_LIMIT;
         unsigned int PROGRAM_START;
-        IntrTLMPort_32 IRQ_port;
-        PinTLM_out_32 irqAck;
-        IRQ_IRQ_Instruction * IRQ_irqInstr;
-        ~LEON3Processor();
+        ~ARM7Processor();
     };
 
 };

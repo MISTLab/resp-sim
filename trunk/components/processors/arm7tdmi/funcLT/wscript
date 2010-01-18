@@ -54,14 +54,12 @@ def build(bld):
         decoder.cpp
         memory.cpp
         externalPorts.cpp
-        externalPins.cpp
-        irqPorts.cpp
     """
     obj.uselib = 'BOOST BOOST_FILESYSTEM BOOST_THREAD SYSTEMC_H TLM TRAP'
     obj.uselib_local = 'systemc binutils utils'
     obj.includes = '.'
-    obj.name = 'leon3_funcLT'
-    obj.target = 'leon3_funcLT'
+    obj.name = 'arm7tdmi_funcLT'
+    obj.target = 'arm7tdmi_funcLT'
 
     obj = bld.new_task_gen('pypp')
     obj.source="""
@@ -69,13 +67,13 @@ def build(bld):
         memory.hpp
     """
     obj.uselib = 'BOOST BOOST_FILESYSTEM BOOST_THREAD SYSTEMC_H TLM TRAP BOOST_PYTHON'
-    obj.uselib_local = 'systemc leon3_funcLT binutils'
+    obj.uselib_local = 'systemc arm7tdmi_funcLT binutils'
     obj.includes = '.'
     obj.split = 10
-    obj.name = 'leon3_funcLT_wrapper'
-    obj.target = 'leon3_funcLT_wrapper'
+    obj.name = 'arm7tdmi_funcLT_wrapper'
+    obj.target = 'arm7tdmi_funcLT_wrapper'
     obj.include = 'scwrapper tlmwrapper trapwrapper'
-    obj.start_decls = 'leon3_funclt_trap'
+    obj.start_decls = 'arm7tdmi_funclt_trap'
     obj.custom_code = """
 for i in mb.global_ns.classes():
     for base in i.recursive_bases:
@@ -83,7 +81,7 @@ for i in mb.global_ns.classes():
             i.exclude()
             break
 mb.global_ns.class_('Instruction').exclude()
-mb.global_ns.class_('LEON3_ABIIf').constructors().exclude()
+mb.global_ns.class_('ARM7TDMI_ABIIf').constructors().exclude()
 
 mb.global_ns.class_('Register').exclude()
 mb.global_ns.class_('Register').ignore = False
@@ -91,6 +89,6 @@ mb.global_ns.class_('Alias').exclude()
 mb.global_ns.class_('Alias').ignore = False
 mb.global_ns.class_('InnerField').exclude()
 mb.global_ns.class_('InnerField').ignore = False
-mb.global_ns.class_('LEON3Processor').member_function('decode').exclude()
-mb.global_ns.class_('LEON3Processor').member_function('getInterface').call_policies = call_policies.return_value_policy( call_policies.reference_existing_object )
+mb.global_ns.class_('ARM7Processor').member_function('decode').exclude()
+mb.global_ns.class_('ARM7Processor').member_function('getInterface').call_policies = call_policies.return_value_policy( call_policies.reference_existing_object )
 """
