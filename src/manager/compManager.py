@@ -44,6 +44,7 @@
 architecture"""
 
 from connectionNode import ConnectionNode
+from respkernel import blddir
 import exceptions
 from exc import *
 import component
@@ -650,7 +651,8 @@ class ComponentManager:
         # the __build__/default/component string, then this is a component and I can list it
         # Note actually that the module containing the component is listed, not the class
         # defining the component itself
-        symbolNamespace = [self.archc]
+        ####symbolNamespace = [self.archc]
+        symbolNamespace = []
         symbolNamespace += self.components
         foundComponents = []
         for module in self.components:

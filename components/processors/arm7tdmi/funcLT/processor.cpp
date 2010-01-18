@@ -176,8 +176,6 @@ void arm7tdmi_funclt_trap::ARM7Processor::resetOp(){
 }
 
 void arm7tdmi_funclt_trap::ARM7Processor::end_of_elaboration(){
-	cout << "arm7eoe" << endl;
-	usleep(5000000);
     this->resetOp();
 }
 
@@ -397,8 +395,6 @@ arm7tdmi_funclt_trap::ARM7Processor::ARM7Processor( sc_module_name name, sc_time
 }
 
 arm7tdmi_funclt_trap::ARM7Processor::~ARM7Processor(){
-	cout << "arm7disruptor" << endl;
-	usleep(5000000);
     ARM7Processor::numInstances--;
     if(ARM7Processor::numInstances == 0){
         for(int i = 0; i < 76; i++){

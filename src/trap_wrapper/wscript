@@ -72,6 +72,11 @@ for i in ocls:
     for j in i.member_functions('initSysCalls'):
         if len(j.arguments) > 2:
             j.exclude()
+ocls = mb.global_ns.classes(lambda decl: decl.name.startswith('Profiler<'), allow_empty=True)
+for i in ocls:
+    i.include()
+    if i.name == 'Profiler<unsigned int>':
+        i.alias = 'Profiler32'
 mb.global_ns.class_('ABIIf<unsigned int>').include()
 
 mb.global_ns.classes(lambda decl: decl.name.startswith('ToolsManager'), allow_empty=True).include()
@@ -102,5 +107,6 @@ for cur_namespace in trap_names:
     obj.include = 'scwrapper tlmwrapper'
     obj.templates = [
         'trap::OSEmulator< unsigned int>'
+        ,'trap::Profiler< unsigned int>'
         ,'trap::ABIIf< unsigned int >'
     ]
