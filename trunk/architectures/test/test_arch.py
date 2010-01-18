@@ -45,11 +45,11 @@
 #Creation of the master and slave components; note how what we do is actually calling the constructor of the classes. The
 #call here is performed in python, and this in turn calls the C++ constructor. These python constructors indeed have
 #the same signature of the c++ ones
-instMaster = SimpleMaster.SimpleMaster('master')
-instSlave = SimpleSlave.SimpleSlave('slave')
+instMaster = testMaster_wrapper.testMaster('master')
+instSlave = testSlave_wrapper.testSlave('slave')
 
 #Connection of the ports: first we specify the source component and its ports; then the target component and its port.
-connectPortsForce(instMaster, instMaster.initiator_port, instSlave, instSlave.target_port)
+connectPortsForce(instMaster, instMaster.initSocket, instSlave, instSlave.targetSocket)
 
 #finally we start the simulation for 10 NS
 run_simulation(10)

@@ -47,6 +47,7 @@
 
 #include <ToolsIf.hpp>
 #include <osEmulator.hpp>
+#include <profiler.hpp>
 #include <syscCallB.hpp>
 
 #endif
