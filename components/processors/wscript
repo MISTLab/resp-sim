@@ -44,4 +44,4 @@
 # Build
 
 def build(bld):
-    bld.add_subdirs('leon3')
+    bld.add_subdirs('arm7tdmi arm9tdmi leon3')
