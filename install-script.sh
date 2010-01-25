@@ -68,13 +68,14 @@ sudo apt-get -y install libboost-dev
 sudo apt-get -y install doxygen
 
 # Update alternatives
-sudo update-alternatives --add /usr/bin/python python /usr/bin/python2.5 40
-sudo update-alternatives --add /usr/bin/python python /usr/bin/python2.6 10
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.5 40
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.6 10
 
 mkdir External_tools
 cd External_tools
 
 # Pyplusplus
+echo "Downloading py++, be patient!"
 #   pygccxml
 #       download/install
 svn co https://pygccxml.svn.sourceforge.net/svnroot/pygccxml/tags/pygccxml_dev_1.0.0 pygccxml
@@ -90,8 +91,8 @@ cd ..
 
 # libMOMH
 #   download
-wget http://download.gna.org/momh/libmomh-1.91.3.tar.gz
-tar xvzf http://download.gna.org/momh/libmomh-1.91.3.tar.gz
+wget http://www.jumpjoe.com/sysc/libmomh-1.91.3.tar.gz
+tar xvzf libmomh-1.91.3.tar.gz
 #   configure/install
 cd libmomh-1.91.3
 ./configure
@@ -124,3 +125,5 @@ cd ../..
 # Configure resp
 ./waf configure --with-systemc=External_tools/systemc-2.2.0 --with-tlm=External_tools/TLM2 --with-momh-header=/usr/local/include/libmomh
 ./waf -j 2
+
+cleanup
