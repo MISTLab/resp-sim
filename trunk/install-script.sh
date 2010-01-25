@@ -78,21 +78,21 @@ cd External_tools
 echo "Downloading py++, be patient!"
 #   pygccxml
 #       download/install
-svn co https://pygccxml.svn.sourceforge.net/svnroot/pygccxml/tags/pygccxml_dev_1.0.0 pygccxml
+svn co https://pygccxml.svn.sourceforge.net/svnroot/pygccxml/pygccxml_dev pygccxml
 cd pygccxml
 sudo python setup.py install
 cd ..
 #   py++
 #       download/install
-svn co https://pygccxml.svn.sourceforge.net/svnroot/pygccxml/tags/pyplusplus_dev_1.0.0 pyplusplus
+svn co https://pygccxml.svn.sourceforge.net/svnroot/pygccxml/pyplusplus_dev pyplusplus
 cd pyplusplus
 sudo python setup.py install
 cd ..
 
 # libMOMH
 #   download
-wget http://www.jumpjoe.com/sysc/libmomh-1.91.3.tar.gz
-tar xvzf libmomh-1.91.3.tar.gz
+wget http://www.jumpjoe.com/sysc/libmomh-1.91.3.tar.bz2
+tar xvzf libmomh-1.91.3.tar.bz2
 #   configure/install
 cd libmomh-1.91.3
 ./configure
@@ -119,11 +119,12 @@ svn checkout http://trap-gen.googlecode.com/svn/trunk/ trap-gen
 #   configure/install
 cd trap-gen
 ./waf configure --with-systemc=../systemc-2.2.0
+./waf
 sudo ./waf install
 cd ../..
 
 # Configure resp
 ./waf configure --with-systemc=External_tools/systemc-2.2.0 --with-tlm=External_tools/TLM2 --with-momh-header=/usr/local/include/libmomh
-./waf -j 2
+./waf
 
-cleanup
+#cleanup
