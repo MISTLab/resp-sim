@@ -86,7 +86,7 @@ cd ..
 # libMOMH
 #   download
 wget http://www.jumpjoe.com/sysc/libmomh-1.91.3.tar.bz2
-tar xvzf libmomh-1.91.3.tar.bz2
+tar xvjf libmomh-1.91.3.tar.bz2
 #   configure/install
 cd libmomh-1.91.3
 ./configure
