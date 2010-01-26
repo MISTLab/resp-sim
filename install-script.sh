@@ -53,19 +53,13 @@
 
 # Prerequisite packages
 #   GCC 4.2
-sudo apt-get -y install g++-4.2
+sudo apt-get -y install g++-4.2 libsigc++-2.0-dev python2.5 python2.5-dev subversion gccxml binutils-dev libboost-dev
 #   SVN
-sudo apt-get -y install subversion
-#   python
-sudo apt-get -y install python2.5
+#   python2.5 python2.5-dev
 #   gccxml
-sudo apt-get -y install gccxml
 #   binutils
-sudo apt-get -y install binutils-dev
 #   boost
-sudo apt-get -y install libboost-dev
 #   doxygen (sorry)
-sudo apt-get -y install doxygen
 
 # Update alternatives
 sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.5 40
