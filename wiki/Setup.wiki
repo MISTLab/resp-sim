@@ -1,6 +1,17 @@
 #summary This page contains the instruction on how to configure and compile the ReSP's sources
 #labels Featured,Phase-Deploy
 
+= Simplified installation for Ubuntu 9.10 Karmic Koala =
+
+Ubuntu 9.10 has all the proper versions of dependent software in its package repository. We provide a single script to collect all the dependent software and perform its installation.
+Prerequisites:
+  * You need to have administrator rights to perform the automatic installation. The script uses the standard "sudo" command, and will most likely require the input of your password only once
+  * You must have an active internet connection to download the required packages
+  * ReSP must have been downloaded from the SVN repository
+
+Installation:
+Simply run the script karmic-install.sh from the root of the ReSP tree.
+
 = Building and Installation Instruction =
 
 ReSP uses waf ([http://code.google.com/p/waf]) as build system; from a user point of view it is similar to the usual autotools
