@@ -153,6 +153,10 @@ for i in cls:
     i.include()
     for k in i.member_functions(allow_empty=True):
         k.exclude()
+        if k.name == 'bind':
+            k.include()
+        if k.name == 'size':
+            k.include()
 
 tlm_names = mb.namespaces(lambda x: x.name in ['tlm', 'tlm_utils'])
 for cur_namespace in tlm_names:

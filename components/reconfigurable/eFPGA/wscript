@@ -1,0 +1,29 @@
+#! /usr/bin/env python
+
+def build(bld):
+
+#    bld.add_subdirs('bitstreamSink')
+
+    obj = bld.new_task_gen('cxx', 'cshlib')
+    obj.source = '''
+        eFPGA.cpp
+        eFPGAAllocationTable.cpp
+        allocationFit.cpp
+    '''
+    obj.target = 'eFPGA'
+    obj.uselib='SYSTEMC_H TLM BOOST'
+    obj.uselib_local='systemc'
+
+    obj = bld.new_task_gen('pypp')
+    obj.source ='''
+        eFPGA.hpp
+    '''
+    obj.target = 'eFPGA_wrapper'
+    obj.uselib = 'SYSTEMC_H TLM BOOST BOOST_PYTHON'
+    obj.uselib_local = 'systemc eFPGA'
+    obj.include = 'scwrapper tlmwrapper'
+    obj.start_decls = 'eFPGA'
+    obj.custom_code = """
+mb.global_ns.class_('eFPGA').include()
+"""
+
