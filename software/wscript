@@ -1,0 +1,148 @@
+#!/usr/bin/env python
+
+import os
+import Options,Logs
+import Configure
+
+##############################################
+# System-wide cross compilation setup
+#
+# (this might be automated!)
+##############################################
+
+# General cross-compilation flags
+
+cross_cflags = '-g3 -specs=osemu.specs -fdata-sections -ffunction-sections'.split()
+cross_cxxflags =  cross_cflags
+cross_linkflags =  '-g3 -specs=osemu.specs -static -lm -Wl,--gc-sections'.split()
+
+# ECOS support flags
+
+ecos_config_path = os.path.join( 'software' , 'os' , 'eCos', 'configurations' )
+ecos_defines = ['-D__ECOS__', '-nostdlib' , '-fno-builtin']
+
+# Supported Instruction set architectures and associated processors
+#                           Architecture   :   Processors
+supported_architectures = {
+                            'arm'          :   [ 'arm7' ]
+                          , 'sparc'        :   [ 'leon2' ]
+#                          , 'mips'         :   [ 'mips1' ]
+#                          , 'nios'         :   [ 'nios' ]
+#                          , 'ppc'          :   [ 'powerpc', 'ppc405' ]
+                          }
+
+architecture_flags = {
+                            'arm'          :   ['-mcpu=arm7tdmi' ]
+                          , 'sparc'        :   [ '-mcpu=v8', '-msoft-float' ]
+                          , 'mips'         :   []
+                          , 'nios'         :   []
+                          , 'ppc'          :   []
+                          }
+
+# Build
+
+def build(bld):
+    folders = 'simple_benchmarks lib/pthread_stub'
+    bld.add_subdirs(folders)
+
+def set_options(opt):
+    opt.add_option('--software-flags', type='string', help='Additional compilation flags for benchmarks programs', dest='software_flags')
+    for arch in supported_architectures.keys():
+        # Location of the ARM cross-compiler
+        opt.add_option('--'+arch+'-compiler', type='string', help='Location of the '+arch.upper()+' cross-compiler', dest=arch+'_cross')
+
+
+def configure(conf):
+    conf.check_tool('gcc g++')
+
+    #########################################
+    # Select which variants are to be created
+    #########################################
+
+    active_variants =  []
+    processors = []
+
+    #########################################
+    # Scan all supported architectures
+    #########################################
+    for arch in supported_architectures.keys():
+        env_variant = conf.env.copy()
+
+        # Check if the compiler is present
+        cross = crosspp = path = None
+        try:
+            path = os.path.abspath(os.path.expanduser(getattr(Options.options,arch+'_cross')))
+            cross = conf.find_program(arch+'-elf-gcc', os.path.join(path, 'bin'))
+            crosspp = conf.find_program(arch+'-elf-g++', os.path.join(path, 'bin'))
+        except AttributeError:
+            # If the path was not specified look in the search PATH
+            cross = conf.find_program(arch+'-elf-gcc')
+            crosspp = conf.find_program(arch+'-elf-g++')
+
+        # Check if the compiler works with a test program
+        if cross or crosspp:
+            # Create variants for each cross-compiler
+            # Check if the compiler works
+            if Logs.verbose:
+                checkStr = 'cd build && echo  \"#include <stdlib.h>\nint main(){return 0;}\" | ' + cross + ' -x c ' + ' '.join(cross_cflags+architecture_flags[arch]) + ' - > /dev/null'
+                print checkStr
+            else:
+                checkStr = 'cd build && echo  \"#include <stdlib.h>\nint main(){return 0;}\" | ' + cross + ' -x c ' + ' '.join(cross_cflags+architecture_flags[arch]) + ' - > /dev/null 2>&1'
+
+            if os.system(checkStr) == 0:
+
+                # Create the variant and add the associated processors to the list to be built
+                active_variants.append(arch)
+                processors += supported_architectures[arch]
+                conf.set_env_name(arch, env_variant)
+                env_variant.set_variant(arch)
+
+                # Special treatment for AR and RANLIB (might be done better)
+                if path:
+                    env_variant['AR'] = os.path.join(path, 'bin', arch+'-elf-ar')
+                    env_variant['RANLIB'] = os.path.join(path, 'bin', arch+'-elf-ranlib')
+                else:
+                    env_variant['AR'] = arch+'-elf-ar'
+                    env_variant['RANLIB'] = arch+'-elf-ranlib'
+
+                # Use check_tool in the appropriate variant
+                conf.setenv( arch )
+                conf.check_tool( 'ar' )
+                #conf.setenv( 'default' )
+
+                # Set the build environment variables for the variant
+                env_variant['CC'] = env_variant['LINK_CC'] = cross
+                env_variant['CPPFLAGS'] = []
+                env_variant['CPPPATH'] = []
+                env_variant.append_unique('CPPPATH', '../software/os/myPosixLayer')
+                env_variant['CFLAGS'] = cross_cflags + architecture_flags[arch]
+                env_variant['CCFLAGS'] = env_variant['CFLAGS']
+                env_variant['LINKFLAGS'] = cross_linkflags
+                env_variant['FULLSTATIC'] = True
+                env_variant['LIB'] = []
+                env_variant['LIBPATH'] = []
+                if Options.options.software_flags:
+                    env_variant.append_unique('CFLAGS', Options.options.software_flags.split())
+                    env_variant.append_unique('CCFLAGS' , Options.options.software_flags.split())
+
+
+            else:
+                conf.check_message('configuration of',  arch+'-elf-gcc', False, 'Error in the configuration of the C cross-compiler, unable to produce executables')
+                raise Configure.ConfigurationError(crosspp + ' unable to create executables')
+
+            # Check for C++ compiler
+            if Logs.verbose:
+                checkStr = 'cd build && echo \"class itWorks{public: int a;}; int main(){itWorks c; c.a=3; return c.a;}\" | ' + crosspp + ' -x c++-cpp-output ' + ' '.join(cross_cxxflags+architecture_flags[arch]) + ' - > /dev/null'
+                print checkStr
+            else:
+                checkStr = 'cd build && echo \"class itWorks{public: int a;}; int main(){itWorks c; c.a=3; return c.a;}\" | ' + crosspp + ' -x c++-cpp-output ' + ' '.join(cross_cxxflags+architecture_flags[arch]) + ' - > /dev/null 2>&1'
+            if os.system(checkStr) == 0:
+                env_variant['CXX'] = env_variant['LINK_CXX'] = crosspp
+                env_variant['CXXFLAGS'] = cross_cxxflags + architecture_flags[arch]
+                if Options.options.software_flags:
+                    env_variant['CXXFLAGS'] += Options.options.software_flags.split()
+            else:
+                conf.check_message('configuration of',  arch+'-elf-g++', False, 'Error in the configuration of the C++ cross-compiler, unable to produce executables')
+                raise Configure.ConfigurationError(crosspp + ' unable to create executables')
+    # Add the processors needed to execute the variants
+    conf.env.append_unique('ENABLE_PROCESSORS' , [ a for a in processors if a not in conf.env['ENABLE_PROCESSORS']] )
