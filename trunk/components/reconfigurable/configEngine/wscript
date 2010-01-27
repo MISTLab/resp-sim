@@ -1,0 +1,45 @@
+#! /usr/bin/env python
+
+def build(bld):
+
+#    bld.add_subdirs('reconfEmulator')
+
+    obj = bld.new_task_gen('cxx', 'cshlib')
+    obj.source = '''
+        configEngine.cpp
+        cEAllocationTable.cpp
+	reconfCalls.cpp
+    '''
+    obj.target = 'configEngine'
+    obj.uselib='SYSTEMC_H TLM BOOST TRAP'
+    obj.uselib_local = 'systemc binutils utils'
+
+    obj = bld.new_task_gen('pypp')
+    obj.source ='''
+        configEngine.hpp
+        reconfEmulator.hpp
+    '''
+    obj.target = 'cE_wrapper'
+    obj.uselib = 'SYSTEMC_H TLM BOOST BOOST_PYTHON TRAP'
+    obj.uselib_local = 'systemc configEngine'
+    obj.include = 'scwrapper tlmwrapper trapwrapper'
+    obj.start_decls = 'configEngine reconfEmu'
+    obj.custom_code = """
+mb.global_ns.class_('configEngine').include()
+mb.global_ns.enumerations('deletionAlgorithm').include()
+cb = mb.global_ns.classes(lambda decl: decl.name.startswith('reconfCB<'), allow_empty=True)
+for i in cb:
+    i.include()
+    if i.name == 'reconfCB<unsigned int>':
+        i.alias = 'reconfCB32'
+cb = mb.global_ns.classes(lambda decl: decl.name.startswith('reconfEmulator<'), allow_empty=True)
+for i in cb:
+    i.include()
+    if i.name == 'reconfEmulator<unsigned int>':
+        i.alias = 'reconfEmulator32'
+"""
+    obj.templates = [
+        'reconfEmu::reconfCB<unsigned int>'
+        ,'reconfEmu::reconfEmulator<unsigned int>'
+    ]
+

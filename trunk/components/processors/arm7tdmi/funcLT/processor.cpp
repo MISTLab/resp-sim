@@ -391,7 +391,10 @@ arm7tdmi_funclt_trap::ARM7Processor::ARM7Processor( sc_module_name name, sc_time
         this->LR_IRQ, this->SP_FIQ, this->LR_FIQ, this->PC, this->REGS, this->instrExecuting, \
         this->instrEndEvent);
     SC_THREAD(mainLoop);
+	cout << "Constr: " << sc_time_stamp() << endl;
+
     end_module();
+	cout << "Constr: " << sc_time_stamp() << endl;
 }
 
 arm7tdmi_funclt_trap::ARM7Processor::~ARM7Processor(){

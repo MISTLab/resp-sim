@@ -52,6 +52,10 @@ class print_stats_cb(sc_controller_wrapper.EOScallback):
         times are printed; note that before printing statistics, I wait for simulation termination
         (if not otherwise specified)"""
         import time
+        try:
+            from respkernel import statsPrinter
+	except Exception:
+            pass
         while not self.controller.is_ended():
             time.sleep(0.1)
         try:
