@@ -127,6 +127,7 @@ public:
     TimeSliceClock(const sc_time &resolution);
     void preempt();
 };
+
 class IRQClock : public sc_module{
 private:
     sc_time resolution;
@@ -136,6 +137,7 @@ public:
     IRQClock(const sc_time &resolution);
     void schedulerIRQ();
 };
+
 class EventClock : public sc_module{
 private:
     boost::minstd_rand generator;
@@ -144,6 +146,7 @@ public:
     EventClock();
     void schedulerEvent();
 };
+
 class CondVarClock : public sc_module{
 public:
     sc_event startCount;
@@ -178,25 +181,32 @@ class ConcurrencyManager{
         ///setting the template dynamically
         std::map<unsigned int, Processor<unsigned int> > managedProc;
         unsigned int maxProcId;
+        
         ///Note that the last element of the readyQueue, the one containing
         ///the tasks with EDF schedule, must be ordered on the
         ///schedule deadline: the first element the one with closest
         ///deadline, the last one with the furthest one
         std::deque<ThreadEmu *> * readyQueue;
+        
         ///Contains the allocated thread attributes
         std::map<int, AttributeEmu *> existingAttr;
+        
         ///Contains the allocated threads; note that no thread
         ///is eliminated from the system (all threads can be joined
         ///and only one process is running, so we must keep track
         ///of all the threads forever)
         std::map<int, ThreadEmu *> existingThreads;
-        ///Stard address and size of the thread stacks (of course there is no
+        
+        ///Store address and size of the thread stacks (of course there is no
         ///way of determining if a thread has grown over its stack)
         std::map<unsigned int, unsigned int> stacks;
+        
         ///Associates thread specific information with the threads
         std::map<std::pair<int, ThreadEmu *>, unsigned int> threadSpecific;
+        
         ///Keeps track of all the keys used to associate a memory area with each thread (if needed)
         int keys;
+        
         ///SystemC mutex variables used to maintain synchronization
         ///among the different sc_treads
         SysCLock schedLock;
@@ -221,19 +231,25 @@ class ConcurrencyManager{
         /// Now some static stuff which is shared by all the emulation groups
         ///specifies whether blocked processor halts or keep on working in busy wait loops
         static bool busyWaitLoop;
+        
         ///Specifies the stack size for each thread, defaults to 20 KB
         static unsigned int threadStackSize;
+        
         ///Associates thred properties with a routine name: all threads
         ///created from that routine shall have such properties
         static std::map<std::string, DefaultThreadInfo> defThreadInfo;
+        
         ///The registered interrupt service routines.
         static std::map<int, std::string> interruptServiceRoutines;
+        
         ///The size and content of the thread-local-storage
         static unsigned int tlsSize;
         static unsigned char * tlsData;
+        
         ///Default thread attribute, used to initialize threads which do not declare
         ///any specific attribute
         static AttributeEmu defaultAttr;
+        
         ///Latencies of the scheduling operations, used to mimick the behavior
         ///of a real scheduler and to correctly keep track of time
         static sc_time schedLatency;

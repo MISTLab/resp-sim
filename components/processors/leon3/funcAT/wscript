@@ -1,45 +1,5 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
-##############################################################################
-#
-#
-#         ___           ___           ___           ___
-#        /  /\         /  /\         /  /\         /  /\
-#       /  /::\       /  /:/_       /  /:/_       /  /::\
-#      /  /:/\:\     /  /:/ /\     /  /:/ /\     /  /:/\:\
-#     /  /:/~/:/    /  /:/ /:/_   /  /:/ /::\   /  /:/~/:/
-#    /__/:/ /:/___ /__/:/ /:/ /\ /__/:/ /:/\:\ /__/:/ /:/
-#    \  \:\/:::::/ \  \:\/:/ /:/ \  \:\/:/~/:/ \  \:\/:/
-#     \  \::/~~~~   \  \::/ /:/   \  \::/ /:/   \  \::/
-#      \  \:\        \  \:\/:/     \__\/ /:/     \  \:\
-#       \  \:\        \  \::/        /__/:/       \  \:\
-#        \__\/         \__\/         \__\/         \__\/
-#
-#
-#
-#
-#   This file is part of ReSP.
-#
-#   This program is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU General Public License as published by
-#   the Free Software Foundation, either version 3 of the License, or
-#   (at your option) any later version.
-#
-#   This program is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU General Public License for more details.
-#
-#   You should have received a copy of the GNU General Public License
-#   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-#
-#
-#   (c) Giovanni Beltrame, Luca Fossati
-#       Giovanni.Beltrame@esa.int fossati@elet.polimi.it
-#
-##############################################################################
-
 
 import os
 
@@ -54,11 +14,43 @@ def build(bld):
         decoder.cpp
         memory.cpp
         externalPorts.cpp
+        irqPorts.cpp
         externalPins.cpp
     """
     obj.uselib = 'BOOST BOOST_FILESYSTEM BOOST_THREAD SYSTEMC_H TLM TRAP'
     obj.includes = '.'
-    obj.uselib_local = 'systemc'
+    obj.export_incdirs = '.'
     obj.name = 'leon3_funcAT'
     obj.target = 'leon3_funcAT'
 
+    obj = bld.new_task_gen('pypp')
+    obj.source="""
+        processor.hpp
+        memory.hpp
+    """
+    obj.uselib = 'BOOST BOOST_FILESYSTEM BOOST_THREAD SYSTEMC_H TLM TRAP BOOST_PYTHON'
+    obj.uselib_local = 'systemc leon3_funcAT binutils'
+    obj.includes = '.'
+    obj.split = 10
+    obj.name = 'leon3_funcAT_wrapper'
+    obj.target = 'leon3_funcAT_wrapper'
+    obj.include = 'scwrapper tlmwrapper trapwrapper'
+    obj.start_decls = 'leon3_funcat_trap'
+    obj.custom_code = """
+for i in mb.global_ns.classes():
+    for base in i.recursive_bases:
+        if base.related_class.name == 'Instruction':
+            i.exclude()
+            break
+mb.global_ns.class_('Instruction').exclude()
+mb.global_ns.class_('LEON3_ABIIf').constructors().exclude()
+
+mb.global_ns.class_('Register').exclude()
+mb.global_ns.class_('Register').ignore = False
+mb.global_ns.class_('Alias').exclude()
+mb.global_ns.class_('Alias').ignore = False
+mb.global_ns.class_('InnerField').exclude()
+mb.global_ns.class_('InnerField').ignore = False
+mb.global_ns.class_('Processor').member_function('decode').exclude()
+mb.global_ns.class_('Processor').member_function('getInterface').call_policies = call_policies.return_value_policy( call_policies.reference_existing_object )
+"""

@@ -600,13 +600,9 @@ def reset():
 
     #print 'SynchManager.reset'
     # Reset OSEmulation
-    SynchManager.reset()
+    #cm.reset()
 
-    #print 'archcwrap.reset'
-    # Reset Syscalls
-    archcwrap.reset()
-
-    #print 'manager'
+     #print 'manager'
     # Reset component manager
     manager.reset()
 

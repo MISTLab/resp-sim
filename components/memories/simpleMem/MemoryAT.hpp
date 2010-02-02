@@ -47,7 +47,7 @@
 
 #include <systemc.h>
 #include <tlm.h>
-#include <tlm_utils/simple_target_socket.h>
+#include <tlm_utils/multi_passthrough_target_socket.h>
 #include <tlm_utils/peq_with_cb_and_phase.h>
 #include <boost/lexical_cast.hpp>
 #include <string>
@@ -59,7 +59,7 @@ DECLARE_EXTENDED_PHASE(internal_ph);
 
 template<unsigned int sockSize> class MemoryAT: public sc_module{
     public:
-    tlm_utils::simple_target_socket<MemoryAT, sockSize> socket;
+    tlm_utils::multi_passthrough_target_socket<MemoryAT, sockSize> socket;
 
     MemoryAT(sc_module_name name, unsigned int size, sc_time latency = SC_ZERO_TIME) :
                                 sc_module(name), socket("mem_socket"), size(size), latency(latency), transId(0),
@@ -78,7 +78,7 @@ template<unsigned int sockSize> class MemoryAT: public sc_module{
     }
 
     // TLM-2 non-blocking transport method
-    tlm::tlm_sync_enum nb_transport_fw(tlm::tlm_generic_payload& trans,
+    tlm::tlm_sync_enum nb_transport_fw(int tag, tlm::tlm_generic_payload& trans,
                                                 tlm::tlm_phase& phase, sc_time& delay){
         sc_dt::uint64    adr = trans.get_address();
         unsigned int     len = trans.get_data_length();
@@ -196,7 +196,7 @@ template<unsigned int sockSize> class MemoryAT: public sc_module{
     }
 
     // TLM-2 debug transaction method
-    unsigned int transport_dbg(tlm::tlm_generic_payload& trans){
+    unsigned int transport_dbg(int tag, tlm::tlm_generic_payload& trans){
         tlm::tlm_command cmd = trans.get_command();
         sc_dt::uint64    adr = trans.get_address();
         unsigned char*   ptr = trans.get_data_ptr();

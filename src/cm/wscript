@@ -67,9 +67,9 @@ def build(bld):
     obj.custom_code = """
 ConcurrencyManager = mb.global_ns.class_('ConcurrencyManager')
 ConcurrencyManager.ignore = False
-for attrName in ['busyWaitLoop', 'threadStackSize', 'defThreadInfo', 'interruptServiceRoutines', 'tlsSize', 'tlsData', 'defaultAttr', 'schedLatency', 'deSchedLatency', 'schedChooseLatency']:
-    ConcurrencyManager.variable(attrName).exclude()
-ConcurrencyManager.member_functions().exclude()
+#for attrName in ['busyWaitLoop', 'threadStackSize', 'defThreadInfo', 'interruptServiceRoutines', 'tlsSize', 'tlsData', 'defaultAttr', #'schedLatency', 'deSchedLatency', 'schedChooseLatency']:
+#    ConcurrencyManager.variable(attrName).exclude()
+#ConcurrencyManager.member_functions().exclude()
 mb.global_ns.class_('SysCLock').exclude()
 mb.global_ns.class_('ThreadEmu').exclude()
 mb.global_ns.class_('AttributeEmu').exclude()

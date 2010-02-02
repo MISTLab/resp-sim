@@ -64,19 +64,25 @@ const int resp::ConcurrencyManager::SYSC_NON_PREEMPTIVE = 0;
 
 ///specifies whether blocked processor halts or keep on working in busy wait loops
 bool resp::ConcurrencyManager::busyWaitLoop = true;
+
 ///Specifies the stack size for each thread
 unsigned int resp::ConcurrencyManager::threadStackSize = 1024*20;
+
 ///Associates thred properties with a routine name: all threads
 ///created from that routine shall have such properties
 std::map<std::string, DefaultThreadInfo> resp::ConcurrencyManager::defThreadInfo;
+
 ///The registered interrupt service routines.
 std::map<int, std::string> resp::ConcurrencyManager::interruptServiceRoutines;
+
 ///The size and content of the thread-local-storage
 unsigned int resp::ConcurrencyManager::tlsSize = 0;
 unsigned char * resp::ConcurrencyManager::tlsData = NULL;
+
 ///Default thread attribute, used to initialize threads which do not declare
 ///any specific attribute
 AttributeEmu resp::ConcurrencyManager::defaultAttr;
+
 ///Latencies of the scheduling operations, used to mimick the behavior
 ///of a real scheduler and to correctly keep track of time
 sc_time resp::ConcurrencyManager::schedLatency(SC_ZERO_TIME);

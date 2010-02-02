@@ -183,9 +183,14 @@ for i in sc_start_decl:
 sc_stop_decl = mb.global_ns.free_functions('sc_stop', allow_empty=True)
 for i in sc_stop_decl:
     i.include()
-my_sc_is_running_decl = mb.global_ns.free_function('my_sc_is_running')
-my_sc_is_running_decl.include()
-my_sc_is_running_decl.alias = 'SYSC_' + my_sc_is_running_decl.alias
+
+try:
+    my_sc_is_running_decl = mb.global_ns.free_function('my_sc_is_running')
+    my_sc_is_running_decl.include()
+    my_sc_is_running_decl.alias = 'SYSC_' + my_sc_is_running_decl.alias
+except:
+    pass
+
 waitFuns = mb.global_ns.free_functions('wait')
 for i in waitFuns:
     i.include()
