@@ -44,5 +44,5 @@
 # Build
 
 def build(bld):
-    bld.add_subdirs('processors memories reconfigurable testComponents')
+    bld.add_subdirs('processors memories network reconfigurable testComponents')
 

@@ -45,10 +45,10 @@ PROCESSOR_NUMBER  = 1             #
 try:
     PROCESSOR_NAMESPACE
 except:
-    PROCESSOR_NAMESPACE = leon3_funcLT_wrapper
+    PROCESSOR_NAMESPACE = leon3_funcAT_wrapper
 
 # Memory/bus
-MEMORY_SIZE       = 256           # MBytes
+MEMORY_SIZE       = 32              # MBytes
 MEM_LATENCY       = 10.0            # ns
 
 
@@ -56,7 +56,7 @@ MEM_LATENCY       = 10.0            # ns
 try:
     SOFTWARE
 except:
-    SOFTWARE = None
+    SOFTWARE = 'crc'
 
 if SOFTWARE:
     try:
@@ -72,9 +72,9 @@ OS_EMULATION = True     # True or False
 
 # Find the specified software in the _build_ directory if not an absolute path
 if not SOFTWARE or not os.path.isfile(SOFTWARE):
-    SOFTWARE = findInFolder(SOFTWARE, '_build_/arm')
+    SOFTWARE = findInFolder(SOFTWARE, 'software/build/sparc')
     if not SOFTWARE:
-        raise Exception('Unable to find program ' + SOFTWARE)
+        raise Exception('Unable to find program')
 
 ################################################
 ##### COMPONENT CREATION #######################
@@ -91,7 +91,7 @@ for i in range(0, PROCESSOR_NUMBER):
 ##### MEMORY INSTANTIATION #####
 memorySize = 1024*1024*MEMORY_SIZE
 latencyMem = scwrapper.sc_time(MEM_LATENCY, scwrapper.SC_NS)
-mem = MemoryLT32.MemoryLT32( 'mem', memorySize, latencyMem)
+mem = MemoryAT32.MemoryAT32( 'mem', memorySize, latencyMem)
 
 ################################################
 ##### INTERCONNECTIONS #########################

@@ -72,7 +72,9 @@ void ThreadEmu::ExecutionTrace::clear(){
 }
 
 SemaphoreEmu::SemaphoreEmu(int initialValue){
+    this->value = initialValue;
 }
+
 SemaphoreEmu::~SemaphoreEmu(){
 }
 

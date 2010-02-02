@@ -45,4 +45,4 @@
 
 def build(bld):
     #accAT accLT funcAT funcLT_trace
-    bld.add_subdirs('funcLT')
+    bld.add_subdirs('funcLT funcAT')
