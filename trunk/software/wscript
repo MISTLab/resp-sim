@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 import os
-import Options,Logs
+import Options,Logs,TaskGen
 import Configure
+from Tools import cc
 
 ##############################################
 # System-wide cross compilation setup
@@ -15,11 +16,6 @@ import Configure
 cross_cflags = '-g3 -specs=osemu.specs -fdata-sections -ffunction-sections'.split()
 cross_cxxflags =  cross_cflags
 cross_linkflags =  '-g3 -specs=osemu.specs -static -lm -Wl,--gc-sections'.split()
-
-# ECOS support flags
-
-ecos_config_path = os.path.join( 'software' , 'os' , 'eCos', 'configurations' )
-ecos_defines = ['-D__ECOS__', '-nostdlib' , '-fno-builtin']
 
 # Supported Instruction set architectures and associated processors
 #                           Architecture   :   Processors
@@ -42,7 +38,9 @@ architecture_flags = {
 # Build
 
 def build(bld):
-    folders = 'simple_benchmarks lib/pthread_stub'
+
+    TaskGen.declare_extension(['.S','.s'], cc.c_hook)
+    folders = 'simple_benchmarks lib/pthread_stub apps'
     bld.add_subdirs(folders)
 
 def set_options(opt):
@@ -53,7 +51,7 @@ def set_options(opt):
 
 
 def configure(conf):
-    conf.check_tool('gcc g++')
+    conf.check_tool('gcc g++ misc')
 
     #########################################
     # Select which variants are to be created
