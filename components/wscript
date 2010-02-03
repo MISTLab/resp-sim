@@ -44,5 +44,5 @@
 # Build
 
 def build(bld):
-    bld.add_subdirs('processors memories interconnect reconfigurable testComponents')
+    bld.add_subdirs('processors memories network interconnect reconfigurable testComponents')
 

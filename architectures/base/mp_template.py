@@ -45,7 +45,7 @@ PROCESSOR_NUMBER  = 1             #
 try:
     PROCESSOR_NAMESPACE
 except:
-    PROCESSOR_NAMESPACE = leon3_funcAT_wrapper
+    PROCESSOR_NAMESPACE = arm7tdmi_funcLT_wrapper
 
 # Memory/bus
 MEMORY_SIZE       = 32              # MBytes
@@ -56,7 +56,7 @@ MEM_LATENCY       = 10.0            # ns
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'crc'
+    SOFTWARE = 'ffmpeg'
 
 if SOFTWARE:
     try:
@@ -72,7 +72,7 @@ OS_EMULATION = True     # True or False
 
 # Find the specified software in the _build_ directory if not an absolute path
 if not SOFTWARE or not os.path.isfile(SOFTWARE):
-    SOFTWARE = findInFolder(SOFTWARE, 'software/build/sparc')
+    SOFTWARE = findInFolder(SOFTWARE, 'software/build/arm')
     if not SOFTWARE:
         raise Exception('Unable to find program')
 
@@ -86,23 +86,29 @@ if not SOFTWARE or not os.path.isfile(SOFTWARE):
 processors = []
 latency = scwrapper.sc_time(float(1000)/float(PROCESSOR_FREQUENCY),  scwrapper.SC_NS)
 for i in range(0, PROCESSOR_NUMBER):
-    processors.append(PROCESSOR_NAMESPACE.Processor('processor_' + str(i), latency))
+    processors.append(PROCESSOR_NAMESPACE.ARM7Processor('processor_' + str(i), latency))
 
 ##### MEMORY INSTANTIATION #####
 memorySize = 1024*1024*MEMORY_SIZE
 latencyMem = scwrapper.sc_time(MEM_LATENCY, scwrapper.SC_NS)
-mem = MemoryAT32.MemoryAT32( 'mem', memorySize, latencyMem)
+mem = MemoryLT32.MemoryLT32( 'mem', memorySize, latencyMem)
 
 ################################################
 ##### INTERCONNECTIONS #########################
 ################################################
 
+bus  = BusLT32.BusLT32('bus',scwrapper.sc_time(100,scwrapper.SC_NS),1)
+
 ##### BUS CONNECTIONS #####
 # Connecting the master components to the bus
-# Caches
 for i in range(0, PROCESSOR_NUMBER):
-    processors[i].dataMem.initSocket.bind(mem.socket)
-    processors[i].instrMem.initSocket.bind(mem.socket)
+    connectPortsForce(processors[i], processors[i].instrMem.initSocket, bus, bus.targetSocket)
+    connectPortsForce(processors[i], processors[i].dataMem.initSocket, bus, bus.targetSocket)
+
+connectPortsForce(bus, bus.initiatorSocket, mem, mem.targetSocket)
+
+# Add memory mapping
+bus.addBinding("mem",0x0,1024*1024*256,False)
 
 ################################################
 ##### SYSTEM INIT ##############################

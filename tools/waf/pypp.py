@@ -238,6 +238,7 @@ def process_headers(self):
         pypptask.custom_declaration_code = self.custom_declaration_code
         pypptask.custom_registration_code = self.custom_registration_code
         pypptask.target = ccroot.get_target_name(self)
+        print pypptask.target
         pypptask.split = self.split
         pypptask.start_decls = Utils.to_list(self.start_decls)
         pypptask.virtuality = self.virtuality
