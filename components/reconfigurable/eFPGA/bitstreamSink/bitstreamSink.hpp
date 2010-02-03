@@ -4,75 +4,65 @@
 #ifndef BITSTREAMSINK_HPP
 #define BITSTREAMSINK_HPP
 
-#include <stdlib.h>
+#include <systemc.h>
+#include <tlm.h>
+#include <tlm_utils/multi_passthrough_target_socket.h>
+#include <boost/lexical_cast.hpp>
 #include <string>
 
-#include <tlm.h>
-#include <systemc.h>
+#include <utils.hpp>
 
-using namespace tlm;
 using namespace std;
+using namespace tlm;
+using namespace tlm_utils;
 
-template <class dataType> class bitstreamSink : public sc_module,
-                     public tlm_transport_if <	tlm_request<dataType, dataType>,
-						tlm_response<dataType> > {
-
-public:
-	typedef tlm_request<dataType, dataType> memRequest_type;
-	typedef tlm_response<dataType> memResponse_type;
-	typedef tlm_transport_if<memRequest_type, memResponse_type> memIf_type;
-	typedef tlm_target_port<memIf_type> memTargPort_type;
-
-	//This is the port receiving the bitstream (uses the same types of a memory target port)
-	memTargPort_type configPort;
-	string name;
-
+template<typename BUSWIDTH> class bitstreamSink: public sc_module {
+private:
 	sc_event writeFree;
 	bool busy;
 
-	// Constructor.
-	bitstreamSink (sc_module_name n): sc_module(n), configPort( (string(n) + "_configPort").c_str() ), name(n){
-		configPort(*this);
+public:
+	multi_passthrough_target_socket<bitstreamSink, sizeof(BUSWIDTH)*8> targetSocket;
+
+	bitstreamSink(sc_module_name module_name) : sc_module(module_name),
+			targetSocket((boost::lexical_cast<std::string>(module_name) + "_targSock").c_str()) {
+		this->targetSocket.register_b_transport(this, &bitstreamSink::b_transport);
+//		this->targetSocket.register_get_direct_mem_ptr(this, &bitstreamSink::get_direct_mem_ptr);
+//		this->targetSocket.register_transport_dbg(this, &bitstreamSink::transport_dbg);
+
 		this->busy = false;
 		end_module();
 	}
 
-	//Transport methods
-	memResponse_type transport(const memRequest_type& request){
-		tlm_response<dataType> response;
-		this->transport(request, response);
-		return response;
-	}
+	~bitstreamSink(){}
 
-	void transport(const memRequest_type& request, memResponse_type& response){
+	void b_transport(int tag, tlm_generic_payload& trans, sc_time& delay){
+		tlm_command cmd = trans.get_command();
+		sc_dt::uint64    adr = trans.get_address();
+		unsigned char*   ptr = trans.get_data_ptr();
+		unsigned int     len = trans.get_data_length();
+		unsigned char*   byt = trans.get_byte_enable_ptr();
+		unsigned int     wid = trans.get_streaming_width();
 
-		int block_size = request.get_block_size();
+		unsigned int block_size = len / sizeof(BUSWIDTH);
+		if (len%sizeof(BUSWIDTH) != 0) block_size++;
 
-		while( this->busy  && !request.is_control_access() ) {
+		while( this->busy) {
 			wait( this->writeFree );
 		}
+		this->busy = true;
 
-		if( !request.is_control_access() )
-			this->busy = true;
-        
-		if (request.get_command() == WRITE){
-			//cerr << "Sink: Received " << block_size << " words!" << endl;
+		if (trans.is_write()){
+//			cerr << "Sink: Received " << block_size << " words!" << endl;
+			trans.set_response_status(TLM_OK_RESPONSE);
 		}
 		else {
 			cerr << "Sink: Unknown request type!" << endl;
-			response.get_status().set_error();
-			response.get_status().set_no_response();
-			this->busy = false;
-			this->writeFree.notify();
-			return;
+			trans.set_response_status(TLM_COMMAND_ERROR_RESPONSE);
 		}
 
-		response.get_status().set_ok();
-
-		if( !request.is_control_access() ) {
-			this->busy = false;
-			this->writeFree.notify();
-		}
+		this->busy = false;
+		this->writeFree.notify();
 	}
 
 };

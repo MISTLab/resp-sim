@@ -203,7 +203,7 @@ void eFPGAAllocationTable::printStatus() {
 		key = latIt->first;
 		bloIt = occupationTable.find(key);
 		cout << setiosflags (ios::left);
-		cout << "| " << setw (10) << key << " | " << setw (17) << latIt->second << " ns | ";
+		cout << "| " << setw (10) << key << " | " << setw (17) << latIt->second << "    | ";
 		cout << "{" << setw (10) << (bloIt->second).upperLeft.row << "," << setw (10) << (bloIt->second).upperLeft.column << "}; ";
 		cout << "{" << setw (10) << (bloIt->second).lowerRight.row << "," << setw (10) << (bloIt->second).lowerRight.column << "} |"<< endl;
 		latIt++;

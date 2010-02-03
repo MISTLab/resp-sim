@@ -1,8 +1,10 @@
 #include "configEngine.hpp"
 
-configEngine::configEngine(sc_module_name name, ABIIf<unsigned int> &processorInstance, unsigned long long configAddress, deletionAlgorithm delAlg):
-				initiatorSocket((boost::lexical_cast<std::string>(name) + "_port").c_str()),
-				sc_module(name), tab(delAlg), bitstream_address(configAddress), recEmu(processorInstance) {
+configEngine::configEngine(sc_module_name name, ABIIf<unsigned int> &processorInstance, sc_dt::uint64 bitstreamSource, sc_dt::uint64 bitstreamDest, deletionAlgorithm delAlg):
+				initiatorSocket((boost::lexical_cast<std::string>(name) + "_initSock").c_str()),
+				busSocket((boost::lexical_cast<std::string>(name) + "_busSock").c_str()),
+				bitstream_source_address(bitstreamSource), bitstream_dest_address(bitstreamDest),
+				sc_module(name), tab(delAlg), recEmu(processorInstance) {
 	requestDelay = SC_ZERO_TIME;
 	execDelay = SC_ZERO_TIME;
 	configDelay = SC_ZERO_TIME;
@@ -147,17 +149,20 @@ unsigned int configEngine::configure(string funcName, sc_time latency, unsigned 
 	// Function successfully configured, inserting a fix delay
 	wait(configDelay);
 
-	// READs on the memory the bitstream to be configured on the selected device
-//	configrequest.set_command(READ);
-//	configrequest.set_address(0);			// We start to read at address 0 (usually attached to main memory)...
-//	configrequest.set_block_address_incr(0);	// and for each block we do not increment the address!
-//	configrequest.set_block_size(responseValue);	// Remeber: each block introduces a bus latency + memory latency
-//	this->bus_init_port->transport(configrequest, response);
+	// 'READs' on the memory the bitstream to be configured on the selected device
+	unsigned int bitstream_length = responseValue*sizeof(unsigned int);
+	unsigned int* bitstream = (unsigned int*) malloc (bitstream_length);
+	message.set_read();
+	message.set_address(bitstream_source_address);		// We start to read the bitstream...
+        message.set_data_length(bitstream_length);		// using the appropriate length!
+	message.set_data_ptr((unsigned char*)bitstream);
+	message.set_response_status(TLM_INCOMPLETE_RESPONSE);
+	this->busSocket->b_transport(message,delay);
 
 	// 'WRITEs' the bitstream on the selected device
-//	configrequest.set_command(WRITE);
-//	configrequest.set_address(bitstream_address);	// We send the message to the bitstream sink
-//	this->bus_init_port->transport(configrequest, response);
+	message.set_write();
+	message.set_address(bitstream_dest_address);
+	this->busSocket->b_transport(message,delay);		// We send the 'write' message to the bitstream sink
 
 	//cerr << tab.getName(address) << " configured at address " << address << " on device # " << tab.getDevice(address) << ";";
 	//cerr << " configuration required " << responseValue << " words." << endl;

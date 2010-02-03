@@ -2,36 +2,20 @@
 # encoding: utf-8
 
 def build(bld):
-    if bld.env['STATIC_PLATFORM']:
-        return
-
-    obj = bld.new_task_gen('pypp', 'shlib')
+    obj = bld.new_task_gen('pypp')
     obj.source ='''
         bitstreamSink.hpp
     '''
-
-    obj.target='bitstreamSink';
+    obj.target='bS_wrapper';
+    obj.uselib='BOOST BOOST_PYTHON TLM SYSTEMC_H'
+    obj.uselib_local='systemc utils'
+    obj.include = 'scwrapper tlmwrapper'
     obj.start_decls = 'bitstreamSink'
-    obj.uselib='SYSTEMC_H TLM_H BOOST BOOST_PYTHON PYEXT'
-    obj.uselib_local='systemc'
-    obj.include = "scwrapper"
-    obj.env.append_unique('CXXFLAGS', '-DDATA_PASSED_BY_VALUE')
-    obj.env.append_unique('CPPFLAGS', '-DDATA_PASSED_BY_VALUE')
-    obj.templates = [
-                    'bitstreamSink<unsigned int>'
-                    ]
-    obj.custom_declaration_code= """
-"""
+    obj.templates = ['bitstreamSink<unsigned int>']
     obj.custom_code = """
 cls = mb.global_ns.classes(lambda decl : decl.name.startswith('bitstreamSink') )
 for i in cls:
     i.include()
-    i.alias = 'bitstreamSink'
-cls = mb.global_ns.member_functions(lambda decl : decl.name.endswith('transport'))
-for i in cls:
-    try:
-        i.exclude()
-    except:
-        pass
+    i.alias = 'bitstreamSink32'
 """
 

@@ -52,7 +52,7 @@ def build(bld):
     obj.uselib_local = 'systemc utils'
     obj.include = 'scwrapper tlmwrapper'
     obj.start_decls = 'MemoryLT'
-    obj.templates = ['MemoryLT<32>']
+    obj.templates = ['MemoryLT<unsigned int>']
     obj.custom_code = """
 cls = mb.global_ns.classes(lambda decl : decl.name.startswith('MemoryLT') )
 for i in cls:

@@ -2,7 +2,7 @@
 
 eFPGA::eFPGA(sc_module_name name, unsigned int w, unsigned int h, sc_time lw, float wa, float ca) :
 				sc_module(name), name(name), latword(lw), wordarea(wa), cellarea(ca), tab(string(name),w,h),
-				targetSocket((boost::lexical_cast<std::string>(name) + "_port").c_str()) {
+				targetSocket((boost::lexical_cast<std::string>(name) + "_targSock").c_str()) {
 
 	//I bind the port to the class (this) which contains the transport methods
 	this->targetSocket.register_b_transport(this, &eFPGA::b_transport);
@@ -28,7 +28,7 @@ void eFPGA::b_transport(tlm_generic_payload& message, sc_time& delay) {
 	unsigned char* received = message.get_data_ptr();
 	payloadData* messageData = (payloadData*) received;
 	unsigned int* retVal = (unsigned int*) received;
-	unsigned int address = messageData->address;
+	sc_dt::uint64 address = messageData->address;
 	sc_time latency = messageData->latency;
 	unsigned int funWidth = messageData->width;
 	unsigned int funHeight = messageData->height;
