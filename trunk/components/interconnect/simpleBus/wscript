@@ -1,0 +1,29 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+def build(bld):
+    obj = bld.new_task_gen('pypp')
+    obj.source ='''
+        BusLT.hpp
+    '''
+    obj.target='BusLT32';
+    obj.uselib = 'BOOST BOOST_PYTHON TLM SYSTEMC_H'
+    obj.uselib_local = 'systemc utils'
+    obj.include = 'scwrapper tlmwrapper'
+    obj.start_decls = 'BusLT'
+    obj.templates = ['BusLT<unsigned int>']
+    obj.custom_code = """
+cls = mb.global_ns.classes(lambda decl : decl.name.startswith('BusLT') )
+cls.include()
+for i in cls:
+    i.alias = 'BusLT32'
+    i.variable('numAccesses').include()
+    try:
+        i.member_function('decode').exclude()
+    except:
+        pass
+    try:
+        i.member_function('setEndianess').exclude()
+    except:
+        pass
+"""

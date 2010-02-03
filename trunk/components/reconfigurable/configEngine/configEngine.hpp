@@ -19,6 +19,7 @@
 #include <systemc.h>
 #include <tlm.h>
 #include <tlm_utils/multi_passthrough_initiator_socket.h>
+#include <tlm_utils/simple_initiator_socket.h>
 #include <tlm_utils/tlm_quantumkeeper.h>
 #include <boost/lexical_cast.hpp>
 #include <trap_utils.hpp>
@@ -32,7 +33,7 @@ using namespace reconfEmu;
 class configEngine: public sc_module {
 
 private:
-	unsigned long long bitstream_address;
+	sc_dt::uint64 bitstream_source_address, bitstream_dest_address;
 	sc_time requestDelay, execDelay, configDelay, removeDelay;
 
 	// The centralized map of the configured functions
@@ -50,13 +51,12 @@ public:
 
 	// This is the Emulator used to perform the calls to hardware methods
 	reconfEmulator<unsigned int> recEmu;
-	
+
 	// This is the port communicating with the devices
 	multi_passthrough_initiator_socket< configEngine, 32 > initiatorSocket;
 
 	// This is the port attached to the system main bus
-//	tlm_initiator_port <	tlm_transport_if <	tlm_request<unsigned int, unsigned int>,
-//							tlm_response<unsigned int>	> 	> bus_init_port;
+	simple_initiator_socket < configEngine, 32 > busSocket;
 
 	/*
 	 * Constructor:
@@ -64,7 +64,7 @@ public:
 	 * configuration is required and there is no more space on the fabrics.
 	 / 
 	 */
-	configEngine(sc_module_name name, ABIIf<unsigned int> &processorInstance, unsigned long long configAddress,
+	configEngine(sc_module_name name, ABIIf<unsigned int> &processorInstance, sc_dt::uint64 bitstreamSource, sc_dt::uint64 bitstreamDest,
 		deletionAlgorithm delAlg = LRU);
 
 

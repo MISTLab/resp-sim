@@ -2,8 +2,8 @@ l3 = leon3_funcLT_wrapper.LEON3Processor('l3',scwrapper.sc_time(10.0,scwrapper.S
 memorySize = 1024*1024*256
 latencyMem = scwrapper.sc_time(10.0, scwrapper.SC_NS)
 mem = MemoryLT32.MemoryLT32('mem', memorySize, latencyMem)
-connectPortsForce(l3, l3.dataMem.initSocket, mem, mem.socket)
-connectPortsForce(l3, l3.instrMem.initSocket, mem, mem.socket)
+connectPortsForce(l3, l3.dataMem.initSocket, mem, mem.targetSocket)
+connectPortsForce(l3, l3.instrMem.initSocket, mem, mem.targetSocket)
 
 loader = loader_wrapper.Loader('sparc.out')
 #Initialization of the processors and loading in memory of the application program

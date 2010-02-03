@@ -2,7 +2,7 @@
 
 def build(bld):
 
-#    bld.add_subdirs('bitstreamSink')
+    bld.add_subdirs('bitstreamSink')
 
     obj = bld.new_task_gen('cxx', 'cshlib')
     obj.source = '''

@@ -2,8 +2,8 @@ a7 = arm7tdmi_funcLT_wrapper.ARM7Processor('a7',scwrapper.sc_time(10.0,scwrapper
 memorySize = 1024*1024*256
 latencyMem = scwrapper.sc_time(10.0, scwrapper.SC_NS)
 mem = MemoryLT32.MemoryLT32('mem', memorySize, latencyMem)
-connectPortsForce(a7, a7.dataMem.initSocket, mem, mem.socket)
-connectPortsForce(a7, a7.instrMem.initSocket, mem, mem.socket)
+connectPortsForce(a7, a7.dataMem.initSocket, mem, mem.targetSocket)
+connectPortsForce(a7, a7.instrMem.initSocket, mem, mem.targetSocket)
 
 loader = loader_wrapper.Loader('arm.out')
 #Initialization of the processors and loading in memory of the application program
