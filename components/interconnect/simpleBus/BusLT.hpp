@@ -50,8 +50,8 @@
  *
  *
  *
- *   (c) Giovanni Beltrame, Luca Fossati
- *       Giovanni.Beltrame@esa.int fossati@elet.polimi.it
+ *   (c) Fabio Arlati
+ *       arlati.fabio@gmail.com
  *
 \***************************************************************************/
 
@@ -69,6 +69,7 @@
 #include <tlm_utils/multi_passthrough_initiator_socket.h>
 #include <boost/lexical_cast.hpp>
 
+#include "controller.hpp"
 #include "utils.hpp"
 
 //#define PROC_NUM_ADDR 0xF0000004
@@ -278,6 +279,8 @@ public:
 		wait(words*this->latency);
 		this->numAccesses++;
 		trans.set_dmi_allowed(false);			// Disables DMI in order to insert the bus latency for each transaction
+
+//		cout << resp::sc_controller::getController().get_simulated_time() << endl;
 
 		//Now I check if there are some elements which need to be awakened
 		if(this->targetSocket.size() > 1) {
