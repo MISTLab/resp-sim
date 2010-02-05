@@ -48,9 +48,10 @@
 #include <registers.hpp>
 #include <alias.hpp>
 #include <systemc.h>
+#include <boost/circular_buffer.hpp>
+#include <instructionBase.hpp>
 #include <vector>
 #include <string>
-#include <instructionBase.hpp>
 #include <trap_utils.hpp>
 
 using namespace arm7tdmi_funclt_trap;
@@ -495,6 +496,10 @@ void arm7tdmi_funclt_trap::ARM7TDMI_ABIIf::writeCharMem( const unsigned int & ad
     this->dataMem.write_byte_dbg(address, datum);
 }
 
+boost::circular_buffer< HistoryInstrType > & arm7tdmi_funclt_trap::ARM7TDMI_ABIIf::getInstructionHistory(){
+    return this->instHistoryQueue;
+}
+
 arm7tdmi_funclt_trap::ARM7TDMI_ABIIf::~ARM7TDMI_ABIIf(){
 
 }
@@ -502,10 +507,11 @@ arm7tdmi_funclt_trap::ARM7TDMI_ABIIf::ARM7TDMI_ABIIf( unsigned int & PROGRAM_LIM
     MemoryInterface & dataMem, Reg32_0 & CPSR, Reg32_1 & MP_ID, Reg32_1 * RB, Reg32_0 \
     * SPSR, Alias & FP, Alias & SPTR, Alias & LINKR, Alias & SP_IRQ, Alias & LR_IRQ, \
     Alias & SP_FIQ, Alias & LR_FIQ, Alias & PC, Alias * REGS, bool & instrExecuting, \
-    sc_event & instrEndEvent ) : PROGRAM_LIMIT(PROGRAM_LIMIT), dataMem(dataMem), CPSR(CPSR), \
-    MP_ID(MP_ID), RB(RB), SPSR(SPSR), FP(FP), SPTR(SPTR), LINKR(LINKR), SP_IRQ(SP_IRQ), \
-    LR_IRQ(LR_IRQ), SP_FIQ(SP_FIQ), LR_FIQ(LR_FIQ), PC(PC), REGS(REGS), instrExecuting(instrExecuting), \
-    instrEndEvent(instrEndEvent){
+    sc_event & instrEndEvent, boost::circular_buffer< HistoryInstrType > & instHistoryQueue \
+    ) : PROGRAM_LIMIT(PROGRAM_LIMIT), dataMem(dataMem), CPSR(CPSR), MP_ID(MP_ID), RB(RB), \
+    SPSR(SPSR), FP(FP), SPTR(SPTR), LINKR(LINKR), SP_IRQ(SP_IRQ), LR_IRQ(LR_IRQ), SP_FIQ(SP_FIQ), \
+    LR_FIQ(LR_FIQ), PC(PC), REGS(REGS), instrExecuting(instrExecuting), instrEndEvent(instrEndEvent), \
+    instHistoryQueue(instHistoryQueue){
     this->routineExitState = 0;
     this->routineEntryState = 0;
     std::vector<std::string> tempVec;

@@ -49,9 +49,10 @@
 #include <registers.hpp>
 #include <alias.hpp>
 #include <systemc.h>
+#include <boost/circular_buffer.hpp>
+#include <instructionBase.hpp>
 #include <vector>
 #include <string>
-#include <instructionBase.hpp>
 #include <trap_utils.hpp>
 
 #define FUNC_MODEL
@@ -78,6 +79,7 @@ namespace arm7tdmi_funclt_trap{
         Alias * REGS;
         bool & instrExecuting;
         sc_event & instrEndEvent;
+        boost::circular_buffer< HistoryInstrType > & instHistoryQueue;
         int routineEntryState;
         int routineExitState;
         std::vector< std::vector< std::string > > routineEntrySequence;
@@ -87,7 +89,8 @@ namespace arm7tdmi_funclt_trap{
         ARM7TDMI_ABIIf( unsigned int & PROGRAM_LIMIT, MemoryInterface & dataMem, Reg32_0 \
             & CPSR, Reg32_1 & MP_ID, Reg32_1 * RB, Reg32_0 * SPSR, Alias & FP, Alias & SPTR, \
             Alias & LINKR, Alias & SP_IRQ, Alias & LR_IRQ, Alias & SP_FIQ, Alias & LR_FIQ, Alias \
-            & PC, Alias * REGS, bool & instrExecuting, sc_event & instrEndEvent );
+            & PC, Alias * REGS, bool & instrExecuting, sc_event & instrEndEvent, boost::circular_buffer< \
+            HistoryInstrType > & instHistoryQueue );
         bool isLittleEndian() const throw();
         bool isInstrExecuting() const throw();
         void waitInstrEnd() const throw();
@@ -115,6 +118,7 @@ namespace arm7tdmi_funclt_trap{
         unsigned char readCharMem( const unsigned int & address );
         void writeMem( const unsigned int & address, unsigned int datum );
         void writeCharMem( const unsigned int & address, unsigned char datum );
+        boost::circular_buffer< HistoryInstrType > & getInstructionHistory();
         virtual ~ARM7TDMI_ABIIf();
     };
 

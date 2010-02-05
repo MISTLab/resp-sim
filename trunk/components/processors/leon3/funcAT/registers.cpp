@@ -68,6 +68,21 @@ leon3_funcat_trap::Register::Register( const Register & other ){
 
 }
 
+InnerField & leon3_funcat_trap::Reg32_0::InnerField_PS::operator =( const unsigned \
+    int & other ) throw(){
+    this->value &= 0xffffffbfL;
+    this->value |= ((other & 0x1) << 6);
+    return *this;
+}
+
+leon3_funcat_trap::Reg32_0::InnerField_PS::InnerField_PS( unsigned int & value ) \
+    : value(value){
+
+}
+
+leon3_funcat_trap::Reg32_0::InnerField_PS::~InnerField_PS(){
+
+}
 InnerField & leon3_funcat_trap::Reg32_0::InnerField_VER::operator =( const unsigned \
     int & other ) throw(){
     this->value &= 0xf0ffffffL;
@@ -173,6 +188,21 @@ leon3_funcat_trap::Reg32_0::InnerField_S::InnerField_S( unsigned int & value ) :
 leon3_funcat_trap::Reg32_0::InnerField_S::~InnerField_S(){
 
 }
+InnerField & leon3_funcat_trap::Reg32_0::InnerField_CWP::operator =( const unsigned \
+    int & other ) throw(){
+    this->value &= 0xffffffe0L;
+    this->value |= other;
+    return *this;
+}
+
+leon3_funcat_trap::Reg32_0::InnerField_CWP::InnerField_CWP( unsigned int & value \
+    ) : value(value){
+
+}
+
+leon3_funcat_trap::Reg32_0::InnerField_CWP::~InnerField_CWP(){
+
+}
 InnerField & leon3_funcat_trap::Reg32_0::InnerField_ET::operator =( const unsigned \
     int & other ) throw(){
     this->value &= 0xffffffdfL;
@@ -186,36 +216,6 @@ leon3_funcat_trap::Reg32_0::InnerField_ET::InnerField_ET( unsigned int & value )
 }
 
 leon3_funcat_trap::Reg32_0::InnerField_ET::~InnerField_ET(){
-
-}
-InnerField & leon3_funcat_trap::Reg32_0::InnerField_ICC_c::operator =( const unsigned \
-    int & other ) throw(){
-    this->value &= 0xffefffffL;
-    this->value |= ((other & 0x1) << 20);
-    return *this;
-}
-
-leon3_funcat_trap::Reg32_0::InnerField_ICC_c::InnerField_ICC_c( unsigned int & value \
-    ) : value(value){
-
-}
-
-leon3_funcat_trap::Reg32_0::InnerField_ICC_c::~InnerField_ICC_c(){
-
-}
-InnerField & leon3_funcat_trap::Reg32_0::InnerField_PS::operator =( const unsigned \
-    int & other ) throw(){
-    this->value &= 0xffffffbfL;
-    this->value |= ((other & 0x1) << 6);
-    return *this;
-}
-
-leon3_funcat_trap::Reg32_0::InnerField_PS::InnerField_PS( unsigned int & value ) \
-    : value(value){
-
-}
-
-leon3_funcat_trap::Reg32_0::InnerField_PS::~InnerField_PS(){
 
 }
 InnerField & leon3_funcat_trap::Reg32_0::InnerField_PIL::operator =( const unsigned \
@@ -233,19 +233,19 @@ leon3_funcat_trap::Reg32_0::InnerField_PIL::InnerField_PIL( unsigned int & value
 leon3_funcat_trap::Reg32_0::InnerField_PIL::~InnerField_PIL(){
 
 }
-InnerField & leon3_funcat_trap::Reg32_0::InnerField_CWP::operator =( const unsigned \
+InnerField & leon3_funcat_trap::Reg32_0::InnerField_ICC_c::operator =( const unsigned \
     int & other ) throw(){
-    this->value &= 0xffffffe0L;
-    this->value |= other;
+    this->value &= 0xffefffffL;
+    this->value |= ((other & 0x1) << 20);
     return *this;
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_CWP::InnerField_CWP( unsigned int & value \
+leon3_funcat_trap::Reg32_0::InnerField_ICC_c::InnerField_ICC_c( unsigned int & value \
     ) : value(value){
 
 }
 
-leon3_funcat_trap::Reg32_0::InnerField_CWP::~InnerField_CWP(){
+leon3_funcat_trap::Reg32_0::InnerField_ICC_c::~InnerField_ICC_c(){
 
 }
 InnerField & leon3_funcat_trap::Reg32_0::InnerField_IMPL::operator =( const unsigned \
@@ -581,10 +581,10 @@ std::ostream & leon3_funcat_trap::Reg32_0::operator <<( std::ostream & stream ) 
     return stream;
 }
 
-leon3_funcat_trap::Reg32_0::Reg32_0() : field_VER(this->value), field_ICC_z(this->value), \
-    field_ICC_v(this->value), field_EF(this->value), field_EC(this->value), field_ICC_n(this->value), \
-    field_S(this->value), field_ET(this->value), field_ICC_c(this->value), field_PS(this->value), \
-    field_PIL(this->value), field_CWP(this->value), field_IMPL(this->value){
+leon3_funcat_trap::Reg32_0::Reg32_0() : field_PS(this->value), field_VER(this->value), \
+    field_ICC_z(this->value), field_ICC_v(this->value), field_EF(this->value), field_EC(this->value), \
+    field_ICC_n(this->value), field_S(this->value), field_CWP(this->value), field_ET(this->value), \
+    field_PIL(this->value), field_ICC_c(this->value), field_IMPL(this->value){
     this->value = 0;
 }
 

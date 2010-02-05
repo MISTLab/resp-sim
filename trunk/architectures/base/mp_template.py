@@ -86,7 +86,7 @@ if not SOFTWARE or not os.path.isfile(SOFTWARE):
 processors = []
 latency = scwrapper.sc_time(float(1000)/float(PROCESSOR_FREQUENCY),  scwrapper.SC_NS)
 for i in range(0, PROCESSOR_NUMBER):
-    processors.append(PROCESSOR_NAMESPACE.ARM7Processor('processor_' + str(i), latency))
+    processors.append(PROCESSOR_NAMESPACE.Processor_arm7tdmi_funclt('processor_' + str(i), latency))
 
 ##### MEMORY INSTANTIATION #####
 memorySize = 1024*1024*MEMORY_SIZE

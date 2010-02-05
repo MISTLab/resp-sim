@@ -91,6 +91,6 @@ mb.global_ns.class_('Alias').exclude()
 mb.global_ns.class_('Alias').ignore = False
 mb.global_ns.class_('InnerField').exclude()
 mb.global_ns.class_('InnerField').ignore = False
-mb.global_ns.class_('LEON3Processor').member_function('decode').exclude()
-mb.global_ns.class_('LEON3Processor').member_function('getInterface').call_policies = call_policies.return_value_policy( call_policies.reference_existing_object )
+mb.global_ns.class_('Processor_leon3_funclt').member_function('decode').exclude()
+mb.global_ns.class_('Processor_leon3_funclt').member_function('getInterface').call_policies = call_policies.return_value_policy( call_policies.reference_existing_object )
 """

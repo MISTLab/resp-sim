@@ -46,7 +46,7 @@
 
 #include <registers.hpp>
 #include <ostream>
-#include <set>
+#include <list>
 
 #define FUNC_MODEL
 #define LT_IF
@@ -57,7 +57,7 @@ namespace leon3_funclt_trap{
         Register * reg;
         unsigned int offset;
         unsigned int defaultOffset;
-        std::set< Alias * > referredAliases;
+        std::list< Alias * > referredAliases;
         Alias * referringAliases;
 
         public:
@@ -70,7 +70,7 @@ namespace leon3_funclt_trap{
         }
         void immediateWrite( const unsigned int & value ) throw();
         unsigned int readNewValue() throw();
-        inline Register * getReg() throw(){
+        inline Register * getReg() const throw(){
             return this->reg;
         }
         unsigned int operator ~() throw();
@@ -184,43 +184,43 @@ namespace leon3_funclt_trap{
             this->reg = newAlias.reg;
             this->offset = newAlias.offset + newOffset;
             this->defaultOffset = newOffset;
-            std::set<Alias *>::iterator referredIter, referredEnd;
+            std::list<Alias *>::iterator referredIter, referredEnd;
             for(referredIter = this->referredAliases.begin(), referredEnd = this->referredAliases.end(); \
                 referredIter != referredEnd; referredIter++){
                 (*referredIter)->newReferredAlias(newAlias.reg, newAlias.offset + newOffset);
             }
             if(this->referringAliases != NULL){
-                this->referringAliases->referredAliases.erase(this);
+                this->referringAliases->referredAliases.remove(this);
             }
             this->referringAliases = &newAlias;
-            newAlias.referredAliases.insert(this);
+            newAlias.referredAliases.push_back(this);
         }
         inline void updateAlias( Alias & newAlias ) throw(){
             this->offset = newAlias.offset;
             this->defaultOffset = 0;
             this->reg = newAlias.reg;
-            std::set<Alias *>::iterator referredIter, referredEnd;
+            std::list<Alias *>::iterator referredIter, referredEnd;
             for(referredIter = this->referredAliases.begin(), referredEnd = this->referredAliases.end(); \
                 referredIter != referredEnd; referredIter++){
                 (*referredIter)->newReferredAlias(newAlias.reg, newAlias.offset);
             }
             if(this->referringAliases != NULL){
-                this->referringAliases->referredAliases.erase(this);
+                this->referringAliases->referredAliases.remove(this);
             }
             this->referringAliases = &newAlias;
-            newAlias.referredAliases.insert(this);
+            newAlias.referredAliases.push_back(this);
         }
         inline void updateAlias( Register & newAlias, unsigned int newOffset ) throw(){
             this->reg = &newAlias;
             this->offset = newOffset;
             this->defaultOffset = 0;
-            std::set<Alias *>::iterator referredIter, referredEnd;
+            std::list<Alias *>::iterator referredIter, referredEnd;
             for(referredIter = this->referredAliases.begin(), referredEnd = this->referredAliases.end(); \
                 referredIter != referredEnd; referredIter++){
                 (*referredIter)->newReferredAlias(&newAlias, newOffset);
             }
             if(this->referringAliases != NULL){
-                this->referringAliases->referredAliases.erase(this);
+                this->referringAliases->referredAliases.remove(this);
             }
             this->referringAliases = NULL;
         }
@@ -228,13 +228,13 @@ namespace leon3_funclt_trap{
             this->offset = 0;
             this->defaultOffset = 0;
             this->reg = &newAlias;
-            std::set<Alias *>::iterator referredIter, referredEnd;
+            std::list<Alias *>::iterator referredIter, referredEnd;
             for(referredIter = this->referredAliases.begin(), referredEnd = this->referredAliases.end(); \
                 referredIter != referredEnd; referredIter++){
                 (*referredIter)->newReferredAlias(&newAlias);
             }
             if(this->referringAliases != NULL){
-                this->referringAliases->referredAliases.erase(this);
+                this->referringAliases->referredAliases.remove(this);
             }
             this->referringAliases = NULL;
         }
@@ -243,7 +243,7 @@ namespace leon3_funclt_trap{
         inline void newReferredAlias( Register * newAlias, unsigned int newOffset ) throw(){
             this->reg = newAlias;
             this->offset = newOffset + this->defaultOffset;
-            std::set<Alias *>::iterator referredIter, referredEnd;
+            std::list<Alias *>::iterator referredIter, referredEnd;
             for(referredIter = this->referredAliases.begin(), referredEnd = this->referredAliases.end(); \
                 referredIter != referredEnd; referredIter++){
                 (*referredIter)->newReferredAlias(newAlias, newOffset);
@@ -252,7 +252,7 @@ namespace leon3_funclt_trap{
         inline void newReferredAlias( Register * newAlias ) throw(){
             this->offset = this->defaultOffset;
             this->reg = newAlias;
-            std::set<Alias *>::iterator referredIter, referredEnd;
+            std::list<Alias *>::iterator referredIter, referredEnd;
             for(referredIter = this->referredAliases.begin(), referredEnd = this->referredAliases.end(); \
                 referredIter != referredEnd; referredIter++){
                 (*referredIter)->newReferredAlias(newAlias);

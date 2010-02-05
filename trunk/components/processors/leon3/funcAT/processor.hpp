@@ -53,6 +53,10 @@
 #include <registers.hpp>
 #include <alias.hpp>
 #include <externalPorts.hpp>
+#include <iostream>
+#include <fstream>
+#include <boost/circular_buffer.hpp>
+#include <instructionBase.hpp>
 #ifdef __GNUC__
 #ifdef __GNUC_MINOR__
 #if (__GNUC__ >= 4 && __GNUC_MINOR__ >= 3)
@@ -78,15 +82,20 @@
 
 #include <irqPorts.hpp>
 #include <externalPins.hpp>
+#include <string>
 
 #define FUNC_MODEL
 #define AT_IF
 using namespace trap;
 namespace leon3_funcat_trap{
 
-    class Processor : public sc_module{
+    class Processor_leon3_funcat : public sc_module{
         private:
         Decoder decoder;
+        unsigned int profStartAddr;
+        unsigned int profEndAddr;
+        std::ofstream histFile;
+        bool historyEnabled;
         bool instrExecuting;
         sc_event instrEndEvent;
         static Instruction * * INSTRUCTIONS;
@@ -95,8 +104,8 @@ namespace leon3_funcat_trap{
         unsigned int IRQ;
 
         public:
-        SC_HAS_PROCESS( Processor );
-        Processor( sc_module_name name, sc_time latency );
+        SC_HAS_PROCESS( Processor_leon3_funcat );
+        Processor_leon3_funcat( sc_module_name name, sc_time latency );
         void mainLoop();
         void resetOp();
         void end_of_elaboration();
@@ -121,14 +130,20 @@ namespace leon3_funcat_trap{
         TLMMemory instrMem;
         TLMMemory dataMem;
         sc_time latency;
+        sc_time profTimeStart;
+        sc_time profTimeEnd;
+        boost::circular_buffer< HistoryInstrType > instHistoryQueue;
+        unsigned int undumpedHistElems;
         unsigned int numInstructions;
         unsigned int ENTRY_POINT;
         unsigned int PROGRAM_LIMIT;
         unsigned int PROGRAM_START;
         IntrTLMPort_32 IRQ_port;
         PinTLM_out_32 irqAck;
+        void setProfilingRange( unsigned int startAddr, unsigned int endAddr );
+        void enableHistory( std::string fileName = "" );
         IRQ_IRQ_Instruction * IRQ_irqInstr;
-        ~Processor();
+        ~Processor_leon3_funcat();
     };
 
 };

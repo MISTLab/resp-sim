@@ -149,13 +149,13 @@ namespace leon3_funclt_trap{
         inline void stall( const unsigned int & numCycles ){
             this->totalInstrCycles += numCycles;
         }
-        bool IncrementRegWindow();
-        bool DecrementRegWindow();
+        bool IncrementRegWindow() throw();
+        bool DecrementRegWindow() throw();
         int SignExtend( unsigned int bitSeq, unsigned int bitSeq_length ) const throw();
         void RaiseException( unsigned int pcounter, unsigned int npcounter, unsigned int \
             exceptionId, unsigned int customTrapOffset = 0 );
-        bool checkIncrementWin();
-        bool checkDecrementWin();
+        bool checkIncrementWin() const throw();
+        bool checkDecrementWin() const throw();
         unsigned int totalInstrCycles;
         virtual ~Instruction();
     };
@@ -167,7 +167,7 @@ namespace leon3_funclt_trap{
     class WB_plain_op : public virtual Instruction{
 
         protected:
-        inline void WB_plain( Alias & rd, unsigned int & rd_bit, unsigned int & result ){
+        inline void WB_plain( Alias & rd, unsigned int & rd_bit, unsigned int & result ) throw(){
 
             rd = result;
         }
@@ -187,7 +187,7 @@ namespace leon3_funclt_trap{
     class ICC_writeLogic_op : public virtual Instruction{
 
         protected:
-        inline void ICC_writeLogic( unsigned int & result ){
+        inline void ICC_writeLogic( unsigned int & result ) throw(){
 
             PSR[key_ICC_n] = ((result & 0x80000000) >> 31);
             PSR[key_ICC_z] = (result == 0);
@@ -211,7 +211,7 @@ namespace leon3_funclt_trap{
 
         protected:
         inline void ICC_writeTSub( unsigned int & result, bool & temp_V, unsigned int & rs1_op, \
-            unsigned int & rs2_op ){
+            unsigned int & rs2_op ) throw(){
 
             PSR[key_ICC_n] = ((result & 0x80000000) >> 31);
             PSR[key_ICC_z] = (result == 0);
@@ -235,7 +235,8 @@ namespace leon3_funclt_trap{
     class ICC_writeDiv_op : public virtual Instruction{
 
         protected:
-        inline void ICC_writeDiv( bool & exception, unsigned int & result, bool & temp_V ){
+        inline void ICC_writeDiv( bool & exception, unsigned int & result, bool & temp_V \
+            ) throw(){
 
             if(!exception){
                 PSR[key_ICC_n] = ((result & 0x80000000) >> 31);
@@ -261,7 +262,7 @@ namespace leon3_funclt_trap{
 
         protected:
         inline void ICC_writeAdd( unsigned int & result, unsigned int & rs1_op, unsigned \
-            int & rs2_op ){
+            int & rs2_op ) throw(){
 
             PSR[key_ICC_n] = ((result & 0x80000000) >> 31);
             PSR[key_ICC_z] = (result == 0);
@@ -287,7 +288,7 @@ namespace leon3_funclt_trap{
 
         protected:
         inline void ICC_writeSub( unsigned int & result, unsigned int & rs1_op, unsigned \
-            int & rs2_op ){
+            int & rs2_op ) throw(){
 
             PSR[key_ICC_n] = ((result & 0x80000000) >> 31);
             PSR[key_ICC_z] = (result == 0);
@@ -313,7 +314,7 @@ namespace leon3_funclt_trap{
 
         protected:
         inline void ICC_writeTAdd( unsigned int & result, bool & temp_V, unsigned int & rs1_op, \
-            unsigned int & rs2_op ){
+            unsigned int & rs2_op ) throw(){
 
             PSR[key_ICC_n] = ((result & 0x80000000) >> 31);
             PSR[key_ICC_z] = (result == 0);
@@ -338,7 +339,7 @@ namespace leon3_funclt_trap{
 
         protected:
         inline void ICC_writeTVSub( unsigned int & result, bool & temp_V, unsigned int & \
-            rs1_op, unsigned int & rs2_op ){
+            rs1_op, unsigned int & rs2_op ) throw(){
 
             if(!temp_V){
                 PSR[key_ICC_n] = ((result & 0x80000000) >> 31);
@@ -365,7 +366,7 @@ namespace leon3_funclt_trap{
 
         protected:
         inline void WB_tv( Alias & rd, unsigned int & rd_bit, unsigned int & result, bool \
-            & temp_V ){
+            & temp_V ) throw(){
 
             if(!temp_V){
                 rd = result;
@@ -388,7 +389,7 @@ namespace leon3_funclt_trap{
 
         protected:
         inline void ICC_writeTVAdd( unsigned int & result, bool & temp_V, unsigned int & \
-            rs1_op, unsigned int & rs2_op ){
+            rs1_op, unsigned int & rs2_op ) throw(){
 
             if(!temp_V){
                 PSR[key_ICC_n] = ((result & 0x80000000) >> 31);
@@ -5058,6 +5059,10 @@ namespace leon3_funclt_trap{
 namespace leon3_funclt_trap{
 
     class IRQ_IRQ_Instruction : public Instruction{
+
+        protected:
+        unsigned int pcounter;
+        unsigned int npcounter;
 
         public:
         IRQ_IRQ_Instruction( Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 \

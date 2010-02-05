@@ -55,7 +55,7 @@
 #include <systemc.h>
 
 using namespace leon3_funclt_trap;
-bool leon3_funclt_trap::Instruction::IncrementRegWindow(){
+bool leon3_funclt_trap::Instruction::IncrementRegWindow() throw(){
     {
         unsigned int newCwp;
 
@@ -67,24 +67,22 @@ bool leon3_funclt_trap::Instruction::IncrementRegWindow(){
         #ifndef ACC_MODEL
         //Functional model: we simply immediately update the alias
         for(int i = 8; i < 32; i++){
-            REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (128)]);
+            REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) & 0x7f]);
         }
         #else
         //Cycle accurate model: we have to update the alias using the pipeline register
         //We update the aliases for this stage and for all the preceding ones (we are in the
-        //execute stage and we need to update fetch, decode, and register read and execute)
+        //decode stage and we need to update fetch, and decode)
         for(int i = 8; i < 32; i++){
-            REGS_fetch[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_decode[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_regs[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_execute[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_fetch[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
+            REGS_decode[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
         }
         #endif
         return true;
     }
 }
 
-bool leon3_funclt_trap::Instruction::DecrementRegWindow(){
+bool leon3_funclt_trap::Instruction::DecrementRegWindow() throw(){
     {
         unsigned int newCwp;
 
@@ -96,17 +94,15 @@ bool leon3_funclt_trap::Instruction::DecrementRegWindow(){
         #ifndef ACC_MODEL
         //Functional model: we simply immediately update the alias
         for(int i = 8; i < 32; i++){
-            REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (128)]);
+            REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) & 0x7f]);
         }
         #else
         //Cycle accurate model: we have to update the alias using the pipeline register
         //We update the aliases for this stage and for all the preceding ones (we are in the
-        //execute stage and we need to update fetch, decode, and register read and execute)
+        //decode stage and we need to update fetch, and decode)
         for(int i = 8; i < 32; i++){
-            REGS_fetch[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_decode[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_regs[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_execute[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_fetch[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
+            REGS_decode[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
         }
         #endif
         return true;
@@ -141,19 +137,19 @@ void leon3_funclt_trap::Instruction::RaiseException( unsigned int pcounter, unsi
         #ifndef ACC_MODEL
         //Functional model: we simply immediately update the alias
         for(int i = 8; i < 32; i++){
-            REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (128)]);
+            REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) & 0x7f]);
         }
         #else
         //Cycle accurate model: we have to update the alias using the pipeline register
         //We update the aliases for this stage and for all the preceding ones (we are in the
         //execute stage and we need to update fetch, decode, and register read and execute)
         for(int i = 8; i < 32; i++){
-            REGS_fetch[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_decode[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_regs[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_execute[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_memory[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_exception[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_fetch[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
+            REGS_decode[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
+            REGS_regs[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
+            REGS_execute[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
+            REGS_memory[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
+            REGS_exception[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
         }
         #endif
 
@@ -294,12 +290,16 @@ void leon3_funclt_trap::Instruction::RaiseException( unsigned int pcounter, unsi
             PC = TBR;
             NPC = TBR + 4;
         }
+        if(exceptionId > TRAP_INSTRUCTION && exceptionId < IMPL_DEP_EXC){
+            // finally I acknowledge the interrupt on the external pin port
+            irqAck.send_pin_req(IMPL_DEP_EXC - exceptionId, 0);
+        }
         flush();
         annull();
     }
 }
 
-bool leon3_funclt_trap::Instruction::checkIncrementWin(){
+bool leon3_funclt_trap::Instruction::checkIncrementWin() const throw(){
 
     unsigned int newCwp = ((unsigned int)(PSR[key_CWP] + 1)) % NUM_REG_WIN;
     if(((0x01 << (newCwp)) & WIM) != 0){
@@ -310,7 +310,7 @@ bool leon3_funclt_trap::Instruction::checkIncrementWin(){
     }
 }
 
-bool leon3_funclt_trap::Instruction::checkDecrementWin(){
+bool leon3_funclt_trap::Instruction::checkDecrementWin() const throw(){
 
     unsigned int newCwp = ((unsigned int)(PSR[key_CWP] - 1)) % NUM_REG_WIN;
     if(((0x01 << (newCwp)) & WIM) != 0){
@@ -768,10 +768,14 @@ leon3_funclt_trap::LDSB_imm::~LDSB_imm(){
 }
 unsigned int leon3_funclt_trap::WRITEpsr_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     // Note how we filter writes to EF and EC fields since we do not
     // have neither a co-processor nor the FPU
@@ -945,10 +949,14 @@ leon3_funclt_trap::XNORcc_reg::~XNORcc_reg(){
 }
 unsigned int leon3_funclt_trap::READpsr::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     #ifdef ACC_MODEL
     psr_temp = PSR_execute;
@@ -1185,10 +1193,14 @@ leon3_funclt_trap::TSUBcc_imm::~TSUBcc_imm(){
 }
 unsigned int leon3_funclt_trap::LDSBA_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + rs2;
     supervisor = PSR[key_S];
@@ -1268,10 +1280,14 @@ leon3_funclt_trap::LDSBA_reg::~LDSBA_reg(){
 }
 unsigned int leon3_funclt_trap::LDUH_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + SignExtend(simm13, 13);
 
@@ -1337,10 +1353,14 @@ leon3_funclt_trap::LDUH_imm::~LDUH_imm(){
 }
 unsigned int leon3_funclt_trap::STA_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + rs2;
     toWrite = rd;
@@ -1477,10 +1497,14 @@ leon3_funclt_trap::ORN_reg::~ORN_reg(){
 }
 unsigned int leon3_funclt_trap::LDSHA_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + rs2;
     supervisor = PSR[key_S];
@@ -1564,10 +1588,14 @@ leon3_funclt_trap::LDSHA_reg::~LDSHA_reg(){
 }
 unsigned int leon3_funclt_trap::STBA_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + rs2;
     toWrite = (unsigned char)(rd & 0x000000FF);
@@ -1642,10 +1670,14 @@ leon3_funclt_trap::STBA_reg::~STBA_reg(){
 }
 unsigned int leon3_funclt_trap::ST_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + SignExtend(simm13, 13);
     toWrite = rd;
@@ -1716,10 +1748,14 @@ leon3_funclt_trap::ST_imm::~ST_imm(){
 }
 unsigned int leon3_funclt_trap::READtbr::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     tbr_temp = TBR;
     supervisor = PSR[key_S];
@@ -1772,10 +1808,14 @@ leon3_funclt_trap::READtbr::~READtbr(){
 }
 unsigned int leon3_funclt_trap::UDIVcc_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     rs1_op = rs1;
     rs2_op = SignExtend(simm13, 13);
@@ -1855,21 +1895,25 @@ leon3_funclt_trap::UDIVcc_imm::~UDIVcc_imm(){
 }
 unsigned int leon3_funclt_trap::SWAPA_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + rs2;
     toWrite = rd;
     supervisor = PSR[key_S];
 
-    if(!supervisor){
-        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
+    notAligned = (address & 0x00000003) != 0;
+    #ifdef ACC_MODEL
+    if(!supervisor || notAligned){
+        flush();
     }
-    if(notAligned){
-        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
-    }
+    #endif
 
     if(!supervisor || notAligned){
         flush();
@@ -1880,12 +1924,12 @@ unsigned int leon3_funclt_trap::SWAPA_reg::behavior(){
     }
     stall(2);
 
-    notAligned = (address & 0x00000003) != 0;
-    #ifdef ACC_MODEL
-    if(!supervisor || notAligned){
-        flush();
+    if(!supervisor){
+        RaiseException(pcounter, npcounter, PRIVILEDGE_INSTR);
     }
-    #endif
+    if(notAligned){
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
+    }
 
     rd = readValue;
     return this->totalInstrCycles;
@@ -2124,10 +2168,14 @@ leon3_funclt_trap::SUBXcc_imm::~SUBXcc_imm(){
 }
 unsigned int leon3_funclt_trap::STH_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + rs2;
     toWrite = (unsigned short int)(rd & 0x0000FFFF);
@@ -2618,10 +2666,14 @@ leon3_funclt_trap::WRITEasr_reg::~WRITEasr_reg(){
 }
 unsigned int leon3_funclt_trap::LD_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + rs2;
 
@@ -2689,10 +2741,14 @@ leon3_funclt_trap::LD_reg::~LD_reg(){
 }
 unsigned int leon3_funclt_trap::ST_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + rs2;
     toWrite = rd;
@@ -2825,21 +2881,27 @@ leon3_funclt_trap::SUBcc_reg::~SUBcc_reg(){
 }
 unsigned int leon3_funclt_trap::LDD_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
-
     #ifdef ACC_MODEL
-    REGS[rd_bit | 0x1].lock();
+    npcounter = PC;
     #endif
 
+    #ifdef ACC_MODEL
+    REGS[rd_bit ^ 0x1].lock();
+    #endif
     address = rs1 + rs2;
-
     notAligned = (address & 0x00000007) != 0;
     #ifdef ACC_MODEL
     if(notAligned){
-        REGS[rd_bit | 0x1].unlock();
+        flush();
+    }
+    #endif
+    #ifdef ACC_MODEL
+    if(notAligned){
         flush();
     }
     #endif
@@ -2848,6 +2910,11 @@ unsigned int leon3_funclt_trap::LDD_reg::behavior(){
         readValue = dataMem.read_dword(address);
         stall(1);
     }
+    #ifdef ACC_MODEL
+    if(notAligned){
+        flush();
+    }
+    #endif
 
     if(notAligned){
         RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
@@ -2856,17 +2923,14 @@ unsigned int leon3_funclt_trap::LDD_reg::behavior(){
     if(rd_bit % 2 == 0){
         rd = (unsigned int)(readValue & 0x00000000FFFFFFFFLL);
         REGS[rd_bit + 1] = (unsigned int)((readValue >> 32) & 0x00000000FFFFFFFFLL);
-        #ifdef ACC_MODEL
-        REGS[rd_bit + 1].unlock();
-        #endif
     }
     else{
         REGS[rd_bit - 1] = (unsigned int)(readValue & 0x00000000FFFFFFFFLL);
         rd = (unsigned int)((readValue >> 32) & 0x00000000FFFFFFFFLL);
-        #ifdef ACC_MODEL
-        REGS[rd_bit - 1].unlock();
-        #endif
     }
+    #ifdef ACC_MODEL
+    unlockQueue[0].push_back(REGS[rd_bit ^ 0x1].getPipeReg());
+    #endif
     return this->totalInstrCycles;
 }
 
@@ -2976,10 +3040,14 @@ leon3_funclt_trap::ADDcc_imm::~ADDcc_imm(){
 }
 unsigned int leon3_funclt_trap::LDUH_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + rs2;
 
@@ -3105,10 +3173,14 @@ leon3_funclt_trap::SRL_reg::~SRL_reg(){
 }
 unsigned int leon3_funclt_trap::SAVE_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
     result = rs1 + SignExtend(simm13, 13);
 
     okNewWin = DecrementRegWindow();
@@ -3332,11 +3404,14 @@ leon3_funclt_trap::OR_imm::~OR_imm(){
 }
 unsigned int leon3_funclt_trap::STD_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
-
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
     address = rs1 + SignExtend(simm13, 13);
     if(rd_bit % 2 == 0){
         toWrite = rd | (((unsigned long long)REGS[rd_bit + 1]) << 32);
@@ -3538,17 +3613,24 @@ leon3_funclt_trap::ADDX_imm::~ADDX_imm(){
 }
 unsigned int leon3_funclt_trap::SWAP_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + SignExtend(simm13, 13);
     toWrite = rd;
 
+    notAligned = (address & 0x00000003) != 0;
+    #ifdef ACC_MODEL
     if(notAligned){
-        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
+        flush();
     }
+    #endif
 
     if(notAligned){
         flush();
@@ -3559,12 +3641,9 @@ unsigned int leon3_funclt_trap::SWAP_imm::behavior(){
     }
     stall(2);
 
-    notAligned = (address & 0x00000003) != 0;
-    #ifdef ACC_MODEL
     if(notAligned){
-        flush();
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
-    #endif
 
     rd = readValue;
     return this->totalInstrCycles;
@@ -3893,10 +3972,14 @@ leon3_funclt_trap::SRA_reg::~SRA_reg(){
 }
 unsigned int leon3_funclt_trap::STH_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + SignExtend(simm13, 13);
     toWrite = (unsigned short int)(rd & 0x0000FFFF);
@@ -3967,10 +4050,14 @@ leon3_funclt_trap::STH_imm::~STH_imm(){
 }
 unsigned int leon3_funclt_trap::WRITEwim_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     result = rs1 ^ SignExtend(simm13, 13);
     raiseException = (PSR[key_S] == 0);
@@ -4030,21 +4117,27 @@ leon3_funclt_trap::WRITEwim_imm::~WRITEwim_imm(){
 }
 unsigned int leon3_funclt_trap::LDD_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
-
     #ifdef ACC_MODEL
-    REGS[rd_bit | 0x1].lock();
+    npcounter = PC;
     #endif
 
+    #ifdef ACC_MODEL
+    REGS[rd_bit ^ 0x1].lock();
+    #endif
     address = rs1 + SignExtend(simm13, 13);
-
     notAligned = (address & 0x00000007) != 0;
     #ifdef ACC_MODEL
     if(notAligned){
-        REGS[rd_bit | 0x1].unlock();
+        flush();
+    }
+    #endif
+    #ifdef ACC_MODEL
+    if(notAligned){
         flush();
     }
     #endif
@@ -4053,6 +4146,11 @@ unsigned int leon3_funclt_trap::LDD_imm::behavior(){
         readValue = dataMem.read_dword(address);
         stall(1);
     }
+    #ifdef ACC_MODEL
+    if(notAligned){
+        flush();
+    }
+    #endif
 
     if(notAligned){
         RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
@@ -4061,17 +4159,14 @@ unsigned int leon3_funclt_trap::LDD_imm::behavior(){
     if(rd_bit % 2 == 0){
         rd = (unsigned int)(readValue & 0x00000000FFFFFFFFLL);
         REGS[rd_bit + 1] = (unsigned int)((readValue >> 32) & 0x00000000FFFFFFFFLL);
-        #ifdef ACC_MODEL
-        REGS[rd_bit + 1].unlock();
-        #endif
     }
     else{
         REGS[rd_bit - 1] = (unsigned int)(readValue & 0x00000000FFFFFFFFLL);
         rd = (unsigned int)((readValue >> 32) & 0x00000000FFFFFFFFLL);
-        #ifdef ACC_MODEL
-        REGS[rd_bit - 1].unlock();
-        #endif
     }
+    #ifdef ACC_MODEL
+    unlockQueue[0].push_back(REGS[rd_bit ^ 0x1].getPipeReg());
+    #endif
     return this->totalInstrCycles;
 }
 
@@ -4176,10 +4271,14 @@ leon3_funclt_trap::SLL_imm::~SLL_imm(){
 }
 unsigned int leon3_funclt_trap::LDUHA_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + rs2;
     supervisor = PSR[key_S];
@@ -4392,10 +4491,14 @@ leon3_funclt_trap::TADDcc_imm::~TADDcc_imm(){
 }
 unsigned int leon3_funclt_trap::SDIV_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     rs1_op = rs1;
     rs2_op = SignExtend(simm13, 13);
@@ -4479,10 +4582,14 @@ leon3_funclt_trap::SDIV_imm::~SDIV_imm(){
 }
 unsigned int leon3_funclt_trap::TSUBccTV_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     rs1_op = rs1;
     rs2_op = SignExtend(simm13, 13);
@@ -4661,10 +4768,14 @@ leon3_funclt_trap::ORNcc_reg::~ORNcc_reg(){
 }
 unsigned int leon3_funclt_trap::RETT_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
     targetAddr = rs1 + SignExtend(simm13, 13);
     newCwp = ((unsigned int)(PSR[key_CWP] + 1)) % NUM_REG_WIN;
     exceptionEnabled = PSR[key_ET];
@@ -4718,19 +4829,19 @@ unsigned int leon3_funclt_trap::RETT_imm::behavior(){
         #ifndef ACC_MODEL
         //Functional model: we simply immediately update the alias
         for(int i = 8; i < 32; i++){
-            REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (128)]);
+            REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) & 0x7f]);
         }
         #else
         //Cycle accurate model: we have to update the alias using the pipeline register
         //We update the aliases for this stage and for all the preceding ones (we are in the
         //execute stage and we need to update fetch, decode, and register read and execute)
         for(int i = 8; i < 32; i++){
-            REGS_fetch[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_decode[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_regs[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_execute[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_memory[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_exception[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_fetch[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
+            REGS_decode[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
+            REGS_regs[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
+            REGS_execute[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
+            REGS_memory[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
+            REGS_exception[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
         }
         #endif
 
@@ -4786,10 +4897,14 @@ leon3_funclt_trap::RETT_imm::~RETT_imm(){
 }
 unsigned int leon3_funclt_trap::SDIVcc_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     rs1_op = rs1;
     rs2_op = rs2;
@@ -4934,9 +5049,13 @@ leon3_funclt_trap::ADD_reg::~ADD_reg(){
 }
 unsigned int leon3_funclt_trap::TRAP_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     #ifndef ACC_MODEL
     bool icc_z = PSR[key_ICC_z];
@@ -4949,6 +5068,19 @@ unsigned int leon3_funclt_trap::TRAP_imm::behavior(){
     bool icc_v = PSR_execute[key_ICC_v];
     bool icc_c = PSR_execute[key_ICC_c];
     #endif
+
+    //While TRAP normally stops simulation when the _exit routine is encountered, TSIM \
+        stops simulation
+    //when a TA instruction is encountered (no matter what the argument of TA is)
+    #ifdef TSIM_COMPATIBILITY
+    if(cond == 0x8){
+        std::cerr << std::endl << "Simulation stopped by a TA instruction" << std::endl << \
+            std::endl;
+        sc_stop();
+        wait(SC_ZERO_TIME);
+    }
+    #endif
+
     raiseException = (cond == 0x8) ||
     ((cond == 0x9) && !icc_z) ||
     ((cond == 0x1) && icc_z) ||
@@ -5073,10 +5205,14 @@ leon3_funclt_trap::TRAP_imm::~TRAP_imm(){
 }
 unsigned int leon3_funclt_trap::WRITEtbr_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     result = rs1 ^ SignExtend(simm13, 13);
     raiseException = (PSR[key_S] == 0);
@@ -5193,10 +5329,14 @@ leon3_funclt_trap::LDUB_reg::~LDUB_reg(){
 }
 unsigned int leon3_funclt_trap::RESTORE_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
     result = rs1 + rs2;
 
     okNewWin = IncrementRegWindow();
@@ -5645,10 +5785,14 @@ leon3_funclt_trap::UMUL_imm::~UMUL_imm(){
 }
 unsigned int leon3_funclt_trap::READwim::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     wim_temp = WIM;
     supervisor = PSR[key_S];
@@ -5942,10 +6086,14 @@ leon3_funclt_trap::ANDN_reg::~ANDN_reg(){
 }
 unsigned int leon3_funclt_trap::TSUBccTV_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     rs1_op = rs1;
     rs2_op = rs2;
@@ -6121,10 +6269,14 @@ leon3_funclt_trap::SRA_imm::~SRA_imm(){
 }
 unsigned int leon3_funclt_trap::LDSH_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + rs2;
 
@@ -6199,10 +6351,14 @@ leon3_funclt_trap::LDSH_reg::~LDSH_reg(){
 }
 unsigned int leon3_funclt_trap::UDIVcc_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     rs1_op = rs1;
     rs2_op = rs2;
@@ -6339,11 +6495,14 @@ leon3_funclt_trap::ORN_imm::~ORN_imm(){
 }
 unsigned int leon3_funclt_trap::STD_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
-
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
     address = rs1 + rs2;
     if(rd_bit % 2 == 0){
         toWrite = rd | (((unsigned long long)REGS[rd_bit + 1]) << 32);
@@ -6478,10 +6637,14 @@ leon3_funclt_trap::ANDNcc_imm::~ANDNcc_imm(){
 }
 unsigned int leon3_funclt_trap::TADDccTV_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     rs1_op = rs1;
     rs2_op = SignExtend(simm13, 13);
@@ -6550,10 +6713,14 @@ leon3_funclt_trap::TADDccTV_imm::~TADDccTV_imm(){
 }
 unsigned int leon3_funclt_trap::WRITEtbr_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     result = rs1 ^ rs2;
     raiseException = (PSR[key_S] == 0);
@@ -6732,10 +6899,14 @@ leon3_funclt_trap::XNOR_imm::~XNOR_imm(){
 }
 unsigned int leon3_funclt_trap::UDIV_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     rs1_op = rs1;
     rs2_op = SignExtend(simm13, 13);
@@ -6814,10 +6985,14 @@ leon3_funclt_trap::UDIV_imm::~UDIV_imm(){
 }
 unsigned int leon3_funclt_trap::LDSH_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + SignExtend(simm13, 13);
 
@@ -6890,10 +7065,14 @@ leon3_funclt_trap::LDSH_imm::~LDSH_imm(){
 }
 unsigned int leon3_funclt_trap::UNIMP::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     RaiseException(pcounter, npcounter, ILLEGAL_INSTR);
     return this->totalInstrCycles;
@@ -6938,10 +7117,14 @@ leon3_funclt_trap::UNIMP::~UNIMP(){
 }
 unsigned int leon3_funclt_trap::LDSTUBA_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + rs2;
     supervisor = PSR[key_S];
@@ -7337,10 +7520,14 @@ leon3_funclt_trap::SUB_reg::~SUB_reg(){
 }
 unsigned int leon3_funclt_trap::WRITEwim_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     result = rs1 ^ rs2;
     raiseException = (PSR[key_S] == 0);
@@ -7535,9 +7722,13 @@ leon3_funclt_trap::TSUBcc_reg::~TSUBcc_reg(){
 }
 unsigned int leon3_funclt_trap::BRANCH::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     switch(cond){
         case 0x8:{
@@ -8028,10 +8219,14 @@ leon3_funclt_trap::SUBcc_imm::~SUBcc_imm(){
 }
 unsigned int leon3_funclt_trap::TADDccTV_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     rs1_op = rs1;
     rs2_op = rs2;
@@ -8101,10 +8296,14 @@ leon3_funclt_trap::TADDccTV_reg::~TADDccTV_reg(){
 }
 unsigned int leon3_funclt_trap::SDIV_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     rs1_op = rs1;
     rs2_op = rs2;
@@ -8251,17 +8450,24 @@ leon3_funclt_trap::SMULcc_imm::~SMULcc_imm(){
 }
 unsigned int leon3_funclt_trap::SWAP_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + rs2;
     toWrite = rd;
 
+    notAligned = (address & 0x00000003) != 0;
+    #ifdef ACC_MODEL
     if(notAligned){
-        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
+        flush();
     }
+    #endif
 
     if(notAligned){
         flush();
@@ -8272,12 +8478,9 @@ unsigned int leon3_funclt_trap::SWAP_reg::behavior(){
     }
     stall(2);
 
-    notAligned = (address & 0x00000003) != 0;
-    #ifdef ACC_MODEL
     if(notAligned){
-        flush();
+        RaiseException(pcounter, npcounter, MEM_ADDR_NOT_ALIGNED);
     }
-    #endif
 
     rd = readValue;
     return this->totalInstrCycles;
@@ -8391,10 +8594,14 @@ leon3_funclt_trap::SUBX_imm::~SUBX_imm(){
 }
 unsigned int leon3_funclt_trap::STDA_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + rs2;
     if(rd_bit % 2 == 0){
@@ -8548,9 +8755,13 @@ leon3_funclt_trap::UMAC_reg::~UMAC_reg(){
 }
 unsigned int leon3_funclt_trap::JUMP_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     unsigned int jumpAddr = rs1 + SignExtend(simm13, 13);
     if((jumpAddr & 0x00000003) != 0){
@@ -8802,10 +9013,14 @@ leon3_funclt_trap::ORNcc_imm::~ORNcc_imm(){
 }
 unsigned int leon3_funclt_trap::LDUBA_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + rs2;
     supervisor = PSR[key_S];
@@ -8885,9 +9100,13 @@ leon3_funclt_trap::LDUBA_reg::~LDUBA_reg(){
 }
 unsigned int leon3_funclt_trap::JUMP_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     unsigned int jumpAddr = rs1 + rs2;
     if((jumpAddr & 0x00000003) != 0){
@@ -9027,10 +9246,14 @@ leon3_funclt_trap::ADDX_reg::~ADDX_reg(){
 }
 unsigned int leon3_funclt_trap::UDIV_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     rs1_op = rs1;
     rs2_op = rs2;
@@ -9213,10 +9436,14 @@ leon3_funclt_trap::STBAR::~STBAR(){
 }
 unsigned int leon3_funclt_trap::LDA_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + rs2;
     supervisor = PSR[key_S];
@@ -9299,10 +9526,14 @@ leon3_funclt_trap::LDA_reg::~LDA_reg(){
 }
 unsigned int leon3_funclt_trap::STHA_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + rs2;
     toWrite = (unsigned short int)(rd & 0x0000FFFF);
@@ -9381,13 +9612,17 @@ leon3_funclt_trap::STHA_reg::~STHA_reg(){
 }
 unsigned int leon3_funclt_trap::LDDA_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     #ifdef ACC_MODEL
-    REGS[rd_bit | 0x1].lock();
+    REGS[rd_bit ^ 0x1].lock();
     #endif
 
     address = rs1 + rs2;
@@ -9396,7 +9631,6 @@ unsigned int leon3_funclt_trap::LDDA_reg::behavior(){
     notAligned = (address & 0x00000007) != 0;
     #ifdef ACC_MODEL
     if(notAligned || !supervisor){
-        REGS[rd_bit | 0x1].unlock();
         flush();
     }
     #endif
@@ -9422,17 +9656,14 @@ unsigned int leon3_funclt_trap::LDDA_reg::behavior(){
     if(rd_bit % 2 == 0){
         rd = (unsigned int)(readValue & 0x00000000FFFFFFFFLL);
         REGS[rd_bit + 1] = (unsigned int)((readValue >> 32) & 0x00000000FFFFFFFFLL);
-        #ifdef ACC_MODEL
-        REGS[rd_bit + 1].unlock();
-        #endif
     }
     else{
         REGS[rd_bit - 1] = (unsigned int)(readValue & 0x00000000FFFFFFFFLL);
         rd = (unsigned int)((readValue >> 32) & 0x00000000FFFFFFFFLL);
-        #ifdef ACC_MODEL
-        REGS[rd_bit - 1].unlock();
-        #endif
     }
+    #ifdef ACC_MODEL
+    unlockQueue[0].push_back(REGS[rd_bit ^ 0x1].getPipeReg());
+    #endif
     return this->totalInstrCycles;
 }
 
@@ -9543,10 +9774,14 @@ leon3_funclt_trap::SLL_reg::~SLL_reg(){
 }
 unsigned int leon3_funclt_trap::RESTORE_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
     result = rs1 + SignExtend(simm13, 13);
 
     okNewWin = IncrementRegWindow();
@@ -9637,10 +9872,14 @@ leon3_funclt_trap::RESTORE_imm::~RESTORE_imm(){
 }
 unsigned int leon3_funclt_trap::LD_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     address = rs1 + SignExtend(simm13, 13);
 
@@ -9706,9 +9945,13 @@ leon3_funclt_trap::LD_imm::~LD_imm(){
 }
 unsigned int leon3_funclt_trap::TRAP_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     #ifndef ACC_MODEL
     bool icc_z = PSR[key_ICC_z];
@@ -9721,6 +9964,19 @@ unsigned int leon3_funclt_trap::TRAP_reg::behavior(){
     bool icc_v = PSR_execute[key_ICC_v];
     bool icc_c = PSR_execute[key_ICC_c];
     #endif
+
+    //While TRAP normally stops simulation when the _exit routine is encountered, TSIM \
+        stops simulation
+    //when a TA instruction is encountered (no matter what the argument of TA is)
+    #ifdef TSIM_COMPATIBILITY
+    if(cond == 0x8){
+        std::cerr << std::endl << "Simulation stopped by a TA instruction" << std::endl << \
+            std::endl;
+        sc_stop();
+        wait(SC_ZERO_TIME);
+    }
+    #endif
+
     raiseException = (cond == 0x8) ||
     ((cond == 0x9) && !icc_z) ||
     ((cond == 0x1) && icc_z) ||
@@ -9900,10 +10156,14 @@ leon3_funclt_trap::LDUB_imm::~LDUB_imm(){
 }
 unsigned int leon3_funclt_trap::RETT_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
     targetAddr = rs1 + rs2;
     newCwp = ((unsigned int)(PSR[key_CWP] + 1)) % NUM_REG_WIN;
     exceptionEnabled = PSR[key_ET];
@@ -9957,19 +10217,19 @@ unsigned int leon3_funclt_trap::RETT_reg::behavior(){
         #ifndef ACC_MODEL
         //Functional model: we simply immediately update the alias
         for(int i = 8; i < 32; i++){
-            REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (128)]);
+            REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) & 0x7f]);
         }
         #else
         //Cycle accurate model: we have to update the alias using the pipeline register
         //We update the aliases for this stage and for all the preceding ones (we are in the
         //execute stage and we need to update fetch, decode, and register read and execute)
         for(int i = 8; i < 32; i++){
-            REGS_fetch[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_decode[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_regs[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_execute[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_memory[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-            REGS_exception[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
+            REGS_fetch[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
+            REGS_decode[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
+            REGS_regs[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
+            REGS_execute[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
+            REGS_memory[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
+            REGS_exception[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) & 0x7f]);
         }
         #endif
 
@@ -10026,10 +10286,14 @@ leon3_funclt_trap::RETT_reg::~RETT_reg(){
 }
 unsigned int leon3_funclt_trap::SDIVcc_imm::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     rs1_op = rs1;
     rs2_op = SignExtend(simm13, 13);
@@ -10115,10 +10379,14 @@ leon3_funclt_trap::SDIVcc_imm::~SDIVcc_imm(){
 }
 unsigned int leon3_funclt_trap::SAVE_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
     result = rs1 + rs2;
 
     okNewWin = DecrementRegWindow();
@@ -10325,9 +10593,13 @@ leon3_funclt_trap::ORcc_imm::~ORcc_imm(){
 }
 unsigned int leon3_funclt_trap::CALL::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     unsigned int target = pcounter + (disp30 << 2);
     #ifdef ACC_MODEL
@@ -10379,10 +10651,14 @@ leon3_funclt_trap::CALL::~CALL(){
 }
 unsigned int leon3_funclt_trap::WRITEpsr_reg::behavior(){
     this->totalInstrCycles = 0;
-
     pcounter = PC;
+    #ifndef ACC_MODEL
     npcounter = NPC;
+    #endif
     this->IncrementPC();
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
 
     // Note how we filter writes to EF and EC fields since we do not
     // have neither a co-processor nor the FPU
@@ -10507,40 +10783,25 @@ leon3_funclt_trap::ANDcc_imm::~ANDcc_imm(){
 }
 unsigned int leon3_funclt_trap::IRQ_IRQ_Instruction::behavior(){
     this->totalInstrCycles = 0;
+
+    pcounter = PC;
+    #ifndef ACC_MODEL
+    npcounter = NPC;
+    #endif
+
+    #ifdef ACC_MODEL
+    npcounter = PC;
+    #endif
     //Basically, what I have to do when
     //an interrupt arrives is very simple: we check that interrupts
     //are enabled and that the the processor can take this interrupt
     //(valid interrupt level). The we simply raise an exception and
     //acknowledge the IRQ on the irqAck port.
-    // First of all I have to move to a new register window
-    unsigned int newCwp = ((unsigned int)(PSR[key_CWP] - 1)) % 8;
-    PSR.immediateWrite((PSR & 0xFFFFFFE0) | newCwp);
-    #ifndef ACC_MODEL
-    //Functional model: we simply immediately update the alias
-    for(int i = 8; i < 32; i++){
-        REGS[i].updateAlias(WINREGS[(newCwp*16 + i - 8) % (128)]);
-    }
-    #else
-    //Cycle accurate model: we have to update the alias using the pipeline register
-    //We update the aliases for this stage and for all the preceding ones (we are in the
-    //execute stage and we need to update fetch, decode, and register read and execute)
-    for(int i = 8; i < 32; i++){
-        REGS_fetch[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-        REGS_decode[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-        REGS_regs[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-        REGS_execute[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-        REGS_memory[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-        REGS_exception[i].updateAlias(WINREGS_pipe[(newCwp*16 + i - 8) % (128)]);
-    }
-    #endif
-
-    // Now I set the TBR
-    TBR[key_TT] = 0x10 + IRQ;
-    // I have to jump to the address contained in the TBR register
-    PC = TBR;
-    NPC = TBR + 4;
-    // finally I acknowledge the interrupt on the external pin port
-    irqAck.send_pin_req(IRQ, 0);
+    //All of this can be simply done by calling the
+    //RaiseException method
+    // Note that 38 corresponds to the highest defined exception
+    // (IMPL_DEP_EXC): this because interrupt 1 has id 37, etc.
+    RaiseException(pcounter, npcounter, 38 - IRQ);
     return this->totalInstrCycles;
 }
 
@@ -10555,7 +10816,7 @@ void leon3_funclt_trap::IRQ_IRQ_Instruction::setParams( const unsigned int & bit
 }
 
 std::string leon3_funclt_trap::IRQ_IRQ_Instruction::getInstructionName() const throw(){
-    return "IRQIRQInstruction";
+    return "IRQ_IRQ_Instruction";
 }
 
 std::string leon3_funclt_trap::IRQ_IRQ_Instruction::getMnemonic() const throw(){

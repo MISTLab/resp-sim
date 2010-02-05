@@ -45,7 +45,7 @@
 #include <alias.hpp>
 #include <registers.hpp>
 #include <ostream>
-#include <set>
+#include <list>
 
 using namespace leon3_funclt_trap;
 void leon3_funclt_trap::Alias::immediateWrite( const unsigned int & value ) throw(){
@@ -230,16 +230,16 @@ void leon3_funclt_trap::Alias::directSetAlias( Alias & newAlias ) throw(){
     this->reg = newAlias.reg;
     this->offset = newAlias.offset;
     if(this->referringAliases != NULL){
-        this->referringAliases->referredAliases.erase(this);
+        this->referringAliases->referredAliases.remove(this);
     }
     this->referringAliases = &newAlias;
-    newAlias.referredAliases.insert(this);
+    newAlias.referredAliases.push_back(this);
 }
 
 void leon3_funclt_trap::Alias::directSetAlias( Register & newAlias ) throw(){
     this->reg = &newAlias;
     if(this->referringAliases != NULL){
-        this->referringAliases->referredAliases.erase(this);
+        this->referringAliases->referredAliases.remove(this);
     }
     this->referringAliases = NULL;
 }
@@ -255,19 +255,20 @@ leon3_funclt_trap::Alias::Alias() : offset(0), defaultOffset(0){
 
 leon3_funclt_trap::Alias::Alias( Alias * initAlias, unsigned int offset ) : reg(initAlias->reg), \
     offset(initAlias->offset + offset), defaultOffset(offset){
-    initAlias->referredAliases.insert(this);
+    initAlias->referredAliases.push_back(this);
     this->referringAliases = initAlias;
 }
 
 leon3_funclt_trap::Alias::~Alias(){
-    std::set<Alias *>::iterator referredIter, referredEnd;
+    std::list<Alias *>::iterator referredIter, referredEnd;
     for(referredIter = this->referredAliases.begin(), referredEnd = this->referredAliases.end(); \
         referredIter != referredEnd; referredIter++){
-        if((*referredIter)->referringAliases == this)
-        (*referredIter)->referringAliases = NULL;
+        if((*referredIter)->referringAliases == this){
+            (*referredIter)->referringAliases = NULL;
+        }
     }
     if(this->referringAliases != NULL){
-        this->referringAliases->referredAliases.erase(this);
+        this->referringAliases->referredAliases.remove(this);
     }
     this->referringAliases = NULL;
 }
