@@ -49,5 +49,6 @@
 #include <osEmulator.hpp>
 #include <profiler.hpp>
 #include <syscCallB.hpp>
+#include <GDBStub.hpp>
 
 #endif

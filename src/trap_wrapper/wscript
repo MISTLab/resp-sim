@@ -84,6 +84,8 @@ mb.global_ns.classes(lambda decl: decl.name.startswith('MemoryToolsIf'), allow_e
 abiIfDecl = mb.global_ns.classes(lambda decl: 'ABIIf' in decl.name, allow_empty=True)
 for i in abiIfDecl:
     i.member_function('getState').call_policies = call_policies.return_value_policy( call_policies.return_addressof )
+    i.member_function('getInstructionHistory').call_policies = call_policies.return_value_policy( call_policies.reference_existing_object )
+
 
 trap_names = mb.namespaces(lambda x: x.name == 'trap')
 for cur_namespace in trap_names:

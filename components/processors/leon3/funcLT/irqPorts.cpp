@@ -51,7 +51,6 @@
 using namespace leon3_funclt_trap;
 void leon3_funclt_trap::IntrTLMPort_32::b_transport( int tag, tlm::tlm_generic_payload \
     & trans, sc_time & delay ){
-    tlm::tlm_command cmd = trans.get_command();
     unsigned char* ptr = trans.get_data_ptr();
     sc_dt::uint64 adr = trans.get_address();
     if(*ptr == 0){
@@ -67,7 +66,6 @@ void leon3_funclt_trap::IntrTLMPort_32::b_transport( int tag, tlm::tlm_generic_p
 
 unsigned int leon3_funclt_trap::IntrTLMPort_32::transport_dbg( int tag, tlm::tlm_generic_payload \
     & trans ){
-    tlm::tlm_command cmd = trans.get_command();
     unsigned char* ptr = trans.get_data_ptr();
     sc_dt::uint64 adr = trans.get_address();
     if(*ptr == 0){

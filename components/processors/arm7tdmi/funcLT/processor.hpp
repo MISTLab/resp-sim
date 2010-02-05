@@ -54,6 +54,10 @@
 #include <registers.hpp>
 #include <alias.hpp>
 #include <externalPorts.hpp>
+#include <iostream>
+#include <fstream>
+#include <boost/circular_buffer.hpp>
+#include <instructionBase.hpp>
 #ifdef __GNUC__
 #ifdef __GNUC_MINOR__
 #if (__GNUC__ >= 4 && __GNUC_MINOR__ >= 3)
@@ -77,16 +81,21 @@
 #endif
 #endif
 
+#include <string>
 
 #define FUNC_MODEL
 #define LT_IF
 using namespace trap;
 namespace arm7tdmi_funclt_trap{
 
-    class ARM7Processor : public sc_module{
+    class Processor_arm7tdmi_funclt : public sc_module{
         private:
         Decoder decoder;
         tlm_utils::tlm_quantumkeeper quantKeeper;
+        unsigned int profStartAddr;
+        unsigned int profEndAddr;
+        std::ofstream histFile;
+        bool historyEnabled;
         bool instrExecuting;
         sc_event instrEndEvent;
         static Instruction * * INSTRUCTIONS;
@@ -94,8 +103,8 @@ namespace arm7tdmi_funclt_trap{
         static int numInstances;
 
         public:
-        SC_HAS_PROCESS( ARM7Processor );
-        ARM7Processor( sc_module_name name, sc_time latency );
+        SC_HAS_PROCESS( Processor_arm7tdmi_funclt );
+        Processor_arm7tdmi_funclt( sc_module_name name, sc_time latency );
         void mainLoop();
         void resetOp();
         void end_of_elaboration();
@@ -119,11 +128,17 @@ namespace arm7tdmi_funclt_trap{
         TLMMemory instrMem;
         TLMMemory dataMem;
         sc_time latency;
+        sc_time profTimeStart;
+        sc_time profTimeEnd;
+        boost::circular_buffer< HistoryInstrType > instHistoryQueue;
+        unsigned int undumpedHistElems;
         unsigned int numInstructions;
         unsigned int ENTRY_POINT;
         unsigned int PROGRAM_LIMIT;
         unsigned int PROGRAM_START;
-        ~ARM7Processor();
+        void setProfilingRange( unsigned int startAddr, unsigned int endAddr );
+        void enableHistory( std::string fileName = "" );
+        ~Processor_arm7tdmi_funclt();
     };
 
 };

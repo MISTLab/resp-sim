@@ -129,6 +129,8 @@ BFDWrapper::BFDWrapper(std::string binaryName) : execImage(NULL){
     }
 
     this->wordsize = bfd_get_arch_size(this->execImage)/(8*bfd_octets_per_byte(this->execImage));
+    
+    std::cout << "Step 1\n";
 
     //Now I read the different sections and save them in a temporary vector
     struct bfd_section *p = NULL;
@@ -155,6 +157,7 @@ BFDWrapper::BFDWrapper(std::string binaryName) : execImage(NULL){
             }
         }
     }
+    std::cout << "Step 2\n";
     this->codeSize.first = gblEndAddr;
     this->codeSize.second = gblStartAddr;
     this->execName = bfd_get_filename(this->execImage);
@@ -181,6 +184,7 @@ BFDWrapper::BFDWrapper(std::string binaryName) : execImage(NULL){
     this->readSyms();
     this->readSrc();
 
+    std::cout << "Step 3\n";
     //Finally I deallocate part of the memory
     std::vector<Section>::iterator sectionsIter, sectionsEnd;
     for(sectionsIter = this->secList.begin(), sectionsEnd = this->secList.end(); sectionsIter != sectionsEnd; sectionsIter++){
@@ -188,6 +192,7 @@ BFDWrapper::BFDWrapper(std::string binaryName) : execImage(NULL){
     }
     this->secList.clear();
     free(this->sy);
+    std::cout << "Step 4\n";
 }
 
 BFDWrapper::~BFDWrapper(){

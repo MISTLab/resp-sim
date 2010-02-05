@@ -48,9 +48,10 @@
 #include <registers.hpp>
 #include <alias.hpp>
 #include <systemc.h>
+#include <boost/circular_buffer.hpp>
+#include <instructionBase.hpp>
 #include <vector>
 #include <string>
-#include <instructionBase.hpp>
 #include <trap_utils.hpp>
 
 using namespace leon3_funcat_trap;
@@ -1203,6 +1204,10 @@ void leon3_funcat_trap::LEON3_ABIIf::writeCharMem( const unsigned int & address,
     this->dataMem.write_byte_dbg(address, datum);
 }
 
+boost::circular_buffer< HistoryInstrType > & leon3_funcat_trap::LEON3_ABIIf::getInstructionHistory(){
+    return this->instHistoryQueue;
+}
+
 leon3_funcat_trap::LEON3_ABIIf::~LEON3_ABIIf(){
 
 }
@@ -1210,9 +1215,11 @@ leon3_funcat_trap::LEON3_ABIIf::LEON3_ABIIf( unsigned int & PROGRAM_LIMIT, Memor
     & dataMem, Reg32_0 & PSR, Reg32_1 & WIM, Reg32_2 & TBR, Reg32_3 & Y, Reg32_3 & PC, \
     Reg32_3 & NPC, RegisterBankClass & GLOBAL, Reg32_3 * WINREGS, Reg32_3 * ASR, Alias \
     & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * REGS, bool & instrExecuting, sc_event \
-    & instrEndEvent ) : PROGRAM_LIMIT(PROGRAM_LIMIT), dataMem(dataMem), PSR(PSR), WIM(WIM), \
-    TBR(TBR), Y(Y), PC(PC), NPC(NPC), GLOBAL(GLOBAL), WINREGS(WINREGS), ASR(ASR), FP(FP), \
-    LR(LR), SP(SP), PCR(PCR), REGS(REGS), instrExecuting(instrExecuting), instrEndEvent(instrEndEvent){
+    & instrEndEvent, boost::circular_buffer< HistoryInstrType > & instHistoryQueue ) \
+    : PROGRAM_LIMIT(PROGRAM_LIMIT), dataMem(dataMem), PSR(PSR), WIM(WIM), TBR(TBR), Y(Y), \
+    PC(PC), NPC(NPC), GLOBAL(GLOBAL), WINREGS(WINREGS), ASR(ASR), FP(FP), LR(LR), SP(SP), \
+    PCR(PCR), REGS(REGS), instrExecuting(instrExecuting), instrEndEvent(instrEndEvent), \
+    instHistoryQueue(instHistoryQueue){
     this->routineExitState = 0;
     this->routineEntryState = 0;
     std::vector<std::string> tempVec;
