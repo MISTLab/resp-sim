@@ -114,7 +114,7 @@ void leon3_funclt_trap::Processor_leon3_funclt::mainLoop(){
             #ifdef ENABLE_HISTORY
             HistoryInstrType instrQueueElem;
             if(this->historyEnabled){
-                instrQueueElem.cycle = (unsigned int)(sc_time_stamp()/this->latency);
+                instrQueueElem.cycle = (unsigned int)(this->quantKeeper.get_current_time()/this->latency);
                 instrQueueElem.address = curPC;
             }
             #endif
@@ -231,6 +231,7 @@ void leon3_funclt_trap::Processor_leon3_funclt::mainLoop(){
         this->instrEndEvent.notify();
         this->numInstructions++;
 
+        this->quantKeeper.sync();
     }
 }
 
@@ -615,8 +616,8 @@ leon3_funclt_trap::Processor_leon3_funclt::Processor_leon3_funclt( sc_module_nam
     }
     this->IRQ_irqInstr = new IRQ_IRQ_Instruction(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck, this->IRQ);
-    quantKeeper.set_global_quantum( this->latency*100 );
-    quantKeeper.reset();
+    this->quantKeeper.set_global_quantum( this->latency*100 );
+    this->quantKeeper.reset();
     // Initialization of the standard registers
     // Initialization of the register banks
     this->GLOBAL.setSize(8);
@@ -661,9 +662,9 @@ leon3_funclt_trap::Processor_leon3_funclt::Processor_leon3_funclt( sc_module_nam
     this->REGS[29].updateAlias(this->WINREGS[21]);
     this->REGS[30].updateAlias(this->WINREGS[22]);
     this->REGS[31].updateAlias(this->WINREGS[23]);
-    this->LR.updateAlias(this->REGS[31], 0);
     this->FP.updateAlias(this->REGS[30], 0);
     this->SP.updateAlias(this->REGS[14], 0);
+    this->LR.updateAlias(this->REGS[31], 0);
     this->profTimeStart = SC_ZERO_TIME;
     this->profTimeEnd = SC_ZERO_TIME;
     this->profStartAddr = (unsigned int)-1;
@@ -699,9 +700,22 @@ leon3_funclt_trap::Processor_leon3_funclt::~Processor_leon3_funclt(){
     }
     delete this->abiIf;
     delete this->IRQ_irqInstr;
-    if(this->histFile){
-        this->histFile.flush();
-        this->histFile.close();
+    #ifdef ENABLE_HISTORY
+    if(this->historyEnabled){
+        //Now, in case the queue dump file has been specified, I have to check if I need \
+            to save it
+        if(this->histFile){
+            if(this->undumpedHistElems > 0){
+                boost::circular_buffer<HistoryInstrType>::const_iterator beg, end;
+                for(beg = this->instHistoryQueue.begin(), end = this->instHistoryQueue.end(); beg \
+                    != end; beg++){
+                    this->histFile << beg->toStr() << std::endl;
+                }
+            }
+            this->histFile.flush();
+            this->histFile.close();
+        }
     }
+    #endif
 }
 

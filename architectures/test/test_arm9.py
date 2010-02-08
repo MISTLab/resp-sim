@@ -1,4 +1,4 @@
-a9 = arm9tdmi_funcLT_wrapper.ARM9Processor('a9',scwrapper.sc_time(10.0,scwrapper.SC_NS))
+a9 = arm9tdmi_funcLT_wrapper.Processor_arm9tdmi_funclt('a9',scwrapper.sc_time(10.0,scwrapper.SC_NS))
 memorySize = 1024*1024*256
 latencyMem = scwrapper.sc_time(10.0, scwrapper.SC_NS)
 mem = MemoryLT32.MemoryLT32('mem', memorySize, latencyMem)

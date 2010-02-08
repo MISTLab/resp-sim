@@ -76,6 +76,10 @@
 #endif
 
 #include <ToolsIf.hpp>
+#include <iostream>
+#include <fstream>
+#include <boost/circular_buffer.hpp>
+#include <instructionBase.hpp>
 
 #define ACC_MODEL
 #define LT_IF
@@ -180,25 +184,34 @@ namespace leon3_acclt_trap{
 
         public:
         SC_HAS_PROCESS( FETCH_PipeStage );
-        FETCH_PipeStage( ToolsManager< unsigned int > & toolManager, unsigned int & IRQ, \
-            sc_event & instrEndEvent, bool & instrExecuting, unsigned int & numInstructions, \
-            PipelineRegister & PC, Instruction * * & INSTRUCTIONS, TLMMemory & instrMem, Alias \
-            * REGS_wb, Alias & PCR_wb, Alias & SP_wb, Alias & LR_wb, Alias & FP_wb, Alias * REGS_exception, \
-            Alias & PCR_exception, Alias & SP_exception, Alias & LR_exception, Alias & FP_exception, \
-            Alias * REGS_memory, Alias & PCR_memory, Alias & SP_memory, Alias & LR_memory, Alias \
-            & FP_memory, Alias * REGS_execute, Alias & PCR_execute, Alias & SP_execute, Alias \
-            & LR_execute, Alias & FP_execute, Alias * REGS_regs, Alias & PCR_regs, Alias & SP_regs, \
-            Alias & LR_regs, Alias & FP_regs, Alias * REGS_decode, Alias & PCR_decode, Alias \
-            & SP_decode, Alias & LR_decode, Alias & FP_decode, Alias * REGS_fetch, Alias & PCR_fetch, \
-            Alias & SP_fetch, Alias & LR_fetch, Alias & FP_fetch, PipelineRegister * ASR, PipelineRegister \
-            * WINREGS, PipelineRegister * GLOBAL, PipelineRegister & NPC, PipelineRegister & \
-            Y, PipelineRegister & TBR, PipelineRegister & WIM, PipelineRegister & PSR, sc_module_name \
-            pipeName, sc_time & latency, BasePipeStage * stage_fetch, BasePipeStage * stage_decode, \
-            BasePipeStage * stage_regs, BasePipeStage * stage_execute, BasePipeStage * stage_memory, \
-            BasePipeStage * stage_exception, BasePipeStage * stage_wb, BasePipeStage * prevStage \
-            = NULL, BasePipeStage * succStage = NULL );
+        FETCH_PipeStage( sc_time & profTimeEnd, sc_time & profTimeStart, ToolsManager< unsigned \
+            int > & toolManager, unsigned int & IRQ, sc_event & instrEndEvent, bool & instrExecuting, \
+            unsigned int & numInstructions, PipelineRegister & PC, Instruction * * & INSTRUCTIONS, \
+            TLMMemory & instrMem, Alias * REGS_wb, Alias & PCR_wb, Alias & SP_wb, Alias & LR_wb, \
+            Alias & FP_wb, Alias * REGS_exception, Alias & PCR_exception, Alias & SP_exception, \
+            Alias & LR_exception, Alias & FP_exception, Alias * REGS_memory, Alias & PCR_memory, \
+            Alias & SP_memory, Alias & LR_memory, Alias & FP_memory, Alias * REGS_execute, Alias \
+            & PCR_execute, Alias & SP_execute, Alias & LR_execute, Alias & FP_execute, Alias \
+            * REGS_regs, Alias & PCR_regs, Alias & SP_regs, Alias & LR_regs, Alias & FP_regs, \
+            Alias * REGS_decode, Alias & PCR_decode, Alias & SP_decode, Alias & LR_decode, Alias \
+            & FP_decode, Alias * REGS_fetch, Alias & PCR_fetch, Alias & SP_fetch, Alias & LR_fetch, \
+            Alias & FP_fetch, PipelineRegister * ASR, PipelineRegister * WINREGS, PipelineRegister \
+            * GLOBAL, PipelineRegister & NPC, PipelineRegister & Y, PipelineRegister & TBR, PipelineRegister \
+            & WIM, PipelineRegister & PSR, sc_module_name pipeName, sc_time & latency, BasePipeStage \
+            * stage_fetch, BasePipeStage * stage_decode, BasePipeStage * stage_regs, BasePipeStage \
+            * stage_execute, BasePipeStage * stage_memory, BasePipeStage * stage_exception, BasePipeStage \
+            * stage_wb, BasePipeStage * prevStage = NULL, BasePipeStage * succStage = NULL );
         void behavior();
         Decoder decoder;
+        sc_time & profTimeStart;
+        sc_time & profTimeEnd;
+        unsigned int profStartAddr;
+        unsigned int profEndAddr;
+        std::ofstream histFile;
+        bool historyEnabled;
+        boost::circular_buffer< HistoryInstrType > instHistoryQueue;
+        unsigned int undumpedHistElems;
+        ~FETCH_PipeStage();
     };
 
 };

@@ -158,11 +158,14 @@ unsigned int configEngine::configure(string funcName, sc_time latency, unsigned 
 	message.set_data_ptr((unsigned char*)bitstream);
 	message.set_response_status(TLM_INCOMPLETE_RESPONSE);
 	this->busSocket->b_transport(message,delay);
+	wait(delay);
+	delay = SC_ZERO_TIME;
 
 	// 'WRITEs' the bitstream on the selected device
 	message.set_write();
 	message.set_address(bitstream_dest_address);
 	this->busSocket->b_transport(message,delay);		// We send the 'write' message to the bitstream sink
+	wait(delay);
 
 	//cerr << tab.getName(address) << " configured at address " << address << " on device # " << tab.getDevice(address) << ";";
 	//cerr << " configuration required " << responseValue << " words." << endl;

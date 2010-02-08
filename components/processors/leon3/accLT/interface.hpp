@@ -49,9 +49,10 @@
 #include <registers.hpp>
 #include <alias.hpp>
 #include <systemc.h>
+#include <boost/circular_buffer.hpp>
+#include <instructionBase.hpp>
 #include <vector>
 #include <string>
-#include <instructionBase.hpp>
 #include <trap_utils.hpp>
 
 #define ACC_MODEL
@@ -79,6 +80,7 @@ namespace leon3_acclt_trap{
         Alias * REGS;
         bool & instrExecuting;
         sc_event & instrEndEvent;
+        boost::circular_buffer< HistoryInstrType > & instHistoryQueue;
         int routineEntryState;
         int routineExitState;
         std::vector< std::vector< std::string > > routineEntrySequence;
@@ -89,7 +91,8 @@ namespace leon3_acclt_trap{
             & PSR, PipelineRegister & WIM, PipelineRegister & TBR, PipelineRegister & Y, PipelineRegister \
             & PC, PipelineRegister & NPC, PipelineRegister * GLOBAL, PipelineRegister * WINREGS, \
             PipelineRegister * ASR, Alias & FP, Alias & LR, Alias & SP, Alias & PCR, Alias * \
-            REGS, bool & instrExecuting, sc_event & instrEndEvent );
+            REGS, bool & instrExecuting, sc_event & instrEndEvent, boost::circular_buffer< HistoryInstrType \
+            > & instHistoryQueue );
         bool isLittleEndian() const throw();
         int getProcessorID() const throw();
         bool isInstrExecuting() const throw();
@@ -121,6 +124,7 @@ namespace leon3_acclt_trap{
         unsigned char readCharMem( const unsigned int & address );
         void writeMem( const unsigned int & address, unsigned int datum );
         void writeCharMem( const unsigned int & address, unsigned char datum );
+        boost::circular_buffer< HistoryInstrType > & getInstructionHistory();
         virtual ~LEON3_ABIIf();
     };
 

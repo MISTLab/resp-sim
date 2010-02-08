@@ -1,4 +1,4 @@
-a7 = arm7tdmi_funcLT_wrapper.ARM7Processor('a7',scwrapper.sc_time(10.0,scwrapper.SC_NS))
+a7 = arm7tdmi_funcLT_wrapper.Processor_arm7tdmi_funclt('a7',scwrapper.sc_time(10.0,scwrapper.SC_NS))
 memorySize = 1024*1024*256
 latencyMem = scwrapper.sc_time(10.0, scwrapper.SC_NS)
 mem = MemoryLT32.MemoryLT32('mem', memorySize, latencyMem)

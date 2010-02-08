@@ -75,6 +75,10 @@
 #endif
 
 #include <ToolsIf.hpp>
+#include <iostream>
+#include <fstream>
+#include <boost/circular_buffer.hpp>
+#include <instructionBase.hpp>
 
 using namespace leon3_acclt_trap;
 using namespace trap;
@@ -108,7 +112,9 @@ void leon3_acclt_trap::FETCH_PipeStage::behavior(){
     this->curInstruction = this->NOPInstrInstance;
     this->nextInstruction = this->NOPInstrInstance;
     unsigned int numNOPS = 0;
+    bool startMet = false;
     template_map< unsigned int, CacheElem >::iterator instrCacheEnd = this->instrCache.end();
+
     while(true){
         this->instrExecuting = true;
         unsigned int numCycles = 0;
@@ -129,6 +135,12 @@ void leon3_acclt_trap::FETCH_PipeStage::behavior(){
             }
             else{
                 unsigned int curPC = this->PC;
+                if(!startMet && curPC == this->profStartAddr){
+                    this->profTimeStart = sc_time_stamp();
+                }
+                if(startMet && curPC == this->profEndAddr){
+                    this->profTimeEnd = sc_time_stamp();
+                }
 
                 #ifndef DISABLE_TOOLS
                 // code necessary to check the tools, to see if they need
@@ -147,12 +159,25 @@ void leon3_acclt_trap::FETCH_PipeStage::behavior(){
                     #endif
                     //Ok, either the pipeline is empty or there is not tool which needs the pipeline
                     //to be empty: I can procede with the execution
+                    #ifdef ENABLE_HISTORY
+                    HistoryInstrType instrQueueElem;
+                    if(this->historyEnabled){
+                        instrQueueElem.cycle = (unsigned int)(sc_time_stamp()/this->latency);
+                        instrQueueElem.address = curPC;
+                    }
+                    #endif
                     unsigned int bitString = this->instrMem.read_word(curPC);
                     template_map< unsigned int, CacheElem >::iterator cachedInstr = this->instrCache.find(bitString);
                     if(cachedInstr != instrCacheEnd){
                         Instruction * curInstrPtr = cachedInstr->second.instr;
                         // I can call the instruction, I have found it
                         if(curInstrPtr != NULL){
+                            #ifdef ENABLE_HISTORY
+                            if(this->historyEnabled){
+                                instrQueueElem.name = curInstrPtr->getInstructionName();
+                                instrQueueElem.mnemonic = curInstrPtr->getMnemonic();
+                            }
+                            #endif
                             if(curInstrPtr->inPipeline){
                                 curInstrPtr = curInstrPtr->replicate();
                                 curInstrPtr->setParams(bitString);
@@ -202,6 +227,12 @@ void leon3_acclt_trap::FETCH_PipeStage::behavior(){
                             instr->inPipeline = true;
                             instr->fetchPC = curPC;
                             instr->setParams(bitString);
+                            #ifdef ENABLE_HISTORY
+                            if(this->historyEnabled){
+                                instrQueueElem.name = instr->getInstructionName();
+                                instrQueueElem.mnemonic = instr->getMnemonic();
+                            }
+                            #endif
                             try{
                                 #ifndef DISABLE_TOOLS
                                 if(!(this->toolManager.newIssue(instr->fetchPC, instr))){
@@ -259,6 +290,12 @@ void leon3_acclt_trap::FETCH_PipeStage::behavior(){
                         instr->inPipeline = true;
                         instr->fetchPC = curPC;
                         instr->setParams(bitString);
+                        #ifdef ENABLE_HISTORY
+                        if(this->historyEnabled){
+                            instrQueueElem.name = instr->getInstructionName();
+                            instrQueueElem.mnemonic = instr->getMnemonic();
+                        }
+                        #endif
                         try{
                             #ifndef DISABLE_TOOLS
                             if(!(this->toolManager.newIssue(instr->fetchPC, instr))){
@@ -292,6 +329,25 @@ void leon3_acclt_trap::FETCH_PipeStage::behavior(){
                         this->instrCache.insert(std::pair< unsigned int, CacheElem >(bitString, CacheElem()));
                         instrCacheEnd = this->instrCache.end();
                     }
+                    #ifdef ENABLE_HISTORY
+                    if(this->historyEnabled){
+                        // First I add the new element to the queue
+                        this->instHistoryQueue.push_back(instrQueueElem);
+                        //Now, in case the queue dump file has been specified, I have to check if I need \
+                            to save it
+                        if(this->histFile){
+                            this->undumpedHistElems++;
+                            if(undumpedHistElems == this->instHistoryQueue.capacity()){
+                                boost::circular_buffer<HistoryInstrType>::const_iterator beg, end;
+                                for(beg = this->instHistoryQueue.begin(), end = this->instHistoryQueue.end(); beg \
+                                    != end; beg++){
+                                    this->histFile << beg->toStr() << std::endl;
+                                }
+                                this->undumpedHistElems = 0;
+                            }
+                        }
+                    }
+                    #endif
                     this->numInstructions++;
                     #ifndef DISABLE_TOOLS
                 }
@@ -489,37 +545,63 @@ void leon3_acclt_trap::FETCH_PipeStage::refreshRegisters() throw(){
     }
 }
 
-leon3_acclt_trap::FETCH_PipeStage::FETCH_PipeStage( ToolsManager< unsigned int > \
-    & toolManager, unsigned int & IRQ, sc_event & instrEndEvent, bool & instrExecuting, \
-    unsigned int & numInstructions, PipelineRegister & PC, Instruction * * & INSTRUCTIONS, \
-    TLMMemory & instrMem, Alias * REGS_wb, Alias & PCR_wb, Alias & SP_wb, Alias & LR_wb, \
-    Alias & FP_wb, Alias * REGS_exception, Alias & PCR_exception, Alias & SP_exception, \
-    Alias & LR_exception, Alias & FP_exception, Alias * REGS_memory, Alias & PCR_memory, \
-    Alias & SP_memory, Alias & LR_memory, Alias & FP_memory, Alias * REGS_execute, Alias \
-    & PCR_execute, Alias & SP_execute, Alias & LR_execute, Alias & FP_execute, Alias \
-    * REGS_regs, Alias & PCR_regs, Alias & SP_regs, Alias & LR_regs, Alias & FP_regs, \
-    Alias * REGS_decode, Alias & PCR_decode, Alias & SP_decode, Alias & LR_decode, Alias \
-    & FP_decode, Alias * REGS_fetch, Alias & PCR_fetch, Alias & SP_fetch, Alias & LR_fetch, \
-    Alias & FP_fetch, PipelineRegister * ASR, PipelineRegister * WINREGS, PipelineRegister \
-    * GLOBAL, PipelineRegister & NPC, PipelineRegister & Y, PipelineRegister & TBR, PipelineRegister \
-    & WIM, PipelineRegister & PSR, sc_module_name pipeName, sc_time & latency, BasePipeStage \
-    * stage_fetch, BasePipeStage * stage_decode, BasePipeStage * stage_regs, BasePipeStage \
-    * stage_execute, BasePipeStage * stage_memory, BasePipeStage * stage_exception, BasePipeStage \
-    * stage_wb, BasePipeStage * prevStage, BasePipeStage * succStage ) : sc_module(pipeName), \
-    BasePipeStage(latency, stage_fetch, stage_decode, stage_regs, stage_execute, stage_memory, \
-    stage_exception, stage_wb, prevStage, succStage), PSR(PSR), WIM(WIM), TBR(TBR), Y(Y), \
-    NPC(NPC), GLOBAL(GLOBAL), WINREGS(WINREGS), ASR(ASR), FP_fetch(FP_fetch), LR_fetch(LR_fetch), \
-    SP_fetch(SP_fetch), PCR_fetch(PCR_fetch), REGS_fetch(REGS_fetch), FP_decode(FP_decode), \
-    LR_decode(LR_decode), SP_decode(SP_decode), PCR_decode(PCR_decode), REGS_decode(REGS_decode), \
-    FP_regs(FP_regs), LR_regs(LR_regs), SP_regs(SP_regs), PCR_regs(PCR_regs), REGS_regs(REGS_regs), \
-    FP_execute(FP_execute), LR_execute(LR_execute), SP_execute(SP_execute), PCR_execute(PCR_execute), \
-    REGS_execute(REGS_execute), FP_memory(FP_memory), LR_memory(LR_memory), SP_memory(SP_memory), \
-    PCR_memory(PCR_memory), REGS_memory(REGS_memory), FP_exception(FP_exception), LR_exception(LR_exception), \
+leon3_acclt_trap::FETCH_PipeStage::~FETCH_PipeStage(){
+    #ifdef ENABLE_HISTORY
+    if(this->historyEnabled){
+        //Now, in case the queue dump file has been specified, I have to check if I need \
+            to save it
+        if(this->histFile){
+            if(this->undumpedHistElems > 0){
+                boost::circular_buffer<HistoryInstrType>::const_iterator beg, end;
+                for(beg = this->instHistoryQueue.begin(), end = this->instHistoryQueue.end(); beg \
+                    != end; beg++){
+                    this->histFile << beg->toStr() << std::endl;
+                }
+            }
+            this->histFile.flush();
+            this->histFile.close();
+        }
+    }
+    #endif
+}
+leon3_acclt_trap::FETCH_PipeStage::FETCH_PipeStage( sc_time & profTimeEnd, sc_time \
+    & profTimeStart, ToolsManager< unsigned int > & toolManager, unsigned int & IRQ, \
+    sc_event & instrEndEvent, bool & instrExecuting, unsigned int & numInstructions, \
+    PipelineRegister & PC, Instruction * * & INSTRUCTIONS, TLMMemory & instrMem, Alias \
+    * REGS_wb, Alias & PCR_wb, Alias & SP_wb, Alias & LR_wb, Alias & FP_wb, Alias * REGS_exception, \
+    Alias & PCR_exception, Alias & SP_exception, Alias & LR_exception, Alias & FP_exception, \
+    Alias * REGS_memory, Alias & PCR_memory, Alias & SP_memory, Alias & LR_memory, Alias \
+    & FP_memory, Alias * REGS_execute, Alias & PCR_execute, Alias & SP_execute, Alias \
+    & LR_execute, Alias & FP_execute, Alias * REGS_regs, Alias & PCR_regs, Alias & SP_regs, \
+    Alias & LR_regs, Alias & FP_regs, Alias * REGS_decode, Alias & PCR_decode, Alias \
+    & SP_decode, Alias & LR_decode, Alias & FP_decode, Alias * REGS_fetch, Alias & PCR_fetch, \
+    Alias & SP_fetch, Alias & LR_fetch, Alias & FP_fetch, PipelineRegister * ASR, PipelineRegister \
+    * WINREGS, PipelineRegister * GLOBAL, PipelineRegister & NPC, PipelineRegister & \
+    Y, PipelineRegister & TBR, PipelineRegister & WIM, PipelineRegister & PSR, sc_module_name \
+    pipeName, sc_time & latency, BasePipeStage * stage_fetch, BasePipeStage * stage_decode, \
+    BasePipeStage * stage_regs, BasePipeStage * stage_execute, BasePipeStage * stage_memory, \
+    BasePipeStage * stage_exception, BasePipeStage * stage_wb, BasePipeStage * prevStage, \
+    BasePipeStage * succStage ) : sc_module(pipeName), BasePipeStage(latency, stage_fetch, \
+    stage_decode, stage_regs, stage_execute, stage_memory, stage_exception, stage_wb, \
+    prevStage, succStage), PSR(PSR), WIM(WIM), TBR(TBR), Y(Y), NPC(NPC), GLOBAL(GLOBAL), \
+    WINREGS(WINREGS), ASR(ASR), FP_fetch(FP_fetch), LR_fetch(LR_fetch), SP_fetch(SP_fetch), \
+    PCR_fetch(PCR_fetch), REGS_fetch(REGS_fetch), FP_decode(FP_decode), LR_decode(LR_decode), \
+    SP_decode(SP_decode), PCR_decode(PCR_decode), REGS_decode(REGS_decode), FP_regs(FP_regs), \
+    LR_regs(LR_regs), SP_regs(SP_regs), PCR_regs(PCR_regs), REGS_regs(REGS_regs), FP_execute(FP_execute), \
+    LR_execute(LR_execute), SP_execute(SP_execute), PCR_execute(PCR_execute), REGS_execute(REGS_execute), \
+    FP_memory(FP_memory), LR_memory(LR_memory), SP_memory(SP_memory), PCR_memory(PCR_memory), \
+    REGS_memory(REGS_memory), FP_exception(FP_exception), LR_exception(LR_exception), \
     SP_exception(SP_exception), PCR_exception(PCR_exception), REGS_exception(REGS_exception), \
     FP_wb(FP_wb), LR_wb(LR_wb), SP_wb(SP_wb), PCR_wb(PCR_wb), REGS_wb(REGS_wb), instrMem(instrMem), \
     INSTRUCTIONS(INSTRUCTIONS), PC(PC), numInstructions(numInstructions), instrExecuting(instrExecuting), \
-    instrEndEvent(instrEndEvent), IRQ(IRQ), toolManager(toolManager){
+    instrEndEvent(instrEndEvent), IRQ(IRQ), toolManager(toolManager), profTimeStart(profTimeStart), \
+    profTimeEnd(profTimeEnd){
     SC_THREAD(behavior);
+    this->profStartAddr = (unsigned int)-1;
+    this->profEndAddr = (unsigned int)-1;
+    this->historyEnabled = false;
+    this->instHistoryQueue.set_capacity(1000);
+    this->undumpedHistElems = 0;
     end_module();
 }
 

@@ -275,8 +275,8 @@ public:
 		unsigned int len = trans.get_data_length();
 		unsigned int words = len / sizeof(BUSWIDTH);
 		if (len%sizeof(BUSWIDTH) != 0) words++;
-//		delay += words*this->latency;
-		wait(words*this->latency);
+		delay += words*this->latency;
+//		wait(words*this->latency);
 		this->numAccesses++;
 		trans.set_dmi_allowed(false);			// Disables DMI in order to insert the bus latency for each transaction
 

@@ -180,10 +180,10 @@ def configure(conf):
     conf.check_tool('python')
     conf.check_python_version((2,4))
     if float(conf.env['PYTHON_VERSION']) == 2.6:
-        if sys.version_info[2] > 2:
-            conf.fatal('There is a problem of compatibility with boost libraries and Python version >= 2.6.3. Please downgrade Python version')
-    if float(conf.env['PYTHON_VERSION']) > 2.6:
-        conf.fatal('There is a problem of compatibility with boost libraries and Python version >= 2.6.3. Please downgrade Python version')
+        if sys.version_info[2] == 3:
+            conf.fatal('There is a problem of compatibility with boost libraries and Python version = 2.6.3. Please upgrade or downgrade Python version')
+#    if float(conf.env['PYTHON_VERSION']) > 2.6:
+#        conf.fatal('There is a problem of compatibility with boost libraries and Python version >= 2.6.3. Please downgrade Python version')
     conf.check_python_headers()
     if float(conf.env['PYTHON_VERSION']) < 2.5:
         conf.env.append_unique('CPPFLAGS', '-DPy_ssize_t=long' )
@@ -348,6 +348,41 @@ def configure(conf):
         conf.check_cc(header_name='bfd.h', uselib='IBERTY BFD', uselib_store='BFD_H', mandatory=1, includes=[os.path.abspath(os.path.expanduser(os.path.expandvars(os.path.join(Options.options.bfddir, 'include'))))])
     else:
         conf.check_cc(header_name='bfd.h', uselib='IBERTY BFD', uselib_store='BFD_H', mandatory=1)
+
+    ###########################################################
+    # Check for Binutils version
+    ###########################################################
+    # mandatory version checks
+    binutilsVerCheck = """
+        #include <cstdlib>
+        extern "C" {
+            #include <bfd.h>
+        }
+
+        int main(int argc, char** argv) {
+            bfd_section *p = NULL;
+            #ifndef bfd_is_target_special_symbol
+            #error "too old BFD library"
+            #endif
+            return 0;
+        };
+    """
+    conf.check_cxx(fragment=binutilsVerCheck, msg='Check for Binutils Version', uselib='BFD', mandatory=1, errmsg='Not supported version, use at least 2.16')
+
+    # bfd_demangle only appears in 2.18
+    binutilsDemangleCheck = """
+        #include <cstdlib>
+        extern "C" {
+            #include <bfd.h>
+        }
+
+        int main(int argc, char** argv) {
+            char * tempRet = bfd_demangle(NULL, NULL, 0);
+            return 0;
+        };
+    """
+    if not conf.check_cxx(fragment=binutilsDemangleCheck, msg='Check for bfd_demangle', uselib='BFD', mandatory=0, okmsg='ok >= 2.18', errmsg='fail, reverting to cplus_demangle'):
+        conf.env.append_unique('CPPFLAGS', '-DOLD_BFD')
 
     ##################################################
     # Check for pthread library/flag

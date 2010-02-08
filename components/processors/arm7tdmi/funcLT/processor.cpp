@@ -101,7 +101,7 @@ void arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::mainLoop(){
         #ifdef ENABLE_HISTORY
         HistoryInstrType instrQueueElem;
         if(this->historyEnabled){
-            instrQueueElem.cycle = (unsigned int)(sc_time_stamp()/this->latency);
+            instrQueueElem.cycle = (unsigned int)(this->quantKeeper.get_current_time()/this->latency);
             instrQueueElem.address = curPC;
         }
         #endif
@@ -218,6 +218,7 @@ void arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::mainLoop(){
         this->instrEndEvent.notify();
         this->numInstructions++;
 
+        this->quantKeeper.sync();
     }
 }
 
@@ -267,8 +268,9 @@ void arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::enableHistory( std::string
 }
 
 arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::Processor_arm7tdmi_funclt( sc_module_name \
-    name, sc_time latency ) : sc_module(name), latency(latency), instrMem("instrMem", \
-    this->quantKeeper, MP_ID), dataMem("dataMem", this->quantKeeper, MP_ID){
+    name, sc_time latency ) : sc_module(name), latency(latency), SP_IRQ(&RB[21], 0), \
+    instrMem("instrMem", this->quantKeeper, MP_ID), dataMem("dataMem", this->quantKeeper, \
+    MP_ID){
     Processor_arm7tdmi_funclt::numInstances++;
     if(Processor_arm7tdmi_funclt::INSTRUCTIONS == NULL){
         // Initialization of the array holding the initial instance of the instructions
@@ -426,8 +428,8 @@ arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::Processor_arm7tdmi_funclt( sc_m
         Processor_arm7tdmi_funclt::INSTRUCTIONS[75] = new InvalidInstr(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
     }
-    quantKeeper.set_global_quantum( this->latency*100 );
-    quantKeeper.reset();
+    this->quantKeeper.set_global_quantum( this->latency*100 );
+    this->quantKeeper.reset();
     // Initialization of the standard registers
     // Initialization of the register banks
     // Initialization of the aliases (plain and banks)
@@ -447,14 +449,13 @@ arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::Processor_arm7tdmi_funclt( sc_m
     this->REGS[13].updateAlias(this->RB[13]);
     this->REGS[14].updateAlias(this->RB[14]);
     this->REGS[15].updateAlias(this->RB[15], 4);
-    this->FP.updateAlias(this->REGS[11], 0);
-    this->LINKR.updateAlias(this->REGS[14], 0);
-    this->SP_IRQ.updateAlias(this->RB[21], 0);
-    this->LR_IRQ.updateAlias(this->RB[22], 0);
-    this->SPTR.updateAlias(this->REGS[13], 0);
-    this->PC.updateAlias(this->REGS[15], 0);
     this->LR_FIQ.updateAlias(this->RB[29], 0);
+    this->LINKR.updateAlias(this->REGS[14], 0);
+    this->SPTR.updateAlias(this->REGS[13], 0);
+    this->FP.updateAlias(this->REGS[11], 0);
     this->SP_FIQ.updateAlias(this->RB[28], 0);
+    this->LR_IRQ.updateAlias(this->RB[22], 0);
+    this->PC.updateAlias(this->REGS[15], 0);
     this->profTimeStart = SC_ZERO_TIME;
     this->profTimeEnd = SC_ZERO_TIME;
     this->profStartAddr = (unsigned int)-1;
@@ -489,9 +490,22 @@ arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::~Processor_arm7tdmi_funclt(){
         delete cacheIter->second.instr;
     }
     delete this->abiIf;
-    if(this->histFile){
-        this->histFile.flush();
-        this->histFile.close();
+    #ifdef ENABLE_HISTORY
+    if(this->historyEnabled){
+        //Now, in case the queue dump file has been specified, I have to check if I need \
+            to save it
+        if(this->histFile){
+            if(this->undumpedHistElems > 0){
+                boost::circular_buffer<HistoryInstrType>::const_iterator beg, end;
+                for(beg = this->instHistoryQueue.begin(), end = this->instHistoryQueue.end(); beg \
+                    != end; beg++){
+                    this->histFile << beg->toStr() << std::endl;
+                }
+            }
+            this->histFile.flush();
+            this->histFile.close();
+        }
     }
+    #endif
 }
 
