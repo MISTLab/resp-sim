@@ -4,7 +4,7 @@ def statsPrinter():
 #    print '\x1b[34m\x1b[1mNumber of processor instructions executed:\x1b[0m'
 #    print '\x1b[31m' + str(proc1.get_instr_counter()) + '\x1b[0m'
 
-a9 = arm9tdmi_funcLT_wrapper.ARM9Processor('a9',scwrapper.sc_time(10.0,scwrapper.SC_NS))
+a9 = arm9tdmi_funcLT_wrapper.Processor_arm9tdmi_funclt('a9',scwrapper.sc_time(10.0,scwrapper.SC_NS))
 #bus  = BusLT32.BusLT32('bus',scwrapper.SC_ZERO_TIME)
 bus  = BusLT32.BusLT32('bus',scwrapper.sc_time(0.001, scwrapper.SC_NS),3)
 memorySize = 1024*1024*256

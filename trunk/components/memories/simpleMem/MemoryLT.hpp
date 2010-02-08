@@ -111,8 +111,8 @@ public:
 		// Use temporal decoupling: add memory latency to delay argument
 		unsigned int words = len / sizeof(BUSWIDTH);
 		if (len%sizeof(BUSWIDTH) != 0) words++;
-//		delay += words*this->latency;
-		wait(words*this->latency);
+		delay += words*this->latency;
+//		wait(words*this->latency);
 
 		trans.set_dmi_allowed(true);
 		trans.set_response_status(TLM_OK_RESPONSE);

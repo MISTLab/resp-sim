@@ -437,16 +437,6 @@ int leon3_acclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                                 return 92;
                             }
                         break;}
-                        case 0x0:{
-                            if((instrCode & 0x2000) != 0x0){
-                                // Instruction TADDcc_imm
-                                return 75;
-                            }
-                            else{
-                                // Instruction TADDcc_reg
-                                return 76;
-                            }
-                        break;}
                         case 0x180000:{
                             if((instrCode & 0x2000) == 0x0){
                                 // Instruction TSUBccTV_reg
@@ -465,6 +455,16 @@ int leon3_acclt_trap::Decoder::decode( unsigned int instrCode ) const throw(){
                             else{
                                 // Instruction TADDccTV_imm
                                 return 77;
+                            }
+                        break;}
+                        case 0x0:{
+                            if((instrCode & 0x2000) != 0x0){
+                                // Instruction TADDcc_imm
+                                return 75;
+                            }
+                            else{
+                                // Instruction TADDcc_reg
+                                return 76;
                             }
                         break;}
                         case 0x80000:{

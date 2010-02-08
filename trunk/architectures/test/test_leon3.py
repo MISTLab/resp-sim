@@ -1,4 +1,4 @@
-l3 = leon3_funcLT_wrapper.LEON3Processor('l3',scwrapper.sc_time(10.0,scwrapper.SC_NS))
+l3 = leon3_funcLT_wrapper.Processor_leon3_funclt('l3',scwrapper.sc_time(10.0,scwrapper.SC_NS))
 memorySize = 1024*1024*256
 latencyMem = scwrapper.sc_time(10.0, scwrapper.SC_NS)
 mem = MemoryLT32.MemoryLT32('mem', memorySize, latencyMem)

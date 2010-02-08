@@ -76,6 +76,7 @@
 
 #include <irqPorts.hpp>
 #include <externalPins.hpp>
+#include <string>
 #include <pipeline.hpp>
 
 #define ACC_MODEL
@@ -83,7 +84,7 @@
 using namespace trap;
 namespace leon3_acclt_trap{
 
-    class Processor : public sc_module{
+    class Processor_leon3_acclt : public sc_module{
         private:
         bool instrExecuting;
         sc_event instrEndEvent;
@@ -93,8 +94,8 @@ namespace leon3_acclt_trap{
         unsigned int IRQ;
 
         public:
-        SC_HAS_PROCESS( Processor );
-        Processor( sc_module_name name, sc_time latency );
+        SC_HAS_PROCESS( Processor_leon3_acclt );
+        Processor_leon3_acclt( sc_module_name name, sc_time latency );
         void resetOp();
         void end_of_elaboration();
         Instruction * decode( unsigned int bitString );
@@ -220,12 +221,16 @@ namespace leon3_acclt_trap{
         TLMMemory instrMem;
         TLMMemory dataMem;
         sc_time latency;
+        sc_time profTimeStart;
+        sc_time profTimeEnd;
         unsigned int numInstructions;
         unsigned int ENTRY_POINT;
         unsigned int PROGRAM_LIMIT;
         unsigned int PROGRAM_START;
         IntrTLMPort_32 IRQ_port;
         PinTLM_out_32 irqAck;
+        void setProfilingRange( unsigned int startAddr, unsigned int endAddr );
+        void enableHistory( std::string fileName = "" );
         WB_PipeStage wb_stage;
         EXCEPTION_PipeStage exception_stage;
         MEMORY_PipeStage memory_stage;
@@ -235,7 +240,7 @@ namespace leon3_acclt_trap{
         FETCH_PipeStage fetch_stage;
         static NOPInstruction * NOPInstrInstance;
         IRQ_IRQ_Instruction * IRQ_irqInstr;
-        ~Processor();
+        ~Processor_leon3_acclt();
     };
 
 };
