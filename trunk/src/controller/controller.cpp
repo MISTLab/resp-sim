@@ -114,31 +114,49 @@ void my_terminate_handler(){
     }
     catch(...){}
 
-    try{
-        /// I used this trick to prevent exiting from this function:
-        /// this way it is possible to still used ReSP without
-        /// having to close the whole ReSP process as the consequence of
-        /// the exception
-        boost::mutex termMutex;
-        boost::condition termCond;
-        boost::mutex::scoped_lock lk(termMutex);
-        termCond.wait(lk);
-    }
-    catch(...){;}
-}
-
-///Resets the controller, destroying any object
-///associated to it.
-void sc_controller::reset_controller(){
-    if(sc_controller::controllerInstance != NULL){
-        delete sc_controller::controllerInstance;
-        sc_controller::controllerInstance = NULL;
+    if(sc_controller::getController().interactive){
+      try{
+          /// I used this trick to prevent exiting from this function:
+          /// this way it is possible to still used ReSP without
+          /// having to close the whole ReSP process as the consequence of
+          /// the exception
+          boost::mutex termMutex;
+          boost::condition termCond;
+          boost::mutex::scoped_lock lk(termMutex);
+          termCond.wait(lk);
+      }
+      catch(...){;}
     }
 }
 
 /// Instance of the controller, used to manage simulation.
 /// note that only one controller can exist in the system at a time
 sc_controller * sc_controller::controllerInstance = NULL;
+
+/// Static method for the creation of the controller; note that this is the only way
+///of creating a controller since the real constructor is private
+sc_controller & sc_controller::getController(){
+    return sc_controller::getController(true);
+}
+sc_controller & sc_controller::getController(bool interactive){
+    if(sc_controller::controllerInstance == NULL){
+        sc_controller::controllerInstance = new sc_controller(interactive);
+    }
+    return *(sc_controller::controllerInstance);
+}
+
+///Static method for the reset of the controller. 
+//Any object associated to the controlled is destroyed
+void sc_controller::reset(){
+    if(sc_controller::controllerInstance != NULL){
+        delete sc_controller::controllerInstance;
+        sc_controller::controllerInstance = NULL;
+        //reset all registered callbacks
+        resp::end_of_sim_callbacks.clear();
+        resp::pause_callbacks.clear();
+        resp::error_callbacks.clear();
+    }
+}
 
 /// Constructor for the controller; it is private since the static method
 /// createController should be
@@ -160,20 +178,7 @@ sc_controller::sc_controller(bool interactive) : interactive(interactive),
 }
 
 sc_controller::~sc_controller(){
-    if(this->interactive)
-        delete this->se;
-}
-
-/// Static method for the creation of the controller class; note that this is the only way
-///of creating a controller since the real constructor is private
-sc_controller & sc_controller::getController(){
-    return sc_controller::getController(true);
-}
-sc_controller & sc_controller::getController(bool interactive){
-    if(sc_controller::controllerInstance == NULL){
-        sc_controller::controllerInstance = new sc_controller(interactive);
-    }
-    return *(sc_controller::controllerInstance);
+    //nothing to be done
 }
 
 /// Runs the simulation for a specified amount of time

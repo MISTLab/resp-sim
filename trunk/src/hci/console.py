@@ -125,7 +125,9 @@ class Console(code.InteractiveConsole):
 
         # Now that the imports are finished, I can see if it is the case of starting GDB
         if self.debug:
-            os.system('xterm -e gdb -p ' + str(os.getpid()) +  ' -ex continue &')
+            #os.system('xterm -e gdb -p ' + str(os.getpid()) +  ' -ex continue &')
+            import subprocess
+            self.resp_kernel.debugger = subprocess.Popen(['xterm', '-e', 'gdb', '-p', str(os.getpid()), '-ex', 'continue', '&'])
 
         # end, at then end I can instantiate the signal handler and the controller
         import customCompleter

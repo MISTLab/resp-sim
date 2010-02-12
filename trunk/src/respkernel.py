@@ -190,6 +190,7 @@ class RespKernel:
 
         # The "Controller" deals with simulation control (run, pause, stop, etc.)
         self.controller = None
+        self.debugger = None
 
         # Anything else?
         self.scripting_commands = []
@@ -308,10 +309,11 @@ class RespKernel:
                 self.controller = sc_controller_wrapper.sc_controller.getController(None)
         controller = self.controller
         from print_stats import print_stats_cb
+
         global eosCb
         eosCb = print_stats_cb(self.controller)
         sc_controller_wrapper.registerEosCallback(eosCb)
-
+        
         if globals().has_key('__warningregistry__'):
             globals().pop('__warningregistry__')
         if globals().has_key('dl'):
@@ -458,9 +460,12 @@ class RespKernel:
     def run_silent(self, duration=-1):
         # Runs the simulation in batch mode: this means that it executes a simulation
         # in non-interactive mode and executing the specified python actions at
-        # different times. In addition to the actions it is possible to change the
+        # different times. TODO In addition to the actions it is possible to change the
         # parameters of the loaded architecture
-        run_simulation(duration)
+        
+        #if simulation commands are not specified in the architecture file, execute the whole simulation
+        if not controller.has_started():
+            run_simulation(duration)
 
     def delete_all(self):
         """Delete all the object instances in namespaces whose base type is
@@ -470,6 +475,10 @@ class RespKernel:
             if self.verbose:
                 print 'killing the simulation'
             self.controller.stop_simulation()
+        
+        if self.debugger != None:
+          os.system('kill -9 ' + str(self.debugger.pid))
+          
         for name in globals().keys():
             if name == 'controller':
                 continue
@@ -559,14 +568,17 @@ def get_namespace():
 
 def reset():
     """ Resets the simulator to the initial state """
-    # Delete All
-    # TODO: Refactor!
+    
+    #check if an exception has occurred in systemc...
+    global controller
 
     if controller.error == True:
         print "\n\nSimulation cannot be restarted since an exception has been thrown!\n\n"
         return
 
-    controller.stop_simulation()
+    # Delete All
+    if controller.is_running():
+        controller.stop_simulation()
     for name in globals().keys():
         if name == 'controller':
             continue
@@ -588,7 +600,6 @@ def reset():
         except:
             pass
 
-
     for name in globals().keys():
         if name == 'controller':
             continue
@@ -598,27 +609,46 @@ def reset():
         elif hasattr (globals()[name], '__del__'):
             del globals()[name]
 
-    #print 'SynchManager.reset'
     # Reset OSEmulation
     #cm.reset()
 
-     #print 'manager'
     # Reset component manager
     manager.reset()
 
-    #print 'power'
     # Reset power framework
     import power
     power.reset()
 
-    #print 'SystemC'
     # Reset SystemC (tricky)
     scwrapper.sc_get_curr_simcontext().reset()
 
-    #print 'power'
     # Reset controller
     controller.reset()
-
+    
+    del globals()['controller']
+    del globals()['run_simulation']
+    del globals()['run_up_to']
+    del globals()['pause_simulation']
+    del globals()['stop_simulation']
+    del globals()['get_simulated_time']
+    del globals()['get_real_time']
+    
+    global run_simulation, pause_simulation, stop_simulation, get_simulated_time, get_real_time, run_up_to
+    
+    controller = sc_controller_wrapper.sc_controller.getController()
+        
+    run_simulation = controller.run_simulation
+    run_up_to = controller.run_up_to
+    pause_simulation = controller.pause_simulation
+    stop_simulation = controller.stop_simulation
+    get_simulated_time = controller.get_simulated_time
+    get_real_time = controller.get_real_time
+    
+    #re-register end-of-simulation callback
+    global eosCb
+    from print_stats import print_stats_cb
+    eosCb = print_stats_cb(controller)
+    sc_controller_wrapper.registerEosCallback(eosCb)
 
 def findInFolder(fileName, startFolder):
     '''Locate all files matching supplied filename pattern in and below

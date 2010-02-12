@@ -111,7 +111,7 @@ public:
 
     ///Resets the controller, destroying any object
     ///associated to it.
-    void reset_controller();
+    static void reset();
 
     /// Runs the simulation for a specified amount of time
     void run_simulation(double simTime = 0, sc_time_unit time_unit = SC_NS);
