@@ -575,10 +575,12 @@ def reset():
     if controller.error == True:
         print "\n\nSimulation cannot be restarted since an exception has been thrown!\n\n"
         return
+        
+    # Stop simulation
+    if (not self.controller.is_finished()) and self.controller.is_running()):
+        controller.stop_simulation()
 
     # Delete All
-    if controller.is_running():
-        controller.stop_simulation()
     for name in globals().keys():
         if name == 'controller':
             continue

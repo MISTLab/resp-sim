@@ -249,6 +249,7 @@ void sc_controller::stop_simulation(){
     if(this->interactive){
         // I simply have stop simulation calling sc_stop
         sc_stop();
+        this->controllerMachine.pause_condition.notify_all();
     }
     else{
         std::cerr << "Unable to stop simulation in non-interactive mode" << std::endl;
