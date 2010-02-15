@@ -51,7 +51,9 @@
 #include <boost/lexical_cast.hpp>
 #include <string>
 
+
 class testMaster: public sc_module{
+    int count;
     public:
     tlm_utils::simple_initiator_socket< testMaster, 8 > initSocket;
 
