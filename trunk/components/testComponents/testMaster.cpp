@@ -50,12 +50,13 @@
 testMaster::testMaster(sc_module_name name) : sc_module(name), initSocket((boost::lexical_cast<std::string>(name) + "_port").c_str()){
     SC_THREAD(sendChars);
     srand((unsigned)time(0));
+    count = 0;
     end_module();
 }
 
 void testMaster::sendChars(){
 
-    for( int i = 0 ; i < 10 ; i++  ) {
+    while(1) {
         unsigned char datum = (unsigned char)(rand()%128);
         tlm::tlm_generic_payload trans;
         sc_time delay;
@@ -71,5 +72,10 @@ void testMaster::sendChars(){
         if(trans.is_response_error()){
             std::cerr << "testMaster: Error response from the TLM port" << std::endl;
         }
+        
+        count ++;
+        if(count == 10) sc_stop();
+        wait(10, SC_NS);
     }
 }
+
