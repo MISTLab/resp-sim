@@ -577,7 +577,7 @@ def reset():
         return
         
     # Stop simulation
-    if (not self.controller.is_finished()) and self.controller.is_running()):
+    if (not controller.is_finished() and controller.is_running()):
         controller.stop_simulation()
 
     # Delete All
