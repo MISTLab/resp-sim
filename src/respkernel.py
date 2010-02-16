@@ -313,7 +313,7 @@ class RespKernel:
         global eosCb
         eosCb = print_stats_cb(self.controller)
         sc_controller_wrapper.registerEosCallback(eosCb)
-        
+
         if globals().has_key('__warningregistry__'):
             globals().pop('__warningregistry__')
         if globals().has_key('dl'):
@@ -568,7 +568,7 @@ def get_namespace():
 
 def reset():
     """ Resets the simulator to the initial state """
-    
+        
     #check if an exception has occurred in systemc...
     global controller
 
@@ -577,7 +577,7 @@ def reset():
         return
         
     # Stop simulation
-    if (not controller.is_ended()):
+    if (controller.has_started() and not controller.is_ended()):
       controller.stop_simulation()
       import time
       time.sleep(1)

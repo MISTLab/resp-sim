@@ -60,6 +60,7 @@
 #include "Python.h"
 
 using namespace resp;
+extern void (*delta_callback)(void);
 
 /**
  * Thread for running systemc in a separate thread: this allows
@@ -168,6 +169,7 @@ sc_controller::sc_controller(bool interactive) : interactive(interactive),
     if(this->interactive){
         PyEval_InitThreads();
         this->se = new simulation_engine("sim_engine", controllerMachine);
+        delta_callback = &resp::notifyDeltaCallback;
     }
 
     this->error = false;
