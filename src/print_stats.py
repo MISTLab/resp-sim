@@ -51,13 +51,10 @@ class print_stats_cb(sc_controller_wrapper.EOScallback):
         is called passing the globals namespace to it. Otherwise simply the real and simulated
         times are printed; note that before printing statistics, I wait for simulation termination
         (if not otherwise specified)"""
-        import time
         try:
             from respkernel import statsPrinter
-	except Exception:
+        except Exception:
             pass
-        while not self.controller.is_ended():
-            time.sleep(0.1)
         try:
             # Call a custom statsprinter if registered
             statsPrinter()

@@ -81,14 +81,18 @@ simulation_engine::simulation_engine(sc_module_name name, ControllerMachine &con
 void simulation_engine::pause(){
     // in order to prevent very fast paused events (i.e. simulation is paused soon
     // after it is started), so fast the the machine hasn't moved to the running state
-    // yet, I use this mutex
+    // yet, I use this mutex 
+ 
     boost::mutex::scoped_lock lk_reset(this->controllerMachine.reset_mutex);
     // First of all I perform the transition to pause the state machine
     this->controllerMachine.process_event( EvPause() );
+ 
     // I signal to all who registered that simulation
     // is being paused
     notifyPauseCallback();
-    // finally I pause by waiting on the condition
+    // finally I pause by waiting on the condition 
+    {
     boost::mutex::scoped_lock lk(this->controllerMachine.pause_mutex);
     this->controllerMachine.pause_condition.wait(lk);
+    }
 }

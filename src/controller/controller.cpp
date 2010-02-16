@@ -249,7 +249,12 @@ void sc_controller::stop_simulation(){
     if(this->interactive){
         // I simply have stop simulation calling sc_stop
         sc_stop();
-        this->controllerMachine.pause_condition.notify_all();
+        if ( this->controllerMachine.state_cast< const Stopped_st * >() == 0){
+            this->controllerMachine.process_event( EvStop() );
+            { // Wait for pause state to exit
+                boost::mutex::scoped_lock lk(this->controllerMachine.pause_mutex);
+            }
+        }
     }
     else{
         std::cerr << "Unable to stop simulation in non-interactive mode" << std::endl;

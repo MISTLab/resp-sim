@@ -577,11 +577,12 @@ def reset():
         return
         
     # Stop simulation
-    if (not controller.is_finished() and controller.is_running()):
+    if (not controller.is_ended()):
       controller.stop_simulation()
       import time
       time.sleep(1)
     
+
     # Delete All
     for name in globals().keys():
         if name == 'controller':

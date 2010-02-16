@@ -349,7 +349,7 @@ def configure(conf):
     else:
         conf.check_cc(header_name='bfd.h', uselib='IBERTY BFD', uselib_store='BFD_H', mandatory=1)
 
-    ###########################################################
+    ##########################################################
     # Check for Binutils version
     ###########################################################
     # mandatory version checks
