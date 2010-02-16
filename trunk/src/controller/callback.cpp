@@ -84,3 +84,17 @@ void resp::notifyErrorCallback(){
         (*(*cbIter))();
     }
 }
+
+std::vector<resp::DeltaCallback *> resp::delta_callbacks;
+
+void resp::registerDeltaCallback(resp::DeltaCallback &cb){
+    delta_callbacks.push_back(&cb);
+}
+
+void resp::notifyDeltaCallback(){
+    std::vector<DeltaCallback *>::iterator cbIter, cbIterEnd;
+    for(cbIter = delta_callbacks.begin(), cbIterEnd = delta_callbacks.end();
+                                                    cbIter != cbIterEnd; cbIter++){
+        (*(*cbIter))();
+    }
+}

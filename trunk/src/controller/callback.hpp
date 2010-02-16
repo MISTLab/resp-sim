@@ -72,6 +72,12 @@ class ErrorCallback{
    virtual ~ErrorCallback(){}
 };
 
+class DeltaCallback{
+  public:
+   DeltaCallback(){}
+   virtual void operator()() = 0;
+   virtual ~DeltaCallback(){}
+};
 void registerEosCallback(EOScallback &cb);
 void notifyEosCallback();
 extern std::vector<EOScallback *> end_of_sim_callbacks;
@@ -81,6 +87,9 @@ extern std::vector<PauseCallback *> pause_callbacks;
 void registerErrorCallback(ErrorCallback &cb);
 void notifyErrorCallback();
 extern std::vector<ErrorCallback *> error_callbacks;
+void registerDeltaCallback(DeltaCallback &cb);
+void notifyDeltaCallback();
+extern std::vector<DeltaCallback *> delta_callbacks;
 
 }
 
