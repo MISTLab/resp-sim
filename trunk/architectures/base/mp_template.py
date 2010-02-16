@@ -56,7 +56,7 @@ MEM_LATENCY       = 10.0            # ns
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'ffmpeg'
+    SOFTWARE = 'crc'
 
 if SOFTWARE:
     try:
