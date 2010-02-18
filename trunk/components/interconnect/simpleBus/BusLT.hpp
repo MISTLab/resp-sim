@@ -61,6 +61,7 @@
 #include <string>
 #include <queue>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 
 #include <systemc.h>
@@ -154,7 +155,8 @@ protected:
 public:
 	bool busy;
 	sc_time latency;
-	unsigned long numAccesses;
+	unsigned int numAccesses;
+	unsigned int numWords;
 	target_socket_type targetSocket;
 	initiator_socket_type initiatorSocket;
 
@@ -171,6 +173,7 @@ public:
 		this->targetSocket.register_transport_dbg(this, &BusLT::transport_dbg);
 		this->busy = false;
 		this->numAccesses = 0;
+		this->numWords = 0;
 		this->curr_target_port_rank = 0;
 		end_module();
 	}
@@ -239,6 +242,7 @@ public:
 	 * b_transport method implementation
 	 *-----------------------------------*/
 	void b_transport(int tag, tlm_generic_payload& trans, sc_time& delay) {
+
 		sc_dt::uint64 addr = trans.get_address();
 		bool locking;
 //		cerr << "Incoming address was " << addr;
@@ -278,8 +282,11 @@ public:
 		delay += words*this->latency;
 //		wait(words*this->latency);
 		this->numAccesses++;
+		this->numWords+=words;
 		trans.set_dmi_allowed(false);			// Disables DMI in order to insert the bus latency for each transaction
 
+//		ofstream test("bus.txt", ios::app);
+//		test << trans.get_address() << " " << trans.get_data_length() << endl;
 //		cout << resp::sc_controller::getController().get_simulated_time() << endl;
 
 		//Now I check if there are some elements which need to be awakened

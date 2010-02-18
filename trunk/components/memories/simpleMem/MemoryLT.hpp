@@ -60,18 +60,23 @@ using namespace tlm_utils;
 template<typename BUSWIDTH> class MemoryLT: public sc_module {
 private:
 	const sc_time latency;
-	unsigned int size;
+	sc_dt::uint64 size;
 	unsigned char * mem;
 
 public:
 	multi_passthrough_target_socket<MemoryLT, sizeof(BUSWIDTH)*8> targetSocket;
+	unsigned int numAccesses;
+	unsigned int numWords;
 
-	MemoryLT(sc_module_name module_name, unsigned int size, sc_time latency = SC_ZERO_TIME) :
+	MemoryLT(sc_module_name module_name, sc_dt::uint64 size, sc_time latency = SC_ZERO_TIME) :
 			sc_module(module_name), size(size), latency(latency),
 			targetSocket((boost::lexical_cast<std::string>(module_name) + "_targSock").c_str()) {
 		this->targetSocket.register_b_transport(this, &MemoryLT::b_transport);
 		this->targetSocket.register_get_direct_mem_ptr(this, &MemoryLT::get_direct_mem_ptr);
 		this->targetSocket.register_transport_dbg(this, &MemoryLT::transport_dbg);
+
+		this->numAccesses = 0;
+		this->numWords = 0;
 
 		// Reset memory
 		this->mem = new unsigned char[this->size];
@@ -91,17 +96,14 @@ public:
 		unsigned char*   byt = trans.get_byte_enable_ptr();
 		unsigned int     wid = trans.get_streaming_width();
 
-		if(adr > this->size){
+		// Checking consistency of the request
+		if(adr > this->size || adr + len > this->size) {
 			trans.set_response_status(TLM_ADDRESS_ERROR_RESPONSE);
-			cerr << "Error requesting address " << showbase << hex << adr << dec << endl;
-			return;
-		}
-		if(byt != 0){
-			trans.set_response_status(TLM_BYTE_ENABLE_ERROR_RESPONSE);
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << "Error requesting address " << showbase << hex << adr << dec << endl);
 			return;
 		}
 
-		if(trans.get_command() == TLM_READ_COMMAND){
+		if(cmd == TLM_READ_COMMAND){
 			memcpy(ptr, &mem[adr], len);
 		}
 		else if(cmd == TLM_WRITE_COMMAND){
@@ -113,6 +115,8 @@ public:
 		if (len%sizeof(BUSWIDTH) != 0) words++;
 		delay += words*this->latency;
 //		wait(words*this->latency);
+		this->numAccesses++;
+		this->numWords+=words;
 
 		trans.set_dmi_allowed(true);
 		trans.set_response_status(TLM_OK_RESPONSE);
@@ -141,15 +145,19 @@ public:
 		unsigned char*   ptr = trans.get_data_ptr();
 		unsigned int     len = trans.get_data_length();
 
-		// Calculate the number of bytes to be actually copied
-		unsigned int num_bytes = (len < this->size - adr) ? len : this->size - adr;
+		// Checking consistency of the request
+		if(adr > this->size || adr + len > this->size) {
+			trans.set_response_status(TLM_ADDRESS_ERROR_RESPONSE);
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << "Error requesting address " << showbase << hex << adr << dec << endl);
+			return 0;
+		}
 
 		if(cmd == TLM_READ_COMMAND)
-			memcpy(ptr, &mem[adr], num_bytes);
+			memcpy(ptr, &mem[adr], len);
 		else if(cmd == TLM_WRITE_COMMAND)
-			memcpy(&mem[adr], ptr, num_bytes);
+			memcpy(&mem[adr], ptr, len);
 
-		return num_bytes;
+		return len;
 	}
 
 	//Method used to directly write a word into memory; it is mainly used to load the
