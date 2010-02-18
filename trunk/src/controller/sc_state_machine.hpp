@@ -113,6 +113,9 @@ struct ControllerMachine : boost::statechart::state_machine<ControllerMachine, R
     // mutex controlling the exit from the reset status
     boost::mutex reset_mutex;
 
+    // Condition for the end of simulation
+    boost::condition end_condition;
+
     ControllerMachine(boost::timer & timeTracker, double & accumulatedTime);
 };
 
