@@ -156,6 +156,7 @@ void sc_controller::reset_controller(){
         resp::end_of_sim_callbacks.clear();
         resp::pause_callbacks.clear();
         resp::error_callbacks.clear();
+        resp::delta_callbacks.clear();
     }
 }
 
