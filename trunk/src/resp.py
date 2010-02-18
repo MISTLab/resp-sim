@@ -149,7 +149,7 @@ if __name__ == '__main__':
 
     #Check if a predefined architecture have to be loaded
     if options.archFile:
-        if not resp_kernel.load_architecture(options.archFile):
+        if not resp_kernel.load_architecture(options.archFile, True):
             print 'Error during loading of file ' + options.archFile
             sys.exit(0)
 
@@ -191,7 +191,7 @@ if __name__ == '__main__':
     else:
         # Start HCI interfaces
         try:
-            console = console.Console(resp_kernel, options.verbose,  options.debug)
+            console = console.Console(resp_kernel) #, options.verbose,  False) # options.debug)
             console.start_console()
         except SystemExit:
             if options.server:

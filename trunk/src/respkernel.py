@@ -46,10 +46,6 @@
 __version__ = '0.5'
 __revision__ = '$Rev$'
 
-TRAP_PREFIX = "TRAPW_"
-TLM_PREFIX = "TLMW_"
-SC_PREFIX = "SYSCW_"
-
 import sys, os, atexit
 
 # Import DL and set correct link flags for RTTI use
@@ -93,87 +89,66 @@ sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'utils'))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'bfdFrontend')))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'loader')))
 
-from power import *
+#from power import * #TODO useless at the moment
+
+import colors
 
 # END General Init code ########################################################
 
 def getCppName(pypp_name):
+    #TODO never used
     return pypp_name.replace('_comma_', ',').replace('_less_', '<').replace('_greater_', '>').replace('_scope_', '::').replace(',_', ', ')
 
 def filterNames(namespaceToFilter):
+    '''This function receives as parameter a namespace (systemc, TRAP and TLM libraries, or a related component) and
+    filter the names contained in it and derived from the systemc, tlm and trap libraries. The objective is to set more 
+    user-friendly names'''
+        
+    TRAP_PREFIX = "TRAPW_"
+    TLM_PREFIX = "TLMW_"
+    SC_PREFIX = "SYSCW_"
+
+    TRAP_WRAPPER = 'trapwrapper'
+    TLM_WRAPPER = 'tlmwrapper'
+    SC_WRAPPER = 'scwrapper'
+
     global scwrapper, tlmwrapper, trapwrapper
-    from types import BuiltinFunctionType
+    from types import BuiltinFunctionType # all built-ins functions are instance of this type
 
-    # Filtering for TRAP
-    for j in filter(lambda x: x.startswith(TRAP_PREFIX), dir(namespaceToFilter)):
-        item = getattr(namespaceToFilter, j)
+    # Prefixes of the three libraries and corresponding wrapper names
+    prefixes = [TRAP_PREFIX, TLM_PREFIX, SC_PREFIX]
+    wrapperNames = {TRAP_PREFIX: TRAP_WRAPPER, TLM_PREFIX: TLM_WRAPPER, SC_PREFIX: SC_WRAPPER}
 
-        if not isinstance( item , BuiltinFunctionType ):
-            try:
-                item.__name__ = j[len(TRAP_PREFIX):]
-                item.__module__ = 'trapwrapper'
-            except:
-                print 'Error converting name of ' + j
-
-        if not j[len(TRAP_PREFIX):] in dir(trapwrapper):
-            setattr( trapwrapper, j[len(TRAP_PREFIX):], item )
-
-        delattr(namespaceToFilter, j)
-
-    # Filtering for TLM
-    for j in filter(lambda x: x.startswith(TLM_PREFIX), dir(namespaceToFilter)):
-        item = getattr(namespaceToFilter, j)
-
-        if not isinstance( item , BuiltinFunctionType ):
-            try:
-                item.__name__ = j[len(TLM_PREFIX):]
-                item.__module__ = 'tlmwrapper'
-            except:
-                print 'Error converting name of ' + j
-
-        if not j[len(TLM_PREFIX):] in dir(tlmwrapper):
-            setattr( tlmwrapper, j[len(TLM_PREFIX):], item )
-
-        delattr(namespaceToFilter, j)
-
-    # Filtering for SYSTEMC
-    for j in filter(lambda x: x.startswith(SC_PREFIX), dir(namespaceToFilter)):
-        item = getattr(namespaceToFilter, j)
-
-        if not isinstance( item , BuiltinFunctionType ):
-            try:
-                item.__name__ = j[len(SC_PREFIX):]
-                item.__module__ = 'scwrapper'
-            except:
-                print 'Error converting name of ' + j
-
-        if not j[len(SC_PREFIX):] in dir(scwrapper):
-            setattr( scwrapper, j[len(SC_PREFIX):], item )
-
-        delattr( namespaceToFilter, j)
+    # Filtering names for each one of the three libs (TRAP, TLM, systemc)
+    for prefix in prefixes: # Iterate each library to filter the related names in the namespace passed as parameter
+        currWrapperName = wrapperNames[prefix]
+        for j in filter(lambda x: x.startswith(prefix), dir(namespaceToFilter)):
+            item = getattr(namespaceToFilter, j)
+            if not isinstance(item, BuiltinFunctionType):
+                try:
+                    item.__name__ = j[len(prefix):]
+                    item.__module__ = currWrapperName
+                except:
+                    print 'Error converting name of ' + j
+            currWrapper = globals()[currWrapperName]
+            if not j[len(prefix):] in dir(currWrapper):
+                setattr(currWrapper, j[len(prefix):], item)
+            delattr(namespaceToFilter, j)
 
     # Now I have again to go over the components and eliminate all those elements which are
     # contained also in scwrapper, in TLM wrapper, and in TRAP wrapper
     toFilterNames_names = []
-    if namespaceToFilter.__name__ != 'scwrapper':
-        try:
-            toFilterNames_names += dir(scwrapper)
-        except:
-            pass
-    if namespaceToFilter.__name__ != 'tlmwrapper':
-        try:
-            toFilterNames_names += dir(tlmwrapper)
-        except:
-            pass
-    if namespaceToFilter.__name__ != 'trapwrapper':
-        try:
-            toFilterNames_names += dir(trapwrapper)
-        except:
-            pass
-
+    for prefix in prefixes:
+        currWrapperName = wrapperNames[prefix]
+        if namespaceToFilter.__name__ != currWrapperName:
+            try:
+                currWrapper = globals()[currWrapperName]
+                toFilterNames_names += dir(currWrapper)
+            except:
+                pass
     for j in dir(namespaceToFilter):
         if j in toFilterNames_names and not j.startswith('_'):
-            delattr( namespaceToFilter, j)
+            delattr(namespaceToFilter, j)
 
 class RespKernel:
     """This class represents the core simulator class. This class provides a set of objects and functions to
@@ -181,8 +156,7 @@ class RespKernel:
     that can be used by InteractiveInterpreters to provide human-computer interfaces"""
 
     def __init__(self,  options=None):
-        """Initialize the simulation and component managing kernel"""
-        # Options...
+        """Initializes the simulation and component managing kernel"""
 
         # Initialization of the main kernel interface
         # The "Manager" deals with component instantiation and life cycle
@@ -190,16 +164,15 @@ class RespKernel:
 
         # The "Controller" deals with simulation control (run, pause, stop, etc.)
         self.controller = None
-        self.debugger = None
-
-        # Anything else?
+        
         self.scripting_commands = []
-        self.components = []
-        self.fileName = None
+        self.components = [] # The list of all available components
+        self.fileName = None # The name of the loaded architecture
+        self.interactive = True # States id the simulation mode is interactive or not
+        self.verbose = False # States if the execution is verbose or not
+        self.debugger = None # This is a reference to the process running the debugger
 
-        # Other options
-        self.verbose = False
-
+        # Check if the libraries have been correctly compiled
         try:
             import configuration
             if configuration.STATIC_PLATFORM:
@@ -210,30 +183,35 @@ class RespKernel:
         except:
             pass
 
+        #setup ReSP kernel
         try:
             self.setup(options)
             self.setup_scripting_commands()
         except Exception,  e:
             print '\nError in the setup of the ReSP Kernel  --> ' + str(e) + '\n'
+            if self.verbose:
+                import traceback
+                traceback.print_exc()
+                print ''
             sys.exit(0)
 
     def setup(self, options=None):
-        """Sets up the ReSP interpreter: component loading, path adjustments, etc."""
+        """Sets up the ReSP interpreter: library and component loading, simulation controller instantiation, etc."""
 
         # Now I start performing the parsing of the command line options
-        interaction = True
         if options:
-            interaction = not (options.silent or not options.interactive)
+            self.interactive = not (options.silent or not options.interactive) #TODO ????? check it
             self.verbose = options.verbose
+            if options.color:                
+                colors.enable_colors()
 
-        # import the basic modules and turn off the warningns
-        import signal #readline
-
-        # Import modules for the respkernel namespace
-        # import systemc, archc and tlm wrapper
+        #turn off the warnings
         if not self.verbose:
             import warnings
             warnings.simplefilter('ignore', RuntimeWarning)
+
+        # Import modules for the respkernel namespace
+        # import systemc, trap and tlm wrapper
 
         global tlmwrapper, scwrapper, trapwrapper, sc_controller, compManager, converters, bfdwrapper, loader_wrapper
 
@@ -268,7 +246,7 @@ class RespKernel:
             print "Loading loader_wrapper"
         import loader_wrapper
 
-        # import components storing them into a component list
+        # import components storing them into the component list
         self.components = []
         componentListFile = os.path.abspath(os.path.join(blddir, '.wrapper_order.py'))
         if os.path.exists(componentListFile):
@@ -281,13 +259,7 @@ class RespKernel:
             print >> sys.stderr, 'File ' + componentListFile + ' does not exists'
             sys.exit(0)
 
-        # THIS IS THE OLD CODE FOR LOADING THE COMPONENTS
-        #try:
-            #self.load_components(os.path.abspath(os.path.join(blddir, 'default', 'components')),  self.components)
-        #except Exception,  e:
-            #print >> sys.stderr, 'Error in loading the components in the simulator --> ',  e
-            #sys.exit(0)
-
+        # turn on the warnings
         if not self.verbose:
             warnings.resetwarnings()
 
@@ -295,39 +267,58 @@ class RespKernel:
         from compManager import ComponentManager
         global manager
         self.manager = manager = ComponentManager(self.components, scwrapper)
-        global loadedFileName
-        self.fileName = loadedFileName = ''
-        # and, at then end, I can instantiate controller and register the
-        # callback for the end of simulation
-        global controller
-        try:
-            self.controller = sc_controller_wrapper.sc_controller.getController(interaction)
-        except:
-            if interaction:
-                self.controller = sc_controller_wrapper.sc_controller.getController()
-            else:
-                self.controller = sc_controller_wrapper.sc_controller.getController(None)
-        controller = self.controller
-        from print_stats import print_stats_cb
+        self.fileName = ''
 
-        global eosCb
-        eosCb = print_stats_cb(self.controller)
-        sc_controller_wrapper.registerEosCallback(eosCb)
+        # instantiate controller and register the
+        # callback for the end of simulation        
+        if self.verbose:
+            print "Setting up the controller"        
+        self.setup_controller(self.interactive)        
 
         if globals().has_key('__warningregistry__'):
             globals().pop('__warningregistry__')
         if globals().has_key('dl'):
             globals().pop('dl')
+            
+        #start debugger
+        if options.debug:
+            self.start_debugger()
+            if self.verbose:
+                print "Starting debugger..."
 
+        #register in the exit handler the function destroing all imported stuff
         atexit.register(self.delete_all)
 
+    def setup_controller(self, interactive):
+        '''Instantiates the controller and register the callback for the end of simulation'''
+        #instantiate controller
+        if self.verbose:
+            print "Instantiating the controller"        
+        global controller
+        try:
+            self.controller = sc_controller_wrapper.sc_controller.getController(interactive)
+        except:
+            if interactive:
+                self.controller = sc_controller_wrapper.sc_controller.getController()
+            else:
+                self.controller = sc_controller_wrapper.sc_controller.getController(None)
+        controller = self.controller
+        
+        # register callback for end of simulation
+        if self.verbose:
+            print "Registering eosCb"        
+        from print_stats import print_stats_cb
+        global eosCb
+        eosCb = print_stats_cb(self.controller)
+        sc_controller_wrapper.registerEosCallback(eosCb)
+        
     def setup_scripting_commands(self):
-        """Create some convenience functions, used to run scripts without the need to refer to RespKernel, controller or manager objects"""
+        """Creates some convenience functions, used to run scripts without the need to refer to RespKernel, controller or manager objects"""
 
         global connectPortsForce, connectPorts, connectSyscPorts, connectSyscSignal, listComponents,  printComponents, getCompInstance, areConnected, \
                 getSources,  getTargets, getConnected, getComponents, getAttrInstance,  getInstance, getBase, run_simulation, \
                 pause_simulation, stop_simulation,  get_simulated_time, get_real_time, run_up_to, reload_architecture, \
-                enable_fault_injection, showArchitecture
+                enable_fault_injection, showArchitecture, reset, load_architecture, reload_architecture, get_architecture_filename
 
         # Assign scripting commands to manager, helper and controller methods
         reload_architecture = self.reload_architecture
@@ -344,7 +335,7 @@ class RespKernel:
         getConnected = self.manager.getConnected
         getComponents = self.manager.getComponents
         showArchitecture = self.manager.showArchitecture
-
+        
         import helper
         getAttrInstance =  helper.getAttrInstance
         getInstance = helper.getInstance
@@ -356,53 +347,28 @@ class RespKernel:
         stop_simulation = self.controller.stop_simulation
         get_simulated_time = self.controller.get_simulated_time
         get_real_time = self.controller.get_real_time
+        reset = self.reset
+        
+        load_architecture = self.load_architecture
+        reload_architecture = self.reload_architecture
+        get_architecture_filename = self.get_architecture_filename
 
-        enable_fault_injection  = self.enable_fault_injection
+        enable_fault_injection  = self.enable_fault_injection #TODO
 
         # List commands in an internal array for reference
         self.scripting_commands = [connectPortsForce, connectPorts, connectSyscPorts, connectSyscSignal, listComponents,  printComponents, \
                                    getCompInstance, areConnected, getSources,  getTargets, getConnected, getComponents, \
                                    getAttrInstance,  getInstance, getBase, run_simulation, pause_simulation, \
-                                   stop_simulation, get_simulated_time, get_real_time, run_up_to, enable_fault_injection, showArchitecture]
-
-
-    def addSimulationVar(self, name, value):
-        globals()[name] = value
-
-    # Old code for loading components, now we do not examine folder anymore, we have
-    # the list of the components to be loaded and their order created during compilation
-    #def load_components(self, folder,  componentList):
-        #"""Loads the wrappers of the components present in curFolder"""
-        #curPathLoaded = False
-        #dirContent = os.listdir(folder)
-        #for element in dirContent:
-            #if os.path.isfile(os.path.join(folder, element)):
-                #if element.endswith('.so') and not element.startswith('lib'):
-                    #if not curPathLoaded:
-                        #curPathLoaded = True
-                        #sys.path.append(os.path.abspath(folder))
-                    #toLoadName = os.path.splitext(element)[0]
-
-                    #if self.verbose:
-                        #print "Loading " + toLoadName
-                    #temp = __import__(toLoadName)
-                    #try:
-                        #filterNames(temp)
-                    #except:
-                        #print "Error during loading of component " + toLoadName
-                        #import traceback
-                        #traceback.print_exc()
-
-                    #componentList.append(temp)
-                    #globals()[toLoadName] = temp
-        #[self.load_components(os.path.join(folder, element),  componentList) for element in dirContent if os.path.isdir(os.path.join(folder, element))]
-
+                                   stop_simulation, get_simulated_time, get_real_time, run_up_to, enable_fault_injection, showArchitecture, reset, \
+                                   load_architecture, reload_architecture, get_architecture_filename]
+        
     def load_components(self, componentListFile):
+        """Loads all components included in the ReSP. The complete list is contained in the componentListFile that has been built during compiling"""
         componentPathList = [line.strip() for line in open(componentListFile).readlines()]
         for component in componentPathList:
             if not os.path.exists(component):
                 if self.verbose:
-                    print 'Component ' + component + ' appears in the compilation list, but it does not exists'
+                    print 'Component ' + component + ' appears in the compilation list, but the library is missing'
             else:
                 componentPath, componentFile = os.path.split(component)
                 componentName = os.path.splitext(componentFile)[0]
@@ -416,20 +382,17 @@ class RespKernel:
                         filterNames(temp)
                     except:
                         print "Error in renaming during loading of component " + componentName
-                        import traceback
-                        traceback.print_exc()
-
+                        if self.verbose:
+                            import traceback
+                            traceback.print_exc()
                     self.components.append(temp)
                     globals()[componentName] = temp
 
-    def load_architecture(self, fileName):
-        """Loads the architecture specified in fileName; it can either be an XML file
-        or a python script; namespace represents the namespace containing the classes of components
-        referenced in the architecture"""
-        if fileName.endswith('.xml'):
-            print 'Loading of XML files not yet supported'
-            return False
-        elif fileName.endswith('.py'):
+    def load_architecture(self, fileName, returnCheck = False):
+        """Loads the architecture specified in fileName; currently it must be a python script. If returnCheck
+        parameter is enabled, the function returns True in case of success or False if any problem occurred during
+        architecture loading"""
+        if fileName.endswith('.py'):
             # I have to find the path for the module, then add it to the
             # system path and finally import the module: all the instructions
             # contained in the module (which are the instructions specifying how
@@ -437,54 +400,91 @@ class RespKernel:
             try:
                 exec open(fileName) in globals()
             except Exception, e:
-                print 'Error in opening architecture file ' + fileName + ' --> ' + str(e) + '\n'
+                print colors.colorMap['red'] + 'Error in opening architecture file: '+colors.colorMap['none'] + fileName + ' --> ' + str(e) + '\n'
                 if self.verbose:
                     import traceback
                     traceback.print_exc()
                     print ''
                 print 'In order to be able to load a new architecture, the simulator must be restarted'
+                if returnCheck:
+                    return False
+                else:
+                    return
+            else:
+                print '\n' + colors.colorMap['red'] + 'File ' + colors.colorMap['none'] + colors.colorMap['bright_green'] + fileName + colors.colorMap['none'] + colors.colorMap['red'] + ' correctly loaded\n' + colors.colorMap['none']
+                if sys.stdout.isatty():
+                    print "\033]0;ReSP - " + os.path.basename(fileName) + "\007"
+        else:
+            print 'Currelty only files specified in Python are supported'
+            if returnCheck:
                 return False
-
-        global loadedFileName
-        self.fileName = loadedFileName = fileName
-        return True
-
+            else:
+                return
+        
+        self.fileName = fileName
+        if returnCheck:
+            return True
+        else:
+            return
+        
     def reload_architecture(self):
+        """Reloads the current architecture after resetting the simulator"""
         if self.fileName == None:
             print 'No architecture to reload'
             return
-
         self.reset()
         self.load_architecture(self.fileName)
 
+    def get_architecture_filename(self):
+        '''Return the name of the file containing the loaded architecture'''
+        return self.fileName
+
     def run_silent(self, duration=-1):
-        # Runs the simulation in batch mode: this means that it executes a simulation
-        # in non-interactive mode and executing the specified python actions at
-        # different times. TODO In addition to the actions it is possible to change the
+        '''Runs the simulation in batch mode'''
+        # it executes a simulation in non-interactive mode and executing the specified python 
+        # actions at different times. TODO In addition to the actions it is possible to change the
         # parameters of the loaded architecture
         
         #if simulation commands are not specified in the architecture file, execute the whole simulation
         if not controller.has_started():
             run_simulation(duration)
 
-    def delete_all(self):
-        """Delete all the object instances in namespaces whose base type is
-        Boost.Python.instance; note that in case the simulation is still
-        running, the first thing I do is stopping it"""
-        if (not self.controller.is_finished()) and self.controller.is_running() and (not self.controller.error):
+    def start_debugger(self):
+        '''Starts the GBD debugger'''
+        import subprocess
+        try:
+            self.debugger = subprocess.Popen(['xterm', '-e', 'gdb', '-p', str(os.getpid()), '-ex', 'continue', '&'])
+        except Exception, e:
+            print '\n--> Error while opening GDB !!!\n'
             if self.verbose:
-                print 'killing the simulation'
-            self.controller.stop_simulation()
-        
+                import traceback
+                traceback.print_exc()
+                print ''
+                
+    def end_debugger(self):
+        '''Ends GBD debugger, if started'''
         if self.debugger != None:
-          os.system('kill -9 ' + str(self.debugger.pid))
-          
+            os.system('kill -9 ' + str(self.debugger.pid))
+        
+    def get_namespace(self):
+        """ Returns the respkernel dictionary (i.e. namespace) """
+        return globals()
+
+    def __delete_all_helper(self):
+        """ Deletes all the object instances in namespaces whose base type is
+        Boost.Python.instance. DO NOTE: it should not be called directly since it
+        may cause ReSP crash if the simulation is still running"""
         for name in globals().keys():
             if name == 'controller':
                 continue
             comp = globals()[name]
             try:
                 base = comp.__class__.__bases__[0]
+                # Remove stray power models
+                if base.__name__ == 'model':
+                    del globals()[name]
+                    continue
+                # Remove all boost.python references
                 while base.__name__ != "instance" and base.__name__ != "object":
                     base = base.__bases__[0]
                 if base.__name__ == "instance":
@@ -496,15 +496,76 @@ class RespKernel:
             except:
                 pass
 
-    def get_namespace(self):
-        """ Returns the respkernel dictionary (i.e. namespace) """
-        return globals()
+        for name in globals().keys():
+            if name == 'controller':
+                continue
+            comp = globals()[name]
+            if (isinstance( comp , list) or isinstance( comp, dict )) and not name.startswith('__'):
+                del globals()[name]
+            elif hasattr (globals()[name], '__del__'):
+                del globals()[name]
+
+    def delete_all(self):
+        """Deletes all the object instances in namespaces whose base type is
+        Boost.Python.instance; note that in case the simulation is still
+        running, the first thing I do is stopping it"""
+        #if (not self.controller.is_finished()) and self.controller.is_running() and (not self.controller.error):
+        if ((self.controller.has_started() and not self.controller.is_ended()) and not self.controller.error):
+            if self.verbose:
+                print 'killing the simulation'
+            self.controller.stop_simulation()
+            import time
+            time.sleep(1)
+       
+        # kill the debugger process if the simulation is in debugging mode
+        if self.debugger != None:
+          self.end_debugger()
+          
+        self.__delete_all_helper()
 
     def reset(self):
-        """ Resets the simulator to the initial state """
-        reset()
+        """ Resets the simulator to the initial state """ 
+        global controller
 
-    def enable_fault_injection(self, value = True):
+        #check if an exception has occurred in systemc...
+        if controller.error == True:
+            print "\n\nSimulation cannot be restarted since an exception has been thrown!\n\n"
+            return
+            
+        # Stop simulation
+        if (controller.has_started() and not controller.is_ended()):
+          controller.stop_simulation()
+          import time
+          time.sleep(1)
+        
+        # Delete All
+        self.__delete_all_helper()
+
+        # Reset OSEmulation
+        #cm.reset()
+
+        # Reset component manager
+        manager.reset()
+
+        # Reset power framework
+        #import power
+        #power.reset()
+
+        # Reset SystemC (tricky)
+        scwrapper.sc_get_curr_simcontext().reset()
+
+        # Reset controller
+        controller.reset_controller()
+        
+        del globals()['controller']
+        for script in self.scripting_commands:
+            del globals()[script.__name__]
+                
+        #instantiate a new controller and setup scripting commands (for simplicity all commands are restored...)
+        self.setup_controller(self.interactive)
+        self.setup_scripting_commands()
+
+    def enable_fault_injection(self, value = True): #TODO
         """ Enables oe disables the fault injection environment"""
         global manager
         if len(self.manager.getComponents()) > 0:
@@ -566,97 +627,8 @@ def get_namespace():
     """ Returns the respkernel dictionary (i.e. namespace) """
     return globals()
 
-def reset():
-    """ Resets the simulator to the initial state """
-        
-    #check if an exception has occurred in systemc...
-    global controller
-
-    if controller.error == True:
-        print "\n\nSimulation cannot be restarted since an exception has been thrown!\n\n"
-        return
-        
-    # Stop simulation
-    if (controller.has_started() and not controller.is_ended()):
-      controller.stop_simulation()
-      import time
-      time.sleep(1)
-    
-
-    # Delete All
-    for name in globals().keys():
-        if name == 'controller':
-            continue
-        comp = globals()[name]
-        try:
-            base = comp.__class__.__bases__[0]
-
-            # Remove stray power models
-            if base.__name__ == 'model':
-                del globals()[name]
-                continue
-
-            # Remove all boost.python references
-            while base.__name__ != "instance" and base.__name__ != "object":
-                base = base.__bases__[0]
-            if base.__name__ == "instance":
-                del globals()[name]
-
-        except:
-            pass
-
-    for name in globals().keys():
-        if name == 'controller':
-            continue
-        comp = globals()[name]
-        if (isinstance( comp , list) or isinstance( comp, dict )) and not name.startswith('__'):
-            del globals()[name]
-        elif hasattr (globals()[name], '__del__'):
-            del globals()[name]
-
-    # Reset OSEmulation
-    #cm.reset()
-
-    # Reset component manager
-    manager.reset()
-
-    # Reset power framework
-    import power
-    power.reset()
-
-    # Reset SystemC (tricky)
-    scwrapper.sc_get_curr_simcontext().reset()
-
-    # Reset controller
-    controller.reset()
-    
-    del globals()['controller']
-    del globals()['run_simulation']
-    del globals()['run_up_to']
-    del globals()['pause_simulation']
-    del globals()['stop_simulation']
-    del globals()['get_simulated_time']
-    del globals()['get_real_time']
-    
-    global run_simulation, pause_simulation, stop_simulation, get_simulated_time, get_real_time, run_up_to
-    
-    controller = sc_controller_wrapper.sc_controller.getController()
-        
-    run_simulation = controller.run_simulation
-    run_up_to = controller.run_up_to
-    pause_simulation = controller.pause_simulation
-    stop_simulation = controller.stop_simulation
-    get_simulated_time = controller.get_simulated_time
-    get_real_time = controller.get_real_time
-    
-    #re-register end-of-simulation callback
-    global eosCb
-    from print_stats import print_stats_cb
-    eosCb = print_stats_cb(controller)
-    sc_controller_wrapper.registerEosCallback(eosCb)
-
 def findInFolder(fileName, startFolder):
-    '''Locate all files matching supplied filename pattern in and below
+    '''Locates all files matching supplied filename pattern in and below
     supplied root directory.'''
     for path, dirs, files in os.walk(os.path.abspath(startFolder)):
         if fileName in files:

@@ -148,7 +148,7 @@ sc_controller & sc_controller::getController(bool interactive){
 
 ///Static method for the reset of the controller. 
 //Any object associated to the controlled is destroyed
-void sc_controller::reset(){
+void sc_controller::reset_controller(){
     if(sc_controller::controllerInstance != NULL){
         delete sc_controller::controllerInstance;
         sc_controller::controllerInstance = NULL;
@@ -169,8 +169,9 @@ sc_controller::sc_controller(bool interactive) : interactive(interactive),
     if(this->interactive){
         PyEval_InitThreads();
         this->se = new simulation_engine("sim_engine", controllerMachine);
-        delta_callback = &resp::notifyDeltaCallback;
     }
+    
+    delta_callback = &resp::notifyDeltaCallback;
 
     this->error = false;
     this->accumulatedTime = 0;
