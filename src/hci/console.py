@@ -93,9 +93,8 @@ class Console(code.InteractiveConsole):
         Console class for the ReSP interactive shell
     """
 
-    def __init__(self, resp_kernel,  verbose = False, debug = False, locals_ns=None):
-        self.verbose = verbose
-        self.debug = debug
+    def __init__(self, resp_kernel, locals_ns=None):
+        self.verbose = resp_kernel.verbose
         self.started = False
         self.error = False
         self.resp_kernel = resp_kernel
@@ -123,12 +122,6 @@ class Console(code.InteractiveConsole):
         """initializes the console by importing all the libraries and packages
         containing the components and the wrappers"""
 
-        # Now that the imports are finished, I can see if it is the case of starting GDB
-        if self.debug:
-            #os.system('xterm -e gdb -p ' + str(os.getpid()) +  ' -ex continue &')
-            import subprocess
-            self.resp_kernel.debugger = subprocess.Popen(['xterm', '-e', 'gdb', '-p', str(os.getpid()), '-ex', 'continue', '&'])
-
         # end, at then end I can instantiate the signal handler and the controller
         import customCompleter
         completer = customCompleter.Completer(self.locals)
@@ -141,16 +134,16 @@ class Console(code.InteractiveConsole):
 
         # Sneakily add some extra commands to the respkernel namespace
         self.locals['show_commands'] = self.show_commands
-        self.locals['load_architecture'] = self.load_architecture
-        self.locals['generate_fault_list'] = self.generate_fault_list
-
-        #refs 114
-        self.locals['save_architecture'] = self.save_architecture
-        self.locals['generate_fault_list'] = self.generate_fault_list
+        
+        #self.locals['load_architecture'] = self.load_architecture
+        ##refs 114
+        #self.locals['save_architecture'] = self.save_architecture
+        
+        self.locals['disable_colors'] = colors.disable_colors
+        self.locals['enable_colors'] = colors.enable_colors
 
     def start_console(self):
         """Starts the console interactive mode"""
-        self.resp_kernel.controller.consoleInit = True
         self.interact('')
 
     def init_history(self, histfile):
@@ -184,52 +177,43 @@ class Console(code.InteractiveConsole):
         readline.write_history_file(histfile + '_backup')
 
 
-    def load_architecture(self, fileName):
-        """Loads the architecture specified in fileName; it can either be an XML file
-        or a python script; namespace represents the namespace containing the classes of components
-        referenced in the architecture; usually you can pass globals() as namespace parameter"""
-        if fileName.endswith('.xml'):
-            print colors.color_red + 'Error, Loading of XML files not yet supported' + colors.color_none
-        elif fileName.endswith('.py'):
-            # I have to find the path for the module, then add it to the
-            # system path and finally import the module: all the instructions
-            # contained in the module (which are the instructions specifying how
-            # to connect the architeture) will be executed
-            try:
-                exec open(fileName)  in self.resp_kernel.get_namespace()
-            except Exception, e:
-                print colors.colorMap['red'] + 'Error in opening architecture file: '+colors.colorMap['none'] + fileName + ' --> ' + str(e) + '\n'
-                if self.resp_kernel.verbose:
-                    import traceback
-                    traceback.print_exc()
-                    print ''
-                print 'In order to be able to load a new architecture, the simulator must be restarted'
-            else:
-                print '\n' + colors.colorMap['red'] + 'File ' + colors.colorMap['none'] + colors.colorMap['bright_green'] + fileName + colors.colorMap['none'] + colors.colorMap['red'] + ' correctly loaded\n' + colors.colorMap['none']
-                if sys.stdout.isatty():
-                    print "\033]0;ReSP - " + os.path.basename(fileName) + "\007"
-        else:
-            #refs 114
-            exec("__ARCHPATH__ = '%s'" %fileName) in self.resp_kernel.get_namespace()
-            curPath = os.path.abspath(os.path.join(os.path.dirname(sys.modules['respkernel'].__file__),'..'))
-            exec open(curPath + '/tools/importexport/import.py') in self.resp_kernel.get_namespace()
-
-        self.resp_kernel.get_namespace()['loadedFileName'] = fileName
-        self.resp_kernel.fileName =  fileName
-
-    #refs 114
-    def save_architecture(self, fileName):
-        exec("__ARCHPATH__ = '%s'" %fileName) in self.resp_kernel.get_namespace()
-        curPath = os.path.abspath(os.path.join(os.path.dirname(sys.modules['respkernel'].__file__),'..'))
-        exec open(curPath + '/tools/importexport/export.py') in self.resp_kernel.get_namespace()
-
-    def generate_fault_list(self):
-        import injection.listgeneration
-        from injection.listgeneration import fault_list_generation
-        try:
-            fault_list_generation(self)
-        except BaseException, e:
-            print "Error occurred during fault list generation wizard: " + str(e)
+#    def load_architecture(self, fileName):
+#        """Loads the architecture specified in fileName; it can either be an XML file
+#        or a python script; namespace represents the namespace containing the classes of components
+#        referenced in the architecture; usually you can pass globals() as namespace parameter"""
+#        if fileName.endswith('.xml'):
+#            print colors.color_red + 'Error, Loading of XML files not yet supported' + colors.color_none
+#        elif fileName.endswith('.py'):
+#            # I have to find the path for the module, then add it to the
+#            # system path and finally import the module: all the instructions
+#            # contained in the module (which are the instructions specifying how
+#            # to connect the architeture) will be executed
+#            try:
+#                exec open(fileName)  in self.resp_kernel.get_namespace()
+#            except Exception, e:
+#                print colors.colorMap['red'] + 'Error in opening architecture file: '+colors.colorMap['none'] + fileName + ' --> ' + str(e) + '\n'
+#                if self.resp_kernel.verbose:
+#                    import traceback
+#                    traceback.print_exc()
+#                    print ''
+#                print 'In order to be able to load a new architecture, the simulator must be restarted'
+#            else:
+#                print '\n' + colors.colorMap['red'] + 'File ' + colors.colorMap['none'] + colors.colorMap['bright_green'] + fileName + colors.colorMap['none'] + colors.colorMap['red'] + ' correctly loaded\n' + colors.colorMap['none']
+#                if sys.stdout.isatty():
+#                    print "\033]0;ReSP - " + os.path.basename(fileName) + "\007"
+#        else:
+#            #refs 114
+#            exec("__ARCHPATH__ = '%s'" %fileName) in self.resp_kernel.get_namespace()
+#            curPath = os.path.abspath(os.path.join(os.path.dirname(sys.modules['respkernel'].__file__),'..'))
+#            exec open(curPath + '/tools/importexport/import.py') in self.resp_kernel.get_namespace()
+#
+#        self.resp_kernel.fileName =  fileName
+#
+#    #refs 114
+#    def save_architecture(self, fileName):
+#        exec("__ARCHPATH__ = '%s'" %fileName) in self.resp_kernel.get_namespace()
+#        curPath = os.path.abspath(os.path.join(os.path.dirname(sys.modules['respkernel'].__file__),'..'))
+#        exec open(curPath + '/tools/importexport/export.py') in self.resp_kernel.get_namespace()
 
     def ctrl_c_handler(self, signum, frame):
         """Custom handler of the CTRL-C (SIGINT)
