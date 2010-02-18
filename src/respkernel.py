@@ -535,8 +535,6 @@ class RespKernel:
         # Stop simulation
         if (controller.has_started() and not controller.is_ended()):
           controller.stop_simulation()
-          import time
-          time.sleep(1)
         
         # Delete All
         self.__delete_all_helper()

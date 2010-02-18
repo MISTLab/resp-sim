@@ -254,9 +254,11 @@ void sc_controller::stop_simulation(){
         sc_stop();
         if ( this->controllerMachine.state_cast< const Stopped_st * >() == 0){
             this->controllerMachine.process_event( EvStop() );
-            { // Wait for pause state to exit
+            // Wait for pause state to exit
+            Py_BEGIN_ALLOW_THREADS 
                 boost::mutex::scoped_lock lk(this->controllerMachine.pause_mutex);
-            }
+                this->controllerMachine.end_condition.wait(lk);
+            Py_END_ALLOW_THREADS
         }
     }
     else{

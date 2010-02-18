@@ -66,6 +66,10 @@ void simulation_engine::end_of_simulation(){
     }
     // Finally I signal to everyone that simulation has ended
     notifyEosCallback();
+    
+    // Notify any waiting threads
+    this->controllerMachine.end_condition.notify_all();
+    
 }
 
 /// Simulation engine constructor
