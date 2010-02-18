@@ -50,7 +50,7 @@ unsigned int configEngine::configure(string funcName, sc_time latency, unsigned 
 	messageData.width = width;
 	messageData.height = height;
 	messageData.answer = 0;
-        message.set_data_length(payload_length);
+	message.set_data_length(payload_length);
 	message.set_data_ptr(payload_buffer);
 	message.set_read();
 	message.set_address(1);
@@ -157,15 +157,20 @@ unsigned int configEngine::configure(string funcName, sc_time latency, unsigned 
         message.set_data_length(bitstream_length);		// using the appropriate length!
 	message.set_data_ptr((unsigned char*)bitstream);
 	message.set_response_status(TLM_INCOMPLETE_RESPONSE);
+//	cout << "Got here 1" << endl;
 	this->busSocket->b_transport(message,delay);
+//	cout << "Got here 2" << endl;
 	wait(delay);
 	delay = SC_ZERO_TIME;
 
 	// 'WRITEs' the bitstream on the selected device
 	message.set_write();
 	message.set_address(bitstream_dest_address);
+//	cout << "Got here 3 " << sc_time_stamp().to_default_time_units() << endl;
 	this->busSocket->b_transport(message,delay);		// We send the 'write' message to the bitstream sink
+//	cout << "Got here 4" << endl;
 	wait(delay);
+//	cout << "Got here 5" << endl;
 
 	//cerr << tab.getName(address) << " configured at address " << address << " on device # " << tab.getDevice(address) << ";";
 	//cerr << " configuration required " << responseValue << " words." << endl;

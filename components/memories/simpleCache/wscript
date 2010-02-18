@@ -42,6 +42,27 @@
 
 
 # Build
-
 def build(bld):
-    bld.add_subdirs('simpleMem simpleCache')
+    obj = bld.new_task_gen('pypp')
+    obj.source = """
+        CacheLT.hpp
+    """
+    obj.target = 'CacheLT32'
+    obj.uselib = 'BOOST BOOST_PYTHON TLM SYSTEMC_H'
+    obj.uselib_local = 'systemc utils'
+    obj.include = 'scwrapper tlmwrapper'
+    obj.start_decls = 'CacheLT'
+    obj.templates = ['CacheLT<unsigned int>']
+    obj.custom_code = """
+mb.global_ns.enumerations('removePolicyType').include()
+mb.global_ns.enumerations('writePolicyType').include()
+cls = mb.global_ns.classes(lambda decl : decl.name.startswith('CacheLT') )
+for i in cls:
+    i.include()
+    i.alias = 'CacheLT32'
+    try:
+        mb.global_ns.member_function('get_direct_mem_ptr').exclude()
+    except:
+        pass
+"""
+
