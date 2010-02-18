@@ -250,9 +250,9 @@ void sc_controller::pause_simulation(){
 
 ///Stops simulation (through a call to sc_stop)
 void sc_controller::stop_simulation(){
+    sc_stop();
     if(this->interactive){
         // I simply have stop simulation calling sc_stop
-        sc_stop();
         if ( this->controllerMachine.state_cast< const Stopped_st * >() == 0){
             this->controllerMachine.process_event( EvStop() );
             // Wait for pause state to exit
@@ -261,9 +261,6 @@ void sc_controller::stop_simulation(){
                 this->controllerMachine.end_condition.wait(lk);
             Py_END_ALLOW_THREADS
         }
-    }
-    else{
-        std::cerr << "Unable to stop simulation in non-interactive mode" << std::endl;
     }
 }
 
@@ -282,7 +279,7 @@ bool sc_controller::is_running(){
 /// True if simulation has ended, i.e.. there are no events or
 /// sc_stop has been called
 bool sc_controller::is_ended(){
-    return this->controllerMachine.state_cast< const Stopped_st * >() != 0;
+    return (sc_end_of_simulation_invoked() && ! this->interactive) || this->controllerMachine.state_cast< const Stopped_st * >() != 0;
 }
 
 /// True if simulation has already been started
