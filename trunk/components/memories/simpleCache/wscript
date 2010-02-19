@@ -49,8 +49,9 @@ def build(bld):
     """
     obj.target = 'CacheLT32'
     obj.uselib = 'BOOST BOOST_PYTHON TLM SYSTEMC_H'
-    obj.uselib_local = 'systemc utils'
+    obj.uselib_local = 'systemc utils sc_controller'
     obj.include = 'scwrapper tlmwrapper'
+    obj.includes = '../../../src/controller'
     obj.start_decls = 'CacheLT'
     obj.templates = ['CacheLT<unsigned int>']
     obj.custom_code = """

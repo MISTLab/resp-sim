@@ -50,8 +50,11 @@
 #include <tlm_utils/multi_passthrough_target_socket.h>
 #include <boost/lexical_cast.hpp>
 #include <string>
+#include <iostream>
+#include <fstream>
 
-#include <utils.hpp>
+#include "controller.hpp"
+#include "utils.hpp"
 
 using namespace std;
 using namespace tlm;
@@ -95,6 +98,9 @@ public:
 		unsigned int     len = trans.get_data_length();
 		unsigned char*   byt = trans.get_byte_enable_ptr();
 		unsigned int     wid = trans.get_streaming_width();
+
+//		ofstream outFile("mem.txt", ios::app);
+//		outFile << resp::sc_controller::getController().get_simulated_time() << " " << trans.get_address() << " " << trans.get_data_length() << " " << trans.is_write() << endl;
 
 		// Checking consistency of the request
 		if(adr > this->size || adr + len > this->size) {
