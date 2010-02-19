@@ -70,7 +70,7 @@
 #include <tlm_utils/multi_passthrough_initiator_socket.h>
 #include <boost/lexical_cast.hpp>
 
-#include "controller.hpp"
+//#include "controller.hpp"
 #include "utils.hpp"
 
 //#define PROC_NUM_ADDR 0xF0000004
@@ -263,7 +263,8 @@ public:
 		}
 
 //		ofstream outFile("bus.txt", ios::app);
-//		outFile << resp::sc_controller::getController().get_simulated_time() << " " << trans.get_address() << " " << trans.get_data_length() << " " << trans.is_write() << endl;
+//		outFile << sc_time_stamp() << " " << trans.get_address() << " " << trans.get_data_length() << " " << trans.is_write() << endl;
+		//resp::sc_controller::getController().get_simulated_time()
 //		cerr << ": requested " << addr << " on device # " << portId << endl;
 		trans.set_address(addr);
 

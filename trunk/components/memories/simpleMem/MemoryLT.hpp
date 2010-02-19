@@ -53,7 +53,6 @@
 #include <iostream>
 #include <fstream>
 
-#include "controller.hpp"
 #include "utils.hpp"
 
 using namespace std;
@@ -100,7 +99,7 @@ public:
 		unsigned int     wid = trans.get_streaming_width();
 
 //		ofstream outFile("mem.txt", ios::app);
-//		outFile << resp::sc_controller::getController().get_simulated_time() << " " << trans.get_address() << " " << trans.get_data_length() << " " << trans.is_write() << endl;
+//		outFile << sc_time_stamp() << " " << trans.get_address() << " " << trans.get_data_length() << " " << trans.is_write() << endl;
 
 		// Checking consistency of the request
 		if(adr > this->size || adr + len > this->size) {
@@ -163,6 +162,7 @@ public:
 		else if(cmd == TLM_WRITE_COMMAND)
 			memcpy(&mem[adr], ptr, len);
 
+		trans.set_response_status(TLM_OK_RESPONSE);
 		return len;
 	}
 
