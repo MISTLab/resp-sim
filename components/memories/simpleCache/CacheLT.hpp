@@ -54,7 +54,8 @@
 #include <iostream>
 #include <fstream>
 
-#include <utils.hpp>
+#include "controller.hpp"
+#include "utils.hpp"
 
 using namespace std;
 using namespace tlm;
@@ -135,7 +136,7 @@ private:
 		this->initSocket->b_transport(message,delay);
 		if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while reading from main memory");
 
-		this->numBusReadAcc++;
+		this->numReadBusAcc++;
 		delay += this->cacheLoadLatency;
 		return nB;
 	}
@@ -155,7 +156,7 @@ private:
 		this->initSocket->b_transport(message,delay);
 		if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while writing to main memory");
 
-		this->numBusWriteAcc++;
+		this->numWriteBusAcc++;
 		delay += this->cacheStoreLatency;
 		return;
 	}
@@ -185,15 +186,15 @@ public:
 	simple_initiator_socket<CacheLT, sizeof(BUSWIDTH)*8> initSocket;
 
 	// Statistics
-	unsigned int readMissNum;
-	unsigned int readHitNum;
-	unsigned int writeMissNum;
-	unsigned int writeHitNum;
+	unsigned int numReadMiss;
+	unsigned int numReadHit;
+	unsigned int numWriteMiss;
+	unsigned int numWriteHit;
 	unsigned int numScratchAcc;
 
-	unsigned int numCacheAcc;
-	unsigned int numBusReadAcc;
-	unsigned int numBusWriteAcc;
+	unsigned int numAccesses;
+	unsigned int numReadBusAcc;
+	unsigned int numWriteBusAcc;
 
 	CacheLT(sc_module_name module_name, sc_dt::uint64 size, sc_dt::uint64 limit, unsigned int wordsPerBlock, unsigned int numWays, removePolicyType rP = LRU, writePolicyType wP = BACK,
 		sc_time readLatency = SC_ZERO_TIME, sc_time writeLatency = SC_ZERO_TIME, sc_time loadLatency = SC_ZERO_TIME, sc_time storeLatency = SC_ZERO_TIME, sc_time removeLatency = SC_ZERO_TIME) :
@@ -213,13 +214,13 @@ public:
 		this->scratchMemory = NULL;
 
 		srand((unsigned)time(0));
-		this->readMissNum = 0;
-		this->readHitNum = 0;
-		this->writeMissNum = 0;
-		this->writeHitNum = 0;
-		this->numCacheAcc = 0;
-		this->numBusReadAcc = 0;
-		this->numBusWriteAcc = 0;
+		this->numReadMiss = 0;
+		this->numReadHit = 0;
+		this->numWriteMiss = 0;
+		this->numWriteHit = 0;
+		this->numAccesses = 0;
+		this->numReadBusAcc = 0;
+		this->numWriteBusAcc = 0;
 
 		this->bytesPerWord = sizeof(BUSWIDTH);
 		this->blockSize = bytesPerWord * wordsPerBlock;
@@ -308,7 +309,7 @@ public:
 					// We have a HIT!
 //					cerr << "Hit!" << endl;
 					hit = true;
-					this->readHitNum++;
+					this->numReadHit++;
 
 					// We save the current block...
 					curBlock = *(tagIter);
@@ -324,7 +325,7 @@ public:
 			if (!hit) {
 				// We have a MISS...
 //				cerr << "Miss!" << endl;
-				this->readMissNum++;
+				this->numReadMiss++;
 				// We load the block from memory...
 				curBlock = this->loadCacheBlock(curBaseAddress,delay);
 
@@ -381,7 +382,7 @@ public:
 					// We have a HIT!
 //					cerr << "Hit!" << endl;
 					hit = true;
-					this->writeHitNum++;
+					this->numWriteHit++;
 
 					// We save the current block...
 					tagIter->dirty = true;
@@ -398,7 +399,7 @@ public:
 			if (!hit) {
 				// We have a MISS...
 //				cerr << "Miss!" << endl;
-				this->writeMissNum++;
+				this->numWriteMiss++;
 				// If we have a Write-Back or Write-Through-All policy...
 				if (this->writePolicy == BACK || this->writePolicy == THROUGH_ALL) {
 					// We load the block from memory...
@@ -452,9 +453,10 @@ public:
 		unsigned char*   byt = trans.get_byte_enable_ptr();
 		unsigned int     wid = trans.get_streaming_width();
 
-//		ofstream test("cache.txt", ios::app);
-//		test << trans.get_address() << " " << trans.get_data_length() << endl;
 //		cout << "Cache " << this->name << "\tAdr: " << adr << "\tLen: " << len << "\tWid: " << wid << endl;
+//		ofstream outFile("cache.txt", ios::app);
+//		outFile << resp::sc_controller::getController().get_simulated_time() << " " << trans.get_address() << " " << trans.get_data_length() << " " << trans.is_write() << endl;
+
 		unsigned int words = len / sizeof(BUSWIDTH);
 		if (len%sizeof(BUSWIDTH) != 0) words++;
 
@@ -489,7 +491,7 @@ public:
 				}
 				else trans.set_response_status(TLM_OK_RESPONSE);
 			}
-			this->numCacheAcc++;
+			this->numAccesses++;
 		}
 	}
 
