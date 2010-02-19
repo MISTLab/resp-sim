@@ -54,7 +54,6 @@
 #include <iostream>
 #include <fstream>
 
-#include "controller.hpp"
 #include "utils.hpp"
 
 using namespace std;
@@ -455,7 +454,7 @@ public:
 
 //		cout << "Cache " << this->name << "\tAdr: " << adr << "\tLen: " << len << "\tWid: " << wid << endl;
 //		ofstream outFile("cache.txt", ios::app);
-//		outFile << resp::sc_controller::getController().get_simulated_time() << " " << trans.get_address() << " " << trans.get_data_length() << " " << trans.is_write() << endl;
+//		outFile << sc_time_stamp() << " " << trans.get_address() << " " << trans.get_data_length() << " " << trans.is_write() << endl;
 
 		unsigned int words = len / sizeof(BUSWIDTH);
 		if (len%sizeof(BUSWIDTH) != 0) words++;
@@ -491,6 +490,7 @@ public:
 				}
 				else trans.set_response_status(TLM_OK_RESPONSE);
 			}
+			else THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Undefined TLM command");
 			this->numAccesses++;
 		}
 	}
@@ -512,7 +512,81 @@ public:
 
 //		cout << "DBG Cache " << this->name << "\tAdr: " << adr << "\tLen: " << len << endl;
 
-		return this->initSocket->transport_dbg(trans);
+		// Calculating the TAG associated to the required memory position
+		sc_dt::uint64 tag = GET_TAG(adr);
+
+		// Declaring some support variables...
+		deque<CacheBlock>::iterator tagIter;
+		bool hit;
+		CacheBlock curBlock;
+		sc_dt::uint64 curBaseAddress;
+		int cachePointerModifier;
+		unsigned int partLen;
+		unsigned int remLen = len;
+		unsigned char *dataPointer = ptr;
+
+		// For each block containing part of the requested data...
+		for (curBaseAddress = adr - (adr % this->blockSize); curBaseAddress < adr+len; curBaseAddress += this->blockSize) {
+			hit = false;
+			// For each block cached...
+			// N.B. If no blocks are currently cached, cache[tag] is an ampty queue!
+			for (tagIter = this->cache[tag].begin(); tagIter != this->cache[tag].end(); tagIter++) {
+				// If the required block is cached...
+				if (tagIter->base_address == curBaseAddress) {
+					// We have a HIT!
+//					cerr << "DBG Hit!" << endl;
+					hit = true;
+
+					// We save the current block...
+					curBlock = *(tagIter);
+					// And we upgrade the queue order if we use an LRU policy
+					if (this->removePolicy==LRU) {
+						this->cache[tag].erase(tagIter);
+						this->cache[tag].push_front(curBlock);
+					}
+					break;
+				}
+			}
+			if (!hit) {
+				// We have a MISS...
+//				cerr << "Miss!" << endl;
+
+				// We load the block from memory...
+				curBlock = CacheBlock();
+				curBlock.block = (unsigned char*) malloc (blockSize*sizeof(unsigned char));
+				curBlock.base_address = adr - adr % blockSize;
+				tlm_generic_payload message;
+
+				message.set_data_length(blockSize);
+				message.set_data_ptr(curBlock.block);
+				message.set_read();
+				message.set_address(curBlock.base_address);
+				message.set_response_status(TLM_INCOMPLETE_RESPONSE);
+				this->initSocket->transport_dbg(message);
+				if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while reading from main memory");
+			}
+
+			// Finally, we can actually read the required data from the block...
+
+			// We calculate the displacement of the data in the cache block...
+			cachePointerModifier = adr - curBlock.base_address;
+			if (cachePointerModifier < 0) cachePointerModifier = 0;
+			// And the length of the data to be read
+			partLen = remLen;
+			if (partLen + cachePointerModifier > this->blockSize) partLen = this->blockSize - cachePointerModifier;
+			// We perform the effective read...
+			if(cmd == TLM_READ_COMMAND)
+				memcpy(dataPointer, curBlock.block + cachePointerModifier, partLen*sizeof(unsigned char));
+			else if(cmd == TLM_WRITE_COMMAND)
+				memcpy(curBlock.block + cachePointerModifier, dataPointer, partLen*sizeof(unsigned char));
+			else THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Undefined TLM command");
+			// And we update the pointer to the required data for eventual subsequent reads
+			remLen -= partLen;
+			dataPointer += partLen;
+		}
+		trans.set_response_status(TLM_OK_RESPONSE);
+		return len;
+//		return this->initSocket->transport_dbg(trans);
 	}
 };
 

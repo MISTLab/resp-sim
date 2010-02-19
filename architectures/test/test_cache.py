@@ -1,6 +1,10 @@
 def statsPrinter():
     print '\x1b[34m\x1b[1mSimulated Elapsed Time (nano-seconds):\x1b[0m'
     print '\x1b[31m' + str(controller.get_simulated_time()) + '\x1b[0m'
+    print '\x1b[34m\x1b[1mBus Accesses:\x1b[0m'
+    print '\x1b[31m' + str(bus.numAccesses) + '\x1b[0m'
+    print '\x1b[34m\x1b[1mBus Words:\x1b[0m'
+    print '\x1b[31m' + str(bus.numWords) + '\x1b[0m'
 
 withBus = True
 withDataCache = True
@@ -9,7 +13,7 @@ zeroTime = False
 memorySize = 1024*1024*256
 memoryLatency = scwrapper.sc_time(5,scwrapper.SC_NS)
 busLatency = scwrapper.sc_time(5,scwrapper.SC_NS)
-progName = 'arm.out'
+progName = 'scanf'
 
 a9 = arm9tdmi_funcLT_wrapper.Processor_arm9tdmi_funclt('a9',scwrapper.sc_time(10.0,scwrapper.SC_NS))
 if zeroTime and withBus:
@@ -24,7 +28,7 @@ else:
     mem = MemoryLT32.MemoryLT32('mem', memorySize, memoryLatency)
     
 if withDataCache:
-    dataCache = CacheLT32.CacheLT32('dataCache', 8192, memorySize, 32, 2, CacheLT32.LRU, CacheLT32.BACK)
+    dataCache = CacheLT32.CacheLT32('dataCache', 8192*1024*1024, memorySize, 4, 32, CacheLT32.LRU, CacheLT32.THROUGH)
     #dataCache.setReadLatency(scwrapper.sc_time(0.001,scwrapper.SC_PS))
     #dataCache.setScratchpad(4194304,1048576,scwrapper.sc_time(0.001,scwrapper.SC_PS))
     connectPortsForce(a9, a9.dataMem.initSocket, dataCache, dataCache.targetSocket)
@@ -39,7 +43,7 @@ else:
         connectPortsForce(a9, a9.dataMem.initSocket, mem, mem.targetSocket)
     
 if withInstrCache:
-    instrCache = CacheLT32.CacheLT32('instrCache', 8192, memorySize, 32, 2, CacheLT32.LRU, CacheLT32.BACK)
+    instrCache = CacheLT32.CacheLT32('instrCache', 8192*1024*1024, memorySize, 4, 32, CacheLT32.LRU, CacheLT32.THROUGH)
     connectPortsForce(a9, a9.instrMem.initSocket, instrCache, instrCache.targetSocket)
     if withBus:
         connectPortsForce(instrCache, instrCache.initSocket, bus, bus.targetSocket)

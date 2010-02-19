@@ -49,9 +49,8 @@ def build(bld):
     """
     obj.target = 'MemoryLT32'
     obj.uselib = 'BOOST BOOST_PYTHON TLM SYSTEMC_H'
-    obj.uselib_local = 'systemc utils sc_controller'
+    obj.uselib_local = 'systemc utils'
     obj.include = 'scwrapper tlmwrapper'
-    obj.includes = '../../../src/controller'
     obj.start_decls = 'MemoryLT'
     obj.templates = ['MemoryLT<unsigned int>']
     obj.custom_code = """
