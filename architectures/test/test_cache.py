@@ -13,7 +13,7 @@ zeroTime = False
 memorySize = 1024*1024*256
 memoryLatency = scwrapper.sc_time(5,scwrapper.SC_NS)
 busLatency = scwrapper.sc_time(5,scwrapper.SC_NS)
-progName = 'scanf'
+progName = 'test_reconfig'
 
 a9 = arm9tdmi_funcLT_wrapper.Processor_arm9tdmi_funclt('a9',scwrapper.sc_time(10.0,scwrapper.SC_NS))
 if zeroTime and withBus:
@@ -28,7 +28,7 @@ else:
     mem = MemoryLT32.MemoryLT32('mem', memorySize, memoryLatency)
     
 if withDataCache:
-    dataCache = CacheLT32.CacheLT32('dataCache', 8192*1024*1024, memorySize, 4, 32, CacheLT32.LRU, CacheLT32.THROUGH)
+    dataCache = CacheLT32.CacheLT32('dataCache', 8192*1024*1024, memorySize, 4, 32, CacheLT32.LRU, CacheLT32.BACK)
     #dataCache.setReadLatency(scwrapper.sc_time(0.001,scwrapper.SC_PS))
     #dataCache.setScratchpad(4194304,1048576,scwrapper.sc_time(0.001,scwrapper.SC_PS))
     connectPortsForce(a9, a9.dataMem.initSocket, dataCache, dataCache.targetSocket)
