@@ -516,6 +516,7 @@ public:
 		sc_dt::uint64 tag = GET_TAG(adr);
 
 		// Declaring some support variables...
+		tlm_generic_payload message;
 		deque<CacheBlock>::iterator tagIter;
 		bool hit;
 		CacheBlock curBlock;
@@ -555,7 +556,6 @@ public:
 				curBlock = CacheBlock();
 				curBlock.block = (unsigned char*) malloc (blockSize*sizeof(unsigned char));
 				curBlock.base_address = adr - adr % blockSize;
-				tlm_generic_payload message;
 
 				message.set_data_length(blockSize);
 				message.set_data_ptr(curBlock.block);
@@ -577,8 +577,17 @@ public:
 			// We perform the effective read...
 			if(cmd == TLM_READ_COMMAND)
 				memcpy(dataPointer, curBlock.block + cachePointerModifier, partLen*sizeof(unsigned char));
-			else if(cmd == TLM_WRITE_COMMAND)
+			else if(cmd == TLM_WRITE_COMMAND) {
 				memcpy(curBlock.block + cachePointerModifier, dataPointer, partLen*sizeof(unsigned char));
+
+				message.set_data_length(blockSize);
+				message.set_data_ptr(curBlock.block);
+				message.set_write();
+				message.set_address(curBlock.base_address);
+				message.set_response_status(TLM_INCOMPLETE_RESPONSE);
+				this->initSocket->transport_dbg(message);
+				if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while reading from main memory");
+			}
 			else THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Undefined TLM command");
 			// And we update the pointer to the required data for eventual subsequent reads
 			remLen -= partLen;
