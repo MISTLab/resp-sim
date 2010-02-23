@@ -84,7 +84,7 @@ struct ThreadEmu{
     status_t status;
     unsigned int stackBase;
     unsigned int tlsAddress;
-    std::vector<unsigned char> state;
+    unsigned char *state;
     int id;
     bool isIRQ;
 

@@ -116,6 +116,8 @@ template<class issueWidth> class ConcurrencyEmulator: public trap::ToolsIf<issue
     private:
         ///The name of the executable managed by this emulator
         std::string execName;
+        /// System memory size
+        unsigned int memSize;
         ///routine offset
         int routineOffset;
         ///map holding the addresses of the emulated routines
@@ -217,8 +219,8 @@ template<class issueWidth> class ConcurrencyEmulator: public trap::ToolsIf<issue
         }
     public:
         ///Constructor of the Emulator: its main task consists of creating an instance of the emulator
-        ConcurrencyEmulator(trap::ABIIf<issueWidth> &processorInstance, int routineOffset = 0) :
-                                processorInstance(processorInstance), routineOffset(routineOffset){
+        ConcurrencyEmulator(trap::ABIIf<issueWidth> &processorInstance, unsigned int memSize, int routineOffset = 0) :
+                                processorInstance(processorInstance), memSize(memSize), routineOffset(routineOffset) {
             this->syscCallbacksEnd = this->syscCallbacks.end();
             this->execName = "";
         }
@@ -246,14 +248,14 @@ template<class issueWidth> class ConcurrencyEmulator: public trap::ToolsIf<issue
             //does not exist yet
             this->execName = execName;
             if(ConcurrencyEmulatorBase::cm.find(group) == ConcurrencyEmulatorBase::cm.end()){
-                ConcurrencyEmulatorBase::cm[group] = new ConcurrencyManager(execName);
+                ConcurrencyEmulatorBase::cm[group] = new ConcurrencyManager(execName, this->memSize);
             }
             ConcurrencyManager * curCm  = ConcurrencyEmulatorBase::cm[group];
             std::map<std::string, sc_time>::const_iterator curLatency;
-            //Lets add a processor to the current concurrency manager
-            curCm->addProcessor(this->processorInstance);
+
             //Now I initialized the BFD library with an instance of the current executable file
             BFDWrapper::getInstance(execName);
+
             //Now I perform the registration of the emulated pthread-Calls
             pthread_mutex_destroySysCall<issueWidth> *a = NULL;
             curLatency = latencies.find("pthread_mutex_destroy");
@@ -624,11 +626,26 @@ template<class issueWidth> class ConcurrencyEmulator: public trap::ToolsIf<issue
             if(!this->register_syscall("pthread_myexit", *T))
                 delete T;
 
+            // Set the return address for threads
+            BFDWrapper &bfdFE = BFDWrapper::getInstance(this->execName);
+            bool valid = false;
+            curCm->pthread_exit_address = bfdFE.getSymAddr(std::string("pthread_myexit"),valid)+this->routineOffset;
+
+            // Trap the busy loop
             if(ConcurrencyManager::busyWaitLoop){
                 __nop_busy_loopSysCall<issueWidth> *U = new __nop_busy_loopSysCall<issueWidth>(this->processorInstance, curCm);
                 if(!this->register_syscall(".__nop_busy_loop", *U))
                     THROW_EXCEPTION(".__nop_busy_loop symbol not found in the executable, unable to initialize pthread-emulation system");
+
+                curCm->nop_loop_address = bfdFE.getSymAddr(std::string("__nop_busy_loop"),valid)+this->routineOffset;
             }
+
+            // Set the main symbol in the concurrency manager
+            curCm->main_thread_address =  bfdFE.getSymAddr(std::string("main"),valid)+this->routineOffset; 
+
+            //Lets add a processor to the current concurrency manager
+            curCm->addProcessor(this->processorInstance);
+
             if(reentrant)
                 this->initReentrantEmu(group);
         }

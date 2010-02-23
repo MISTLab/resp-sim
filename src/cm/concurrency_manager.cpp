@@ -101,7 +101,7 @@ bool deadlineSort(const ThreadEmu * a, const ThreadEmu * b){
     return a->attr->deadline < b->attr->deadline;
 }
 
-resp::ConcurrencyManager::ConcurrencyManager(std::string execName) : execName(execName){
+resp::ConcurrencyManager::ConcurrencyManager(std::string execName, unsigned int memSize) : execName(execName), memSize(memSize) {
     //Constructor: there is not much to do
     //a part from se-setting the reentracy
     //variables
@@ -147,6 +147,7 @@ void resp::ConcurrencyManager::reset(){
     this->threadSpecific.clear();
     for(int i = 0; i < resp::ConcurrencyManager::SYSC_PRIO_MAX + 2; i++){
         this->readyQueue[i].clear();
+    this->pthread_exit_address = 0;
     }
 }
 
@@ -216,7 +217,7 @@ bool resp::ConcurrencyManager::preemptLowerPrio(ThreadEmu *th){
             this->readyQueue[curMinPrio].push_back(minPriProc->runThread);
             if(curMinPrio == resp::ConcurrencyManager::SYSC_PRIO_MAX + 1)
                 std::sort(this->readyQueue[curMinPrio].begin(), this->readyQueue[curMinPrio].end(), deadlineSort);
-            int thId = minPriProc->deSchedule();
+            int thId = minPriProc->deSchedule(ConcurrencyManager::nop_loop_address);
             this->existingThreads[thId]->status = ThreadEmu::READY;
             minPriProc->schedule(th);
             return true;
@@ -422,6 +423,7 @@ int resp::ConcurrencyManager::createThread(unsigned int procId, unsigned int thr
             curAttr->deadline = resp::ConcurrencyManager::defThreadInfo[routineName].deadline;
         }
         th = new ThreadEmu(createdThId, threadFun, args, curStackBase, curTlsAddress, curAttr);
+        th->lastRetAddr = ConcurrencyManager::pthread_exit_address;
     }
     this->existingThreads[createdThId] = th;
 
@@ -483,7 +485,7 @@ void resp::ConcurrencyManager::exitThread(unsigned int procId, unsigned int retV
         THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
     Processor<unsigned int> & curProc = *(curProcIter->second);
 
-    int th = curProc.deSchedule();
+    int th = curProc.deSchedule(ConcurrencyManager::nop_loop_address);
     // Update statistics for the just ended thread
 /*    if(this->existingThreads[th]->attr->schedPolicy == resp::SYSC_SCHED_EDF){
         if(sc_time_stamp().to_double() > this->existingThreads[th]->attr->deadline*1e3 )
@@ -814,7 +816,7 @@ void resp::ConcurrencyManager::join(int thId, unsigned int procId, unsigned int 
     }
     else{
         //I have to deschedule this thread
-        int curThread = curProcIter->second->deSchedule();
+        int curThread = curProcIter->second->deSchedule(ConcurrencyManager::nop_loop_address);
         //Now I have to reschedule the other threads in the system
         ThreadEmu * readTh = this->findReadyThread();
         if(readTh != NULL){
@@ -835,7 +837,7 @@ void resp::ConcurrencyManager::joinAll(unsigned int procId) {
         THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
   
     // Deschedule the current thread
-    int curThread = curProcIter->second->deSchedule();
+    int curThread = curProcIter->second->deSchedule(ConcurrencyManager::nop_loop_address);
     ThreadEmu * readTh = this->findReadyThread();
     if(readTh != NULL){
         curProcIter->second->schedule(readTh);
