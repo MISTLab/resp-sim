@@ -43,7 +43,7 @@
 
 #include <systemc.h>
 
-#include <sysCallB.hpp>
+#include <syscCallB.hpp>
 #include <ABIIf.hpp>
 
 #include "concurrency_manager.hpp"
@@ -177,7 +177,7 @@ template<class wordSize> class pthread_mutex_initSysCall : public trap::SyscallC
         pthread_mutex_initSysCall(trap::ABIIf<wordSize> &processorInstance, resp::ConcurrencyManager * cm, sc_time latency = SC_ZERO_TIME) :
                                                                     trap::SyscallCB<wordSize>(processorInstance, latency), cm(cm){}
         bool operator()(){
-            int mutexId = this->cm->createMutex(processorInstance.getProcessorID());
+            int mutexId = this->cm->createMutex();
 
             this->processorInstance.preCall();
 
@@ -211,7 +211,7 @@ template<class wordSize> class pthread_mutex_lockSysCall : public trap::SyscallC
             if(mutexId == -1){
                 // Mutex initialized with PTHREAD_MUTEX_INITIALIZER,
                 //I have to create a new mutex
-                mutexId = this->cm->createMutex(this->processorInstance.getProcessorID());
+                mutexId = this->cm->createMutex();
                 this->processorInstance.writeMem(callArgs[0], mutexId);
             }
             this->processorInstance.setRetVal(0);
@@ -269,7 +269,7 @@ template<class wordSize> class pthread_mutex_trylockSysCall : public trap::Sysca
             if(mutexId == -1){
                 // Mutex initialized with PTHREAD_MUTEX_INITIALIZER,
                 //I have to create a new mutex
-                mutexId = this->cm->createMutex(this->processorInstance.getProcessorID());
+                mutexId = this->cm->createMutex();
                 this->processorInstance.writeMem(callArgs[0], mutexId);
             }
             if(this->cm->lockMutex(mutexId, this->processorInstance.getProcessorID(), true))
@@ -894,7 +894,7 @@ template<class wordSize> class pthread_join_allSysCall : public trap::SyscallCB<
 
             this->processorInstance.setRetVal(0);
             this->processorInstance.returnFromCall();
-            this->cm->joinAll(processorInstance.getProcessorID());
+            this->cm->joinAll(this->processorInstance.getProcessorID());
 
             this->processorInstance.postCall();
 
@@ -1076,7 +1076,7 @@ template<class wordSize> class pthread_cond_signalSysCall : public trap::Syscall
                 condId = this->cm->createCond(this->processorInstance.getProcessorID());
                 this->processorInstance.writeMem(callArgs[0], condId);
             }
-            this->cm->signalCond(condId, false, processorInstance.get_proc_id());
+            this->cm->signalCond(condId, false, this->processorInstance.getProcessorID());
             this->processorInstance.setRetVal(0);
             this->processorInstance.returnFromCall();
 
@@ -1106,7 +1106,7 @@ template<class wordSize> class pthread_cond_broadcastSysCall : public trap::Sysc
                 condId = this->cm->createCond(this->processorInstance.getProcessorID());
                 this->processorInstance.writeMem(callArgs[0], condId);
             }
-            this->cm->signalCond(condId, true, processorInstance.get_proc_id());
+            this->cm->signalCond(condId, true, this->processorInstance.getProcessorID());
             this->processorInstance.setRetVal(0);
             this->processorInstance.returnFromCall();
 
@@ -1140,7 +1140,7 @@ template<class wordSize> class pthread_cond_waitSysCall : public trap::SyscallCB
             if(mutId == -1){
                 // Mutex initialized with PTHREAD_MUTEX_INITIALIZER,
                 //I have to create a new mutex
-                mutId = this->cm->createMutex(this->processorInstance.getProcessorID());
+                mutId = this->cm->createMutex();
                 this->processorInstance.writeMem(callArgs[1], condId);
             }
             this->processorInstance.setRetVal(0);
@@ -1207,7 +1207,7 @@ public:
             if(mutId == -1){
                 // Mutex initialized with PTHREAD_MUTEX_INITIALIZER,
                 //I have to create a new mutex
-                mutId = this->cm->createMutex(this->processorInstance.getProcessorID());
+                mutId = this->cm->createMutex();
                 this->processorInstance.writeMem(callArgs[1], condId);
             }
             double time = 0;
@@ -1251,7 +1251,7 @@ template<class wordSize> class __malloc_lockSysCall : public trap::SyscallCB<wor
 
             this->processorInstance.returnFromCall();
             this->processorInstance.postCall();
-            this->cm->lockMutex(mallocMutex, this->processorInstance.getProcessorID(), false);
+            this->cm->lockMutex(this->cm->mallocMutex, this->processorInstance.getProcessorID(), false);
 
             if(this->latency.to_double() > 0)
                 wait(this->latency);
@@ -1270,7 +1270,7 @@ template<class wordSize> class __malloc_unlockSysCall : public trap::SyscallCB<w
 
             this->processorInstance.returnFromCall();
             this->processorInstance.postCall();
-            this->cm->unLockMutex(mallocMutex, this->processorInstance.getProcessorID());
+            this->cm->unLockMutex(this->cm->mallocMutex, this->processorInstance.getProcessorID());
 
             if(this->latency.to_double() > 0)
                 wait(this->latency);
@@ -1289,7 +1289,7 @@ template<class wordSize> class __sfp_lock_acquireSysCall : public trap::SyscallC
 
             this->processorInstance.returnFromCall();
             this->processorInstance.postCall();
-            this->cm->lockMutex(sfpMutex, this->processorInstance.getProcessorID(), false);
+            this->cm->lockMutex(this->cm->sfpMutex, this->processorInstance.getProcessorID(), false);
 
             if(this->latency.to_double() > 0)
                 wait(this->latency);
@@ -1308,7 +1308,7 @@ template<class wordSize> class __sfp_lock_releaseSysCall : public trap::SyscallC
 
             this->processorInstance.returnFromCall();
             this->processorInstance.postCall();
-            this->cm->unLockMutex(sfpMutex, this->processorInstance.getProcessorID());
+            this->cm->unLockMutex(this->cm->sfpMutex, this->processorInstance.getProcessorID());
 
             if(this->latency.to_double() > 0)
                 wait(this->latency);
@@ -1327,7 +1327,7 @@ template<class wordSize> class __sinit_lock_acquireSysCall : public trap::Syscal
 
             this->processorInstance.returnFromCall();
             this->processorInstance.postCall();
-            this->cm->lockMutex(sinitMutex, this->processorInstance.getProcessorID(), false);
+            this->cm->lockMutex(this->cm->sinitMutex, this->processorInstance.getProcessorID(), false);
 
             if(this->latency.to_double() > 0)
                 wait(this->latency);
@@ -1346,7 +1346,7 @@ template<class wordSize> class __sinit_lock_releaseSysCall : public trap::Syscal
 
             this->processorInstance.returnFromCall();
             this->processorInstance.postCall();
-            this->cm->unLockMutex(sinitMutex, this->processorInstance.getProcessorID());
+            this->cm->unLockMutex(this->cm->sinitMutex, this->processorInstance.getProcessorID());
 
             if(this->latency.to_double() > 0)
                 wait(this->latency);
@@ -1365,7 +1365,7 @@ template<class wordSize> class __fp_lockSysCall : public trap::SyscallCB<wordSiz
 
             this->processorInstance.returnFromCall();
             this->processorInstance.postCall();
-            this->cm->lockMutex(fpMutex, this->processorInstance.getProcessorID(), false);
+            this->cm->lockMutex(this->cm->fpMutex, this->processorInstance.getProcessorID(), false);
 
             if(this->latency.to_double() > 0)
                 wait(this->latency);
@@ -1384,7 +1384,7 @@ template<class wordSize> class __fp_unlockSysCall : public trap::SyscallCB<wordS
 
             this->processorInstance.returnFromCall();
             this->processorInstance.postCall();
-            this->cm->unLockMutex(fpMutex, this->processorInstance.getProcessorID());
+            this->cm->unLockMutex(this->cm->fpMutex, this->processorInstance.getProcessorID());
 
             if(this->latency.to_double() > 0)
                 wait(this->latency);

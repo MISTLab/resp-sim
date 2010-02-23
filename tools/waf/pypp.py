@@ -206,10 +206,11 @@ def process_headers(self):
         self.custom_code = []
 
     targetbase, ext = os.path.splitext(ccroot.get_target_name(self))
-    inc_paths = []
-    for i in self.to_list(self.uselib):
-        if self.env['CPPPATH_'+i]:
-            inc_paths += self.to_list(self.env['CPPPATH_'+i])
+
+    for i in self.to_list(self.uselib_local):
+        lib = self.name_to_obj(i).env['INC_PATHS']
+        if len(lib)>0:
+            self.env.append_unique('INC_PATHS', lib[0])
 
     if len(self.srclist) > 0:
         # Includes are objects: to keep dependencies working, objects have

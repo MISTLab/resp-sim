@@ -50,6 +50,10 @@
 #include "bfdWrapper.hpp"
 #include "concurrency_manager.hpp"
 
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+
 //Initialization of some static variables
 const int resp::ConcurrencyManager::SYSC_SCHED_FIFO = 0;
 const int resp::ConcurrencyManager::SYSC_SCHED_OTHER = 1;
@@ -59,8 +63,8 @@ const int resp::ConcurrencyManager::SYSC_SCHED_EDF = 5;
 const int resp::ConcurrencyManager::SYSC_PRIO_MAX = 255;
 const int resp::ConcurrencyManager::SYSC_PRIO_MIN = 0;
 
-const int resp::ConcurrencyManager::SYSC_PREEMPTIVE = 1;
-const int resp::ConcurrencyManager::SYSC_NON_PREEMPTIVE = 0;
+const int resp::ConcurrencyManager::SYSC_PREEMPTIVE = 0;
+const int resp::ConcurrencyManager::SYSC_NON_PREEMPTIVE = 1;
 
 ///specifies whether blocked processor halts or keep on working in busy wait loops
 bool resp::ConcurrencyManager::busyWaitLoop = true;
@@ -153,11 +157,11 @@ void resp::ConcurrencyManager::reset(){
 ///schedules a thread for execution on that processor
 bool resp::ConcurrencyManager::scheduleFreeProcessor(ThreadEmu *th){
     //Ok,  now I have to see if there is a free processor on which I can schedule the thread
-    std::map<unsigned int, Processor<unsigned int> >::iterator procIter, procIterEnd;
+    std::map<unsigned int, Processor<unsigned int>* >::iterator procIter, procIterEnd;
     for(procIter = this->managedProc.begin(), procIterEnd = this->managedProc.end(); procIter != procIterEnd; procIter++){
-        if(procIter->second.runThread == NULL){
+        if(procIter->second->runThread == NULL){
             //Here we are,  I have found the empty processor
-            procIter->second.schedule(th);
+            procIter->second->schedule(th);
             return true;
         }
     }
@@ -169,11 +173,11 @@ bool resp::ConcurrencyManager::scheduleFreeProcessor(ThreadEmu *th){
 bool resp::ConcurrencyManager::preemptLowerPrio(ThreadEmu *th){
     //First of all I loop all over the ready processors in order to determine
     //the ready ones
-    std::map<unsigned int, Processor<unsigned int> >::iterator procIter, procIterEnd;
+    std::map<unsigned int, Processor<unsigned int>* >::iterator procIter, procIterEnd;
     for(procIter = this->managedProc.begin(), procIterEnd = this->managedProc.end(); procIter != procIterEnd; procIter++){
-        if(procIter->second.runThread == NULL){
+        if(procIter->second->runThread == NULL){
             //Here we are, I have found the empty processor
-            procIter->second.schedule(th);
+            procIter->second->schedule(th);
             return true;
         }
     }
@@ -183,19 +187,19 @@ bool resp::ConcurrencyManager::preemptLowerPrio(ThreadEmu *th){
     Processor<unsigned int> * minPriProc = NULL;
     for(procIter = this->managedProc.begin(), procIterEnd = this->managedProc.end(); procIter != procIterEnd; procIter++){
         int curPrio = 0;
-        if(procIter->second.runThread->attr != NULL){
-            if(procIter->second.runThread->attr->schedPolicy == resp::ConcurrencyManager::SYSC_SCHED_EDF){
+        if(procIter->second->runThread->attr != NULL){
+            if(procIter->second->runThread->attr->schedPolicy == resp::ConcurrencyManager::SYSC_SCHED_EDF){
                 curPrio = resp::ConcurrencyManager::SYSC_PRIO_MAX + 1;
             }
             else
-                curPrio = procIter->second.runThread->attr->priority;
+                curPrio = procIter->second->runThread->attr->priority;
         }
         else{
             std::cerr << "thread attribute is NULL??" << std::endl;
         }
         if(curPrio < curMinPrio){
             curMinPrio = curPrio;
-            minPriProc = &(procIter->second);
+            minPriProc = procIter->second;
         }
     }
 
@@ -326,11 +330,12 @@ int resp::ConcurrencyManager::createThread(unsigned int procId, unsigned int thr
     //I also start the execution of the thread on it; note that all the
     //data structures touched here are also used during scheduling,
     //so synchronization must be enforced with respect to those structures
+    std::cout << __PRETTY_FUNCTION__ << std::endl;
 
-    std::map<unsigned int, Processor<unsigned int> >::iterator curProcIter = this->managedProc.find(procId);
+    std::map<unsigned int, Processor<unsigned int>* >::iterator curProcIter = this->managedProc.find(procId);
     if(curProcIter == this->managedProc.end())
         THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
-    Processor<unsigned int> & curProc = curProcIter->second;
+    Processor<unsigned int> & curProc = *(curProcIter->second);
 
     //Lets determine the lock of the schedule
     this->schedLock.lock();
@@ -348,14 +353,14 @@ int resp::ConcurrencyManager::createThread(unsigned int procId, unsigned int thr
     //I have to determine if there is space for the stack among two already existing ones
     //or if I have to position myself at the end of the stack
     std::map<unsigned int, unsigned int>::const_iterator stacksIter, stacksNext, stacksEnd;
-    for(stacksIter = this->stacks.begin(), stacksNext = stacksIter, stacksNext++, stacksEnd = this->stacks.end();
-                                                                        stacksNext != stacksEnd; stacksIter++, stacksNext++){
+    for(stacksIter = stacksNext = this->stacks.begin() ; stacksIter != stacks.end() ; stacksIter++){
+        if( (++stacksNext) == stacks.end() ) break;
         if((stacksIter->first - stacksIter->second - stacksNext->first) > curStackSize){
             curStackBase = stacksIter->first - stacksIter->second;
             stacks[curStackBase] = curStackSize;
             break;
         }
-    }
+    } 
     if(curStackBase == 0){
         //I haven't found any suitable stack, I have to position on the top
         //of the last stack (lowest address available)
@@ -368,7 +373,7 @@ int resp::ConcurrencyManager::createThread(unsigned int procId, unsigned int thr
     if(this->managedProc.empty()){
         THROW_EXCEPTION("Trying to create a thread while there is not processor interfacee registered");
     }
-    unsigned int codeLimit = this->managedProc.begin()->second.processorInstance.getCodeLimit();
+    unsigned int codeLimit = this->managedProc.begin()->second->processorInstance.getCodeLimit();
     if(curStackBase < codeLimit)
         THROW_EXCEPTION("Unable to allocate " << curStackSize << " bytes for the stack of thread " << existingThreads.size() << ": no more space in memory");
 
@@ -473,10 +478,10 @@ void resp::ConcurrencyManager::exitThread(unsigned int procId, unsigned int retV
     //a deadlock
     this->schedLock.lock();
 
-    std::map<unsigned int, Processor<unsigned int> >::iterator curProcIter = this->managedProc.find(procId);
+    std::map<unsigned int, Processor<unsigned int>* >::iterator curProcIter = this->managedProc.find(procId);
     if(curProcIter == this->managedProc.end())
         THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
-    Processor<unsigned int> & curProc = curProcIter->second;
+    Processor<unsigned int> & curProc = *(curProcIter->second);
 
     int th = curProc.deSchedule();
     // Update statistics for the just ended thread
@@ -749,11 +754,11 @@ void resp::ConcurrencyManager::setThreadSchedDeadline(int threadId, unsigned int
 }
 
 int resp::ConcurrencyManager::getThreadId(unsigned int procId) const{
-    std::map<unsigned int, Processor<unsigned int> >::const_iterator curProcIter = this->managedProc.find(procId);
+    std::map<unsigned int, Processor<unsigned int>* >::const_iterator curProcIter = this->managedProc.find(procId);
     if(curProcIter == this->managedProc.end())
         THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
 
-    return curProcIter->second.runThread->id;
+    return curProcIter->second->runThread->id;
 }
 
 int resp::ConcurrencyManager::createKey(){
@@ -766,10 +771,10 @@ void resp::ConcurrencyManager::setSpecific(unsigned int procId, int key, unsigne
         THROW_EXCEPTION("Key " << key << " not existing");
     }
 
-    std::map<unsigned int, Processor<unsigned int> >::const_iterator curProcIter = this->managedProc.find(procId);
+    std::map<unsigned int, Processor<unsigned int>* >::const_iterator curProcIter = this->managedProc.find(procId);
     if(curProcIter == this->managedProc.end())
         THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
-    std::pair<int,  ThreadEmu *> keyId(key, curProcIter->second.runThread);
+    std::pair<int,  ThreadEmu *> keyId(key, curProcIter->second->runThread);
     this->threadSpecific[keyId] = memArea;
 }
 unsigned int resp::ConcurrencyManager::getSpecific(unsigned int procId, int key) const{
@@ -777,11 +782,11 @@ unsigned int resp::ConcurrencyManager::getSpecific(unsigned int procId, int key)
         THROW_EXCEPTION("Key " << key << " not existing");
     }
 
-    std::map<unsigned int, Processor<unsigned int> >::const_iterator curProcIter = this->managedProc.find(procId);
+    std::map<unsigned int, Processor<unsigned int>* >::const_iterator curProcIter = this->managedProc.find(procId);
     if(curProcIter == this->managedProc.end())
         THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
 
-    std::pair<int,  ThreadEmu *> keyId(key, curProcIter->second.runThread);
+    std::pair<int,  ThreadEmu *> keyId(key, curProcIter->second->runThread);
     std::map<std::pair<int, ThreadEmu *>, unsigned int>::const_iterator foundKey = this->threadSpecific.find(keyId);
     if(foundKey == this->threadSpecific.end()){
         //If no key is found for the current thread NULL is returned
@@ -797,26 +802,51 @@ void resp::ConcurrencyManager::join(int thId, unsigned int procId, unsigned int 
     //I have to deschedule myself
     this->schedLock.lock();
 
-    std::map<unsigned int, Processor<unsigned int> >::iterator curProcIter = this->managedProc.find(procId);
+    std::map<unsigned int, Processor<unsigned int>* >::iterator curProcIter = this->managedProc.find(procId);
     if(curProcIter == this->managedProc.end())
         THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
 
     if(this->existingThreads[thId]->status == ThreadEmu::DEAD){
         //There is nothing to do only set the thread return value
         if(retValAddr != 0){
-            curProcIter->second.processorInstance.writeMem(retValAddr, this->existingThreads[thId]->retVal);
+            curProcIter->second->processorInstance.writeMem(retValAddr, this->existingThreads[thId]->retVal);
         }
     }
     else{
         //I have to deschedule this thread
-        int curThread = curProcIter->second.deSchedule();
+        int curThread = curProcIter->second->deSchedule();
         //Now I have to reschedule the other threads in the system
         ThreadEmu * readTh = this->findReadyThread();
         if(readTh != NULL){
-            curProcIter->second.schedule(readTh);
+            curProcIter->second->schedule(readTh);
         }
         this->existingThreads[thId]->joining.push_back(this->existingThreads[curThread]);
         this->existingThreads[curThread]->joiningRetValAddr = retValAddr;
+    }
+
+    this->schedLock.unlock();
+}
+
+void resp::ConcurrencyManager::joinAll(unsigned int procId) {
+    this->schedLock.lock();
+
+    std::map<unsigned int, Processor<unsigned int>* >::iterator curProcIter = this->managedProc.find(procId);
+    if(curProcIter == this->managedProc.end())
+        THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
+  
+    // Deschedule the current thread
+    int curThread = curProcIter->second->deSchedule();
+    ThreadEmu * readTh = this->findReadyThread();
+    if(readTh != NULL){
+        curProcIter->second->schedule(readTh);
+    }
+
+    // Join with all other existing threads
+    std::map<int, ThreadEmu *>::const_iterator thIter, thEnd;
+    for(thIter = existingThreads.begin(), thEnd = existingThreads.end(); thIter != thEnd; thIter++){
+        if(thIter->second->status != ThreadEmu::DEAD && thIter->first != curThread) {
+            this->existingThreads[curThread]->joining.push_back(this->existingThreads[curThread]);
+        }
     }
 
     this->schedLock.unlock();
@@ -829,20 +859,20 @@ std::pair<unsigned int, unsigned int> resp::ConcurrencyManager::readTLS(unsigned
     if(resp::ConcurrencyManager::tlsSize == 0)
         THROW_EXCEPTION("Error, the current executable file does not have any TLS declared");
 
-    std::map<unsigned int, Processor<unsigned int> >::const_iterator curProcIter = this->managedProc.find(procId);
+    std::map<unsigned int, Processor<unsigned int>* >::const_iterator curProcIter = this->managedProc.find(procId);
     if(curProcIter == this->managedProc.end())
         THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
 
     //The first element of the pair is the begin address of the TLS, the second element is the end address
-    return std::pair<unsigned int, unsigned int>(curProcIter->second.runThread->stackBase,
-                                curProcIter->second.runThread->stackBase - resp::ConcurrencyManager::tlsSize);
+    return std::pair<unsigned int, unsigned int>(curProcIter->second->runThread->stackBase,
+                                curProcIter->second->runThread->stackBase - resp::ConcurrencyManager::tlsSize);
 }
 void resp::ConcurrencyManager::idleLoop(unsigned int procId){
-    std::map<unsigned int, Processor<unsigned int> >::iterator curProcIter = this->managedProc.find(procId);
+    std::map<unsigned int, Processor<unsigned int>* >::iterator curProcIter = this->managedProc.find(procId);
     if(curProcIter == this->managedProc.end())
         THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
 
-    wait(curProcIter->second.idleEvent);
+    wait(curProcIter->second->idleEvent);
 }
 
 void resp::ConcurrencyManager::pushCleanupHandler(unsigned int procId, unsigned int routineAddress, unsigned int arg){

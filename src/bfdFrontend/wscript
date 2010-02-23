@@ -50,6 +50,7 @@ def build(bld):
     """
     obj.target = 'BFDWrapper'
     obj.export_incdirs = '.'
+    obj.includes = '.'
     obj.uselib_local = 'binutils utils'
     obj.uselib = 'BOOST BOOST_REGEX BFD_H'
 
