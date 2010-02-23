@@ -49,7 +49,7 @@
 ///Instance of the concurrency manager, used to actually implement the emulated concurrency-related
 ///functionalities: note that this is a map since there might be different instances of the
 ///Manager, one for each emulation group
-std::map<int, ConcurrencyManager * > resp::ConcurrencyEmulatorBase::cm;
+std::map<int, resp::ConcurrencyManager * > resp::ConcurrencyEmulatorBase::cm;
 
 // ***************** METHODS
 
@@ -73,9 +73,9 @@ void resp::ConcurrencyEmulatorBase::setThreadInfo(std::string functionName, bool
 }
 
                     ///Marks a function to be executed as an interrupt service routine
-void resp::ConcurrencyEmulatorBase::registerISR(std::string isrFunctionName, int irqId, bool preemptive = false,
-                                                            int schedPolicy = resp::ConcurrencyManager::SYSC_SCHED_FIFO,
-                                                                    int priority = resp::ConcurrencyManager::SYSC_PRIO_MAX){
+void resp::ConcurrencyEmulatorBase::registerISR(std::string isrFunctionName, int irqId, bool preemptive,
+                                                            int schedPolicy,
+                                                                    int priority){
     resp::ConcurrencyManager::interruptServiceRoutines[irqId] = isrFunctionName;
     resp::ConcurrencyManager::defThreadInfo[isrFunctionName].preemptive = preemptive;
     resp::ConcurrencyManager::defThreadInfo[isrFunctionName].schedPolicy = schedPolicy;

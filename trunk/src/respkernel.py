@@ -89,7 +89,7 @@ sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'utils'))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'bfdFrontend')))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'loader')))
 
-#from power import * #TODO useless at the moment
+import power; 
 
 import colors
 
@@ -546,8 +546,8 @@ class RespKernel:
         manager.reset()
 
         # Reset power framework
-        #import power
-        #power.reset()
+        import power
+        power.reset()
 
         # Reset SystemC (tricky)
         scwrapper.sc_get_curr_simcontext().reset()

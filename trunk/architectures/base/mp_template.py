@@ -56,7 +56,7 @@ MEM_LATENCY       = 10.0            # ns
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'crc'
+    SOFTWARE = 'simpleTestPT'
 
 if SOFTWARE:
     try:
@@ -133,6 +133,19 @@ for i in range(0, PROCESSOR_NUMBER):
 # Now I initialize the OS emulator
 if OS_EMULATION:
     for i in range(0, PROCESSOR_NUMBER):
+        
         curEmu = trapwrapper.OSEmulator32(processors[i].getInterface())
         curEmu.initSysCalls(SOFTWARE)
+        
+        concurrentEmu = cm_wrapper.ConcurrencyEmulator32(processors[i].getInterface())
+        concurrentEmu.initSysCalls(SOFTWARE,True)
+
         processors[i].toolManager.addTool(curEmu)
+        processors[i].toolManager.addTool(concurrentEmu)
+
+##### CONCURRENCY MANAGEMENT #####
+cm = cm_wrapper.ConcurrencyManager("cm")
+for p in processors:
+    cm.addProcessor32(p.getInterface())
+
+

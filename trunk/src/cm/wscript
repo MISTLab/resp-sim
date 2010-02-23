@@ -47,7 +47,7 @@ def build(bld):
     # Generation of the controller library
     obj = bld.new_task_gen('cxx', 'cshlib', 'pyembed')
     obj.source ='''
-        concurrency_manager.cpp concurrency_structures.cpp
+        concurrency_manager.cpp concurrency_emulator.cpp concurrency_structures.cpp
     '''
 
     obj.target = 'cm'
@@ -57,20 +57,29 @@ def build(bld):
     # Generation of the controller wrapper extension
     obj = bld.new_task_gen('pypp')
     obj.source ='''
-        concurrency_manager.hpp
+        cm_export.hpp
     '''
-
+     #   concurrency_manager.hpp concurrency_emulator.hpp
+     
     obj.target = 'cm_wrapper'
     obj.uselib = 'SYSTEMC_H BOOST BOOST_PYTHON TRAP'
     obj.uselib_local = 'systemc BFDWrapper cm'
     obj.start_decls = 'resp'
     obj.custom_code = """
 ConcurrencyManager = mb.global_ns.class_('ConcurrencyManager')
-ConcurrencyManager.ignore = False
+ConcurrencyManager.include()
 #for attrName in ['busyWaitLoop', 'threadStackSize', 'defThreadInfo', 'interruptServiceRoutines', 'tlsSize', 'tlsData', 'defaultAttr', #'schedLatency', 'deSchedLatency', 'schedChooseLatency']:
 #    ConcurrencyManager.variable(attrName).exclude()
 #ConcurrencyManager.member_functions().exclude()
 mb.global_ns.class_('SysCLock').exclude()
 mb.global_ns.class_('ThreadEmu').exclude()
 mb.global_ns.class_('AttributeEmu').exclude()
+ocls = mb.global_ns.classes(lambda decl: decl.name.startswith('ConcurrencyEmulator'), allow_empty=True)
+for i in ocls:
+    i.include()
+    if i.name == 'ConcurrencyEmulator<unsigned int>':
+        i.alias = 'ConcurrencyEmulator32'
 """
+    obj.templates = [
+        'resp::ConcurrencyEmulator<unsigned int>'
+    ]

@@ -74,6 +74,7 @@ struct SysCLock{
     public:
     SysCLock() : busy(false){}
     void lock(){
+        std::cout << __PRETTY_FUNCTION__ << std::endl;
         while(this->busy)
             wait(this->awakeEvent);
         this->busy = true;
@@ -104,8 +105,23 @@ template <class wordSize> struct Processor{
     }
 
     void schedule(ThreadEmu * thread){
+        std::vector< wordSize > args;
+        args.push_back(thread->args);
         //TODO: ok, here, when scheduling the thread, we also have to remeber to
         //set the thread returtn value in case it was joined!!
+
+        // Set thread state
+        this->runThread = thread;
+        this->runThread->status = ThreadEmu::RUNNING;
+        
+        // Schedule the thread
+        this->processorInstance.setPC((unsigned long long) thread->thread_routine);
+        this->processorInstance.setArgs(args);
+        this->processorInstance.setSP(thread->stackBase);
+        //this->processorInstance.setFP(thread->tlsAddress);
+
+        this->idleEvent.notify();
+        
     }
     int deSchedule(bool saveStatus = true){
     }
@@ -169,17 +185,21 @@ class ConcurrencyManager{
         ///The name of the executable file which is managed by this version of the
         ///concurrency manager
         std::string execName;
+
+    public:
         ///Variables used for managing reentrant synchronization
         unsigned int mallocMutex;
         unsigned int sfpMutex;
         unsigned int sinitMutex;
         unsigned int fpMutex;
+
+    private:
         ///Variables used to actually manage synchronization and scheduling
         ///among processes and threads
 
         ///TODO .... we are fixing this template, we should find an elegant way of
         ///setting the template dynamically
-        std::map<unsigned int, Processor<unsigned int> > managedProc;
+        std::map<unsigned int, Processor<unsigned int>* > managedProc;
         unsigned int maxProcId;
         
         ///Note that the last element of the readyQueue, the one containing
@@ -273,15 +293,24 @@ class ConcurrencyManager{
         ///Adds a processor to be managed by this concurrency
         ///concurrency emulator
         template <class wordSize> void addProcessor(trap::ABIIf<wordSize> &processorInstance){
-            Processor<wordSize> newProc(&processorInstance);
-
             if(this->managedProc.find(processorInstance.getProcessorID()) != this->managedProc.end())
-                THORW_EXCEPTION("A processor with ID = " << processorInstance.getProcessorID() << " has already been added to the concurrency emulator");
+                THROW_EXCEPTION("A processor with ID = " << processorInstance.getProcessorID() << " has already been added to the concurrency emulator");
 
-            this->managedProc[processorInstance.getProcessorID()] = newProc;
+            this->managedProc[processorInstance.getProcessorID()] = new Processor<wordSize>(processorInstance);
             if(processorInstance.getProcessorID() + 1 > this->maxProcId)
                 this->maxProcId = processorInstance.getProcessorID() + 1;
         }
+
+        void addProcessor32(trap::ABIIf<unsigned int> &processorInstance){
+            //Processor<unsigned int> newProc(processorInstance);
+
+            if(this->managedProc.find(processorInstance.getProcessorID()) != this->managedProc.end())
+                THROW_EXCEPTION("A processor with ID = " << processorInstance.getProcessorID() << " has already been added to the concurrency emulator");
+
+            this->managedProc[processorInstance.getProcessorID()] = new Processor<unsigned int>(processorInstance);
+            if(processorInstance.getProcessorID() + 1 > this->maxProcId)
+                this->maxProcId = processorInstance.getProcessorID() + 1;
+        } 
 
         ///*******************************************************************
         /// Here are some functions for computing statistics on the
@@ -339,6 +368,7 @@ class ConcurrencyManager{
         unsigned int getSpecific(unsigned int procId, int key) const;
 
         void join(int thId, unsigned int procId, unsigned int retValAddr);
+        void joinAll(unsigned int procId);
 
         std::pair<unsigned int, unsigned int> readTLS(unsigned int procId) const;
         void idleLoop(unsigned int procId);

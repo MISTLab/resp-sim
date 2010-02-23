@@ -69,14 +69,14 @@
 #endif
 #endif
 
-#include "bfdWrapper.hpp"
-#include "concurrency_manager.hpp"
-#include "concurrency_syscalls.hpp"
-
 #include <ABIIf.hpp>
 #include <ToolsIf.hpp>
 #include <syscCallB.hpp>
 #include <instructionBase.hpp>
+
+#include <bfdWrapper.hpp>
+#include "concurrency_manager.hpp"
+#include "concurrency_syscalls.hpp"
 
 namespace resp{
 
@@ -112,7 +112,7 @@ class ConcurrencyEmulatorBase{
 ///Note that the executable must be compiled with the -specs=osemu.specs,
 ///Otherwise is will be impossible to use the Operating System
 ///Emulation features.
-template<class wordSize> class ConcurrencyEmulator: public trap::ToolsIf<issueWidth>, ConcurrencyEmulatorBase{
+template<class issueWidth> class ConcurrencyEmulator: public trap::ToolsIf<issueWidth>, ConcurrencyEmulatorBase{
     private:
         ///The name of the executable managed by this emulator
         std::string execName;
@@ -127,7 +127,7 @@ template<class wordSize> class ConcurrencyEmulator: public trap::ToolsIf<issueWi
         ///Associates an emulated functionality with a routine name
         ///Returns true if the association was successfully performed
         bool register_syscall(const std::string funName, trap::SyscallCB<issueWidth> &callBack){
-            if(this->execName = ""){
+            if(this->execName == ""){
                 THROW_EXCEPTION("Error the initSysCalls still has to be called before calling register_syscall");
             }
             BFDWrapper &bfdFE = BFDWrapper::getInstance(this->execName);
@@ -181,7 +181,7 @@ template<class wordSize> class ConcurrencyEmulator: public trap::ToolsIf<issueWi
         ///enable the protection of the internal OS routines, ensuring their
         ///atomicity
         ///The emulation group also needs to be specified
-        void initiReentrantEmu(int group = 0){
+        void initReentrantEmu(int group = 0){
             //First of all I have to initialize the reentrant emulation in the concurrency
             //manager
             if(ConcurrencyEmulatorBase::cm.find(group) == ConcurrencyEmulatorBase::cm.end())
@@ -190,41 +190,41 @@ template<class wordSize> class ConcurrencyEmulator: public trap::ToolsIf<issueWi
             curCm->initReentrantEmulation();
 
             //Now I can register the routines managing reentrant emulation
-            __malloc_lockSysCall *a = new __malloc_lockSysCall(this->processorInstance, curCm);
+            __malloc_lockSysCall<issueWidth> *a = new __malloc_lockSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("__malloc_lock", *a))
                 delete a;
-            __malloc_unlockSysCall *b = new __malloc_unlockSysCall(this->processorInstance, curCm);
+            __malloc_unlockSysCall<issueWidth> *b = new __malloc_unlockSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("__malloc_unlock", *b))
                 delete b;
-            __sfp_lock_acquireSysCall *c = new __sfp_lock_acquireSysCall(this->processorInstance, curCm);
+            __sfp_lock_acquireSysCall<issueWidth> *c = new __sfp_lock_acquireSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("__sfp_lock_acquire", *c))
                 delete c;
-            __sfp_lock_releaseSysCall *d = new __sfp_lock_releaseSysCall(this->processorInstance, curCm);
+            __sfp_lock_releaseSysCall<issueWidth> *d = new __sfp_lock_releaseSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("__sfp_lock_release", *d))
                 delete d;
-            __sinit_lock_acquireSysCall *e = new __sinit_lock_acquireSysCall(this->processorInstance, curCm);
+            __sinit_lock_acquireSysCall<issueWidth> *e = new __sinit_lock_acquireSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("__sinit_lock_acquire", *e))
                 delete e;
-            __sinit_lock_releaseSysCall *f = new __sinit_lock_releaseSysCall(this->processorInstance, curCm);
+            __sinit_lock_releaseSysCall<issueWidth> *f = new __sinit_lock_releaseSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("__sinit_lock_release", *f))
                 delete f;
-            __fp_lockSysCall *g = new __fp_lockSysCall(this->processorInstance, curCm);
+            __fp_lockSysCall<issueWidth> *g = new __fp_lockSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("__fp_lock", *g))
                 delete g;
-            __fp_unlockSysCall *h = new __fp_unlockSysCall(this->processorInstance, curCm);
+            __fp_unlockSysCall<issueWidth> *h = new __fp_unlockSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("__fp_unlock", *h))
                 delete h;
         }
     public:
         ///Constructor of the Emulator: its main task consists of creating an instance of the emulator
-        ConcurrencyEmulator(ABIIf<issueWidth> &processorInstance, int routineOffset = 0) :
+        ConcurrencyEmulator(trap::ABIIf<issueWidth> &processorInstance, int routineOffset = 0) :
                                 processorInstance(processorInstance), routineOffset(routineOffset){
             this->syscCallbacksEnd = this->syscCallbacks.end();
             this->execName = "";
         }
         ///Returns the list of the routines marked for emulation insisde the this manager
         std::set<std::string> getRegisteredFunctions(){
-            if(this->execName = ""){
+            if(this->execName == ""){
                 THROW_EXCEPTION("Error the initSysCalls still has to be called before calling getRegisteredFunctions");
             }
             BFDWrapper &bfdFE = BFDWrapper::getInstance(this->execName);
@@ -255,382 +255,382 @@ template<class wordSize> class ConcurrencyEmulator: public trap::ToolsIf<issueWi
             //Now I initialized the BFD library with an instance of the current executable file
             BFDWrapper::getInstance(execName);
             //Now I perform the registration of the emulated pthread-Calls
-            pthread_mutex_destroySysCall *a = NULL;
+            pthread_mutex_destroySysCall<issueWidth> *a = NULL;
             curLatency = latencies.find("pthread_mutex_destroy");
             if(curLatency != latencies.end())
-                a = new pthread_mutex_destroySysCall(this->processorInstance, curCm, curLatency);
+                a = new pthread_mutex_destroySysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                a = new pthread_mutex_destroySysCall(this->processorInstance, curCm);
+                a = new pthread_mutex_destroySysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_mutex_destroy", *a))
                 delete a;
-            pthread_mutex_initSysCall *b = NULL;
+            pthread_mutex_initSysCall<issueWidth> *b = NULL;
             curLatency = latencies.find("pthread_mutex_init");
             if(curLatency != latencies.end())
-                b = new pthread_mutex_initSysCall(this->processorInstance, curCm, curLatency);
+                b = new pthread_mutex_initSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                b = new pthread_mutex_initSysCall(this->processorInstance, curCm);
+                b = new pthread_mutex_initSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_mutex_init", *b))
                 delete b;
-            pthread_mutex_lockSysCall *c = NULL;
+            pthread_mutex_lockSysCall<issueWidth> *c = NULL;
             curLatency = latencies.find("pthread_mutex_lock");
             if(curLatency != latencies.end())
-                c = new pthread_mutex_lockSysCall(this->processorInstance, curCm, curLatency);
+                c = new pthread_mutex_lockSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                c = new pthread_mutex_lockSysCall(this->processorInstance, curCm);
+                c = new pthread_mutex_lockSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_mutex_lock", *c))
                 delete c;
-            pthread_mutex_unlockSysCall *d = NULL;
+            pthread_mutex_unlockSysCall<issueWidth> *d = NULL;
             curLatency = latencies.find("pthread_mutex_unlock");
             if(curLatency != latencies.end())
-                d = new pthread_mutex_unlockSysCall(this->processorInstance, curCm, curLatency);
+                d = new pthread_mutex_unlockSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                d = new pthread_mutex_unlockSysCall(this->processorInstance, curCm);
+                d = new pthread_mutex_unlockSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_mutex_unlock", *d))
                 delete d;
-            pthread_mutex_trylockSysCall *e = NULL;
+            pthread_mutex_trylockSysCall<issueWidth> *e = NULL;
             curLatency = latencies.find("pthread_mutex_trylock");
             if(curLatency != latencies.end())
-                e = new pthread_mutex_trylockSysCall(this->processorInstance, curCm, curLatency);
+                e = new pthread_mutex_trylockSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                e = new pthread_mutex_trylockSysCall(this->processorInstance, curCm);
+                e = new pthread_mutex_trylockSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_mutex_trylock", *e))
                 delete e;
-            pthread_mutexattr_destroySysCall *f = NULL;
+            pthread_mutexattr_destroySysCall<issueWidth> *f = NULL;
             curLatency = latencies.find("pthread_mutexattr_destroy");
             if(curLatency != latencies.end())
-                f = new pthread_mutexattr_destroySysCall(this->processorInstance, curCm, curLatency);
+                f = new pthread_mutexattr_destroySysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                f = new pthread_mutexattr_destroySysCall(this->processorInstance, curCm);
+                f = new pthread_mutexattr_destroySysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_mutexattr_destroy", *f))
                 delete f;
-            pthread_mutexattr_initSysCall *g = NULL;
+            pthread_mutexattr_initSysCall<issueWidth> *g = NULL;
             curLatency = latencies.find("pthread_mutexattr_init");
             if(curLatency != latencies.end())
-                g = new pthread_mutexattr_initSysCall(this->processorInstance, curCm, curLatency);
+                g = new pthread_mutexattr_initSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                g = new pthread_mutexattr_initSysCall(this->processorInstance, curCm);
+                g = new pthread_mutexattr_initSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_mutexattr_init", *g))
                 delete g;
-            pthread_mutexattr_gettypeSysCall *h = NULL;
+            pthread_mutexattr_gettypeSysCall<issueWidth> *h = NULL;
             curLatency = latencies.find("pthread_mutexattr_gettype");
             if(curLatency != latencies.end())
-                h = new pthread_mutexattr_gettypeSysCall(this->processorInstance, curCm, curLatency);
+                h = new pthread_mutexattr_gettypeSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                h = new pthread_mutexattr_gettypeSysCall(this->processorInstance, curCm);
+                h = new pthread_mutexattr_gettypeSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_mutexattr_gettype", *h))
                 delete h;
-            pthread_mutexattr_settypeSysCall *i = NULL;
+            pthread_mutexattr_settypeSysCall<issueWidth> *i = NULL;
             curLatency = latencies.find("pthread_mutexattr_settype");
             if(curLatency != latencies.end())
-                i = new pthread_mutexattr_settypeSysCall(this->processorInstance, curCm, curLatency);
+                i = new pthread_mutexattr_settypeSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                i = new pthread_mutexattr_settypeSysCall(this->processorInstance, curCm);
+                i = new pthread_mutexattr_settypeSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_mutexattr_settype", *i))
                 delete i;
-            pthread_attr_getdetachstateSysCall *j = NULL;
+            pthread_attr_getdetachstateSysCall<issueWidth> *j = NULL;
             curLatency = latencies.find("pthread_attr_getdetachstate");
             if(curLatency != latencies.end())
-                j = new pthread_attr_getdetachstateSysCall(this->processorInstance, curCm, curLatency);
+                j = new pthread_attr_getdetachstateSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                j = new pthread_attr_getdetachstateSysCall(this->processorInstance, curCm);
+                j = new pthread_attr_getdetachstateSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_getdetachstate", *j))
                 delete j;
-            pthread_attr_setdetachstateSysCall *k = NULL;
+            pthread_attr_setdetachstateSysCall<issueWidth> *k = NULL;
             curLatency = latencies.find("pthread_attr_setdetachstate");
             if(curLatency != latencies.end())
-                k = new pthread_attr_setdetachstateSysCall(this->processorInstance, curCm, curLatency);
+                k = new pthread_attr_setdetachstateSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                k = new pthread_attr_setdetachstateSysCall(this->processorInstance, curCm);
+                k = new pthread_attr_setdetachstateSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_setdetachstate", *k))
                 delete k;
-            pthread_attr_destroySysCall *l = NULL;
+            pthread_attr_destroySysCall<issueWidth> *l = NULL;
             curLatency = latencies.find("pthread_attr_destroy");
             if(curLatency != latencies.end())
-                l = new pthread_attr_destroySysCall(this->processorInstance, curCm, curLatency);
+                l = new pthread_attr_destroySysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                l = new pthread_attr_destroySysCall(this->processorInstance, curCm);
+                l = new pthread_attr_destroySysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_destroy", *l))
                 delete l;
-            pthread_attr_initSysCall *m = NULL;
+            pthread_attr_initSysCall<issueWidth> *m = NULL;
             curLatency = latencies.find("pthread_attr_init");
             if(curLatency != latencies.end())
-                m = new pthread_attr_initSysCall(this->processorInstance, curCm, curLatency);
+                m = new pthread_attr_initSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                m = new pthread_attr_initSysCall(this->processorInstance, curCm);
+                m = new pthread_attr_initSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_init", *m))
                 delete m;
-            pthread_attr_getstacksizeSysCall *n = NULL;
+            pthread_attr_getstacksizeSysCall<issueWidth> *n = NULL;
             curLatency = latencies.find("pthread_attr_getstacksize");
             if(curLatency != latencies.end())
-                n = new pthread_attr_getstacksizeSysCall(this->processorInstance, curCm, curLatency);
+                n = new pthread_attr_getstacksizeSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                n = new pthread_attr_getstacksizeSysCall(this->processorInstance, curCm);
+                n = new pthread_attr_getstacksizeSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_getstacksize", *n))
                 delete n;
-            pthread_attr_setstacksizeSysCall *o = NULL;
+            pthread_attr_setstacksizeSysCall<issueWidth> *o = NULL;
             curLatency = latencies.find("pthread_attr_setstacksize");
             if(curLatency != latencies.end())
-                o = new pthread_attr_setstacksizeSysCall(this->processorInstance, curCm, curLatency);
+                o = new pthread_attr_setstacksizeSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                o = new pthread_attr_setstacksizeSysCall(this->processorInstance, curCm);
+                o = new pthread_attr_setstacksizeSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_setstacksize", *o))
                 delete o;
-            pthread_getspecificSysCall *p = NULL;
+            pthread_getspecificSysCall<issueWidth> *p = NULL;
             curLatency = latencies.find("pthread_getspecific");
             if(curLatency != latencies.end())
-                p = new pthread_getspecificSysCall(this->processorInstance, curCm, curLatency);
+                p = new pthread_getspecificSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                p = new pthread_getspecificSysCall(this->processorInstance, curCm);
+                p = new pthread_getspecificSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_getspecific", *p))
                 delete p;
-            pthread_setspecificSysCall *q = NULL;
+            pthread_setspecificSysCall<issueWidth> *q = NULL;
             curLatency = latencies.find("pthread_setspecific");
             if(curLatency != latencies.end())
-                q = new pthread_setspecificSysCall(this->processorInstance, curCm, curLatency);
+                q = new pthread_setspecificSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                q = new pthread_setspecificSysCall(this->processorInstance, curCm);
+                q = new pthread_setspecificSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_setspecific", *q))
                 delete q;
-            pthread_createSysCall *r = NULL;
+            pthread_createSysCall<issueWidth> *r = NULL;
             curLatency = latencies.find("pthread_create");
             if(curLatency != latencies.end())
-                r = new pthread_createSysCall(this->processorInstance, curCm, curLatency);
+                r = new pthread_createSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                r = new pthread_createSysCall(this->processorInstance, curCm);
+                r = new pthread_createSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_create", *r))
                 delete r;
-            pthread_key_createSysCall *s = NULL;
+            pthread_key_createSysCall<issueWidth> *s = NULL;
             curLatency = latencies.find("pthread_key_create");
             if(curLatency != latencies.end())
-                s = new pthread_key_createSysCall(this->processorInstance, curCm, curLatency);
+                s = new pthread_key_createSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                s = new pthread_key_createSysCall(this->processorInstance, curCm);
+                s = new pthread_key_createSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_key_create", *s))
                 delete s;
-            sem_initSysCall *t = NULL;
+            sem_initSysCall<issueWidth> *t = NULL;
             curLatency = latencies.find("sem_init");
             if(curLatency != latencies.end())
-                t = new sem_initSysCall(this->processorInstance, curCm, curLatency);
+                t = new sem_initSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                t = new sem_initSysCall(this->processorInstance, curCm);
+                t = new sem_initSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("sem_init", *t))
                 delete t;
-            sem_postSysCall *u = NULL;
+            sem_postSysCall<issueWidth> *u = NULL;
             curLatency = latencies.find("sem_post");
             if(curLatency != latencies.end())
-                u = new sem_postSysCall(this->processorInstance, curCm, curLatency);
+                u = new sem_postSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                u = new sem_postSysCall(this->processorInstance, curCm);
+                u = new sem_postSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("sem_post", *u))
                 delete u;
-            sem_destroySysCall *v = NULL;
+            sem_destroySysCall<issueWidth> *v = NULL;
             curLatency = latencies.find("sem_destroy");
             if(curLatency != latencies.end())
-                v = new sem_destroySysCall(this->processorInstance, curCm, curLatency);
+                v = new sem_destroySysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                v = new sem_destroySysCall(this->processorInstance, curCm);
+                v = new sem_destroySysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("sem_destroy", *v))
                 delete v;
-            pthread_exitSysCall *w = NULL;
+            pthread_exitSysCall<issueWidth> *w = NULL;
             curLatency = latencies.find("pthread_exit");
             if(curLatency != latencies.end())
-                w = new pthread_exitSysCall(this->processorInstance, curCm, curLatency->second);
+                w = new pthread_exitSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                w = new pthread_exitSysCall(this->processorInstance, curCm);
+                w = new pthread_exitSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_exit", *w))
                 delete w;
-            sem_waitSysCall *x = NULL;
+            sem_waitSysCall<issueWidth> *x = NULL;
             curLatency = latencies.find("sem_wait");
             if(curLatency != latencies.end())
-                x = new sem_waitSysCall(this->processorInstance, curCm, curLatency->second);
+                x = new sem_waitSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                x = new sem_waitSysCall(this->processorInstance, curCm);
+                x = new sem_waitSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("sem_wait", *x))
                 delete x;
-            pthread_joinSysCall *y = NULL;
+            pthread_joinSysCall<issueWidth> *y = NULL;
             curLatency = latencies.find("pthread_join");
             if(curLatency != latencies.end())
-                y = new pthread_joinSysCall(this->processorInstance, curCm, curLatency->second);
+                y = new pthread_joinSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                y = new pthread_joinSysCall(this->processorInstance, curCm);
+                y = new pthread_joinSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_join", *y))
                 delete y;
-            pthread_join_allSysCall *z = NULL;
+            pthread_join_allSysCall<issueWidth> *z = NULL;
             curLatency = latencies.find("pthread_join_all");
             if(curLatency != latencies.end())
-                z = new pthread_join_allSysCall(this->processorInstance, curCm, curLatency->second);
+                z = new pthread_join_allSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                z = new pthread_join_allSysCall(this->processorInstance, curCm);
+                z = new pthread_join_allSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_join_all", *z))
                 delete z;
-            __aeabi_read_tpSysCall *A = NULL;
+            __aeabi_read_tpSysCall<issueWidth> *A = NULL;
             curLatency = latencies.find("__aeabi_read_tp");
             if(curLatency != latencies.end())
-                A = new __aeabi_read_tpSysCall(this->processorInstance, curCm, curLatency->second);
+                A = new __aeabi_read_tpSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                A = new __aeabi_read_tpSysCall(this->processorInstance, curCm);
+                A = new __aeabi_read_tpSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("__aeabi_read_tp", *A))
                 delete A;
-            pthread_cond_initSysCall *B = NULL;
+            pthread_cond_initSysCall<issueWidth> *B = NULL;
             curLatency = latencies.find("pthread_cond_init");
             if(curLatency != latencies.end())
-                B = new pthread_cond_initSysCall(this->processorInstance, curCm, curLatency->second);
+                B = new pthread_cond_initSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                B = new pthread_cond_initSysCall(this->processorInstance, curCm);
+                B = new pthread_cond_initSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_cond_init", *B))
                 delete B;
-            pthread_cond_signalSysCall *C = NULL;
+            pthread_cond_signalSysCall<issueWidth> *C = NULL;
             curLatency = latencies.find("pthread_cond_signal");
             if(curLatency != latencies.end())
-                C = new pthread_cond_signalSysCall(this->processorInstance, curCm, curLatency->second);
+                C = new pthread_cond_signalSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                C = new pthread_cond_signalSysCall(this->processorInstance, curCm);
+                C = new pthread_cond_signalSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_cond_signal", *C))
                 delete C;
-            pthread_cond_broadcastSysCall *D = NULL;
+            pthread_cond_broadcastSysCall<issueWidth> *D = NULL;
             curLatency = latencies.find("pthread_cond_broadcast");
             if(curLatency != latencies.end())
-                D = new pthread_cond_broadcastSysCall(this->processorInstance, curCm, curLatency->second);
+                D = new pthread_cond_broadcastSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                D = new pthread_cond_broadcastSysCall(this->processorInstance, curCm);
+                D = new pthread_cond_broadcastSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_cond_broadcast", *D))
                 delete D;
-            pthread_cond_waitSysCall *E = NULL;
+            pthread_cond_waitSysCall<issueWidth> *E = NULL;
             curLatency = latencies.find("pthread_cond_wait");
             if(curLatency != latencies.end())
-                E = new pthread_cond_waitSysCall(this->processorInstance, curCm, curLatency->second);
+                E = new pthread_cond_waitSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                E = new pthread_cond_waitSysCall(this->processorInstance, curCm);
+                E = new pthread_cond_waitSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_cond_wait", *E))
                 delete E;
-            pthread_cond_destroySysCall *F = NULL;
+            pthread_cond_destroySysCall<issueWidth> *F = NULL;
             curLatency = latencies.find("pthread_cond_destroy");
             if(curLatency != latencies.end())
-                F = new pthread_cond_destroySysCall(this->processorInstance, curCm, curLatency->second);
+                F = new pthread_cond_destroySysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                F = new pthread_cond_destroySysCall(this->processorInstance, curCm);
+                F = new pthread_cond_destroySysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_cond_destroy", *F))
                 delete F;
-            pthread_cond_timedwaitSysCall *G = NULL;
+            pthread_cond_timedwaitSysCall<issueWidth> *G = NULL;
             curLatency = latencies.find("pthread_cond_timedwait");
             if(curLatency != latencies.end())
-                G = new pthread_cond_timedwaitSysCall(this->processorInstance, curCm, curLatency->second);
+                G = new pthread_cond_timedwaitSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                G = new pthread_cond_timedwaitSysCall(this->processorInstance, curCm);
+                G = new pthread_cond_timedwaitSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_cond_timedwait", *G))
                 delete G;
-            pthread_attr_getschedpolicySysCall *H = NULL;
+            pthread_attr_getschedpolicySysCall<issueWidth> *H = NULL;
             curLatency = latencies.find("pthread_attr_getschedpolicy");
             if(curLatency != latencies.end())
-                H = new pthread_attr_getschedpolicySysCall(this->processorInstance, curCm, curLatency->second);
+                H = new pthread_attr_getschedpolicySysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                H = new pthread_attr_getschedpolicySysCall(this->processorInstance, curCm);
+                H = new pthread_attr_getschedpolicySysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_getschedpolicy", *H))
                 delete H;
-            pthread_attr_setschedpolicySysCall *I = NULL;
+            pthread_attr_setschedpolicySysCall<issueWidth> *I = NULL;
             curLatency = latencies.find("pthread_attr_setschedpolicy");
             if(curLatency != latencies.end())
-                I = new pthread_attr_setschedpolicySysCall(this->processorInstance, curCm, curLatency->second);
+                I = new pthread_attr_setschedpolicySysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                I = new pthread_attr_setschedpolicySysCall(this->processorInstance, curCm);
+                I = new pthread_attr_setschedpolicySysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_setschedpolicy", *I))
                 delete I;
-            pthread_attr_getschedparamSysCall *J = NULL;
+            pthread_attr_getschedparamSysCall<issueWidth> *J = NULL;
             curLatency = latencies.find("pthread_attr_getschedparam");
             if(curLatency != latencies.end())
-                J = new pthread_attr_getschedparamSysCall(this->processorInstance, curCm, curLatency->second);
+                J = new pthread_attr_getschedparamSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                J = new pthread_attr_getschedparamSysCall(this->processorInstance, curCm);
+                J = new pthread_attr_getschedparamSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_getschedparam", *J))
                 delete J;
-            pthread_attr_setschedparamSysCall *K = NULL;
+            pthread_attr_setschedparamSysCall<issueWidth> *K = NULL;
             curLatency = latencies.find("pthread_attr_setschedparam");
             if(curLatency != latencies.end())
-                K = new pthread_attr_setschedparamSysCall(this->processorInstance, curCm, curLatency->second);
+                K = new pthread_attr_setschedparamSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                K = new pthread_attr_setschedparamSysCall(this->processorInstance, curCm);
+                K = new pthread_attr_setschedparamSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_setschedparam", *K))
                 delete K;
-            pthread_attr_getpreemptparamSysCall *L = NULL;
+            pthread_attr_getpreemptparamSysCall<issueWidth> *L = NULL;
             curLatency = latencies.find("pthread_attr_getpreemptparam");
             if(curLatency != latencies.end())
-                L = new pthread_attr_getpreemptparamSysCall(this->processorInstance, curCm, curLatency->second);
+                L = new pthread_attr_getpreemptparamSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                L = new pthread_attr_getpreemptparamSysCall(this->processorInstance, curCm);
+                L = new pthread_attr_getpreemptparamSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_getpreemptparam", *L))
                 delete L;
-            pthread_attr_setpreemptparamSysCall *M = NULL;
+            pthread_attr_setpreemptparamSysCall<issueWidth> *M = NULL;
             curLatency = latencies.find("pthread_attr_setpreemptparam");
             if(curLatency != latencies.end())
-                M = new pthread_attr_setpreemptparamSysCall(this->processorInstance, curCm, curLatency->second);
+                M = new pthread_attr_setpreemptparamSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                M = new pthread_attr_setpreemptparamSysCall(this->processorInstance, curCm);
+                M = new pthread_attr_setpreemptparamSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_attr_setpreemptparam", *M))
                 delete M;
-            pthread_getschedparamSysCall *N = NULL;
+            pthread_getschedparamSysCall<issueWidth> *N = NULL;
             curLatency = latencies.find("pthread_getschedparam");
             if(curLatency != latencies.end())
-                N = new pthread_getschedparamSysCall(this->processorInstance, curCm, curLatency->second);
+                N = new pthread_getschedparamSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                N = new pthread_getschedparamSysCall(this->processorInstance, curCm);
+                N = new pthread_getschedparamSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_getschedparam", *N))
                 delete N;
-            pthread_setschedparamSysCall *O = NULL;
+            pthread_setschedparamSysCall<issueWidth> *O = NULL;
             curLatency = latencies.find("pthread_setschedparam");
             if(curLatency != latencies.end())
-                O = new pthread_setschedparamSysCall(this->processorInstance, curCm, curLatency->second);
+                O = new pthread_setschedparamSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                O = new pthread_setschedparamSysCall(this->processorInstance, curCm);
+                O = new pthread_setschedparamSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_setschedparam", *O))
                 delete O;
-            pthread_selfSysCall *P = NULL;
+            pthread_selfSysCall<issueWidth> *P = NULL;
             curLatency = latencies.find("pthread_self");
             if(curLatency != latencies.end())
-                P = new pthread_selfSysCall(this->processorInstance, curCm, curLatency->second);
+                P = new pthread_selfSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                P = new pthread_selfSysCall(this->processorInstance, curCm);
+                P = new pthread_selfSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_self", *P))
                 delete P;
-            pthread_cancelSysCall *Q = NULL;
+            pthread_cancelSysCall<issueWidth> *Q = NULL;
             curLatency = latencies.find("pthread_cancel");
             if(curLatency != latencies.end())
-                Q = new pthread_cancelSysCall(this->processorInstance, curCm, curLatency->second);
+                Q = new pthread_cancelSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                Q = new pthread_cancelSysCall(this->processorInstance, curCm);
+                Q = new pthread_cancelSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_cancel", *Q))
                 delete Q;
-            pthread_cleanup_popSysCall *R = NULL;
+            pthread_cleanup_popSysCall<issueWidth> *R = NULL;
             curLatency = latencies.find("pthread_cleanup_pop");
             if(curLatency != latencies.end())
-                R = new pthread_cleanup_popSysCall(this->processorInstance, curCm, curLatency->second);
+                R = new pthread_cleanup_popSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                R = new pthread_cleanup_popSysCall(this->processorInstance, curCm);
+                R = new pthread_cleanup_popSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_cleanup_pop", *R))
                 delete R;
-            pthread_cleanup_pushSysCall *S = NULL;
+            pthread_cleanup_pushSysCall<issueWidth> *S = NULL;
             curLatency = latencies.find("pthread_cleanup_push");
             if(curLatency != latencies.end())
-                S = new pthread_cleanup_pushSysCall(this->processorInstance, curCm, curLatency->second);
+                S = new pthread_cleanup_pushSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                S = new pthread_cleanup_pushSysCall(this->processorInstance, curCm);
+                S = new pthread_cleanup_pushSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_cleanup_push", *S))
                 delete S;
-            pthread_exitSysCall *T = NULL;
+            pthread_exitSysCall<issueWidth> *T = NULL;
             curLatency = latencies.find("pthread_myexit");
             if(curLatency != latencies.end())
-                T = new pthread_exitSysCall(this->processorInstance, curCm, curLatency->second);
+                T = new pthread_exitSysCall<issueWidth>(this->processorInstance, curCm, curLatency->second);
             else
-                T = new pthread_exitSysCall(this->processorInstance, curCm);
+                T = new pthread_exitSysCall<issueWidth>(this->processorInstance, curCm);
             if(!this->register_syscall("pthread_myexit", *T))
                 delete T;
 
-            if(waitLoop){
-                __nop_busy_loopSysCall *U = new __nop_busy_loopSysCall(this->processorInstance, curCm);
+            if(ConcurrencyManager::busyWaitLoop){
+                __nop_busy_loopSysCall<issueWidth> *U = new __nop_busy_loopSysCall<issueWidth>(this->processorInstance, curCm);
                 if(!this->register_syscall(".__nop_busy_loop", *U))
                     THROW_EXCEPTION(".__nop_busy_loop symbol not found in the executable, unable to initialize pthread-emulation system");
             }
             if(reentrant)
-                this->initiReentrantEmu(group);
+                this->initReentrantEmu(group);
         }
 
         ///Resets the whole concurrency emulator, reinitializing it and preparing it for a new simulation
@@ -646,11 +646,11 @@ template<class wordSize> class ConcurrencyEmulator: public trap::ToolsIf<issueWi
         ///Method called at every instruction issue by the processor: we have to determine if
         ///the current program counter corresponds to an emulated call and call that
         ///call in case
-        bool newIssue(const issueWidth &curPC, const InstructionBase *curInstr) throw(){
+        bool newIssue(const issueWidth &curPC, const trap::InstructionBase *curInstr) throw(){
             //I have to go over all the registered system calls and check if there is one
             //that matches the current program counter. In case I simply call the corresponding
             //callback.
-            typename template_map<issueWidth, SyscallCB<issueWidth>* >::const_iterator foundSysc = this->syscCallbacks.find(curPC);
+            typename template_map<issueWidth, trap::SyscallCB<issueWidth>* >::const_iterator foundSysc = this->syscCallbacks.find(curPC);
             if(foundSysc != this->syscCallbacksEnd){
                 return (*(foundSysc->second))();
             }
