@@ -93,7 +93,7 @@ template <class wordSize> struct Processor{
     ThreadEmu * runThread;
     std::vector<std::pair<double, double> > idleTrace;
     double curIdleStart;
-
+    
     // Idle event
     sc_event idleEvent;
 
@@ -115,15 +115,44 @@ template <class wordSize> struct Processor{
         this->runThread->status = ThreadEmu::RUNNING;
         
         // Schedule the thread
-        this->processorInstance.setPC((unsigned long long) thread->thread_routine);
-        this->processorInstance.setArgs(args);
-        this->processorInstance.setSP(thread->stackBase);
-        //this->processorInstance.setFP(thread->tlsAddress);
+        // Case 1, new thread
+        if( thread->state == NULL ) {
+            this->processorInstance.setPC(thread->thread_routine);
+            this->processorInstance.setArgs(args);
+            this->processorInstance.setSP(thread->stackBase);
+            this->processorInstance.setLR(thread->lastRetAddr);
+        } else {
+            this->processorInstance.setState(thread->state);
+            if( thread->setSyscRetVal ) {
+                thread->setSyscRetVal = false;
+                this->processorInstance.setRetVal(thread->syscallRetVal);
+            }
+        }
 
+        // Notify halted processors
         this->idleEvent.notify();
         
     }
-    int deSchedule(bool saveStatus = true){
+    int deSchedule(wordSize nop_loop_address, bool saveStatus = true){
+        if( this->runThread == NULL ) {
+            THROW_EXCEPTION("Trying to deschedule a NULL thread");
+        }
+        ThreadEmu *tempThread = this->runThread;
+        this->runThread = NULL;
+        
+        if(saveStatus) {
+            tempThread->status = ThreadEmu::WAITING;
+            tempThread->state = this->processorInstance.getState();
+            tempThread->lastPc = this->processorInstance.readPC();
+            tempThread->lastRetAddr = this->processorInstance.readLR();
+        }
+
+        //this->processorInstance.clearState();
+        this->processorInstance.setPC(nop_loop_address);
+        this->processorInstance.setLR(nop_loop_address);
+
+        return tempThread->id; 
+
     }
     void printIdleTrace(){
     }
@@ -186,6 +215,8 @@ class ConcurrencyManager{
         ///concurrency manager
         std::string execName;
 
+        /// System memory size, used for allocating stacks and TLSs
+        unsigned int memSize;
     public:
         ///Variables used for managing reentrant synchronization
         unsigned int mallocMutex;
@@ -251,7 +282,7 @@ class ConcurrencyManager{
         /// Now some static stuff which is shared by all the emulation groups
         ///specifies whether blocked processor halts or keep on working in busy wait loops
         static bool busyWaitLoop;
-        
+
         ///Specifies the stack size for each thread, defaults to 20 KB
         static unsigned int threadStackSize;
         
@@ -276,8 +307,17 @@ class ConcurrencyManager{
         static sc_time deSchedLatency;
         static sc_time schedChooseLatency;
 
+        /// Standard (trapped) return address used to determine if threads have terminated
+        unsigned int pthread_exit_address;
+        
+        /// Standard (trapped) busy loop address used to pause processors
+        unsigned int nop_loop_address;
+
+        /// Address for the main program, used to create the main thread
+        unsigned int main_thread_address;
+
         /// HERE WE START WITH THE METHODS
-        ConcurrencyManager(std::string execName);
+        ConcurrencyManager(std::string execName, unsigned int memSize);
         ~ConcurrencyManager();
 
         ///Resets the CM to its original status as after the construction
@@ -293,24 +333,32 @@ class ConcurrencyManager{
         ///Adds a processor to be managed by this concurrency
         ///concurrency emulator
         template <class wordSize> void addProcessor(trap::ABIIf<wordSize> &processorInstance){
+            bool createMainThread = false;
+
             if(this->managedProc.find(processorInstance.getProcessorID()) != this->managedProc.end())
                 THROW_EXCEPTION("A processor with ID = " << processorInstance.getProcessorID() << " has already been added to the concurrency emulator");
+
+            if( managedProc.size() == 0 ) {
+                createMainThread = true; 
+            }
 
             this->managedProc[processorInstance.getProcessorID()] = new Processor<wordSize>(processorInstance);
             if(processorInstance.getProcessorID() + 1 > this->maxProcId)
                 this->maxProcId = processorInstance.getProcessorID() + 1;
+        
+            if(createMainThread) {
+                // Set processor to run the main thread
+                ThreadEmu * th = new ThreadEmu(0, main_thread_address, NULL, memSize, tlsSize, &defaultAttr);
+                th->status = ThreadEmu::RUNNING;
+                existingThreads[0] = th;
+                processorInstance.setSP(memSize - tlsSize);
+                stacks[memSize] = threadStackSize;
+                this->managedProc[processorInstance.getProcessorID()]->runThread = th;
+            } else {
+                // Set processor to busy loop
+            }
+
         }
-
-        void addProcessor32(trap::ABIIf<unsigned int> &processorInstance){
-            //Processor<unsigned int> newProc(processorInstance);
-
-            if(this->managedProc.find(processorInstance.getProcessorID()) != this->managedProc.end())
-                THROW_EXCEPTION("A processor with ID = " << processorInstance.getProcessorID() << " has already been added to the concurrency emulator");
-
-            this->managedProc[processorInstance.getProcessorID()] = new Processor<unsigned int>(processorInstance);
-            if(processorInstance.getProcessorID() + 1 > this->maxProcId)
-                this->maxProcId = processorInstance.getProcessorID() + 1;
-        } 
 
         ///*******************************************************************
         /// Here are some functions for computing statistics on the

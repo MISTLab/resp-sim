@@ -108,7 +108,7 @@ for i in range(0, PROCESSOR_NUMBER):
 connectPortsForce(bus, bus.initiatorSocket, mem, mem.targetSocket)
 
 # Add memory mapping
-bus.addBinding("mem",0x0,1024*1024*256,False)
+bus.addBinding("mem",0x0,memorySize,False)
 
 ################################################
 ##### SYSTEM INIT ##############################
@@ -137,15 +137,10 @@ if OS_EMULATION:
         curEmu = trapwrapper.OSEmulator32(processors[i].getInterface())
         curEmu.initSysCalls(SOFTWARE)
         
-        concurrentEmu = cm_wrapper.ConcurrencyEmulator32(processors[i].getInterface())
+        ##### CONCURRENCY MANAGEMENT #####
+        concurrentEmu = cm_wrapper.ConcurrencyEmulator32(processors[i].getInterface(),memorySize)
         concurrentEmu.initSysCalls(SOFTWARE,True)
 
         processors[i].toolManager.addTool(curEmu)
         processors[i].toolManager.addTool(concurrentEmu)
-
-##### CONCURRENCY MANAGEMENT #####
-cm = cm_wrapper.ConcurrencyManager("cm")
-for p in processors:
-    cm.addProcessor32(p.getInterface())
-
 
