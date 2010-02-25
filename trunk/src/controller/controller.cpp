@@ -87,6 +87,9 @@ void my_terminate_handler(){
     std::cerr << "Exception handled by controller!" << std::endl;
     #endif
 
+    //set error flag to true 
+    sc_controller::getController().error = true;
+
     try{
         throw;
     }
