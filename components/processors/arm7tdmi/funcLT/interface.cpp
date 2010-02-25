@@ -60,6 +60,10 @@ bool arm7tdmi_funclt_trap::ARM7TDMI_ABIIf::isLittleEndian() const throw(){
     return true;
 }
 
+int arm7tdmi_funclt_trap::ARM7TDMI_ABIIf::getProcessorID() const throw(){
+    return (MP_ID);
+}
+
 bool arm7tdmi_funclt_trap::ARM7TDMI_ABIIf::isInstrExecuting() const throw(){
     return this->instrExecuting;
 }

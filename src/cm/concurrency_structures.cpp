@@ -52,6 +52,8 @@ AttributeEmu::AttributeEmu(unsigned int stackSize) : stackSize(stackSize) {
 }
 
 ThreadEmu::ThreadEmu(int id, unsigned int thread_routine, unsigned int args, unsigned int stackBase, unsigned int tlsAddress, AttributeEmu *attr) : id(id), thread_routine(thread_routine), args(args), stackBase(stackBase), tlsAddress(tlsAddress), attr(attr) {
+    this->state = NULL;
+    this->isIRQ = false;
 }
 ThreadEmu::~ThreadEmu(){
 }
@@ -70,6 +72,9 @@ void ThreadEmu::ExecutionTrace::clear(){
     this->startAddress = 0;
     this->endAddress = 0;
 }
+
+MutexEmu::MutexEmu() {}
+MutexEmu::~MutexEmu() {}
 
 SemaphoreEmu::SemaphoreEmu(int initialValue){
     this->value = initialValue;

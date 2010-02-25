@@ -74,7 +74,6 @@ struct SysCLock{
     public:
     SysCLock() : busy(false){}
     void lock(){
-        std::cout << __PRETTY_FUNCTION__ << std::endl;
         while(this->busy)
             wait(this->awakeEvent);
         this->busy = true;
@@ -109,6 +108,7 @@ template <class wordSize> struct Processor{
         args.push_back(thread->args);
         //TODO: ok, here, when scheduling the thread, we also have to remeber to
         //set the thread returtn value in case it was joined!!
+        std::cout << __PRETTY_FUNCTION__ << std::endl;
 
         // Set thread state
         this->runThread = thread;
@@ -121,6 +121,8 @@ template <class wordSize> struct Processor{
             this->processorInstance.setArgs(args);
             this->processorInstance.setSP(thread->stackBase);
             this->processorInstance.setLR(thread->lastRetAddr);
+        
+        // Case 2, already existing thread
         } else {
             this->processorInstance.setState(thread->state);
             if( thread->setSyscRetVal ) {
@@ -247,6 +249,9 @@ class ConcurrencyManager{
         ///and only one process is running, so we must keep track
         ///of all the threads forever)
         std::map<int, ThreadEmu *> existingThreads;
+
+        /// Contains allocated mutexes
+        std::map<int, MutexEmu *> existingMutex;
         
         ///Store address and size of the thread stacks (of course there is no
         ///way of determining if a thread has grown over its stack)
@@ -333,13 +338,13 @@ class ConcurrencyManager{
         ///Adds a processor to be managed by this concurrency
         ///concurrency emulator
         template <class wordSize> void addProcessor(trap::ABIIf<wordSize> &processorInstance){
-            bool createMainThread = false;
+            bool createMainThread = true;
 
             if(this->managedProc.find(processorInstance.getProcessorID()) != this->managedProc.end())
                 THROW_EXCEPTION("A processor with ID = " << processorInstance.getProcessorID() << " has already been added to the concurrency emulator");
 
-            if( managedProc.size() == 0 ) {
-                createMainThread = true; 
+            if( managedProc.size() > 0 ) {
+                createMainThread = false; 
             }
 
             this->managedProc[processorInstance.getProcessorID()] = new Processor<wordSize>(processorInstance);
@@ -355,7 +360,11 @@ class ConcurrencyManager{
                 stacks[memSize] = threadStackSize;
                 this->managedProc[processorInstance.getProcessorID()]->runThread = th;
             } else {
-                // Set processor to busy loop
+                // Set processor to busy loop        
+                std::cerr << "Setting processor " << processorInstance.getProcessorID() << " to idle " << this->nop_loop_address << std::endl;
+                processorInstance.setPC(this->nop_loop_address);
+                processorInstance.setLR(this->nop_loop_address);
+                processorInstance.setSP(memSize - tlsSize);
             }
 
         }

@@ -92,6 +92,7 @@ namespace arm7tdmi_funclt_trap{
             & PC, Alias * REGS, bool & instrExecuting, sc_event & instrEndEvent, boost::circular_buffer< \
             HistoryInstrType > & instHistoryQueue );
         bool isLittleEndian() const throw();
+        int getProcessorID() const throw();
         bool isInstrExecuting() const throw();
         void waitInstrEnd() const throw();
         bool isRoutineEntry( const InstructionBase * instr ) throw();

@@ -51,7 +51,7 @@
 #include "concurrency_manager.hpp"
 
 #ifdef NDEBUG
-#undef NDEBUG
+//#undef NDEBUG
 #endif
 
 //Initialization of some static variables
@@ -331,7 +331,6 @@ int resp::ConcurrencyManager::createThread(unsigned int procId, unsigned int thr
     //I also start the execution of the thread on it; note that all the
     //data structures touched here are also used during scheduling,
     //so synchronization must be enforced with respect to those structures
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
 
     std::map<unsigned int, Processor<unsigned int>* >::iterator curProcIter = this->managedProc.find(procId);
     if(curProcIter == this->managedProc.end())
@@ -402,6 +401,7 @@ int resp::ConcurrencyManager::createThread(unsigned int procId, unsigned int thr
         //command line
         if(resp::ConcurrencyManager::defThreadInfo.find(routineName) == resp::ConcurrencyManager::defThreadInfo.end()){
             th = new ThreadEmu(createdThId, threadFun, args, curStackBase, curTlsAddress, &resp::ConcurrencyManager::defaultAttr);
+            th->lastRetAddr = this->pthread_exit_address;
         }
         else{
             curAttr = this->existingAttr[this->createThreadAttr()];
@@ -410,6 +410,7 @@ int resp::ConcurrencyManager::createThread(unsigned int procId, unsigned int thr
             curAttr->priority = resp::ConcurrencyManager::defThreadInfo[routineName].priority;
             curAttr->deadline = resp::ConcurrencyManager::defThreadInfo[routineName].deadline;
             th = new ThreadEmu(createdThId, threadFun, args, curStackBase, curTlsAddress, curAttr);
+            th->lastRetAddr = this->pthread_exit_address;
         }
     }
     else{
@@ -423,7 +424,7 @@ int resp::ConcurrencyManager::createThread(unsigned int procId, unsigned int thr
             curAttr->deadline = resp::ConcurrencyManager::defThreadInfo[routineName].deadline;
         }
         th = new ThreadEmu(createdThId, threadFun, args, curStackBase, curTlsAddress, curAttr);
-        th->lastRetAddr = ConcurrencyManager::pthread_exit_address;
+        th->lastRetAddr = this->pthread_exit_address;
     }
     this->existingThreads[createdThId] = th;
 
@@ -898,29 +899,29 @@ void resp::ConcurrencyManager::destroyMutex(unsigned int procId, int mutex){
     existingMutex.erase(mutex);*/
 }
 int resp::ConcurrencyManager::createMutex(){
-//     int newMutId = 0;
-//     if(existingMutex.size() > 0){
-//         std::map<int, MutexEmu *>::iterator mutBeg, mutEnd;
-//         for(mutBeg = existingMutex.begin(), mutEnd = existingMutex.end(); mutBeg != mutEnd; mutBeg++){
-//             std::map<int, MutexEmu *>::iterator next = mutBeg;
-//             next++;
-//             if(next == mutEnd){
-//                 newMutId = mutBeg->first + 1;
-//                 break;
-//             }
-//             else if(mutBeg->first + 1 < next->first){
-//                 newMutId = mutBeg->first + 1;
-//                 break;
-//             }
-//         }
-//     }
-//     existingMutex[newMutId] = new MutexEmu();
-//     #ifndef NDEBUG
-//     if(procId != (unsigned int)-1)
-//         std::cerr << "Creating mutex " << newMutId << " Thread " << findProcessor(procId).runThread->id << std::endl;
-//     #endif
-//
-//     return newMutId;
+    int newMutId = 0;
+    if(this->existingMutex.size() > 0){
+        std::map<int, MutexEmu *>::iterator mutBeg, mutEnd;
+        for(mutBeg = this->existingMutex.begin(), mutEnd = this->existingMutex.end(); mutBeg != mutEnd; mutBeg++){
+            std::map<int, MutexEmu *>::iterator next = mutBeg;
+            next++;
+            if(next == mutEnd){
+                newMutId = mutBeg->first + 1;
+                break;
+            }
+            else if(mutBeg->first + 1 < next->first){
+                newMutId = mutBeg->first + 1;
+                break;
+            }
+        }
+    }
+    this->existingMutex[newMutId] = new MutexEmu();
+    #ifndef NDEBUG
+//    if(procId != (unsigned int)-1)
+//       std::cerr << "Creating mutex " << newMutId << " Thread " << findProcessor(procId).runThread->id << std::endl;
+    #endif
+
+    return newMutId;
 }
 ///Locks the mutex, deschedules the thread if the mutex is busy; in case
 ///nonbl == true, the function behaves as a trylock

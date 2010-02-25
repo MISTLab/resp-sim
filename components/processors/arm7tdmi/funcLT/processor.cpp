@@ -268,9 +268,8 @@ void arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::enableHistory( std::string
 }
 
 arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::Processor_arm7tdmi_funclt( sc_module_name \
-    name, sc_time latency ) : sc_module(name), latency(latency), SP_IRQ(&RB[21], 0), \
-    instrMem("instrMem", this->quantKeeper, MP_ID), dataMem("dataMem", this->quantKeeper, \
-    MP_ID){
+    name, sc_time latency ) : sc_module(name), latency(latency), instrMem("instrMem", \
+    this->quantKeeper, MP_ID), dataMem("dataMem", this->quantKeeper, MP_ID){
     Processor_arm7tdmi_funclt::numInstances++;
     if(Processor_arm7tdmi_funclt::INSTRUCTIONS == NULL){
         // Initialization of the array holding the initial instance of the instructions
@@ -449,13 +448,14 @@ arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::Processor_arm7tdmi_funclt( sc_m
     this->REGS[13].updateAlias(this->RB[13]);
     this->REGS[14].updateAlias(this->RB[14]);
     this->REGS[15].updateAlias(this->RB[15], 4);
+    this->FP.updateAlias(this->REGS[11], 0);
+    this->SP_IRQ.updateAlias(this->RB[21], 0);
+    this->LR_IRQ.updateAlias(this->RB[22], 0);
+    this->SP_FIQ.updateAlias(this->RB[28], 0);
     this->LR_FIQ.updateAlias(this->RB[29], 0);
+    this->PC.updateAlias(this->REGS[15], 0);
     this->LINKR.updateAlias(this->REGS[14], 0);
     this->SPTR.updateAlias(this->REGS[13], 0);
-    this->FP.updateAlias(this->REGS[11], 0);
-    this->SP_FIQ.updateAlias(this->RB[28], 0);
-    this->LR_IRQ.updateAlias(this->RB[22], 0);
-    this->PC.updateAlias(this->REGS[15], 0);
     this->profTimeStart = SC_ZERO_TIME;
     this->profTimeEnd = SC_ZERO_TIME;
     this->profStartAddr = (unsigned int)-1;
@@ -493,13 +493,20 @@ arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::~Processor_arm7tdmi_funclt(){
     #ifdef ENABLE_HISTORY
     if(this->historyEnabled){
         //Now, in case the queue dump file has been specified, I have to check if I need \
-            to save it
+            to save the yet undumped elements
         if(this->histFile){
             if(this->undumpedHistElems > 0){
-                boost::circular_buffer<HistoryInstrType>::const_iterator beg, end;
-                for(beg = this->instHistoryQueue.begin(), end = this->instHistoryQueue.end(); beg \
-                    != end; beg++){
-                    this->histFile << beg->toStr() << std::endl;
+                std::vector<std::string> histVec;
+                boost::circular_buffer<HistoryInstrType>::const_reverse_iterator beg, end;
+                unsigned int histRead = 0;
+                for(histRead = 0, beg = this->instHistoryQueue.rbegin(), end = this->instHistoryQueue.rend(); \
+                    beg != end && histRead < this->undumpedHistElems; beg++, histRead++){
+                    histVec.push_back(beg->toStr());
+                }
+                std::vector<std::string>::const_reverse_iterator histVecBeg, histVecEnd;
+                for(histVecBeg = histVec.rbegin(), histVecEnd = histVec.rend(); histVecBeg != histVecEnd; \
+                    histVecBeg++){
+                    this->histFile <<  *histVecBeg << std::endl;
                 }
             }
             this->histFile.flush();
