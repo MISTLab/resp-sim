@@ -108,7 +108,6 @@ template <class wordSize> struct Processor{
         args.push_back(thread->args);
         //TODO: ok, here, when scheduling the thread, we also have to remeber to
         //set the thread returtn value in case it was joined!!
-        std::cout << __PRETTY_FUNCTION__ << std::endl;
 
         // Set thread state
         this->runThread = thread;
@@ -120,6 +119,7 @@ template <class wordSize> struct Processor{
             this->processorInstance.setPC(thread->thread_routine);
             this->processorInstance.setArgs(args);
             this->processorInstance.setSP(thread->stackBase);
+            this->processorInstance.setFP(thread->stackBase);
             this->processorInstance.setLR(thread->lastRetAddr);
         
         // Case 2, already existing thread
@@ -361,10 +361,10 @@ class ConcurrencyManager{
                 this->managedProc[processorInstance.getProcessorID()]->runThread = th;
             } else {
                 // Set processor to busy loop        
-                std::cerr << "Setting processor " << processorInstance.getProcessorID() << " to idle " << this->nop_loop_address << std::endl;
                 processorInstance.setPC(this->nop_loop_address);
                 processorInstance.setLR(this->nop_loop_address);
                 processorInstance.setSP(memSize - tlsSize);
+                processorInstance.setFP(memSize - tlsSize);
             }
 
         }

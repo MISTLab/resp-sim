@@ -40,8 +40,8 @@
 ##############################################################################
 
 ###### GENERAL PARAMETERS #####
-PROCESSOR_FREQUENCY = 500         # MHz
-PROCESSOR_NUMBER  = 2             #
+PROCESSOR_FREQUENCY = 1000        # MHz
+PROCESSOR_NUMBER    = 2           #
 try:
     PROCESSOR_NAMESPACE
 except:
@@ -49,14 +49,14 @@ except:
 
 # Memory/bus
 MEMORY_SIZE       = 32              # MBytes
-MEM_LATENCY       = 10.0            # ns
+MEM_LATENCY       = 0.0             # ns
 
 
 # Software
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'crc'
+    SOFTWARE = 'simpleTestPT'
 
 if SOFTWARE:
     try:
@@ -97,7 +97,7 @@ mem = MemoryLT32.MemoryLT32( 'mem', memorySize, latencyMem)
 ##### INTERCONNECTIONS #########################
 ################################################
 
-bus  = BusLT32.BusLT32('bus',scwrapper.sc_time(100,scwrapper.SC_NS),1)
+bus  = BusLT32.BusLT32('bus',scwrapper.SC_ZERO_TIME,1)
 
 ##### BUS CONNECTIONS #####
 # Connecting the master components to the bus
@@ -129,6 +129,7 @@ for i in range(0, PROCESSOR_NUMBER):
     processors[i].ENTRY_POINT = loader.getProgStart()
     processors[i].PROGRAM_LIMIT = loader.getProgDim() + loader.getDataStart()
     processors[i].PROGRAM_START = loader.getDataStart()
+    processors[i].resetOp();
     # Set the processor ID
     processors[i].MP_ID.immediateWrite(i)
 
@@ -141,7 +142,7 @@ if OS_EMULATION:
         
         ##### CONCURRENCY MANAGEMENT #####
         concurrentEmu = cm_wrapper.ConcurrencyEmulator32(processors[i].getInterface(),memorySize)
-        concurrentEmu.initSysCalls(SOFTWARE,True)
+        concurrentEmu.initSysCalls(SOFTWARE)
 
         processors[i].toolManager.addTool(curEmu)
         processors[i].toolManager.addTool(concurrentEmu)

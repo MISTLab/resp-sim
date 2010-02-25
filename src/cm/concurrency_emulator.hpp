@@ -642,10 +642,8 @@ template<class issueWidth> class ConcurrencyEmulator: public trap::ToolsIf<issue
                 __nop_busy_loopSysCall<issueWidth> *U = new __nop_busy_loopSysCall<issueWidth>(this->processorInstance, curCm);
                 if(!this->register_syscall(".__nop_busy_loop", *U))
                     THROW_EXCEPTION(".__nop_busy_loop symbol not found in the executable, unable to initialize pthread-emulation system");
-
-                curCm->nop_loop_address = bfdFE.getSymAddr(std::string(".__nop_busy_loop"),valid)+this->routineOffset;
-                std::cout << "TRAPPING BUSY LOOP " << curCm->nop_loop_address << std::endl;
             }
+            curCm->nop_loop_address = bfdFE.getSymAddr(std::string(".__nop_busy_loop"),valid)+this->routineOffset;
 
             // Set the main symbol in the concurrency manager
             curCm->main_thread_address =  bfdFE.getSymAddr(std::string("main"),valid)+this->routineOffset; 

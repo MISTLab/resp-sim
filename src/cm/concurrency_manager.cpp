@@ -50,10 +50,6 @@
 #include "bfdWrapper.hpp"
 #include "concurrency_manager.hpp"
 
-#ifdef NDEBUG
-//#undef NDEBUG
-#endif
-
 //Initialization of some static variables
 const int resp::ConcurrencyManager::SYSC_SCHED_FIFO = 0;
 const int resp::ConcurrencyManager::SYSC_SCHED_OTHER = 1;
