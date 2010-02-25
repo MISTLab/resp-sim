@@ -57,9 +57,8 @@ def build(bld):
     # Generation of the controller wrapper extension
     obj = bld.new_task_gen('pypp')
     obj.source ='''
-        cm_export.hpp
+        concurrency_manager.hpp concurrency_emulator.hpp
     '''
-     #   concurrency_manager.hpp concurrency_emulator.hpp
      
     obj.target = 'cm_wrapper'
     obj.uselib = 'SYSTEMC_H BOOST BOOST_PYTHON TRAP'

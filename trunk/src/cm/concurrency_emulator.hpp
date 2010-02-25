@@ -241,6 +241,12 @@ template<class issueWidth> class ConcurrencyEmulator: public trap::ToolsIf<issue
             std::map<std::string, sc_time> emptyLatMap;
             this->initSysCalls(execName, emptyLatMap, reentrant, group);
         }
+        /// Adds a processor to a given CM group
+        void addProcessor(trap::ABIIf<issueWidth>& processorInstance, int group = 0 ) {
+             if(ConcurrencyEmulatorBase::cm.find(group) == ConcurrencyEmulatorBase::cm.end())
+                 THROW_EXCEPTION("The current emulation group " << group << " has not been initialized yet: have you correctly called the initSysCalls method?");
+             ConcurrencyEmulatorBase::cm[group]->addProcessor(processorInstance);
+        }
         ///Initializes the system calls for emulation; it registers all the PTHREAD routines which need
         ///emulation. The group parameter specifies the current emulation group
         void initSysCalls(const std::string execName, const std::map<std::string, sc_time> &latencies, bool reentrant = false, int group = 0){
@@ -637,7 +643,8 @@ template<class issueWidth> class ConcurrencyEmulator: public trap::ToolsIf<issue
                 if(!this->register_syscall(".__nop_busy_loop", *U))
                     THROW_EXCEPTION(".__nop_busy_loop symbol not found in the executable, unable to initialize pthread-emulation system");
 
-                curCm->nop_loop_address = bfdFE.getSymAddr(std::string("__nop_busy_loop"),valid)+this->routineOffset;
+                curCm->nop_loop_address = bfdFE.getSymAddr(std::string(".__nop_busy_loop"),valid)+this->routineOffset;
+                std::cout << "TRAPPING BUSY LOOP " << curCm->nop_loop_address << std::endl;
             }
 
             // Set the main symbol in the concurrency manager
