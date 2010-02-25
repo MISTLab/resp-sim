@@ -133,7 +133,7 @@ void arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::mainLoop(){
                 unsigned int bitString = this->instrMem.read_word(curPC);
                 unsigned int & curCount = cachedInstr->second.count;
                 int instrId = this->decoder.decode(bitString);
-                Instruction * instr = Processor_arm7tdmi_funclt::INSTRUCTIONS[instrId];
+                Instruction * instr = this->INSTRUCTIONS[instrId];
                 instr->setParams(bitString);
                 #ifdef ENABLE_HISTORY
                 if(this->historyEnabled){
@@ -159,7 +159,7 @@ void arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::mainLoop(){
                 else{
                     // ... and then add the instruction to the cache
                     cachedInstr->second.instr = instr;
-                    Processor_arm7tdmi_funclt::INSTRUCTIONS[instrId] = instr->replicate();
+                    this->INSTRUCTIONS[instrId] = instr->replicate();
                 }
             }
         }
@@ -168,7 +168,7 @@ void arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::mainLoop(){
             // I have to perform the normal decoding phase ...
             unsigned int bitString = this->instrMem.read_word(curPC);
             int instrId = this->decoder.decode(bitString);
-            Instruction * instr = Processor_arm7tdmi_funclt::INSTRUCTIONS[instrId];
+            Instruction * instr = this->INSTRUCTIONS[instrId];
             instr->setParams(bitString);
             #ifdef ENABLE_HISTORY
             if(this->historyEnabled){
@@ -235,14 +235,14 @@ void arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::resetOp(){
 }
 
 void arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::end_of_elaboration(){
-    this->resetOp();
+    //this->resetOp();
 }
 
 Instruction * arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::decode( unsigned int \
     bitString ){
     int instrId = this->decoder.decode(bitString);
     if(instrId >= 0){
-        Instruction * instr = Processor_arm7tdmi_funclt::INSTRUCTIONS[instrId];
+        Instruction * instr = this->INSTRUCTIONS[instrId];
         instr->setParams(bitString);
         return instr;
     }
@@ -253,7 +253,7 @@ ARM7TDMI_ABIIf & arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::getInterface()
     return *this->abiIf;
 }
 
-Instruction * * arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::INSTRUCTIONS = NULL;
+//Instruction * * arm7tdmi_funclt_trap::this->INSTRUCTIONS = NULL;
 int arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::numInstances = 0;
 void arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::setProfilingRange( unsigned \
     int startAddr, unsigned int endAddr ){
@@ -271,162 +271,162 @@ arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::Processor_arm7tdmi_funclt( sc_m
     name, sc_time latency ) : sc_module(name), latency(latency), instrMem("instrMem", \
     this->quantKeeper, MP_ID), dataMem("dataMem", this->quantKeeper, MP_ID){
     Processor_arm7tdmi_funclt::numInstances++;
-    if(Processor_arm7tdmi_funclt::INSTRUCTIONS == NULL){
+    //if(this->INSTRUCTIONS == NULL){
         // Initialization of the array holding the initial instance of the instructions
-        Processor_arm7tdmi_funclt::INSTRUCTIONS = new Instruction *[76];
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[64] = new TST_si(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS = new Instruction *[76];
+        this->INSTRUCTIONS[64] = new TST_si(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[0] = new ADC_si(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[0] = new ADC_si(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[59] = new SUB_sr(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[59] = new SUB_sr(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[3] = new ADD_si(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[3] = new ADD_si(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[11] = new BIC_si(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[11] = new BIC_si(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[56] = new SBC_sr(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[56] = new SBC_sr(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[19] = new CMP_i(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[19] = new CMP_i(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[10] = new BRANCHX(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[10] = new BRANCHX(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[12] = new BIC_sr(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[12] = new BIC_sr(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[4] = new ADD_sr(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[4] = new ADD_sr(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[39] = new MOV_i(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[39] = new MOV_i(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[74] = new SWAPB(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[74] = new SWAPB(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[43] = new MVN_si(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[43] = new MVN_si(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[22] = new EOR_i(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[22] = new EOR_i(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[1] = new ADC_sr(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[1] = new ADC_sr(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[65] = new TST_sr(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[65] = new TST_sr(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[48] = new ORR_i(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[48] = new ORR_i(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[24] = new LDR_imm(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[24] = new LDR_imm(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[46] = new ORR_si(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[46] = new ORR_si(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[26] = new LDRB_imm(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[26] = new LDRB_imm(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[42] = new msr_reg_Instr(CPSR, MP_ID, RB, \
+        this->INSTRUCTIONS[42] = new msr_reg_Instr(CPSR, MP_ID, RB, \
             SPSR, FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[16] = new CMN_i(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[16] = new CMN_i(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[5] = new ADD_i(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[5] = new ADD_i(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[6] = new AND_si(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[6] = new AND_si(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[14] = new CMN_si(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[14] = new CMN_si(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[23] = new LDM(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[23] = new LDM(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[29] = new LDRSH_off(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[29] = new LDRSH_off(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[68] = new STR_imm(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[68] = new STR_imm(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[49] = new RSB_si(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[49] = new RSB_si(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[30] = new LDRSB_off(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[30] = new LDRSB_off(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[57] = new SBC_i(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[57] = new SBC_i(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[66] = new TST_i(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[66] = new TST_i(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[2] = new ADC_i(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[2] = new ADC_i(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[28] = new LDRH_off(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[28] = new LDRH_off(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[73] = new SWAP(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[73] = new SWAP(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[69] = new STR_off(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[69] = new STR_off(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[72] = new STRH_off(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[72] = new STRH_off(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[18] = new CMP_sr(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[18] = new CMP_sr(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[60] = new SUB_i(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[60] = new SUB_i(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[50] = new RSB_sr(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[50] = new RSB_sr(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[7] = new AND_sr(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[7] = new AND_sr(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[52] = new RSC_si(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[52] = new RSC_si(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[55] = new SBC_si(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[55] = new SBC_si(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[37] = new MOV_si(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[37] = new MOV_si(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[35] = new umlal_Instr(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[35] = new umlal_Instr(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[8] = new AND_i(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[8] = new AND_i(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[25] = new LDR_off(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[25] = new LDR_off(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[38] = new MOV_sr(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[38] = new MOV_sr(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[53] = new RSC_sr(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[53] = new RSC_sr(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[13] = new BIC_i(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[13] = new BIC_i(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[62] = new TEQ_sr(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[62] = new TEQ_sr(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[34] = new smull_Instr(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[34] = new smull_Instr(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[71] = new STRB_off(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[71] = new STRB_off(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[33] = new smlal_Instr(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[33] = new smlal_Instr(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[17] = new CMP_si(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[17] = new CMP_si(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[61] = new TEQ_si(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[61] = new TEQ_si(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[15] = new CMN_sr(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[15] = new CMN_sr(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[40] = new mrs_Instr(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[40] = new mrs_Instr(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[32] = new mul_Instr(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[32] = new mul_Instr(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[58] = new SUB_si(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[58] = new SUB_si(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[67] = new STM(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[67] = new STM(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[47] = new ORR_sr(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[47] = new ORR_sr(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[51] = new RSB_i(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[51] = new RSB_i(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[31] = new mla_Instr(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[31] = new mla_Instr(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[21] = new EOR_sr(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[21] = new EOR_sr(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[41] = new msr_imm_Instr(CPSR, MP_ID, RB, \
+        this->INSTRUCTIONS[41] = new msr_imm_Instr(CPSR, MP_ID, RB, \
             SPSR, FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[27] = new LDRB_off(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[27] = new LDRB_off(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[36] = new umull_Instr(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[36] = new umull_Instr(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[45] = new MVN_i(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[45] = new MVN_i(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[44] = new MVN_sr(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[44] = new MVN_sr(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[9] = new BRANCH(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[9] = new BRANCH(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[20] = new EOR_si(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[20] = new EOR_si(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[70] = new STRB_imm(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[70] = new STRB_imm(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[54] = new RSC_i(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[54] = new RSC_i(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[63] = new TEQ_i(CPSR, MP_ID, RB, SPSR, FP, \
+        this->INSTRUCTIONS[63] = new TEQ_i(CPSR, MP_ID, RB, SPSR, FP, \
             SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-        Processor_arm7tdmi_funclt::INSTRUCTIONS[75] = new InvalidInstr(CPSR, MP_ID, RB, SPSR, \
+        this->INSTRUCTIONS[75] = new InvalidInstr(CPSR, MP_ID, RB, SPSR, \
             FP, SPTR, LINKR, SP_IRQ, LR_IRQ, SP_FIQ, LR_FIQ, PC, REGS, instrMem, dataMem);
-    }
+    //}
     this->quantKeeper.set_global_quantum( this->latency*100 );
     this->quantKeeper.reset();
     // Initialization of the standard registers
@@ -479,10 +479,10 @@ arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::~Processor_arm7tdmi_funclt(){
     Processor_arm7tdmi_funclt::numInstances--;
     if(Processor_arm7tdmi_funclt::numInstances == 0){
         for(int i = 0; i < 76; i++){
-            delete Processor_arm7tdmi_funclt::INSTRUCTIONS[i];
+            delete this->INSTRUCTIONS[i];
         }
-        delete [] Processor_arm7tdmi_funclt::INSTRUCTIONS;
-        Processor_arm7tdmi_funclt::INSTRUCTIONS = NULL;
+        delete [] this->INSTRUCTIONS;
+        this->INSTRUCTIONS = NULL;
     }
     template_map< unsigned int, CacheElem >::const_iterator cacheIter, cacheEnd;
     for(cacheIter = this->instrCache.begin(), cacheEnd = this->instrCache.end(); cacheIter \

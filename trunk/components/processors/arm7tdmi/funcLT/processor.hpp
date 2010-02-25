@@ -98,7 +98,7 @@ namespace arm7tdmi_funclt_trap{
         bool historyEnabled;
         bool instrExecuting;
         sc_event instrEndEvent;
-        static Instruction * * INSTRUCTIONS;
+        Instruction * * INSTRUCTIONS;
         template_map< unsigned int, CacheElem > instrCache;
         static int numInstances;
 

@@ -1430,7 +1430,6 @@ public:
     __nop_busy_loopSysCall(trap::ABIIf<wordSize> &processorInstance, resp::ConcurrencyManager * cm, sc_time latency = SC_ZERO_TIME) :
                                                         trap::SyscallCB<wordSize>(processorInstance, latency), cm(cm){}
     bool operator()(){
-        std::cout << "Processor " << this->processorInstance.getProcessorID() << " busy looping\n";
         this->cm->idleLoop(this->processorInstance.getProcessorID());
         return true;
     }
