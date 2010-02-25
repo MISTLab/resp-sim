@@ -90,6 +90,9 @@ void simulation_engine::pause(){
     boost::mutex::scoped_lock lk_reset(this->controllerMachine.reset_mutex);
     // First of all I perform the transition to pause the state machine
     this->controllerMachine.process_event( EvPause() );
+
+    std::cerr << std::endl << "Simulation paused!" << std::endl << std::endl;
+
  
     // I signal to all who registered that simulation
     // is being paused
