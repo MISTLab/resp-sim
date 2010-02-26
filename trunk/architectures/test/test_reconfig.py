@@ -77,7 +77,7 @@ def statsPrinter():
 
 # Find the specified software in the _build_ directory if not an absolute path
 if not SOFTWARE or not os.path.isfile(SOFTWARE):
-    SOFTWARE = findInFolder(SOFTWARE, '_build_/arm/software/')
+    SOFTWARE = findInFolder(SOFTWARE, 'software/build/arm/')
     if not SOFTWARE:
         raise Exception('Unable to find program')
 

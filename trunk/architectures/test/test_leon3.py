@@ -73,7 +73,7 @@ OS_EMULATION = True     # True or False
 
 # Find the specified software in the _build_ directory if not an absolute path
 if not SOFTWARE or not os.path.isfile(SOFTWARE):
-    SOFTWARE = findInFolder(SOFTWARE, '_build_/sparc/software/')
+    SOFTWARE = findInFolder(SOFTWARE, 'software/build/sparc/')
     if not SOFTWARE:
         raise Exception('Unable to find program')
 

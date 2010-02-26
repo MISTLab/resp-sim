@@ -5,7 +5,7 @@ import sys,os
 def build( bld ):
     fastBenchs = [ 'test_reconfig', 'test_reconfig_scanf']
 
-    files = os.listdir('software/test_code')
+    files = os.listdir('test_code')
     files = filter( lambda x: x.endswith('.c') and os.path.splitext(os.path.basename(x))[0] in fastBenchs, files )
 
     for f in files:
