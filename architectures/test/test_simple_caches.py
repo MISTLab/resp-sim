@@ -45,13 +45,25 @@ PROCESSOR_NUMBER  = 1             #
 try:
     PROCESSOR_NAMESPACE
 except:
-    PROCESSOR_NAMESPACE = arm7tdmi_funcLT_wrapper.Processor_arm7tdmi_funclt
+    PROCESSOR_NAMESPACE = arm9tdmi_funcLT_wrapper.Processor_arm9tdmi_funclt
 
 # Memory/bus
-MEMORY_SIZE       = 32              # MBytes
-MEM_LATENCY       = 10.0            # ns
-BUS_ACTIVE        = True
-BUS_LATENCY       = 10.0            # ns
+MEMORY_SIZE        = 32              # MBytes
+MEM_LATENCY        = 10.0            # ns
+BUS_ACTIVE         = True
+BUS_LATENCY        = 10.0            # ns
+DATA_CACHE_ACTIVE  = True
+INSTR_CACHE_ACTIVE = True
+CACHE_SIZE         = 8               # MBytes
+CACHE_BLOCK_SIZE   = 32              # words
+CACHE_WAYS         = 8
+CACHE_REM_POLICY   = CacheLT32.LRU
+CACHE_WR_POLICY    = CacheLT32.THROUGH
+CACHE_READ_LAT     = 0.0             # ns
+CACHE_WRITE_LAT    = 0.0             # ns
+CACHE_LOAD_LAT     = 0.0             # ns
+CACHE_STORE_LAT    = 0.0             # ns
+CACHE_REMOVE_LAT   = 0.0             # ns
 
 # Software
 try:
@@ -67,6 +79,16 @@ if SOFTWARE:
 
 OS_EMULATION = True     # True or False
 
+# Modified stats auto-printer
+def statsPrinter():
+    print '\x1b[34m\x1b[1mSimulated Elapsed Time (nano-seconds):\x1b[0m'
+    print '\x1b[31m' + str(controller.get_simulated_time()) + '\x1b[0m'
+    if BUS_ACTIVE:
+        print '\x1b[34m\x1b[1mBus Accesses:\x1b[0m'
+        print '\x1b[31m' + str(bus.numAccesses) + '\x1b[0m'
+        print '\x1b[34m\x1b[1mBus Words:\x1b[0m'
+        print '\x1b[31m' + str(bus.numWords) + '\x1b[0m'
+
 ################################################
 ##### AUTO VARIABLE SETUP ######################
 ################################################
@@ -76,6 +98,10 @@ if not SOFTWARE or not os.path.isfile(SOFTWARE):
     SOFTWARE = findInFolder(SOFTWARE, 'software/build/arm')
     if not SOFTWARE:
         raise Exception('Unable to find program')
+
+# This kind of caches works only with a single processor
+if PROCESSOR_NUMBER > 1:
+    raise Exception('Simple caches will work only in single-core systems')
 
 ################################################
 ##### COMPONENT CREATION #######################
@@ -101,25 +127,48 @@ mem = MemoryLT32.MemoryLT32( 'mem', memorySize, latencyMem)
 if BUS_ACTIVE:
     latencyBus = scwrapper.sc_time(BUS_LATENCY, scwrapper.SC_NS)
     bus  = BusLT32.BusLT32('bus',latencyBus,2)
-
-    ##### BUS CONNECTIONS #####
-    # Connecting the master components to the bus
-    for i in range(0, PROCESSOR_NUMBER):
-        connectPortsForce(processors[i], processors[i].instrMem.initSocket, bus, bus.targetSocket)
-        connectPortsForce(processors[i], processors[i].dataMem.initSocket, bus, bus.targetSocket)
-
     connectPortsForce(bus, bus.initiatorSocket, mem, mem.targetSocket)
-
     # Add memory mapping
     bus.addBinding("mem",0x0,memorySize,False)
-else:
-    if PROCESSOR_NUMBER > 1:
-        raise Exception('Multi-core systems need to have an interconnection layer between processors and memory')
+
+##### CACHE, BUS, AND MEMORY CONNECTIONS #####
+if DATA_CACHE_ACTIVE:
+    dataCache = CacheLT32.CacheLT32('dataCache', CACHE_SIZE*1024*1024, memorySize, CACHE_WAYS, CACHE_BLOCK_SIZE, CACHE_REM_POLICY, CACHE_WR_POLICY)
+    dataCache.setReadLatency(scwrapper.sc_time(CACHE_READ_LAT,scwrapper.SC_NS))
+    dataCache.setWriteLatency(scwrapper.sc_time(CACHE_WRITE_LAT,scwrapper.SC_NS))
+    dataCache.setLoadLatency(scwrapper.sc_time(CACHE_LOAD_LAT,scwrapper.SC_NS))
+    dataCache.setStoreLatency(scwrapper.sc_time(CACHE_STORE_LAT,scwrapper.SC_NS))
+    dataCache.setRemoveLatency(scwrapper.sc_time(CACHE_REMOVE_LAT,scwrapper.SC_NS))
+    #dataCache.setScratchpad(4194304,1048576,scwrapper.sc_time(0.001,scwrapper.SC_NS))
+    connectPortsForce(processors[0], processors[0].dataMem.initSocket, dataCache, dataCache.targetSocket)
+    if BUS_ACTIVE:
+        connectPortsForce(dataCache, dataCache.initSocket, bus, bus.targetSocket)
     else:
-        ##### MEMORY CONNECTIONS #####
-        # Connecting the master component to the memory
-        connectPortsForce(processors[0], processors[0].instrMem.initSocket, mem, mem.targetSocket)
+        connectPortsForce(dataCache, dataCache.initSocket, mem, mem.targetSocket)
+else:
+    if BUS_ACTIVE:
+        connectPortsForce(processors[0], processors[0].dataMem.initSocket, bus, bus.targetSocket)
+    else:
         connectPortsForce(processors[0], processors[0].dataMem.initSocket, mem, mem.targetSocket)
+
+if INSTR_CACHE_ACTIVE:
+    instrCache = CacheLT32.CacheLT32('instrCache', CACHE_SIZE*1024*1024, memorySize, CACHE_WAYS, CACHE_BLOCK_SIZE, CACHE_REM_POLICY, CACHE_WR_POLICY)
+    instrCache.setReadLatency(scwrapper.sc_time(CACHE_READ_LAT,scwrapper.SC_NS))
+    instrCache.setWriteLatency(scwrapper.sc_time(CACHE_WRITE_LAT,scwrapper.SC_NS))
+    instrCache.setLoadLatency(scwrapper.sc_time(CACHE_LOAD_LAT,scwrapper.SC_NS))
+    instrCache.setStoreLatency(scwrapper.sc_time(CACHE_STORE_LAT,scwrapper.SC_NS))
+    instrCache.setRemoveLatency(scwrapper.sc_time(CACHE_REMOVE_LAT,scwrapper.SC_NS))
+    #instrCache.setScratchpad(4194304,1048576,scwrapper.sc_time(0.001,scwrapper.SC_NS))
+    connectPortsForce(processors[0], processors[0].instrMem.initSocket, instrCache, instrCache.targetSocket)
+    if BUS_ACTIVE:
+        connectPortsForce(instrCache, instrCache.initSocket, bus, bus.targetSocket)
+    else:
+        connectPortsForce(instrCache, instrCache.initSocket, mem, mem.targetSocket)
+else:
+    if BUS_ACTIVE:
+        connectPortsForce(processors[0], processors[0].instrMem.initSocket, bus, bus.targetSocket)
+    else:
+        connectPortsForce(processors[0], processors[0].instrMem.initSocket, mem, mem.targetSocket)
 
 ################################################
 ##### SYSTEM INIT ##############################
