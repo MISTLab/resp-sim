@@ -57,7 +57,7 @@ BUS_LATENCY       = 10.0            # ns
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'arm.out'
+    SOFTWARE = 'gamma'
 
 if SOFTWARE:
     try:
@@ -73,7 +73,7 @@ OS_EMULATION = True     # True or False
 
 # Find the specified software in the _build_ directory if not an absolute path
 if not SOFTWARE or not os.path.isfile(SOFTWARE):
-    SOFTWARE = findInFolder(SOFTWARE, 'software/build/arm')
+    SOFTWARE = findInFolder(SOFTWARE, '_build_/arm/software/')
     if not SOFTWARE:
         raise Exception('Unable to find program')
 
