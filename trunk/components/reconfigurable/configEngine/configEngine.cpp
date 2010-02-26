@@ -328,22 +328,24 @@ void configEngine::printSystemStatus() {
 
 	tab.printStatus();
 
-	sc_time delay = SC_ZERO_TIME;
-	tlm_generic_payload message;
-	payloadData messageData;
-	unsigned char* payload_buffer = (unsigned char*) &messageData;
-	unsigned int payload_length = sizeof(payloadData);
-	messageData.address = 0;
-	messageData.latency = SC_ZERO_TIME;
-	messageData.width = 0;
-	messageData.height = 0;
-        message.set_data_length(payload_length);
-	message.set_data_ptr(payload_buffer);
-	message.set_read();
-	message.set_address(2);
-	message.set_response_status(TLM_INCOMPLETE_RESPONSE);
-	for (int i = 0; i < initiatorSocket.size(); i++) {
-		this->initiatorSocket[i]->b_transport(message,delay);
+	if (sc_start_of_simulation_invoked()) {
+		sc_time delay = SC_ZERO_TIME;
+		tlm_generic_payload message;
+		payloadData messageData;
+		unsigned char* payload_buffer = (unsigned char*) &messageData;
+		unsigned int payload_length = sizeof(payloadData);
+		messageData.address = 0;
+		messageData.latency = SC_ZERO_TIME;
+		messageData.width = 0;
+		messageData.height = 0;
+	        message.set_data_length(payload_length);
+		message.set_data_ptr(payload_buffer);
+		message.set_read();
+		message.set_address(2);
+		message.set_response_status(TLM_INCOMPLETE_RESPONSE);
+		for (int i = 0; i < initiatorSocket.size(); i++) {
+			this->initiatorSocket[i]->b_transport(message,delay);
+		}
 	}
 }
 
