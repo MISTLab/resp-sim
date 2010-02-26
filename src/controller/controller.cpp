@@ -195,29 +195,33 @@ void sc_controller::run_simulation(double simTime, sc_time_unit time_unit){
 
 /// Runs the simulation for a specified amount of time
 void sc_controller::run_simulation(sc_time simTime){
-    //We have to distinguish two situations: interactive simulation, I use
-    //the state machine and simply make a transition. non-interactive,
-    //I directly start a new thread for the specified amount of
-    //time.
-    if(this->interactive){
-        if(simTime > SC_ZERO_TIME){
-            this->controllerMachine.process_event( EvRun_t(simTime) );
+    if(this->error == true)
+        std::cerr << std::endl << "ERROR: run_simulation cannot be executed since an exception has been thrown.." << std::endl << std::endl;
+    else{
+        //We have to distinguish two situations: interactive simulation, I use
+        //the state machine and simply make a transition. non-interactive,
+        //I directly start a new thread for the specified amount of
+        //time.
+        if(this->interactive){
+            if(simTime > SC_ZERO_TIME){
+                this->controllerMachine.process_event( EvRun_t(simTime) );
+            }
+            else{
+                this->controllerMachine.process_event( EvRun() );
+            }
         }
         else{
-            this->controllerMachine.process_event( EvRun() );
+            controllerThread_ninteractive c;
+            if(simTime > SC_ZERO_TIME)
+                c.timeSlice = simTime;
+            else
+                c.timeSlice = SC_ZERO_TIME;
+            //finally I start the thread and wait for its end
+            this->timeTracker.restart();
+            boost::thread thrd (c);
+            thrd.join();
+            this->accumulatedTime += this->timeTracker.elapsed();
         }
-    }
-    else{
-        controllerThread_ninteractive c;
-        if(simTime > SC_ZERO_TIME)
-            c.timeSlice = simTime;
-        else
-            c.timeSlice = SC_ZERO_TIME;
-        //finally I start the thread and wait for its end
-        this->timeTracker.restart();
-        boost::thread thrd (c);
-        thrd.join();
-        this->accumulatedTime += this->timeTracker.elapsed();
     }
 }
 
@@ -230,39 +234,47 @@ void sc_controller::run_up_to(double simTime, sc_time_unit time_unit){
     if(difference > SC_ZERO_TIME)
         this->run_simulation(difference);
     else
-        std::cerr << "Error, simulation time specified for method run_up_to must be greater than the current time" << std::endl;
+        std::cerr << std::endl << "Error, simulation time specified for method run_up_to must be greater than the current time" << std::endl << std::endl;
 }
 
 /// Pauses the simulation; this is done with the help of
 /// the simulation engine. Notify specifies whether registered
 /// callbacks should be notified of the pausing event or not
 void sc_controller::pause_simulation(){
-    if(this->interactive){
-        // I simply have to pause simulation, the transition will be
-        // implicitly performed. Note that I can pause only if
-        // I am in the running state
-        if(this->controllerMachine.state_cast< const Running_st * >() != 0){
-            this->controllerMachine.pauseEvent.cancel();
-            this->controllerMachine.pauseEvent.notify();
-        }
-    }
+    if(this->error == true)
+        std::cerr << "ERROR: pause_simulation cannot be executed since an exception has been thrown.." << std::endl;
     else{
-        std::cerr << "Unable to pause simulation in non-interactive mode" << std::endl;
+        if(this->interactive){
+            // I simply have to pause simulation, the transition will be
+            // implicitly performed. Note that I can pause only if
+            // I am in the running state
+            if(this->controllerMachine.state_cast< const Running_st * >() != 0){
+                this->controllerMachine.pauseEvent.cancel();
+                this->controllerMachine.pauseEvent.notify();
+            }
+        }
+        else{
+            std::cerr << "Unable to pause simulation in non-interactive mode" << std::endl;
+        }
     }
 }
 
 ///Stops simulation (through a call to sc_stop)
 void sc_controller::stop_simulation(){
-    sc_stop();
-    if(this->interactive){
-        // I simply have stop simulation calling sc_stop
-        if ( this->controllerMachine.state_cast< const Stopped_st * >() == 0){
-            this->controllerMachine.process_event( EvStop() );
-            // Wait for pause state to exit
-            Py_BEGIN_ALLOW_THREADS 
-                boost::mutex::scoped_lock lk(this->controllerMachine.pause_mutex);
-                this->controllerMachine.end_condition.wait(lk);
-            Py_END_ALLOW_THREADS
+    if(this->error == true)
+        std::cerr << std::endl << "ERROR: stop_simulation cannot be executed since an exception has been thrown..." << std::endl << std::endl;
+    else{
+        sc_stop();
+        if(this->interactive){
+            // I simply have stop simulation calling sc_stop
+            if ( this->controllerMachine.state_cast< const Stopped_st * >() == 0){
+                this->controllerMachine.process_event( EvStop() );
+                // Wait for pause state to exit
+                Py_BEGIN_ALLOW_THREADS 
+                    boost::mutex::scoped_lock lk(this->controllerMachine.pause_mutex);
+                    this->controllerMachine.end_condition.wait(lk);
+                Py_END_ALLOW_THREADS
+            }
         }
     }
 }
