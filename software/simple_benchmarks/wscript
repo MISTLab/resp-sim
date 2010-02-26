@@ -12,7 +12,7 @@ def build( bld ):
                  , "rle3", "rle4", "mib_off_strsearch","pocsag", "v42", "wavelt"
                  , "mib_sec_sha", "des", "bcnt", "deepCalls"]
 
-    files = os.listdir('software/simple_benchmarks')
+    files = os.listdir('simple_benchmarks')
     files = filter( lambda x: x.endswith('.c') and os.path.splitext(os.path.basename(x))[0] in fastBenchs, files )
 
     for f in files:

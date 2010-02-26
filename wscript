@@ -72,7 +72,7 @@ def build(bld):
     #TaskGen.declare_extension(['.S','.s'], cc.c_hook)
 
     # process subfolders from here
-    bld.add_subdirs('lib tools src components dse software')
+    bld.add_subdirs('lib tools src components dse')
 
     # Creates the startSim script only if it does not exists yet
     if not os.path.exists(os.path.join(bld.path.abspath(), 'startSim.sh')):
@@ -598,11 +598,6 @@ def configure(conf):
     #################################################
     conf.env.append_unique('CPPPATH', os.path.abspath(os.path.join('src', 'utils')))
 
-    #################################################
-    # Special configuration for the software packages
-    #################################################
-    conf.sub_config('software')
-
 def set_options(opt):
     """
     Allow some user configurability for the build environment
@@ -632,10 +627,6 @@ def set_options(opt):
     # Specifies whether to compile the extensions for DSE or not
     opt.add_option('--with-momh-header', type='string', help='Specifies the location of the headers for the ', dest='momh_header')
     opt.add_option('--with-momh-libs', type='string', help='Specifies the location of the headers for the ', dest='momh_libs')
-
-    # Software-related options
-    sw_group = opt.add_option_group( "Software-related options" )
-    opt.sub_options('software', sw_group )
 
     # After the compilation it executes the tests to check for the correct system functionality
     opt.add_option('-C','--execute-tests', default=False, action="store_true", help='Specifies whether tests have to be executed at the end of the compilation process; this is a compilation option, not a configuration one', dest='exec_tests')
