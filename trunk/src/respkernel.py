@@ -78,6 +78,7 @@ for line in lockFile.readlines():
 lockFile.close()
 
 sys.path.append(os.path.abspath(os.path.join(srcdir, 'src', 'manager')))
+sys.path.append(os.path.abspath(os.path.join(srcdir, 'src', 'controller')))
 sys.path.append(os.path.abspath(os.path.join(srcdir, 'src', 'hci')))
 sys.path.append(os.path.abspath(os.path.join(srcdir, 'src', 'power')))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'controller')))
@@ -285,7 +286,7 @@ class RespKernel:
             self.start_debugger()
             if self.verbose:
                 print "Starting debugger..."
-
+        
         #register in the exit handler the function destroing all imported stuff
         atexit.register(self.delete_all)
 
@@ -318,7 +319,7 @@ class RespKernel:
         global connectPortsForce, connectPorts, connectSyscPorts, connectSyscSignal, listComponents,  printComponents, getCompInstance, areConnected, \
                 getSources,  getTargets, getConnected, getComponents, getAttrInstance,  getInstance, getBase, run_simulation, \
                 pause_simulation, stop_simulation,  get_simulated_time, get_real_time, run_up_to, reload_architecture, \
-                enable_fault_injection, showArchitecture, reset, load_architecture, reload_architecture, get_architecture_filename
+                enable_fault_injection, showArchitecture, reset, load_architecture, reload_architecture, get_architecture_filename, register_breakpoint
 
         # Assign scripting commands to manager, helper and controller methods
         reload_architecture = self.reload_architecture
@@ -336,6 +337,9 @@ class RespKernel:
         getComponents = self.manager.getComponents
         showArchitecture = self.manager.showArchitecture
         
+        import breakpoints
+        register_breakpoint = breakpoints.register_breakpoint       
+      
         import helper
         getAttrInstance =  helper.getAttrInstance
         getInstance = helper.getInstance
@@ -360,7 +364,7 @@ class RespKernel:
                                    getCompInstance, areConnected, getSources,  getTargets, getConnected, getComponents, \
                                    getAttrInstance,  getInstance, getBase, run_simulation, pause_simulation, \
                                    stop_simulation, get_simulated_time, get_real_time, run_up_to, enable_fault_injection, showArchitecture, reset, \
-                                   load_architecture, reload_architecture, get_architecture_filename]
+                                   load_architecture, reload_architecture, get_architecture_filename, register_breakpoint]
         
     def load_components(self, componentListFile):
         """Loads all components included in the ReSP. The complete list is contained in the componentListFile that has been built during compiling"""
@@ -505,6 +509,7 @@ class RespKernel:
             elif hasattr (globals()[name], '__del__'):
                 del globals()[name]
 
+      
     def delete_all(self):
         """Deletes all the object instances in namespaces whose base type is
         Boost.Python.instance; note that in case the simulation is still
@@ -514,8 +519,6 @@ class RespKernel:
             if self.verbose:
                 print 'killing the simulation'
             self.controller.stop_simulation()
-            import time
-            time.sleep(1)
        
         # kill the debugger process if the simulation is in debugging mode
         if self.debugger != None:
@@ -548,6 +551,10 @@ class RespKernel:
         # Reset power framework
         import power
         power.reset()
+        
+        # Reset breakpoints
+        import breakpoints
+        breakpoints.reset()
 
         # Reset SystemC (tricky)
         scwrapper.sc_get_curr_simcontext().reset()
