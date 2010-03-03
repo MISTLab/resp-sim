@@ -119,7 +119,6 @@ template <class wordSize> struct Processor{
             this->processorInstance.setPC(thread->thread_routine);
             this->processorInstance.setArgs(args);
             this->processorInstance.setSP(thread->stackBase);
-            this->processorInstance.setFP(thread->stackBase);
             this->processorInstance.setLR(thread->lastRetAddr);
         
         // Case 2, already existing thread
@@ -130,6 +129,10 @@ template <class wordSize> struct Processor{
                 this->processorInstance.setRetVal(thread->syscallRetVal);
             }
         }
+
+        #ifndef NDEBUG
+        std::cerr << "Scheduled thread " << this->runThread->id << " on processor " << this->processorInstance.getProcessorID() << std::endl;
+        #endif
 
         // Notify halted processors
         this->idleEvent.notify();
@@ -152,6 +155,10 @@ template <class wordSize> struct Processor{
         //this->processorInstance.clearState();
         this->processorInstance.setPC(nop_loop_address);
         this->processorInstance.setLR(nop_loop_address);
+        
+        #ifndef NDEBUG
+        std::cerr << "Descheduled thread " << tempThread->id << " on processor " << processorInstance.getProcessorID() << std::endl;
+        #endif
 
         return tempThread->id; 
 
@@ -252,6 +259,9 @@ class ConcurrencyManager{
 
         /// Contains allocated mutexes
         std::map<int, MutexEmu *> existingMutex;
+
+        /// Contains allocated semaphores
+        std::map<int, SemaphoreEmu *> existingSem;
         
         ///Store address and size of the thread stacks (of course there is no
         ///way of determining if a thread has grown over its stack)
@@ -348,6 +358,9 @@ class ConcurrencyManager{
             }
 
             this->managedProc[processorInstance.getProcessorID()] = new Processor<wordSize>(processorInstance);
+            #ifndef NDEBUG
+            std::cerr << "Instantiated processor " << processorInstance.getProcessorID() << std::endl;
+            #endif
             if(processorInstance.getProcessorID() + 1 > this->maxProcId)
                 this->maxProcId = processorInstance.getProcessorID() + 1;
         

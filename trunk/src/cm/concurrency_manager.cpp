@@ -464,7 +464,7 @@ int resp::ConcurrencyManager::createThread(unsigned int procId, unsigned int thr
     std::cerr << "Created thread Id = " << existingThreads.size() - 1 << \
                 " stack size = " << curStackSize/1024 << "KB" << " stack base " << \
                 std::showbase << std::hex << curStackBase << std::dec << " status " << \
-                th->status << " address " << std::hex << std::showbase << threadFun <<  std::endl;
+                th->status << " address " << std::hex << std::showbase << threadFun <<  std::endl << std::dec;
     #endif
 
     this->schedLock.unlock();
@@ -480,9 +480,9 @@ void resp::ConcurrencyManager::exitThread(unsigned int procId, unsigned int retV
     std::map<unsigned int, Processor<unsigned int>* >::iterator curProcIter = this->managedProc.find(procId);
     if(curProcIter == this->managedProc.end())
         THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
-    Processor<unsigned int> & curProc = *(curProcIter->second);
+    Processor<unsigned int> *curProc = curProcIter->second;
 
-    int th = curProc.deSchedule(ConcurrencyManager::nop_loop_address);
+    int th = curProc->deSchedule(this->nop_loop_address);
     // Update statistics for the just ended thread
 /*    if(this->existingThreads[th]->attr->schedPolicy == resp::SYSC_SCHED_EDF){
         if(sc_time_stamp().to_double() > this->existingThreads[th]->attr->deadline*1e3 )
@@ -523,7 +523,7 @@ void resp::ConcurrencyManager::exitThread(unsigned int procId, unsigned int retV
     //Now I have to schedule a new thread on the just freed processor
     ThreadEmu * readTh = this->findReadyThread();
     if(readTh != NULL){
-        curProc.schedule(readTh);
+        curProc->schedule(readTh);
     }
 
     this->schedLock.unlock();
@@ -813,7 +813,7 @@ void resp::ConcurrencyManager::join(int thId, unsigned int procId, unsigned int 
     }
     else{
         //I have to deschedule this thread
-        int curThread = curProcIter->second->deSchedule(ConcurrencyManager::nop_loop_address);
+        int curThread = curProcIter->second->deSchedule(this->nop_loop_address);
         //Now I have to reschedule the other threads in the system
         ThreadEmu * readTh = this->findReadyThread();
         if(readTh != NULL){
@@ -834,7 +834,7 @@ void resp::ConcurrencyManager::joinAll(unsigned int procId) {
         THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
   
     // Deschedule the current thread
-    int curThread = curProcIter->second->deSchedule(ConcurrencyManager::nop_loop_address);
+    int curThread = curProcIter->second->deSchedule(this->nop_loop_address);
     ThreadEmu * readTh = this->findReadyThread();
     if(readTh != NULL){
         curProcIter->second->schedule(readTh);
@@ -887,12 +887,12 @@ void resp::ConcurrencyManager::execCleanupHandlerTop(unsigned int procId){
 ///*********** Mutex related routines *******************
 ///Destroys a previously allocated mutex, exception if the mutex does not exist
 void resp::ConcurrencyManager::destroyMutex(unsigned int procId, int mutex){
-/*    if(existingMutex.find(mutex) == existingMutex.end()){
+    if(existingMutex.find(mutex) == existingMutex.end()){
         THROW_EXCEPTION("Cannot destroy mutex " << mutex << " unable to find it");
     }
 
     delete existingMutex[mutex];
-    existingMutex.erase(mutex);*/
+    existingMutex.erase(mutex);
 }
 int resp::ConcurrencyManager::createMutex(){
     int newMutId = 0;
@@ -913,8 +913,7 @@ int resp::ConcurrencyManager::createMutex(){
     }
     this->existingMutex[newMutId] = new MutexEmu();
     #ifndef NDEBUG
-//    if(procId != (unsigned int)-1)
-//       std::cerr << "Creating mutex " << newMutId << " Thread " << findProcessor(procId).runThread->id << std::endl;
+    std::cerr << "Creating mutex " << newMutId << std::endl;
     #endif
 
     return newMutId;
@@ -922,239 +921,231 @@ int resp::ConcurrencyManager::createMutex(){
 ///Locks the mutex, deschedules the thread if the mutex is busy; in case
 ///nonbl == true, the function behaves as a trylock
 bool resp::ConcurrencyManager::lockMutex(int mutex, unsigned int procId, bool nonbl){
-//     while(schedulingLockBusy)
-//         wait(schedulingEvent);
-//     schedulingLockBusy = true;
-//
-//     Processor &curProc = findProcessor(procId);
-//
-//     if(curProc.runThread == NULL)
-//         THROW_EXCEPTION("Mutex " << mutex << ": Current processor " << procId << " is not running any thread");
-//
-//     if(existingMutex.find(mutex) == existingMutex.end()){
-//         THROW_EXCEPTION(" Processor " << procId << " Thread " << curProc.runThread->id << " Cannot lock mutex " << mutex << " unable to find it");
-//     }
-//
-//     if(existingMutex[mutex]->owner == curProc.runThread){
-//         //Reentrant mutex, I have to increment the recursive index
-//         existingMutex[mutex]->recursiveIndex++;
-//         schedulingLockBusy = false;
-//         schedulingEvent.notify();
-//         return true;
-//     }
-//     if(existingMutex[mutex]->status == MutexEmu::FREE){
-//         existingMutex[mutex]->status = MutexEmu::LOCKED;
-//         existingMutex[mutex]->owner = curProc.runThread;
-//         #ifndef NDEBUG
-//         if(existingMutex[mutex]->recursiveIndex != 0)
-//             THROW_EXCEPTION("Mutex " << mutex << " is free, but it has recursive index " << existingMutex[mutex]->recursiveIndex);
-//         std::cerr << "Thread " << curProc.runThread->id << " locking free mutex " << mutex << std::endl;
-//         #endif
-//         schedulingLockBusy = false;
-//         schedulingEvent.notify();
-//         return true;
-//     }
-//     if(nonbl){
-//         schedulingLockBusy = false;
-//         schedulingEvent.notify();
-//         return false;
-//     }
-//
-//     #ifndef NDEBUG
-//     if(existingMutex[mutex]->owner->status == ThreadEmu::DEAD)
-//         THROW_EXCEPTION("Thread " << existingMutex[mutex]->owner->id << " died while being the owner of mutex " << mutex);
-//     std::cerr << "Thread " << curProc.runThread->id << " waiting on mutex " << mutex << std::endl;
-//     #endif
-//     //Finally here I have to deschedule the current thread since the mutex is busy
-//     int th = curProc.deSchedule();
-//     existingMutex[mutex]->waitingTh.push_back(existingThreads[th]);
-//     //Now I get the first ready thread and I schedule it on the processor
-//     ThreadEmu * readTh = findReadyThread();
-//     if(readTh != NULL){
-//         curProc.schedule(readTh);
-//     }
-//     schedulingLockBusy = false;
-//     schedulingEvent.notify();
-//
-//     return false;
+    this->schedLock.lock();
+
+    std::map<unsigned int, Processor<unsigned int>* >::const_iterator curProcIter = this->managedProc.find(procId);
+    if(curProcIter == this->managedProc.end())
+        THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
+
+    Processor<unsigned int> *curProc = curProcIter->second;
+
+    if(curProc->runThread == NULL) {
+       std::cerr << (unsigned int) curProc->runThread << std::endl;
+       THROW_EXCEPTION("Mutex " << mutex << ": Current processor " << procId << " is not running any thread");
+    }
+    if(existingMutex.find(mutex) == existingMutex.end()){
+         THROW_EXCEPTION(" Processor " << procId << " Thread " << curProc->runThread->id << " Cannot lock mutex " << mutex << " unable to find it");
+    }
+
+    if(existingMutex[mutex]->owner == curProc->runThread){
+        //Reentrant mutex, I have to increment the recursive index
+        existingMutex[mutex]->recursiveIndex++;
+        this->schedLock.unlock();
+        return true;
+    }
+
+    if(existingMutex[mutex]->status == MutexEmu::FREE){
+        existingMutex[mutex]->status = MutexEmu::LOCKED;
+        existingMutex[mutex]->owner = curProc->runThread;
+        #ifndef NDEBUG
+        if(existingMutex[mutex]->recursiveIndex != 0)
+            THROW_EXCEPTION("Mutex " << mutex << " is free, but it has recursive index " << existingMutex[mutex]->recursiveIndex);
+        std::cerr << "Thread " << curProc->runThread->id << " locking free mutex " << mutex << std::endl;
+        #endif
+        this->schedLock.unlock();
+        return true;
+
+    }
+
+    if(nonbl){
+        this->schedLock.unlock();
+        return false;
+    }
+
+    #ifndef NDEBUG
+    if(existingMutex[mutex]->owner->status == ThreadEmu::DEAD)
+        THROW_EXCEPTION("Thread " << existingMutex[mutex]->owner->id << " died while being the owner of mutex " << mutex);
+     std::cerr << "Thread " << curProc->runThread->id << " waiting on mutex " << mutex << std::endl;
+     #endif
+    //Finally here I have to deschedule the current thread since the mutex is busy
+    int th = curProc->deSchedule(this->nop_loop_address);
+    existingMutex[mutex]->waitingTh.push_back(existingThreads[th]);
+    //Now I get the first ready thread and I schedule it on the processor
+    ThreadEmu * readTh = findReadyThread();
+    if(readTh != NULL){
+         curProc->schedule(readTh);
+    }
+
+    this->schedLock.unlock();
+    return false;
 }
 ///Releases the lock on the mutex
 int resp::ConcurrencyManager::unLockMutex(int mutex, unsigned int procId){
-//     while(schedulingLockBusy)
-//         wait(schedulingEvent);
-//     schedulingLockBusy = true;
-//
-//     if(existingMutex.find(mutex) == existingMutex.end()){
-//         THROW_EXCEPTION("Cannot free mutex " << mutex << " unable to find it");
-//     }
-//
-//     //If the mutex is not locked I simply return
-//     if(existingMutex[mutex]->owner == NULL){
-//         #ifndef NDEBUG
-//         //I check that the status of the mutex is coherent
-//         if(existingMutex[mutex]->status != MutexEmu::FREE || existingMutex[mutex]->waitingTh.size() > 0){
-//             THROW_EXCEPTION("The mutex " << mutex << " is free, but its status is not coherent");
-//         }
-//         #endif
-//
-//         schedulingLockBusy = false;
-//         schedulingEvent.notify();
-//
-//         return -1;
-//     }
-//     //I check that I'm the owner of the mutex, otherwise I raise an exception
-//     Processor &curProc = findProcessor(procId);
-//     #ifndef NDEBUG
-//     if(curProc.runThread == NULL){
-//         THROW_EXCEPTION("Free mutex: the current processor " << curProc.procIf->getId() << " is executing a NULL thread??");
-//     }
-//     #endif
-//     if(existingMutex[mutex]->owner != curProc.runThread){
-//         THROW_EXCEPTION("Cannot free mutex " << mutex << " the owner " << existingMutex[mutex]->owner->id << " is not the current thread " << curProc.runThread->id);
-//     }
-//     //Now I check to see if I'm in a recursive situation
-//     if(existingMutex[mutex]->recursiveIndex > 0){
-//         #ifndef NDEBUG
-//         std::cerr << "Exiting recursive mutex, current index " << existingMutex[mutex]->recursiveIndex << std::endl;
-//         #endif
-//         existingMutex[mutex]->recursiveIndex--;
-//
-//         schedulingLockBusy = false;
-//         schedulingEvent.notify();
-//
-//         return -1;
-//     }
-//     //Now I have to awake the first thread which is waiting on the mutex
-//     if(existingMutex[mutex]->waitingTh.size() > 0){
-//         ThreadEmu * toAwakeTh = existingMutex[mutex]->waitingTh.front();
-//         existingMutex[mutex]->waitingTh.pop_front();
-//         toAwakeTh->status = ThreadEmu::READY;
-//         addReadyThread(toAwakeTh);
-//         existingMutex[mutex]->owner = toAwakeTh;
-//         #ifndef NDEBUG
-//         std::cerr << "Thread " << curProc.runThread->id << " giving mutex " << mutex << " to thread " << toAwakeTh->id << std::endl;
-//         #endif
-//
-//         schedulingLockBusy = false;
-//         schedulingEvent.notify();
-//
-//         return toAwakeTh->id;
-//     }
-//     else{
-//         #ifndef NDEBUG
-//         std::cerr << "Thread " << curProc.runThread->id << " releasing mutex " << mutex << std::endl;
-//         #endif
-//         //Finally I can clear the mutex status
-//         existingMutex[mutex]->status = MutexEmu::FREE;
-//         existingMutex[mutex]->owner = NULL;
-//         existingMutex[mutex]->waitingTh.clear();
-//
-//         schedulingLockBusy = false;
-//         schedulingEvent.notify();
-//
-//         return -1;
-//     }
-//     schedulingLockBusy = false;
-//     schedulingEvent.notify();
-//     return -1;
+    this->schedLock.lock();
+
+    if(existingMutex.find(mutex) == existingMutex.end()){
+        THROW_EXCEPTION("Cannot free mutex " << mutex << " unable to find it");
+    }
+
+    //If the mutex is not locked I simply return
+    if(existingMutex[mutex]->owner == NULL){
+        #ifndef NDEBUG
+        //I check that the status of the mutex is coherent
+        if(existingMutex[mutex]->status != MutexEmu::FREE || existingMutex[mutex]->waitingTh.size() > 0){
+            THROW_EXCEPTION("The mutex " << mutex << " is free, but its status is not coherent");
+        }
+        #endif
+        this->schedLock.unlock();
+ 
+        return -1;
+    }
+ 
+    //I check that I'm the owner of the mutex, otherwise I raise an exception
+    Processor<unsigned int> *curProc = managedProc[procId];
+    #ifndef NDEBUG
+    if(curProc->runThread == NULL){
+        THROW_EXCEPTION("Free mutex: the current processor " << curProc->processorInstance.getProcessorID() << " is executing a NULL thread??");
+    }
+    #endif
+
+    if(existingMutex[mutex]->owner != curProc->runThread){
+        THROW_EXCEPTION("Cannot free mutex " << mutex << " the owner " << existingMutex[mutex]->owner->id << " is not the current thread " << curProc->runThread->id);
+    }
+
+    //Now I check to see if I'm in a recursive situation
+    if(existingMutex[mutex]->recursiveIndex > 0){
+        #ifndef NDEBUG
+        std::cerr << "Exiting recursive mutex, current index " << existingMutex[mutex]->recursiveIndex << std::endl;
+        #endif
+        existingMutex[mutex]->recursiveIndex--;
+        this->schedLock.unlock();
+        return -1;
+    }
+
+    //Now I have to awake the first thread which is waiting on the mutex
+    if(existingMutex[mutex]->waitingTh.size() > 0){
+        ThreadEmu * toAwakeTh = existingMutex[mutex]->waitingTh.front();
+        existingMutex[mutex]->waitingTh.pop_front();
+        toAwakeTh->status = ThreadEmu::READY;
+        readyQueue->push_back(toAwakeTh);
+        existingMutex[mutex]->owner = toAwakeTh;
+        #ifndef NDEBUG
+        std::cerr << "Thread " << curProc->runThread->id << " giving mutex " << mutex << " to thread " << toAwakeTh->id << std::endl;
+        #endif
+
+        this->schedLock.unlock();
+        return toAwakeTh->id;
+    } else {
+        #ifndef NDEBUG
+        std::cerr << "Thread " << curProc->runThread->id << " releasing mutex " << mutex << std::endl;
+        #endif
+        //Finally I can clear the mutex status
+        existingMutex[mutex]->status = MutexEmu::FREE;
+        existingMutex[mutex]->owner = NULL;
+        existingMutex[mutex]->waitingTh.clear();
+
+        this->schedLock.unlock();
+        return -1;
+    }
+    
+    this->schedLock.unlock();
+    return -1;
 }
 
 ///*********** Semaphore related routines *******************
 int resp::ConcurrencyManager::createSem(unsigned int procId, int initialValue){
-//     int newSemId = 0;
-//     if(existingSem.size() > 0){
-//         std::map<int, SemaphoreEmu *>::iterator semBeg, semEnd;
-//         for(semBeg = existingSem.begin(), semEnd = existingSem.end(); semBeg != semEnd; semBeg++){
-//             std::map<int, SemaphoreEmu *>::iterator next = semBeg;
-//             next++;
-//             if(next == semEnd){
-//                 newSemId = semBeg->first + 1;
-//                 break;
-//             }
-//             else if(semBeg->first + 1 < next->first){
-//                 newSemId = semBeg->first + 1;
-//                 break;
-//             }
-//         }
-//     }
-//     existingSem[newSemId] = new SemaphoreEmu(initialValue);
-//     #ifndef NDEBUG
-//     std::cerr << "Creating semaphore " << newSemId << " Thread " << findProcessor(procId).runThread->id << std::endl;
-//     #endif
-//     return newSemId;
+    int newSemId = 0;
+    if(existingSem.size() > 0){
+        std::map<int, SemaphoreEmu *>::iterator semBeg, semEnd;
+        for(semBeg = existingSem.begin(), semEnd = existingSem.end(); semBeg != semEnd; semBeg++){
+            std::map<int, SemaphoreEmu *>::iterator next = semBeg;
+            next++;
+            if(next == semEnd){
+                newSemId = semBeg->first + 1;
+                break;
+            }
+            else if(semBeg->first + 1 < next->first){
+                newSemId = semBeg->first + 1;
+                break;
+            }
+        }
+    }
+    existingSem[newSemId] = new SemaphoreEmu(initialValue);
+    #ifndef NDEBUG
+    std::cerr << "Creating semaphore " << newSemId << " Thread " << managedProc[procId]->runThread->id << std::endl;
+    #endif
+    return newSemId;
 }
 void resp::ConcurrencyManager::destroySem(unsigned int procId, int sem){
-//     if(existingSem.find(sem) == existingSem.end()){
-//         THROW_EXCEPTION("Cannot destroy semaphore " << sem << " unable to find it");
-//     }
-//     #ifndef NDEBUG
-//     if(existingSem[sem]->waitingTh.size() > 0)
-//         THROW_EXCEPTION("Cannot destroy semaphore " << sem << " there are waiting threads");
-//     std::cerr << "Destroying semaphore " << sem << " Thread " << findProcessor(procId).runThread->id << std::endl;
-//     #endif
-//     delete existingSem[sem];
-//     existingSem.erase(sem);
+    if(existingSem.find(sem) == existingSem.end()){
+        THROW_EXCEPTION("Cannot destroy semaphore " << sem << " unable to find it");
+    }
+    #ifndef NDEBUG
+    if(existingSem[sem]->waitingTh.size() > 0)
+        THROW_EXCEPTION("Cannot destroy semaphore " << sem << " there are waiting threads");
+    std::cerr << "Destroying semaphore " << sem << " Thread " << managedProc[procId]->runThread->id << std::endl;
+    #endif
+    delete existingSem[sem];
+    existingSem.erase(sem);
 }
 void resp::ConcurrencyManager::postSem(int sem, unsigned int procId){
-//     while(schedulingLockBusy)
-//         wait(schedulingEvent);
-//     schedulingLockBusy = true;
-//
-//     //I simply have to increment the value of the semaphore; I then check if there are
-//     //threads waiting on the semaphore and I awake them in case
-//     if(existingSem.find(sem) == existingSem.end()){
-//         THROW_EXCEPTION("Cannot post semaphore " << sem << " unable to find it");
-//     }
-//
-//     #ifndef NDEBUG
-//     if(existingSem[sem]->waitingTh.size() > 0 && existingSem[sem]->value > 0){
-//         THROW_EXCEPTION("Semaphore " << sem << " has value " << existingSem[sem]->value << " but there are waiting threads");
-//     }
-//     #endif
-//     if(existingSem[sem]->waitingTh.size() > 0){
-//         ThreadEmu * toAwakeTh = existingSem[sem]->waitingTh.front();
-//         existingSem[sem]->waitingTh.pop_front();
-//         toAwakeTh->status = ThreadEmu::READY;
-//         addReadyThread(toAwakeTh);
-//         #ifndef NDEBUG
-//         Processor &curProc = findProcessor(procId);
-//         std::cerr << "Thread " << curProc.runThread->id << " giving semaphore " << sem << " to thread " << toAwakeTh->id << std::endl;
-//         #endif
-//     }
-//     else
-//         existingSem[sem]->value++;
-//     schedulingLockBusy = false;
-//     schedulingEvent.notify();
+
+    this->schedLock.lock();
+
+    //I simply have to increment the value of the semaphore; I then check if there are
+    //threads waiting on the semaphore and I awake them in case
+    if(existingSem.find(sem) == existingSem.end()){
+        THROW_EXCEPTION("Cannot post semaphore " << sem << " unable to find it");
+    }
+
+    #ifndef NDEBUG
+    if(existingSem[sem]->waitingTh.size() > 0 && existingSem[sem]->value > 0){
+        THROW_EXCEPTION("Semaphore " << sem << " has value " << existingSem[sem]->value << " but there are waiting threads");
+    }
+    #endif
+    if(existingSem[sem]->waitingTh.size() > 0){
+        ThreadEmu * toAwakeTh = existingSem[sem]->waitingTh.front();
+        existingSem[sem]->waitingTh.pop_front();
+        toAwakeTh->status = ThreadEmu::READY;
+        readyQueue->push_back(toAwakeTh);
+        #ifndef NDEBUG
+        std::cerr << "Thread " << managedProc[procId]->runThread->id << " giving semaphore " << sem << " to thread " << toAwakeTh->id << std::endl;
+        #endif
+    }
+    else
+        existingSem[sem]->value++;
+
+    this->schedLock.unlock();
+
 }
 void resp::ConcurrencyManager::waitSem(int sem, unsigned int procId){
-//     while(schedulingLockBusy)
-//         wait(schedulingEvent);
-//     schedulingLockBusy = true;
-//
-//     //If the value of the semaphore is 0 I wait,  otherwise the value gets
-//     //decremented and I can return
-//     if(existingSem.find(sem) == existingSem.end()){
-//         THROW_EXCEPTION("Cannot post semaphore " << sem << " unable to find it");
-//     }
-//
-//     if(existingSem[sem]->value > 0)
-//         existingSem[sem]->value--;
-//     else{
-//         //Finally here I have to deschedule the current thread since the semaphore is empty
-//         Processor &curProc = findProcessor(procId);
-//         int th = curProc.deSchedule();
-//         existingSem[sem]->waitingTh.push_back(existingThreads[th]);
-//         #ifndef NDEBUG
-//         std::cerr << "DeScheduling thread " << th << " because semaphore " << sem << " has value " << existingSem[sem]->value << std::endl;
-//         #endif
-//         //Now I get the first ready thread and I schedule it on the processor
-//         ThreadEmu * readTh = findReadyThread();
-//         if(readTh != NULL){
-//             curProc.schedule(readTh);
-//         }
-//     }
-//     schedulingLockBusy = false;
-//     schedulingEvent.notify();
+
+    this->schedLock.lock();
+
+    //If the value of the semaphore is 0 I wait,  otherwise the value gets
+    //decremented and I can return
+    if(existingSem.find(sem) == existingSem.end()){
+        THROW_EXCEPTION("Cannot post semaphore " << sem << " unable to find it");
+    }
+
+    if(existingSem[sem]->value > 0)
+        existingSem[sem]->value--;
+    else{
+        //Finally here I have to deschedule the current thread since the semaphore is empty
+        Processor<unsigned int> *curProc = managedProc[procId];
+        int th = curProc->deSchedule(nop_loop_address);
+        existingSem[sem]->waitingTh.push_back(existingThreads[th]);
+        #ifndef NDEBUG
+        std::cerr << "DeScheduling thread " << th << " because semaphore " << sem << " has value " << existingSem[sem]->value << std::endl;
+        #endif
+        //Now I get the first ready thread and I schedule it on the processor
+        ThreadEmu * readTh = findReadyThread();
+        if(readTh != NULL){
+            curProc->schedule(readTh);
+        }
+    }
+
+    this->schedLock.unlock();
 }
 
 ///*********** Condition Variable related routines *******************

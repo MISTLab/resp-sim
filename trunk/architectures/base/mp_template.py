@@ -56,7 +56,7 @@ MEM_LATENCY       = 0.0             # ns
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'simpleTestPT'
+    SOFTWARE = 'crc'
 
 if SOFTWARE:
     try:
@@ -142,10 +142,12 @@ if OS_EMULATION:
         
         ##### CONCURRENCY MANAGEMENT #####
         concurrentEmu = cm_wrapper.ConcurrencyEmulator32(processors[i].getInterface(),memorySize)
-        concurrentEmu.initSysCalls(SOFTWARE)
+        concurrentEmu.initSysCalls(SOFTWARE,True)
 
         processors[i].toolManager.addTool(curEmu)
         processors[i].toolManager.addTool(concurrentEmu)
         tools.append(curEmu)
         tools.append(concurrentEmu)
-
+    
+    # OpenMP Support
+    trapwrapper.OSEmulatorBase.set_environ('OMP_NUM_THREADS', str(PROCESSOR_NUMBER)) 
