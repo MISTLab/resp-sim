@@ -119,8 +119,6 @@ unsigned char * arm7tdmi_funclt_trap::ARM7TDMI_ABIIf::getState() const throw(){
     unsigned char * curStateTemp = curState;
     *((unsigned int *)curStateTemp) = this->CPSR.readNewValue();
     curStateTemp += 4;
-    *((unsigned int *)curStateTemp) = this->MP_ID.readNewValue();
-    curStateTemp += 4;
     *((unsigned int *)curStateTemp) = this->RB[0].readNewValue();
     curStateTemp += 4;
     *((unsigned int *)curStateTemp) = this->RB[1].readNewValue();
@@ -197,8 +195,6 @@ unsigned char * arm7tdmi_funclt_trap::ARM7TDMI_ABIIf::getState() const throw(){
 void arm7tdmi_funclt_trap::ARM7TDMI_ABIIf::setState( unsigned char * state ) throw(){
     unsigned char * curStateTemp = state;
     this->CPSR.immediateWrite(*((unsigned int *)curStateTemp));
-    curStateTemp += 4;
-    this->MP_ID.immediateWrite(*((unsigned int *)curStateTemp));
     curStateTemp += 4;
     this->RB[0].immediateWrite(*((unsigned int *)curStateTemp));
     curStateTemp += 4;

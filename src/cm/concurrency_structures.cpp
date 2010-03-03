@@ -73,7 +73,11 @@ void ThreadEmu::ExecutionTrace::clear(){
     this->endAddress = 0;
 }
 
-MutexEmu::MutexEmu() {}
+MutexEmu::MutexEmu() : waitingTh() {
+    status = FREE;
+    owner = NULL;
+    recursiveIndex = 0;
+}
 MutexEmu::~MutexEmu() {}
 
 SemaphoreEmu::SemaphoreEmu(int initialValue){
