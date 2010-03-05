@@ -262,6 +262,9 @@ class ConcurrencyManager{
 
         /// Contains allocated semaphores
         std::map<int, SemaphoreEmu *> existingSem;
+
+        /// Contains allocated semaphores
+        std::map<int, ConditionEmu *> existingCond;
         
         ///Store address and size of the thread stacks (of course there is no
         ///way of determining if a thread has grown over its stack)

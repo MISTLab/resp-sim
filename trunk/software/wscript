@@ -40,7 +40,7 @@ architecture_flags = {
 def build(bld):
 
     TaskGen.declare_extension(['.S','.s'], cc.c_hook)
-    folders = 'lib/pthread_stub apps simple_benchmarks test_code'
+    folders = 'lib apps simple_benchmarks suites test_code'
     bld.add_subdirs(folders)
 
 def set_options(opt):
@@ -112,7 +112,7 @@ def configure(conf):
                 env_variant['CC'] = env_variant['LINK_CC'] = cross
                 env_variant['CPPFLAGS'] = []
                 env_variant['CPPPATH'] = []
-                env_variant.append_unique('CPPPATH', '../software/os/myPosixLayer')
+                env_variant.append_unique('CPPPATH', '../lib/pthread_stub')
                 env_variant['CFLAGS'] = cross_cflags + architecture_flags[arch]
                 env_variant['CCFLAGS'] = env_variant['CFLAGS']
                 env_variant['LINKFLAGS'] = cross_linkflags

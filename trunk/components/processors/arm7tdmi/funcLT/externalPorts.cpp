@@ -450,7 +450,7 @@ void arm7tdmi_funclt_trap::TLMMemory::write_word_dbg( const unsigned int & addre
     if(address == 0xfffffff0L){
         this->MP_ID = datum;
         return;
-    }
+    } 
     tlm::tlm_generic_payload trans;
     trans.set_address(address);
     trans.set_write();
