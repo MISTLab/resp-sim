@@ -42,6 +42,41 @@
 
 
 # Build
-
 def build(bld):
-    bld.add_subdirs('simpleMem simpleCache coherentCache')
+    obj = bld.new_task_gen('pypp')
+    obj.source = """
+        CoherentCacheLT.hpp
+    """
+    obj.target = 'CoherentCacheLT32'
+    obj.uselib = 'BOOST BOOST_PYTHON TLM SYSTEMC_H'
+    obj.uselib_local = 'systemc utils'
+    obj.include = 'scwrapper tlmwrapper'
+    obj.start_decls = 'CoherentCacheLT'
+    obj.templates = ['CoherentCacheLT<unsigned int>']
+    obj.custom_code = """
+cls = mb.global_ns.classes(lambda decl : decl.name.startswith('CoherentCacheLT') )
+for i in cls:
+    i.include()
+    i.alias = 'CoherentCacheLT32'
+    try:
+        mb.global_ns.member_function('get_direct_mem_ptr').exclude()
+    except:
+        pass
+"""
+
+    obj = bld.new_task_gen('pypp')
+    obj.source = """
+        DirectoryLT.hpp
+    """
+    obj.target = 'DirectoryLT32'
+    obj.uselib = 'BOOST BOOST_PYTHON TLM SYSTEMC_H'
+    obj.uselib_local = 'systemc utils'
+    obj.include = 'scwrapper tlmwrapper'
+    obj.start_decls = 'DirectoryLT'
+    obj.templates = ['DirectoryLT<unsigned int>']
+    obj.custom_code = """
+cls = mb.global_ns.classes(lambda decl : decl.name.startswith('DirectoryLT') )
+for i in cls:
+    i.include()
+    i.alias = 'DirectoryLT32'
+"""

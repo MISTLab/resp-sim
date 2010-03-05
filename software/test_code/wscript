@@ -20,3 +20,5 @@ def build( bld ):
                 obj.target = os.path.splitext(f)[0]
             else:
                 obj.clone(arch)
+
+    bld.add_subdirs('pthread')
