@@ -1,0 +1,35 @@
+#!/usr/bin/env python
+
+import sys,os
+
+def build(bld):
+
+    for arch in bld.lst_variants:
+        if arch == 'default': continue
+
+        libs = 'gomp_'+arch+' '
+
+        obj = bld.new_task_gen('cxx','staticlib')
+        obj.env = bld.env_of_name(arch).copy()
+        obj.source = """
+            ompscrCommon_pp.cpp
+            wtime_pp.cpp
+        """
+        obj.target = 'ompsrc_cpp'
+        obj.name = 'ompsrc_cpp_'+arch
+        obj.includes = '../include'
+        obj.uselib_local = libs
+        obj.env.append_unique('CXXFLAGS', '-fopenmp')
+
+        obj = bld.new_task_gen('cc','staticlib')
+        obj.env = bld.env_of_name(arch).copy()
+        obj.source = """
+            ompscrCommon.c
+            wtime.c
+        """
+        obj.target = 'ompsrc_cc'
+        obj.name = 'ompsrc_cc_'+arch
+        obj.includes = '../include'
+        obj.uselib_local = libs
+        obj.env.append_unique('CFLAGS', '-fopenmp')
+        obj.env.append_unique('CCFLAGS', '-fopenmp')

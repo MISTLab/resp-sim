@@ -1,0 +1,86 @@
+#!/usr/bin/env python
+
+def build(bld):
+
+    for arch in bld.lst_variants:
+        if arch == 'default' or arch.startswith('ecos') : continue
+        
+        local_libs = 'ompsrc_cpp_%s gomp_%s pthread_stub_%s' % ( arch, arch, arch)
+
+        obj = bld.new_task_gen('cxx','program')
+        obj.env = bld.env_of_name(arch).copy()
+        obj.source = """
+            cpp_qsomp1.cpp
+        """
+        obj.target = 'cpp_qsomp1'
+        obj.includes = '../../include'
+        obj.uselib_local = local_libs
+        obj.env.append_unique('CFLAGS', '-fopenmp')
+        obj.env.append_unique('CCFLAGS', '-fopenmp')
+        obj.env.append_unique('CXXFLAGS', '-fopenmp')
+        obj.env.append_unique('LINKFLAGS', '-lm')
+
+        obj = bld.new_task_gen('cxx','program')
+        obj.env = bld.env_of_name(arch).copy()
+        obj.source = """
+            cpp_qsomp2.cpp
+        """
+        obj.target = 'cpp_qsomp2'
+        obj.includes = '../../include'
+        obj.uselib_local = local_libs
+        obj.env.append_unique('CFLAGS', '-fopenmp')
+        obj.env.append_unique('CCFLAGS', '-fopenmp')
+        obj.env.append_unique('CXXFLAGS', '-fopenmp')
+        obj.env.append_unique('LINKFLAGS', '-lm')
+
+        obj = bld.new_task_gen('cxx','program')
+        obj.env = bld.env_of_name(arch).copy()
+        obj.source = """
+            cpp_qsomp3.cpp
+        """
+        obj.target = 'cpp_qsomp3'
+        obj.includes = '../../include'
+        obj.uselib_local = local_libs
+        obj.env.append_unique('CFLAGS', '-fopenmp')
+        obj.env.append_unique('CCFLAGS', '-fopenmp')
+        obj.env.append_unique('CXXFLAGS', '-fopenmp')
+        obj.env.append_unique('LINKFLAGS', '-lm')
+
+        obj = bld.new_task_gen('cxx','program')
+        obj.env = bld.env_of_name(arch).copy()
+        obj.source = """
+            cpp_qsomp4.cpp
+        """
+        obj.target = 'cpp_qsomp4'
+        obj.includes = '../../include'
+        obj.uselib_local = local_libs
+        obj.env.append_unique('CFLAGS', '-fopenmp')
+        obj.env.append_unique('CCFLAGS', '-fopenmp')
+        obj.env.append_unique('CXXFLAGS', '-fopenmp')
+        obj.env.append_unique('LINKFLAGS', '-lm')
+
+        obj = bld.new_task_gen('cxx','program')
+        obj.env = bld.env_of_name(arch).copy()
+        obj.source = """
+            cpp_qsomp5.cpp
+        """
+        obj.target = 'cpp_qsomp5'
+        obj.includes = '../../include'
+        obj.uselib_local = local_libs
+        obj.env.append_unique('CFLAGS', '-fopenmp')
+        obj.env.append_unique('CCFLAGS', '-fopenmp')
+        obj.env.append_unique('CXXFLAGS', '-fopenmp')
+        obj.env.append_unique('LINKFLAGS', '-lm')
+
+        obj = bld.new_task_gen('cxx','program')
+        obj.env = bld.env_of_name(arch).copy()
+        obj.source = """
+            cpp_qsomp6.cpp
+        """
+        obj.target = 'cpp_qsomp6'
+        obj.includes = '../../include'
+        obj.uselib_local = local_libs
+        obj.env.append_unique('CFLAGS', '-fopenmp')
+        obj.env.append_unique('CCFLAGS', '-fopenmp')
+        obj.env.append_unique('CXXFLAGS', '-fopenmp')
+        obj.env.append_unique('LINKFLAGS', '-lm')
