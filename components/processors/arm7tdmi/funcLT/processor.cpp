@@ -477,13 +477,11 @@ arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::Processor_arm7tdmi_funclt( sc_m
 
 arm7tdmi_funclt_trap::Processor_arm7tdmi_funclt::~Processor_arm7tdmi_funclt(){
     Processor_arm7tdmi_funclt::numInstances--;
-    if(Processor_arm7tdmi_funclt::numInstances == 0){
-        for(int i = 0; i < 76; i++){
+    for(int i = 0; i < 76; i++){
             delete this->INSTRUCTIONS[i];
         }
-        delete [] this->INSTRUCTIONS;
-        this->INSTRUCTIONS = NULL;
-    }
+    delete [] this->INSTRUCTIONS;
+    this->INSTRUCTIONS = NULL;
     template_map< unsigned int, CacheElem >::const_iterator cacheIter, cacheEnd;
     for(cacheIter = this->instrCache.begin(), cacheEnd = this->instrCache.end(); cacheIter \
         != cacheEnd; cacheIter++){

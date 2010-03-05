@@ -40,23 +40,23 @@
 ##############################################################################
 
 ###### GENERAL PARAMETERS #####
-PROCESSOR_FREQUENCY = 1000        # MHz
-PROCESSOR_NUMBER    = 2           #
+PROCESSOR_FREQUENCY = 500         # MHz
+PROCESSOR_NUMBER    = 6           #
 try:
     PROCESSOR_NAMESPACE
 except:
     PROCESSOR_NAMESPACE = arm7tdmi_funcLT_wrapper
 
 # Memory/bus
-MEMORY_SIZE       = 32              # MBytes
-MEM_LATENCY       = 0.0             # ns
+MEMORY_SIZE       = 32             # MBytes
+MEM_LATENCY       = 10.0           # ns
 
 
 # Software
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'crc'
+    SOFTWARE = 'c_md'
 
 if SOFTWARE:
     try:
@@ -97,7 +97,7 @@ mem = MemoryLT32.MemoryLT32( 'mem', memorySize, latencyMem)
 ##### INTERCONNECTIONS #########################
 ################################################
 
-bus  = BusLT32.BusLT32('bus',scwrapper.SC_ZERO_TIME,1)
+bus  = BusLT32.BusLT32('bus',scwrapper.SC_ZERO_TIME)
 
 ##### BUS CONNECTIONS #####
 # Connecting the master components to the bus

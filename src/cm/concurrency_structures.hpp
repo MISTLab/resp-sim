@@ -133,6 +133,7 @@ struct MutexEmu{
 ///Internal representation of a sempahore
 struct SemaphoreEmu{
     unsigned int value;
+    ThreadEmu * owner;
     std::list<ThreadEmu *> waitingTh;
 
     SemaphoreEmu(int initialValue = 0);

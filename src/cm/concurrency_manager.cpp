@@ -49,6 +49,9 @@
 
 #include "bfdWrapper.hpp"
 #include "concurrency_manager.hpp"
+#ifdef NDEBUG
+//#undef NDEBUG
+#endif
 
 //Initialization of some static variables
 const int resp::ConcurrencyManager::SYSC_SCHED_FIFO = 0;
@@ -344,7 +347,7 @@ int resp::ConcurrencyManager::createThread(unsigned int procId, unsigned int thr
         curStackSize = resp::ConcurrencyManager::threadStackSize;
     }
     else{
-        curStackSize = existingAttr[attr]->stackSize;
+        curStackSize = getStackSize(attr);
     }
     //I have to determine if there is space for the stack among two already existing ones
     //or if I have to position myself at the end of the stack
@@ -538,7 +541,7 @@ int resp::ConcurrencyManager::createThreadAttr(){
     int newAttrId = 0;
     if(this->existingAttr.size() > 0)
         newAttrId = this->existingAttr.rbegin()->first + 1;
-    this->existingAttr[newAttrId] = new AttributeEmu();
+    this->existingAttr[newAttrId] = new AttributeEmu(resp::ConcurrencyManager::threadStackSize);
     this->existingAttr[newAttrId]->id = newAttrId;
     return newAttrId;
 }
@@ -1071,6 +1074,7 @@ int resp::ConcurrencyManager::createSem(unsigned int procId, int initialValue){
         }
     }
     existingSem[newSemId] = new SemaphoreEmu(initialValue);
+    existingSem[newSemId]->owner = managedProc[procId]->runThread;
     #ifndef NDEBUG
     std::cerr << "Creating semaphore " << newSemId << " Thread " << managedProc[procId]->runThread->id << std::endl;
     #endif
@@ -1111,9 +1115,15 @@ void resp::ConcurrencyManager::postSem(int sem, unsigned int procId){
         #ifndef NDEBUG
         std::cerr << "Thread " << managedProc[procId]->runThread->id << " giving semaphore " << sem << " to thread " << toAwakeTh->id << std::endl;
         #endif
+        existingSem[sem]->owner = toAwakeTh;
     }
-    else
+    else { 
+        existingSem[sem]->owner = managedProc[procId]->runThread;
         existingSem[sem]->value++;
+    }
+    #ifndef NDEBUG
+    std::cerr << "Semaphore " << sem << " now owned by thread " << existingSem[sem]->owner->id << std::endl;
+    #endif    
 
     this->schedLock.unlock();
 
@@ -1128,15 +1138,17 @@ void resp::ConcurrencyManager::waitSem(int sem, unsigned int procId){
         THROW_EXCEPTION("Cannot post semaphore " << sem << " unable to find it");
     }
 
-    if(existingSem[sem]->value > 0)
+    
+    if(existingSem[sem]->value > 0) {
         existingSem[sem]->value--;
-    else{
+        existingSem[sem]->owner = managedProc[procId]->runThread;
+    } else if( existingSem[sem]->owner != managedProc[procId]->runThread ) {
         //Finally here I have to deschedule the current thread since the semaphore is empty
         Processor<unsigned int> *curProc = managedProc[procId];
         int th = curProc->deSchedule(nop_loop_address);
         existingSem[sem]->waitingTh.push_back(existingThreads[th]);
         #ifndef NDEBUG
-        std::cerr << "DeScheduling thread " << th << " because semaphore " << sem << " has value " << existingSem[sem]->value << std::endl;
+        std::cerr << "DeScheduling thread " << th << " because semaphore " << sem << " (owner=" << existingSem[sem]->owner->id << ") has value " << existingSem[sem]->value << std::endl;
         #endif
         //Now I get the first ready thread and I schedule it on the processor
         ThreadEmu * readTh = findReadyThread();
@@ -1144,41 +1156,41 @@ void resp::ConcurrencyManager::waitSem(int sem, unsigned int procId){
             curProc->schedule(readTh);
         }
     }
-
     this->schedLock.unlock();
 }
 
 ///*********** Condition Variable related routines *******************
 int resp::ConcurrencyManager::createCond(unsigned int procId){
-//     int newCondId = 0;
-//     if(existingCond.size() > 0){
-//         std::map<int, ConditionEmu *>::iterator condBeg, condEnd;
-//         for(condBeg = existingCond.begin(), condEnd = existingCond.end(); condBeg != condEnd; condBeg++){
-//             std::map<int, ConditionEmu *>::iterator next = condBeg;
-//             next++;
-//             if(next == condEnd){
-//                 newCondId = condBeg->first + 1;
-//                 break;
-//             }
-//             else if(condBeg->first + 1 < next->first){
-//                 newCondId = condBeg->first + 1;
-//                 break;
-//             }
-//         }
-//     }
-//
-//     existingCond[newCondId] = new ConditionEmu();
-//     return newCondId;
+    int newCondId = 0;
+    if(existingCond.size() > 0){
+        std::map<int, ConditionEmu *>::iterator condBeg, condEnd;
+        for(condBeg = existingCond.begin(), condEnd = existingCond.end(); condBeg != condEnd; condBeg++){
+            std::map<int, ConditionEmu *>::iterator next = condBeg;
+            next++;
+            if(next == condEnd){
+                newCondId = condBeg->first + 1;
+                break;
+            }
+            else if(condBeg->first + 1 < next->first){
+                newCondId = condBeg->first + 1;
+                break;
+            }
+        }
+    }
+
+    existingCond[newCondId] = new ConditionEmu();
+    return newCondId;
 }
 void resp::ConcurrencyManager::destroyCond(unsigned int procId, int cond){
-//     if(existingCond.find(cond) == existingCond.end()){
-//         THROW_EXCEPTION("Cannot destroy condition variable " << cond << ": unable to find it");
-//     }
-//
-//     delete existingCond[cond];
-//     existingCond.erase(cond);
+    if(existingCond.find(cond) == existingCond.end()){
+        THROW_EXCEPTION("Cannot destroy condition variable " << cond << ": unable to find it");
+    }
+
+    delete existingCond[cond];
+    existingCond.erase(cond);
 }
 void resp::ConcurrencyManager::signalCond(int cond, bool broadcast, unsigned int procId){
+    std::cerr << "signal condition NOT IMPLEMENTED\n";
 //     //I simply have to awake the threads waiting on this condition;
 //     //note that when the thread is awaken, it has to acquire the mutex
 //     //associated with the condition variable; in case it cannot it
@@ -1256,6 +1268,7 @@ void resp::ConcurrencyManager::signalCond(int cond, bool broadcast, unsigned int
 //     schedulingEvent.notify();
 }
 int resp::ConcurrencyManager::waitCond(int cond, int mutex, double time, unsigned int procId){
+    std::cerr << "wait condition NOT IMPLEMENTED\n";
 //     while(schedulingLockBusy)
 //         wait(schedulingEvent);
 //     schedulingLockBusy = true;

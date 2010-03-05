@@ -15,6 +15,6 @@ def build(bld):
             obj.source = 'empty.c'
         else:
             obj.find_sources_in_dirs('.')
-        obj.name         = 'posixLayer_'+arch
-        obj.target       = 'posixLayer_'+arch
+        obj.name         = 'pthread_stub_'+arch
+        obj.target       = 'pthread_stub_'+arch
         obj.export_incdirs = '.'

@@ -82,6 +82,7 @@ MutexEmu::~MutexEmu() {}
 
 SemaphoreEmu::SemaphoreEmu(int initialValue){
     this->value = initialValue;
+    this->owner = NULL;
 }
 
 SemaphoreEmu::~SemaphoreEmu(){

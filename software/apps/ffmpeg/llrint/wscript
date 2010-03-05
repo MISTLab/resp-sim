@@ -8,12 +8,12 @@ def build(bld):
     for arch in bld.lst_variants:
         if arch != 'arm': continue
 
-        obj = bld.new_task_gen('cc','objects')
+        obj = bld.new_task_gen('cc','staticlib')
         obj.env = bld.env_of_name(arch).copy()
         obj.find_sources_in_dirs('.')
         #obj.source = """lrint.c"""
         obj.includes     = obj.env['FFMPEG_SUBDIRS_INCLUDES']
         obj.name         = 'lrint_'+arch
-        #obj.target = 'lrint'
+        obj.target = 'lrint_'+arch
         obj.env.append_unique('CPPFLAGS', bld.env_of_name(arch)['FFMPEG_SUBDIRS_ADDITIONALFLAGS'])
 
