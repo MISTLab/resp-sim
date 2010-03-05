@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+
+# Build
+
+import Options
+
+def build(bld):
+
+    for arch in bld.lst_variants:
+        if arch == 'default': continue
+
+        obj = bld.new_task_gen('cc', 'staticlib')
+        obj.env      = bld.env_of_name(arch).copy()
+        obj.find_sources_in_dirs('. ./config/posix')
+        obj.includes     = './ ./config/posix ../pthread_stub'
+        additionalFlags = ['-DHAVE_ATTRIBUTE_VISIBILITY','-DHAVE_ATTRIBUTE_ALIAS', '-DHAVE_UNISTD_H']
+        if not arch.startswith('ecos'):
+            #obj.uselib_local     = 'pthread_stub_'+arch
+            additionalFlags += ['-DHAVE_UNISTD_H', '-DHAVE_SYS_TIME_H']
+        else:
+            additionalFlags += ['-DPTHREAD_MUTEX_RECURSIVE=0', '-DTIME_WITH_SYS_TIME=0', '-DHAVE_SYS_TIME_H=0']
+        # possible macros: HAVE_SYNC_BUILTINS, HAVE_ATTRIBUTE_VISIBILITY, HAVE_ATTRIBUTE_DLLEXPORT, HAVE_ATTRIBUTE_ALIAS
+        # HAVE_BROKEN_POSIX_SEMAPHORES, HAVE_CLOCK_GETTIME, HAVE_GETLOADAVG, TIME_WITH_SYS_TIME, HAVE_TLS, HAVE_SYS_TIME_H,
+        # Note that checks should be include at the configure in order to determine the value of these defines
+        # Note also that the same information are hardcoded in the config.h file, so if you want different defines you should also modify that file
+        #additionalFlags += ['-DDEBUG_GOMP']
+        obj.env.append_unique('CFLAGS', [ '-g3'] )
+        obj.env.append_unique('CPPFLAGS',  additionalFlags )
+        obj.name         = 'gomp_'+arch
+        obj.target       = 'gomp'
+        obj.export_incdirs = '.'
+        #ecos_version = obj.clone_object

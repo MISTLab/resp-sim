@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+
+def build(bld):
+
+    for arch in bld.lst_variants:
+        if arch == 'default': continue
+
+# Commented out because written in a bad way (there is a while inside a parallel section). Also
+#The GOMP has anyway a bug because it creates only one team for all the nested parallel sections
+#        obj = bld.new_task_gen('cc','program')
+#        obj.env = bld.env_of_name(arch).copy()
+#        obj.source = """
+#            c_jacobi03.c
+#        """
+#        obj.target = 'c_jacobi03'
+#        obj.includes = '../../../../../os/myPosixLayer ../../include'
+#        obj.uselib_local = 'ompsrc_cc_'+arch+'  gomp_'+arch+' posixLayer_'+arch
+#        obj.env.append_unique('CFLAGS', '-fopenmp')
+#        obj.env.append_unique('CCFLAGS', '-fopenmp')
+#        obj.env.append_unique('LINKFLAGS', '-lm')
+
+        obj = bld.new_task_gen('cc','program')
+        obj.env = bld.env_of_name(arch).copy()
+        obj.source = """
+            c_jacobi01.c
+        """
+        obj.target = 'c_jacobi01'
+        obj.includes = '../../include'
+        obj.uselib_local = 'ompsrc_cc_'+arch+'  gomp_'+arch+' pthread_stub_'+arch 
+        obj.env.append_unique('CFLAGS', '-fopenmp')
+        obj.env.append_unique('CCFLAGS', '-fopenmp')
+        obj.env.append_unique('LINKFLAGS', '-lm')
+
+        obj = bld.new_task_gen('cc','program')
+        obj.env = bld.env_of_name(arch).copy()
+        obj.source = """
+            c_jacobi02.c
+        """
+        obj.target = 'c_jacobi02'
+        obj.includes = '../../include'
+        obj.uselib_local = 'ompsrc_cc_'+arch+'  gomp_'+arch+' pthread_stub_'+arch 
+        obj.env.append_unique('CFLAGS', '-fopenmp')
+        obj.env.append_unique('CCFLAGS', '-fopenmp')
+        obj.env.append_unique('LINKFLAGS', '-lm')
