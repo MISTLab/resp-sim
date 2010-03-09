@@ -119,6 +119,22 @@ def configure(conf):
                 env_variant['FULLSTATIC'] = True
                 env_variant['LIB'] = []
                 env_variant['LIBPATH'] = []
+                env_variant['FFMPEG_SUBDIRS_INCLUDES'] = """
+                    . ../ ../libavcodec ../libavdevice ../libavfilter ../libavformat ../libavutil
+                    ../libswscale 
+                """
+                ffmpeg_vars =[ '-D_FILE_OFFSET_BITS=64',
+                            '-DHAVE_AV_CONFIG_H', '-D_LARGEFILE_SOURCE', '-D_ISOC9X_SOURCE', '-fomit-frame-pointer',
+                            '-Wdeclaration-after-statement', '-Wall', '-Wno-switch', '-Wdisabled-optimization',
+                            '-Wpointer-arith', '-Wredundant-decls', '-Wno-pointer-sign', '-Wcast-qual', 
+                            '-Wwrite-strings', '-fno-math-errno','-funit-at-a-time']
+                if arch == 'arm':
+                    ffmpeg_vars = ffmpeg_vars + ['-DARCH_ARMV4L=1', '-DENABLE_ARMV4L=1'] 
+                else:
+                    ffmpeg_vars = ffmpeg_vars + ['-DENABLE_ARMV4L=0'] 
+                
+                env_variant['FFMPEG_SUBDIRS_ADDITIONALFLAGS'] =  ffmpeg_vars
+                    
                 if Options.options.software_flags:
                     env_variant.append_unique('CFLAGS', Options.options.software_flags.split())
                     env_variant.append_unique('CCFLAGS' , Options.options.software_flags.split())

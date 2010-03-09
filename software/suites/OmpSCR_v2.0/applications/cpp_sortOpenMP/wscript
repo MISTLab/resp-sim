@@ -18,6 +18,7 @@ def build(bld):
         obj.env.append_unique('CFLAGS', '-fopenmp')
         obj.env.append_unique('CCFLAGS', '-fopenmp')
         obj.env.append_unique('CXXFLAGS', '-fopenmp')
+        obj.env.append_unique('CXXFLAGS', '-gstabs')
         obj.env.append_unique('LINKFLAGS', '-lm')
 
         obj = bld.new_task_gen('cxx','program')
