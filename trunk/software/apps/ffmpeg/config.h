@@ -3,8 +3,8 @@
 #define FFMPEG_CONFIG_H
 #define FFMPEG_CONFIGURATION "" //"--cross-prefix=arm-elf- --enable-cross-compile --arch=arm --cpu=arm7tdmi --disable-armv5te --disable-armv6 --disable-network --disable-ipv6 --enable-pthreads --extra-cflags=-I/home/antonio/RESP/software/os/libinterrupt -I/home/antonio/RESP/software/os/myPosixLayer --extra-ldflags=-L/home/antonio/RESP/_build_/arm/software/os/myPosixLayer --specs=osemu.specs -L/home/antonio/RESP/_build_/arm/software/os/libinterrupt -Lllrint --disable-devices --disable-ffserver --disable-ffplay --target-os=cygwin --extra-libs=-llrint -linterrupt --disable-debug --disable-stripping"
 #define ENABLE_ALPHA 0
-#define ARCH_ARMV4L 1
-#define ENABLE_ARMV4L 1
+//#define ARCH_ARMV4L 0
+//#define ENABLE_ARMV4L 0
 #define ENABLE_BFIN 0
 #define ENABLE_IA64 0
 #define ENABLE_M68K 0
@@ -29,8 +29,8 @@
 #define ENABLE_VIS 0
 #define ENABLE_BEOSTHREADS 0
 #define ENABLE_OS2THREADS 0
-#define HAVE_PTHREADS 0
-#define ENABLE_PTHREADS 0
+#define HAVE_PTHREADS 1
+#define ENABLE_PTHREADS 1
 #define ENABLE_W32THREADS 0
 #define ENABLE_ALTIVEC_H 0
 #define ENABLE_ARPA_INET_H 0
@@ -92,8 +92,8 @@
 #define ENABLE_SYS_SELECT_H 0
 #define ENABLE_SYS_SOUNDCARD_H 0
 #define ENABLE_TERMIOS_H 0
-//#define HAVE_THREADS 1
-#define ENABLE_THREADS 0
+#define HAVE_THREADS 1
+#define ENABLE_THREADS 1
 #define ENABLE_WINSOCK2_H 0
 #define CONFIG_BSFS 1
 #define ENABLE_BSFS 1

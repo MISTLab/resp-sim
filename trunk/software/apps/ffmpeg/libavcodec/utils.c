@@ -1352,11 +1352,11 @@ int av_get_bits_per_sample_format(enum SampleFormat sample_fmt) {
     }
 }
 
-//#if !defined(HAVE_THREADS)
+#if !defined(HAVE_THREADS)
 int avcodec_thread_init(AVCodecContext *s, int thread_count){
     return -1;
 }
-//#endif
+#endif
 
 unsigned int av_xiphlacing(unsigned char *s, unsigned int v)
 {

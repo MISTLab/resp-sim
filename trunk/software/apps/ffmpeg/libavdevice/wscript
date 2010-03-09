@@ -6,7 +6,7 @@ import Options
 
 def build(bld):
     for arch in bld.lst_variants:
-        if arch != 'arm': continue
+        if arch == 'default': continue
 
         obj = bld.new_task_gen('cc','staticlib')
         obj.env = bld.env_of_name(arch).copy()
