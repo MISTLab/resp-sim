@@ -40,8 +40,8 @@
 ##############################################################################
 
 ###### GENERAL PARAMETERS #####
-PROCESSOR_FREQUENCY = 100         # MHz
-PROCESSOR_NUMBER  = 2             #
+PROCESSOR_FREQUENCY = 1000         # MHz
+PROCESSOR_NUMBER  = 4             #
 try:
     PROCESSOR_NAMESPACE
 except:
@@ -69,13 +69,21 @@ CACHE_REMOVE_LAT   = 0.0             # ns
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'pt_test2'
+    SOFTWARE = 'ffmpeg'
 
 if SOFTWARE:
     try:
         ARGS
     except:
-        ARGS = None
+        ARGS = []
+        ARGS.append('ffmpeg')
+        ARGS.append('-i')
+        ARGS.append('minimal.mpg')
+        ARGS.append('-b')
+        ARGS.append('64000')
+        ARGS.append('-threads')
+        ARGS.append(str(PROCESSOR_NUMBER))
+        ARGS.append('minimal2.mpg')
 
 OS_EMULATION = True     # True or False
 
@@ -202,6 +210,7 @@ for i in range(0, PROCESSOR_NUMBER):
 # Now I initialize the OS emulator
 tools = list()
 if OS_EMULATION:
+    trapwrapper.OSEmulatorBase.set_program_args(ARGS)
     for i in range(0, PROCESSOR_NUMBER):
         curEmu = trapwrapper.OSEmulator32(processors[i].getInterface())
         curEmu.initSysCalls(SOFTWARE)

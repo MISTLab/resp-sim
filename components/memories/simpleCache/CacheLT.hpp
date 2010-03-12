@@ -452,7 +452,7 @@ public:
 		unsigned char*   byt = trans.get_byte_enable_ptr();
 		unsigned int     wid = trans.get_streaming_width();
 
-//		cout << "Cache " << this->name << "\tAdr: " << adr << "\tLen: " << len << "\tWid: " << wid << endl;
+//		cerr << "Cache " << this->name << "\tAdr: " << adr << "\tLen: " << len << "\tWid: " << wid << endl;
 //		ofstream outFile("cache.txt", ios::app);
 //		outFile << sc_time_stamp() << " " << trans.get_address() << " " << trans.get_data_length() << " " << trans.is_write() << endl;
 
@@ -510,7 +510,7 @@ public:
 		unsigned char*   ptr = trans.get_data_ptr();
 		unsigned int     len = trans.get_data_length();
 
-//		cout << "DBG Cache " << this->name << "\tAdr: " << adr << "\tLen: " << len << endl;
+//		cerr << "DBG Cache " << this->name << "\tAdr: " << adr << "\tLen: " << len << endl;
 
 		// Calculating the TAG associated to the required memory position
 		sc_dt::uint64 tag = GET_TAG(adr);
