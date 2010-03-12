@@ -123,6 +123,7 @@ public:
 		this->numAccesses++;
 		this->numWords+=words;
 
+		trans.set_dmi_allowed(true);
 		trans.set_response_status(TLM_OK_RESPONSE);
 	}
 

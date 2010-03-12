@@ -78,12 +78,12 @@ if SOFTWARE:
         ARGS = []
         ARGS.append('ffmpeg')
         ARGS.append('-i')
-        ARGS.append('minimal.mpg')
+        ARGS.append('software/apps/ffmpeg/minimal.mpg')
         ARGS.append('-b')
         ARGS.append('64000')
         ARGS.append('-threads')
         ARGS.append(str(PROCESSOR_NUMBER))
-        ARGS.append('minimal2.mpg')
+        ARGS.append('software/apps/ffmpeg/minimal2.mpg')
 
 OS_EMULATION = True     # True or False
 

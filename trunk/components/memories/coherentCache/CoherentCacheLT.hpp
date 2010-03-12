@@ -196,6 +196,8 @@ public:
 	unsigned int numReadBusAcc;
 	unsigned int numWriteBusAcc;
 
+	unsigned int myTag;
+
 	CoherentCacheLT(sc_module_name module_name, sc_dt::uint64 size, sc_dt::uint64 limit, unsigned int wordsPerBlock, unsigned int numWays, removePolicyType rP = LRU, writePolicyType wP = BACK,
 		sc_time readLatency = SC_ZERO_TIME, sc_time writeLatency = SC_ZERO_TIME, sc_time loadLatency = SC_ZERO_TIME, sc_time storeLatency = SC_ZERO_TIME, sc_time removeLatency = SC_ZERO_TIME) :
 			sc_module(module_name), name(module_name), size(size), cacheLimit(limit),
@@ -205,7 +207,7 @@ public:
 			targetSocket((boost::lexical_cast<std::string>(module_name) + "_targSock").c_str()),
 			initSocket((boost::lexical_cast<std::string>(module_name) + "_initSock").c_str()),
 			dirTargetSocket((boost::lexical_cast<std::string>(module_name) + "_dirTargSock").c_str()),
-			dirInitSocket((boost::lexical_cast<std::string>(module_name) + "_dirInitSock").c_str()) {
+			dirInitSocket((boost::lexical_cast<std::string>(module_name) + "_dirInitSock").c_str()), myTag(0) {
 
 		this->targetSocket.register_b_transport(this, &CoherentCacheLT::b_transport);
 		this->targetSocket.register_get_direct_mem_ptr(this, &CoherentCacheLT::get_direct_mem_ptr);
@@ -470,7 +472,6 @@ public:
 				this->dirInitSocket->b_transport(message,delay);
 				if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while removing " << curBaseAddress << " from directory");
 			}
-
 		}
 		return delay;
 	}
@@ -531,7 +532,7 @@ public:
 //			else cerr << endl;
 //		}
 
-		trans.set_dmi_allowed(false);			// Disables DMI in order to insert the bus latency for each transaction
+		trans.set_dmi_allowed(false);			// Disables DMI in order to insert the cache latency for each transaction
 	}
 
 	// TLM-2 DMI method
@@ -574,7 +575,7 @@ public:
 				// If the required block is cached...
 				if (tagIter->base_address == curBaseAddress) {
 					// We have a HIT!
-//					cerr << this->myTag << " - DBG Hit! " << curBaseAddress << endl;
+//					cerr << this->myTag << " - DBG Hit! @" << curBaseAddress << endl;
 					hit = true;
 
 					// We save the current block...
@@ -589,7 +590,7 @@ public:
 			}
 			if (!hit) {
 				// We have a MISS...
-//				cerr << this->myTag << " - DBG Miss!" << curBaseAddress << endl;
+//				cerr << this->myTag << " - DBG Miss!" @<< curBaseAddress << endl;
 
 				// We load the block from memory...
 				curBlock = CacheBlock();
@@ -660,12 +661,12 @@ public:
 	void dir_transport(tlm_generic_payload& trans, sc_time& delay){
 		sc_dt::uint64 adr = trans.get_address();
 		tlm_command cmd = trans.get_command();
-		cerr << this->myTag << " - Received command ";
+/*		cerr << this->myTag << " - Received command ";
 		if (cmd == FLUSH) cerr << "FLUSH";
 		else if (cmd == INVALIDATE) cerr << "INVALIDATE";
 		else cerr << "UNKNOWN";
 		cerr << " for block at address " << adr << endl;
-
+*/
 		// Calculating the TAG associated to the required memory position
 		sc_dt::uint64 tag = GET_TAG(adr);
 
