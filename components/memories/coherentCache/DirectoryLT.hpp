@@ -40,6 +40,8 @@ public:
 
 		typename list<int>::iterator cacheListIter, tmpIter;
 
+//		this->printDir();
+
 		if ( blockPrivilege.find(adr) == blockPrivilege.end() ) {
 			// The requested block is currently not loaded in any cache
 			//cerr << "Block at address " << adr << " not loaded:";
