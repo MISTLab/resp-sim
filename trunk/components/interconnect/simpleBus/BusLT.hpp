@@ -262,9 +262,6 @@ public:
 			THROW_EXCEPTION(stream.str());
 		}
 
-//		ofstream outFile("bus.txt", ios::app);
-//		outFile << sc_time_stamp() << " " << trans.get_address() << " " << trans.get_data_length() << " " << trans.is_write() << endl;
-		//resp::sc_controller::getController().get_simulated_time()
 //		cerr << ": requested " << addr << " on device # " << portId << endl;
 		trans.set_address(addr);
 
@@ -288,6 +285,12 @@ public:
 		this->numAccesses++;
 		this->numWords+=words;
 		trans.set_dmi_allowed(false);			// Disables DMI in order to insert the bus latency for each transaction
+
+		//resp::sc_controller::getController().get_simulated_time()
+//		ofstream outFile("bus.txt", ios::app);
+//		outFile << /*sc_time_stamp()*/tag << " " << trans.get_address() << " " << /*trans.get_data_length() << " " <<*/ trans.is_write();
+//		if (trans.get_data_length() == 4) outFile << " " << (unsigned int) (*trans.get_data_ptr()) << endl;
+//		else outFile << endl;
 
 		//Now I check if there are some elements which need to be awakened
 		if(this->targetSocket.size() > 1) {
@@ -328,7 +331,14 @@ public:
 		}
 //		cerr << ": requested " << addr << " on device # " << portId << endl;
 		trans.set_address(addr);
-		return initiatorSocket[portId]->transport_dbg(trans);
+		unsigned int retVal = initiatorSocket[portId]->transport_dbg(trans);
+
+//		ofstream outFile("bus.txt", ios::app);
+//		outFile << /*sc_time_stamp()*/tag << " " << trans.get_address() << " " << /*trans.get_data_length() << " " <<*/ trans.is_write();
+//		if (trans.get_data_length() == 4) outFile << " " << (unsigned int) (*trans.get_data_ptr()) << endl;
+//		else outFile << endl;
+
+		return retVal;
 	}
 		
 };

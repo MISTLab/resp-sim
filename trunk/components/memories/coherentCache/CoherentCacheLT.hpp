@@ -470,6 +470,7 @@ public:
 				this->dirInitSocket->b_transport(message,delay);
 				if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while removing " << curBaseAddress << " from directory");
 			}
+
 		}
 		return delay;
 	}
@@ -482,7 +483,7 @@ public:
 		unsigned char*   byt = trans.get_byte_enable_ptr();
 		unsigned int     wid = trans.get_streaming_width();
 
-//		cout << "Cache " << this->name << "\tAdr: " << adr << "\tLen: " << len << "\tWid: " << wid << endl;
+//		cerr << "Cache " << this->name << "\tAdr: " << adr << "\tLen: " << len << "\tWid: " << wid << endl;
 //		ofstream outFile("cache.txt", ios::app);
 //		outFile << sc_time_stamp() << " " << trans.get_address() << " " << trans.get_data_length() << " " << trans.is_write() << endl;
 
@@ -523,6 +524,14 @@ public:
 			else THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Undefined TLM command");
 			this->numAccesses++;
 		}
+
+//		if (this->myTag > 1) {
+//			cerr << this->name << "\tAddress: " << adr << "\tTransaction: " << trans.is_write() << "\tTime: " << sc_time_stamp() << " ";
+//			if (trans.get_data_length() == 4) cerr << (unsigned int) (*trans.get_data_ptr()) << endl;
+//			else cerr << endl;
+//		}
+
+		trans.set_dmi_allowed(false);			// Disables DMI in order to insert the bus latency for each transaction
 	}
 
 	// TLM-2 DMI method
@@ -540,7 +549,7 @@ public:
 		unsigned char*   ptr = trans.get_data_ptr();
 		unsigned int     len = trans.get_data_length();
 
-//		cout << "DBG Cache " << this->name << "\tAdr: " << adr << "\tLen: " << len << endl;
+//		cerr << "DBG Cache " << this->name << "\tAdr: " << adr << "\tLen: " << len << endl;
 
 		// Calculating the TAG associated to the required memory position
 		sc_dt::uint64 tag = GET_TAG(adr);
@@ -565,7 +574,7 @@ public:
 				// If the required block is cached...
 				if (tagIter->base_address == curBaseAddress) {
 					// We have a HIT!
-//					cerr << "DBG Hit!" << endl;
+//					cerr << this->myTag << " - DBG Hit! " << curBaseAddress << endl;
 					hit = true;
 
 					// We save the current block...
@@ -580,12 +589,26 @@ public:
 			}
 			if (!hit) {
 				// We have a MISS...
-//				cerr << "Miss!" << endl;
+//				cerr << this->myTag << " - DBG Miss!" << curBaseAddress << endl;
 
 				// We load the block from memory...
 				curBlock = CacheBlock();
 				curBlock.block = (unsigned char*) malloc (blockSize*sizeof(unsigned char));
 				curBlock.base_address = adr - adr % blockSize;
+
+				// ... but, first, we simulate a WRITE THROUGH for the directory, in order to flush blocks exclusively held by other caches
+				sc_time delay = SC_ZERO_TIME;
+				message.set_command(TLM_WRITE_COMMAND);
+				message.set_address(curBlock.base_address);
+				message.set_response_status(TLM_INCOMPLETE_RESPONSE);
+				this->dirInitSocket->b_transport(message,delay);
+				if (message.get_response_status() != TLM_OK_RESPONSE)
+					THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while asking EXCLUSIVE privilege for block at address " << curBaseAddress);
+				message.set_command(REMOVE);
+				message.set_address(curBlock.base_address);
+				message.set_response_status(TLM_INCOMPLETE_RESPONSE);
+				this->dirInitSocket->b_transport(message,delay);
+				if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while removing " << curBaseAddress << " from directory");
 
 				message.set_data_length(blockSize);
 				message.set_data_ptr(curBlock.block);
@@ -624,18 +647,25 @@ public:
 			dataPointer += partLen;
 		}
 		trans.set_response_status(TLM_OK_RESPONSE);
+
+//		if (this->myTag > 1) {
+//			cerr << this->name << "DBG\tAddress: " << adr << "\tTransaction: " << trans.is_write() << "\tTime: " << sc_time_stamp() << " ";
+//			if (trans.get_data_length() == 4) cerr << (unsigned int) (*trans.get_data_ptr()) << endl;
+//			else cerr << endl;
+//		}
+
 		return len;
 	}
 
 	void dir_transport(tlm_generic_payload& trans, sc_time& delay){
 		sc_dt::uint64 adr = trans.get_address();
 		tlm_command cmd = trans.get_command();
-/*		cerr << "Received command ";
+		cerr << this->myTag << " - Received command ";
 		if (cmd == FLUSH) cerr << "FLUSH";
 		else if (cmd == INVALIDATE) cerr << "INVALIDATE";
 		else cerr << "UNKNOWN";
 		cerr << " for block at address " << adr << endl;
-*/
+
 		// Calculating the TAG associated to the required memory position
 		sc_dt::uint64 tag = GET_TAG(adr);
 
@@ -663,6 +693,12 @@ public:
 
 		if (cmd == FLUSH) {
 			if (curBlock.dirty) {storeCacheBlock(curBlock,delay);}
+
+//			cerr << curBlock.base_address << endl;
+//			for (int k = 0; k<blockSize; k+=4)
+//				cerr << " " << (unsigned int)*(curBlock.block+k);
+//			cerr << endl;
+
 		}
 		else if (cmd == INVALIDATE) {
 			if (curBlock.dirty) {storeCacheBlock(curBlock,delay);}

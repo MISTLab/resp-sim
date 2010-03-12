@@ -123,7 +123,6 @@ public:
 		this->numAccesses++;
 		this->numWords+=words;
 
-		trans.set_dmi_allowed(true);
 		trans.set_response_status(TLM_OK_RESPONSE);
 	}
 
@@ -157,10 +156,12 @@ public:
 			return 0;
 		}
 
-		if(cmd == TLM_READ_COMMAND)
+		if(cmd == TLM_READ_COMMAND) {
 			memcpy(ptr, &mem[adr], len);
-		else if(cmd == TLM_WRITE_COMMAND)
+		}
+		else if(cmd == TLM_WRITE_COMMAND) {
 			memcpy(&mem[adr], ptr, len);
+		}
 
 		trans.set_response_status(TLM_OK_RESPONSE);
 		return len;

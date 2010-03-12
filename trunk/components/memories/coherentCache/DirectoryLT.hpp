@@ -3,9 +3,9 @@
 #include <tlm_utils/multi_passthrough_target_socket.h>
 #include <tlm_utils/multi_passthrough_initiator_socket.h>
 #include <boost/lexical_cast.hpp>
-#include <map.h>
-#include <list.h>
 #include <iostream>
+#include <map>
+#include <list>
 
 #include "utils.hpp"
 #include "protocolUtils.hpp"
@@ -39,8 +39,6 @@ public:
 		tlm_generic_payload message;
 
 		typename list<int>::iterator cacheListIter, tmpIter;
-
-//		this -> printDir();
 
 		if ( blockPrivilege.find(adr) == blockPrivilege.end() ) {
 			// The requested block is currently not loaded in any cache
