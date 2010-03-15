@@ -41,7 +41,7 @@
 
 ###### GENERAL PARAMETERS #####
 PROCESSOR_FREQUENCY = 500         # MHz
-PROCESSOR_NUMBER    = 6           #
+PROCESSOR_NUMBER    = 4           #
 try:
     PROCESSOR_NAMESPACE
 except:
@@ -56,7 +56,7 @@ MEM_LATENCY       = 10.0           # ns
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'c_md'
+    SOFTWARE = 'ffmpeg'
 
 if SOFTWARE:
     try:
@@ -122,16 +122,25 @@ if not os.path.exists(SOFTWARE):
 
 loader = loader_wrapper.Loader(SOFTWARE)
 #Initialization of the processors and loading in memory of the application program
-for i in range(0, loader.getProgDim()):
-    mem.write_byte_dbg(i + loader.getDataStart(), loader.getProgDataValue(i))
+print "Writing memory"
+loader.loadProgInMemory(mem)
+
+print "Setting up CPU registers"
 
 for i in range(0, PROCESSOR_NUMBER):
+    #if i == 0:
     processors[i].ENTRY_POINT = loader.getProgStart()
+    #else:
+    #    processors[i].ENTRY_POINT = 1044
+    
     processors[i].PROGRAM_LIMIT = loader.getProgDim() + loader.getDataStart()
     processors[i].PROGRAM_START = loader.getDataStart()
-    processors[i].resetOp();
     # Set the processor ID
     processors[i].MP_ID.immediateWrite(i)
+    #processors[i].MPROC_ID = (i << 28)
+    processors[i].resetOp()
+
+print "Setting up OS Emulation"
 
 # Now I initialize the OS emulator
 tools = list()
@@ -151,3 +160,7 @@ if OS_EMULATION:
     
     # OpenMP Support
     trapwrapper.OSEmulatorBase.set_environ('OMP_NUM_THREADS', str(PROCESSOR_NUMBER)) 
+
+    # Command line
+    #ARGUMENTS = ("ffmpeg.exe", "-idct", "simplearm", "-y", "-threads", "1", "-i", "/home/beltrame/Projects/resp-old/software/application/sheep.mpg", "/home/beltrame/minimal.avi")
+    #trapwrapper.OSEmulatorBase.set_program_args(ARGUMENTS)

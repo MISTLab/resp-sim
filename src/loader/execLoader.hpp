@@ -47,6 +47,7 @@
 
 #include <string>
 #include <vector>
+#include <debugMemory.hpp>
 
 extern "C" {
 #include <bfd.h>
@@ -70,16 +71,25 @@ class Loader{
     ///specified as parameter
     Loader(std::string fileName);
     ~Loader();
+
     ///Returns the entry point of the loaded program
     unsigned int getProgStart();
+
     ///Returns the start address of the data to load
     unsigned int getDataStart();
+
     ///Returns the dimensione of the loaded program
     unsigned int getProgDim();
+
     ///Returns a pointer to the array contianing the program data
     unsigned char * getProgData();
+
     ///Returns the byte of the program data at index idx
     unsigned char getProgDataValue(unsigned long idx);
+
+    ///Writes a program in memory
+    void loadProgInMemory( resp::DebugMemory &mem );
+
     ///Specifies whether the current executable has a
     ///Thread-Local-Storage (TLS) section or not
     bool hasTLS();

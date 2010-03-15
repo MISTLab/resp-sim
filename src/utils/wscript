@@ -98,3 +98,16 @@ namespace sandbox { namespace {
 }} // namespace sandbox::<anonymous>
 """
     obj.custom_registration_code = '''sandbox::init_module();'''
+
+    obj = bld.new_task_gen('pypp')                                            
+    obj.source = """
+        debugMemory.hpp
+    """
+    obj.target = 'debugmemory'
+    obj.uselib = 'BOOST BOOST_PYTHON'
+    obj.virtuality = True
+    obj.start_decls = 'resp'
+    obj.custom_code = """
+decl = mb.global_ns.class_('DebugMemory')
+decl.include()
+"""

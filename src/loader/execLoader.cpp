@@ -60,6 +60,7 @@ Loader::Loader(std::string fileName){
     this->dataStart = 0;
 
     this->loadProgramData();
+    
 }
 
 Loader::~Loader(){
@@ -100,6 +101,12 @@ unsigned char Loader::getProgDataValue(unsigned long idx) {
         THROW_EXCEPTION("The program data was not correcly computed");
     }
     return this->programData[idx];
+}
+
+void Loader::loadProgInMemory( resp::DebugMemory &mem ) {
+    for( unsigned int i = 0 ; i < this->progDim ; i++) 
+        mem.write_byte_dbg(this->dataStart+i,this->programData[i]);
+    
 }
 
 unsigned int Loader::getDataStart(){

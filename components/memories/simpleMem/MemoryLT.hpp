@@ -50,16 +50,18 @@
 #include <tlm_utils/multi_passthrough_target_socket.h>
 #include <boost/lexical_cast.hpp>
 #include <string>
+#include <string.h>
 #include <iostream>
 #include <fstream>
 
 #include "utils.hpp"
+#include <debugMemory.hpp>
 
 using namespace std;
 using namespace tlm;
 using namespace tlm_utils;
 
-template<typename BUSWIDTH> class MemoryLT: public sc_module {
+template<typename BUSWIDTH> class MemoryLT: public sc_module, public resp::DebugMemory {
 private:
 	const sc_time latency;
 	sc_dt::uint64 size;
@@ -176,6 +178,7 @@ public:
 		}
 		this->mem[address] = datum;
 	}
+
 };
 
 #endif
