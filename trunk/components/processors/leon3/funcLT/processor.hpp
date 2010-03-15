@@ -100,7 +100,7 @@ namespace leon3_funclt_trap{
         bool historyEnabled;
         bool instrExecuting;
         sc_event instrEndEvent;
-        static Instruction * * INSTRUCTIONS;
+        Instruction * * INSTRUCTIONS;
         template_map< unsigned int, CacheElem > instrCache;
         static int numInstances;
         unsigned int IRQ;
@@ -138,6 +138,7 @@ namespace leon3_funclt_trap{
         unsigned int undumpedHistElems;
         unsigned int numInstructions;
         unsigned int ENTRY_POINT;
+        unsigned int MPROC_ID;
         unsigned int PROGRAM_LIMIT;
         unsigned int PROGRAM_START;
         IntrTLMPort_32 IRQ_port;

@@ -462,8 +462,6 @@ unsigned char * leon3_funclt_trap::LEON3_ABIIf::getState() const throw(){
     curStateTemp += 4;
     *((unsigned int *)curStateTemp) = this->ASR[16].readNewValue();
     curStateTemp += 4;
-    *((unsigned int *)curStateTemp) = this->ASR[17].readNewValue();
-    curStateTemp += 4;
     *((unsigned int *)curStateTemp) = this->ASR[18].readNewValue();
     curStateTemp += 4;
     *((unsigned int *)curStateTemp) = this->ASR[19].readNewValue();
@@ -815,8 +813,6 @@ void leon3_funclt_trap::LEON3_ABIIf::setState( unsigned char * state ) throw(){
     curStateTemp += 4;
     this->ASR[16].immediateWrite(*((unsigned int *)curStateTemp));
     curStateTemp += 4;
-    this->ASR[17].immediateWrite(*((unsigned int *)curStateTemp));
-    curStateTemp += 4;
     this->ASR[18].immediateWrite(*((unsigned int *)curStateTemp));
     curStateTemp += 4;
     this->ASR[19].immediateWrite(*((unsigned int *)curStateTemp));
@@ -865,6 +861,7 @@ unsigned int leon3_funclt_trap::LEON3_ABIIf::readPC() const throw(){
 
 void leon3_funclt_trap::LEON3_ABIIf::setPC( const unsigned int & newValue ) throw(){
     this->PC.immediateWrite(newValue);
+    this->NPC.immediateWrite(newValue+4);
 }
 
 unsigned int leon3_funclt_trap::LEON3_ABIIf::readSP() const throw(){

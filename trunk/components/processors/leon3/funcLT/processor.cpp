@@ -146,7 +146,7 @@ void leon3_funclt_trap::Processor_leon3_funclt::mainLoop(){
                 else{
                     unsigned int & curCount = cachedInstr->second.count;
                     int instrId = this->decoder.decode(bitString);
-                    Instruction * instr = Processor_leon3_funclt::INSTRUCTIONS[instrId];
+                    Instruction * instr = this->INSTRUCTIONS[instrId];
                     instr->setParams(bitString);
                     #ifdef ENABLE_HISTORY
                     if(this->historyEnabled){
@@ -172,7 +172,7 @@ void leon3_funclt_trap::Processor_leon3_funclt::mainLoop(){
                     else{
                         // ... and then add the instruction to the cache
                         cachedInstr->second.instr = instr;
-                        Processor_leon3_funclt::INSTRUCTIONS[instrId] = instr->replicate();
+                        this->INSTRUCTIONS[instrId] = instr->replicate();
                     }
                 }
             }
@@ -180,7 +180,7 @@ void leon3_funclt_trap::Processor_leon3_funclt::mainLoop(){
                 // The current instruction is not present in the cache:
                 // I have to perform the normal decoding phase ...
                 int instrId = this->decoder.decode(bitString);
-                Instruction * instr = Processor_leon3_funclt::INSTRUCTIONS[instrId];
+                Instruction * instr = this->INSTRUCTIONS[instrId];
                 instr->setParams(bitString);
                 #ifdef ENABLE_HISTORY
                 if(this->historyEnabled){
@@ -259,7 +259,7 @@ void leon3_funclt_trap::Processor_leon3_funclt::resetOp(){
     ASR[14].immediateWrite(0x0);
     ASR[15].immediateWrite(0x0);
     ASR[16].immediateWrite(0x0);
-    ASR[17].immediateWrite(0x308);
+    ASR[17].immediateWrite(MPROC_ID + 0x308);
     ASR[18].immediateWrite(0x0);
     ASR[19].immediateWrite(0x0);
     ASR[20].immediateWrite(0x0);
@@ -273,25 +273,24 @@ void leon3_funclt_trap::Processor_leon3_funclt::resetOp(){
     ASR[28].immediateWrite(0x0);
     ASR[29].immediateWrite(0x0);
     ASR[30].immediateWrite(0x0);
-    ASR[31].immediateWrite(0x0);
     PSR.immediateWrite(0xf3000080L);
     WIM.immediateWrite(0x0);
     TBR.immediateWrite(0x0);
     Y.immediateWrite(0x0);
     PC.immediateWrite(ENTRY_POINT);
-    NPC.immediateWrite(ENTRY_POINT + 4);
+    NPC.immediateWrite(ENTRY_POINT + 0x4);
     this->IRQ = -1;
 }
 
 void leon3_funclt_trap::Processor_leon3_funclt::end_of_elaboration(){
-    this->resetOp();
+    //this->resetOp();
 }
 
 Instruction * leon3_funclt_trap::Processor_leon3_funclt::decode( unsigned int bitString \
     ){
     int instrId = this->decoder.decode(bitString);
     if(instrId >= 0){
-        Instruction * instr = Processor_leon3_funclt::INSTRUCTIONS[instrId];
+        Instruction * instr = this->INSTRUCTIONS[instrId];
         instr->setParams(bitString);
         return instr;
     }
@@ -302,7 +301,6 @@ LEON3_ABIIf & leon3_funclt_trap::Processor_leon3_funclt::getInterface(){
     return *this->abiIf;
 }
 
-Instruction * * leon3_funclt_trap::Processor_leon3_funclt::INSTRUCTIONS = NULL;
 int leon3_funclt_trap::Processor_leon3_funclt::numInstances = 0;
 void leon3_funclt_trap::Processor_leon3_funclt::setProfilingRange( unsigned int startAddr, \
     unsigned int endAddr ){
@@ -320,300 +318,298 @@ leon3_funclt_trap::Processor_leon3_funclt::Processor_leon3_funclt( sc_module_nam
     this->quantKeeper), dataMem("dataMem", this->quantKeeper), IRQ_port("IRQ_IRQ", IRQ), \
     irqAck("irqAck_PIN"){
     Processor_leon3_funclt::numInstances++;
-    if(Processor_leon3_funclt::INSTRUCTIONS == NULL){
-        // Initialization of the array holding the initial instance of the instructions
-        Processor_leon3_funclt::INSTRUCTIONS = new Instruction *[145];
-        Processor_leon3_funclt::INSTRUCTIONS[126] = new READasr(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[130] = new WRITEY_reg(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[58] = new XNOR_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[44] = new ANDNcc_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[0] = new LDSB_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[135] = new WRITEpsr_imm(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[125] = new READy(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[60] = new XNORcc_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[127] = new READpsr(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[41] = new ANDN_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[40] = new ANDcc_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[87] = new TSUBcc_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[12] = new LDSBA_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[6] = new LDUH_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[28] = new STA_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[50] = new ORN_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[13] = new LDSHA_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[26] = new STBA_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[22] = new ST_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[129] = new READtbr(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[109] = new UDIVcc_imm(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[35] = new SWAPA_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[73] = new ADDXcc_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[18] = new STB_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[85] = new SUBXcc_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[21] = new STH_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[63] = new SRL_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[133] = new WRITEasr_imm(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[98] = new UMULcc_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[31] = new LDSTUB_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[53] = new XOR_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[104] = new SMAC_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[132] = new WRITEasr_reg(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[9] = new LD_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, \
-            WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[23] = new ST_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[82] = new SUBcc_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[11] = new LDD_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[69] = new ADDcc_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[7] = new LDUH_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[64] = new SRL_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[113] = new SAVE_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[92] = new MULScc_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[45] = new OR_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[24] = new STD_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[86] = new SUBXcc_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[71] = new ADDX_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[33] = new SWAP_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[94] = new UMUL_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[131] = new WRITEY_imm(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[38] = new AND_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[143] = new FLUSH_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[66] = new SRA_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[20] = new STH_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[137] = new WRITEwim_imm(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[10] = new LDD_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[61] = new SLL_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[15] = new LDUHA_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[76] = new TADDcc_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[75] = new TADDcc_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[107] = new SDIV_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[89] = new TSUBccTV_imm(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[142] = new FLUSH_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[52] = new ORNcc_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[121] = new RETT_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[112] = new SDIVcc_reg(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[68] = new ADD_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[123] = new TRAP_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[139] = new WRITEtbr_imm(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[5] = new LDUB_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[116] = new RESTORE_reg(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[74] = new ADDXcc_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[19] = new STB_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[37] = new AND_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[95] = new SMUL_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[67] = new ADD_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[93] = new UMUL_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[128] = new READwim(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[30] = new LDSTUB_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[103] = new SMAC_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[1] = new LDSB_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[42] = new ANDN_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[90] = new TSUBccTV_reg(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[36] = new SETHI(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, \
-            WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[65] = new SRA_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[3] = new LDSH_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[110] = new UDIVcc_reg(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[49] = new ORN_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[25] = new STD_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[43] = new ANDNcc_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[77] = new TADDccTV_imm(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[138] = new WRITEtbr_reg(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[84] = new SUBX_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[57] = new XNOR_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[105] = new UDIV_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[2] = new LDSH_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[141] = new UNIMP(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[32] = new LDSTUBA_reg(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[97] = new UMULcc_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[48] = new ORcc_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[91] = new MULScc_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[56] = new XORcc_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[80] = new SUB_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[136] = new WRITEwim_reg(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[101] = new UMAC_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[88] = new TSUBcc_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[117] = new BRANCH(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[100] = new SMULcc_reg(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[79] = new SUB_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[70] = new ADDcc_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[54] = new XOR_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[81] = new SUBcc_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[78] = new TADDccTV_reg(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[108] = new SDIV_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[99] = new SMULcc_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[34] = new SWAP_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[83] = new SUBX_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[29] = new STDA_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[102] = new UMAC_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[119] = new JUMP_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[96] = new SMUL_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[55] = new XORcc_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[51] = new ORNcc_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[14] = new LDUBA_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[120] = new JUMP_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[72] = new ADDX_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[106] = new UDIV_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[59] = new XNORcc_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[140] = new STBAR(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[16] = new LDA_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[27] = new STHA_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[17] = new LDDA_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[62] = new SLL_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[115] = new RESTORE_imm(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[8] = new LD_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, \
-            WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[124] = new TRAP_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[4] = new LDUB_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[122] = new RETT_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[111] = new SDIVcc_imm(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[114] = new SAVE_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[46] = new OR_reg(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[47] = new ORcc_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[118] = new CALL(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, \
-            WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[134] = new WRITEpsr_reg(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[39] = new ANDcc_imm(PSR, WIM, TBR, Y, PC, NPC, \
-            GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-        Processor_leon3_funclt::INSTRUCTIONS[144] = new InvalidInstr(PSR, WIM, TBR, Y, PC, \
-            NPC, GLOBAL, WINREGS, ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
-    }
+    // Initialization of the array holding the initial instance of the instructions
+    this->INSTRUCTIONS = new Instruction *[145];
+    this->INSTRUCTIONS[126] = new READasr(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[130] = new WRITEY_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[58] = new XNOR_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[44] = new ANDNcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[0] = new LDSB_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[135] = new WRITEpsr_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[125] = new READy(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, \
+        FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[60] = new XNORcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[127] = new READpsr(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[41] = new ANDN_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[40] = new ANDcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[87] = new TSUBcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[12] = new LDSBA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[6] = new LDUH_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[28] = new STA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[50] = new ORN_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[13] = new LDSHA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[26] = new STBA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[22] = new ST_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, \
+        FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[129] = new READtbr(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[109] = new UDIVcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[35] = new SWAPA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[73] = new ADDXcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[18] = new STB_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[85] = new SUBXcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[21] = new STH_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[63] = new SRL_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[133] = new WRITEasr_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[98] = new UMULcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[31] = new LDSTUB_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[53] = new XOR_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[104] = new SMAC_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[132] = new WRITEasr_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[9] = new LD_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, \
+        FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[23] = new ST_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, \
+        FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[82] = new SUBcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[11] = new LDD_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[69] = new ADDcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[7] = new LDUH_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[64] = new SRL_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[113] = new SAVE_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[92] = new MULScc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[45] = new OR_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, \
+        FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[24] = new STD_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[86] = new SUBXcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[71] = new ADDX_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[33] = new SWAP_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[94] = new UMUL_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[131] = new WRITEY_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[38] = new AND_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[143] = new FLUSH_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[66] = new SRA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[20] = new STH_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[137] = new WRITEwim_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[10] = new LDD_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[61] = new SLL_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[15] = new LDUHA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[76] = new TADDcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[75] = new TADDcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[107] = new SDIV_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[89] = new TSUBccTV_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[142] = new FLUSH_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[52] = new ORNcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[121] = new RETT_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[112] = new SDIVcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[68] = new ADD_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[123] = new TRAP_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[139] = new WRITEtbr_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[5] = new LDUB_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[116] = new RESTORE_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[74] = new ADDXcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[19] = new STB_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[37] = new AND_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[95] = new SMUL_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[67] = new ADD_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[93] = new UMUL_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[128] = new READwim(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[30] = new LDSTUB_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[103] = new SMAC_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[1] = new LDSB_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[42] = new ANDN_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[90] = new TSUBccTV_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[36] = new SETHI(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, \
+        FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[65] = new SRA_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[3] = new LDSH_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[110] = new UDIVcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[49] = new ORN_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[25] = new STD_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[43] = new ANDNcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[77] = new TADDccTV_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[138] = new WRITEtbr_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[84] = new SUBX_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[57] = new XNOR_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[105] = new UDIV_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[2] = new LDSH_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[141] = new UNIMP(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, \
+        FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[32] = new LDSTUBA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[97] = new UMULcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[48] = new ORcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[91] = new MULScc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[56] = new XORcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[80] = new SUB_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[136] = new WRITEwim_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[101] = new UMAC_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[88] = new TSUBcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[117] = new BRANCH(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[100] = new SMULcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[79] = new SUB_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[70] = new ADDcc_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[54] = new XOR_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[81] = new SUBcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[78] = new TADDccTV_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[108] = new SDIV_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[99] = new SMULcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[34] = new SWAP_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[83] = new SUBX_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[29] = new STDA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[102] = new UMAC_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[119] = new JUMP_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[96] = new SMUL_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[55] = new XORcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[51] = new ORNcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[14] = new LDUBA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[120] = new JUMP_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[72] = new ADDX_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[106] = new UDIV_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[59] = new XNORcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[140] = new STBAR(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, \
+        FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[16] = new LDA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[27] = new STHA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[17] = new LDDA_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[62] = new SLL_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[115] = new RESTORE_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[8] = new LD_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, \
+        FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[124] = new TRAP_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[4] = new LDUB_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[122] = new RETT_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[111] = new SDIVcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[114] = new SAVE_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[46] = new OR_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, \
+        FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[47] = new ORcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[118] = new CALL(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, ASR, \
+        FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[134] = new WRITEpsr_reg(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[39] = new ANDcc_imm(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
+    this->INSTRUCTIONS[144] = new InvalidInstr(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
+        ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck);
     this->IRQ_irqInstr = new IRQ_IRQ_Instruction(PSR, WIM, TBR, Y, PC, NPC, GLOBAL, WINREGS, \
         ASR, FP, LR, SP, PCR, REGS, instrMem, dataMem, irqAck, this->IRQ);
     this->quantKeeper.set_global_quantum( this->latency*100 );
@@ -674,6 +670,7 @@ leon3_funclt_trap::Processor_leon3_funclt::Processor_leon3_funclt( sc_module_nam
     this->undumpedHistElems = 0;
     this->numInstructions = 0;
     this->ENTRY_POINT = 0;
+    this->MPROC_ID = 0;
     this->PROGRAM_LIMIT = 0;
     this->PROGRAM_START = 0;
     this->abiIf = new LEON3_ABIIf(this->PROGRAM_LIMIT, this->dataMem, this->PSR, this->WIM, \
@@ -686,13 +683,10 @@ leon3_funclt_trap::Processor_leon3_funclt::Processor_leon3_funclt( sc_module_nam
 
 leon3_funclt_trap::Processor_leon3_funclt::~Processor_leon3_funclt(){
     Processor_leon3_funclt::numInstances--;
-    if(Processor_leon3_funclt::numInstances == 0){
-        for(int i = 0; i < 145; i++){
-            delete Processor_leon3_funclt::INSTRUCTIONS[i];
-        }
-        delete [] Processor_leon3_funclt::INSTRUCTIONS;
-        Processor_leon3_funclt::INSTRUCTIONS = NULL;
+    for(int i = 0; i < 145; i++){
+        delete this->INSTRUCTIONS[i];
     }
+    delete [] this->INSTRUCTIONS;
     template_map< unsigned int, CacheElem >::const_iterator cacheIter, cacheEnd;
     for(cacheIter = this->instrCache.begin(), cacheEnd = this->instrCache.end(); cacheIter \
         != cacheEnd; cacheIter++){
@@ -703,13 +697,20 @@ leon3_funclt_trap::Processor_leon3_funclt::~Processor_leon3_funclt(){
     #ifdef ENABLE_HISTORY
     if(this->historyEnabled){
         //Now, in case the queue dump file has been specified, I have to check if I need \
-            to save it
+            to save the yet undumped elements
         if(this->histFile){
             if(this->undumpedHistElems > 0){
-                boost::circular_buffer<HistoryInstrType>::const_iterator beg, end;
-                for(beg = this->instHistoryQueue.begin(), end = this->instHistoryQueue.end(); beg \
-                    != end; beg++){
-                    this->histFile << beg->toStr() << std::endl;
+                std::vector<std::string> histVec;
+                boost::circular_buffer<HistoryInstrType>::const_reverse_iterator beg, end;
+                unsigned int histRead = 0;
+                for(histRead = 0, beg = this->instHistoryQueue.rbegin(), end = this->instHistoryQueue.rend(); \
+                    beg != end && histRead < this->undumpedHistElems; beg++, histRead++){
+                    histVec.push_back(beg->toStr());
+                }
+                std::vector<std::string>::const_reverse_iterator histVecBeg, histVecEnd;
+                for(histVecBeg = histVec.rbegin(), histVecEnd = histVec.rend(); histVecBeg != histVecEnd; \
+                    histVecBeg++){
+                    this->histFile <<  *histVecBeg << std::endl;
                 }
             }
             this->histFile.flush();

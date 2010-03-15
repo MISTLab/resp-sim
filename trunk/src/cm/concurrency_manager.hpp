@@ -60,7 +60,6 @@ namespace std {
   using ::time;
 }
 #endif
-
 #include "concurrency_structures.hpp"
 
 ///Variables necessary to implement a SystemC lock:
@@ -369,7 +368,7 @@ class ConcurrencyManager{
         
             if(createMainThread) {
                 // Set processor to run the main thread
-                ThreadEmu * th = new ThreadEmu(0, main_thread_address, NULL, memSize, tlsSize, &defaultAttr);
+                ThreadEmu * th = new ThreadEmu(0, main_thread_address, 0, memSize, tlsSize, &defaultAttr);
                 th->status = ThreadEmu::RUNNING;
                 existingThreads[0] = th;
                 processorInstance.setSP(memSize - tlsSize);
@@ -380,7 +379,7 @@ class ConcurrencyManager{
                 processorInstance.setPC(this->nop_loop_address);
                 processorInstance.setLR(this->nop_loop_address);
                 processorInstance.setSP(memSize - tlsSize);
-                processorInstance.setFP(memSize - tlsSize);
+                //processorInstance.setFP(memSize - tlsSize);
             }
 
         }
@@ -469,6 +468,9 @@ class ConcurrencyManager{
         ///*********** Condition Variable related routines *******************
         int createCond(unsigned int procId);
         void destroyCond(unsigned int procId, int cond);
+    protected:
+        void lockConditionMutex(ThreadEmu* thread, MutexEmu* mutex);
+    public:
         void signalCond(int cond, bool broadcast, unsigned int procId);
         int waitCond(int cond, int mutex, double time, unsigned int procId);
 };

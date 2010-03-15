@@ -130,7 +130,6 @@ BFDWrapper::BFDWrapper(std::string binaryName) : execImage(NULL){
 
     this->wordsize = bfd_get_arch_size(this->execImage)/(8*bfd_octets_per_byte(this->execImage));
     
-    std::cout << "Step 1\n";
 
     //Now I read the different sections and save them in a temporary vector
     struct bfd_section *p = NULL;
@@ -138,6 +137,11 @@ BFDWrapper::BFDWrapper(std::string binaryName) : execImage(NULL){
     bfd_size_type gblEndAddr = 0;
     for (p = this->execImage->sections; p != NULL; p = p->next){
         flagword flags = bfd_get_section_flags(this->execImage, p);
+
+        #ifndef NDEBUG
+        std::cerr << "Section " << p->name << " Start Address " << std::hex << vma << " Size " << std::hex << datasize << " End Address " << std::hex << datasize + vma << " flags " << std::hex << std::showbase << flags << std::dec << std::endl;
+        #endif
+
         if((flags & SEC_ALLOC) != 0 && (flags & SEC_DEBUGGING) == 0 && (flags & SEC_THREAD_LOCAL) == 0){
             bfd_size_type datasize = bfd_section_size(this->execImage, p);
             bfd_vma vma = bfd_get_section_vma(this->execImage, p);
@@ -148,6 +152,7 @@ BFDWrapper::BFDWrapper(std::string binaryName) : execImage(NULL){
              if((flags & SEC_HAS_CONTENTS) != 0){
                 Section sec;
                 sec.datasize = datasize;
+                sec.type = flags;
                 sec.startAddr = vma;
                 sec.data = new bfd_byte[sec.datasize];
                 sec.descriptor = p;
@@ -157,7 +162,6 @@ BFDWrapper::BFDWrapper(std::string binaryName) : execImage(NULL){
             }
         }
     }
-    std::cout << "Step 2\n";
     this->codeSize.first = gblEndAddr;
     this->codeSize.second = gblStartAddr;
     this->execName = bfd_get_filename(this->execImage);
@@ -184,7 +188,6 @@ BFDWrapper::BFDWrapper(std::string binaryName) : execImage(NULL){
     this->readSyms();
     this->readSrc();
 
-    std::cout << "Step 3\n";
     //Finally I deallocate part of the memory
     std::vector<Section>::iterator sectionsIter, sectionsEnd;
     for(sectionsIter = this->secList.begin(), sectionsEnd = this->secList.end(); sectionsIter != sectionsEnd; sectionsIter++){
@@ -192,7 +195,6 @@ BFDWrapper::BFDWrapper(std::string binaryName) : execImage(NULL){
     }
     this->secList.clear();
     free(this->sy);
-    std::cout << "Step 4\n";
 }
 
 BFDWrapper::~BFDWrapper(){
@@ -220,7 +222,7 @@ std::map<std::string,  unsigned int> BFDWrapper::findFunction(boost::regex &regE
 ///symbol can be mapped to an address). Note
 ///That if address is in the middle of a function, the symbol
 ///returned refers to the function itself
-std::list<std::string> BFDWrapper::symbolsAt(unsigned int address) const{
+std::list<std::string> BFDWrapper::symbolsAt(unsigned int address) const throw(){ 
     template_map<unsigned int, std::list<std::string> >::const_iterator symMap1 = this->addrToSym.find(address);
     if(symMap1 == this->addrToSym.end()){
         template_map<unsigned int, std::string>::const_iterator symMap2 = this->addrToFunction.find(address);
@@ -237,7 +239,7 @@ std::list<std::string> BFDWrapper::symbolsAt(unsigned int address) const{
 ///"" if no symbol is found at the specified address; note
 ///That if address is in the middle of a function, the symbol
 ///returned refers to the function itself
-std::string BFDWrapper::symbolAt(unsigned int address) const{
+std::string BFDWrapper::symbolAt(unsigned int address) const throw(){
     template_map<unsigned int, std::list<std::string> >::const_iterator symMap1 = this->addrToSym.find(address);
     if(symMap1 == this->addrToSym.end()){
         template_map<unsigned int, std::string>::const_iterator symMap2 = this->addrToFunction.find(address);
@@ -255,7 +257,7 @@ std::string BFDWrapper::symbolAt(unsigned int address) const{
 ///(which usually is its address);
 ///valid is set to false if no symbol with the specified
 ///name is found
-unsigned int BFDWrapper::getSymAddr(const std::string &symbol, bool &valid) const{
+unsigned int BFDWrapper::getSymAddr(const std::string &symbol, bool &valid) const throw(){
     std::map<std::string, unsigned int>::const_iterator addrMap = this->symToAddr.find(symbol);
     if(addrMap == this->symToAddr.end()){
         valid = false;
@@ -268,7 +270,7 @@ unsigned int BFDWrapper::getSymAddr(const std::string &symbol, bool &valid) cons
 }
 
 ///Accesses the BFD internal structures in order to get the dissassbly of the symbols
-void BFDWrapper::readSyms(){
+    void BFDWrapper::readSyms(){
     //make sure there are symbols in the file
     if ((bfd_get_file_flags (execImage) & HAS_SYMS) == 0)
         return;
@@ -296,8 +298,8 @@ void BFDWrapper::readSyms(){
         }
         bfd_get_symbol_info (this->execImage, sym, &syminfo);
 
-        if((sym->flags & BSF_DEBUGGING) || bfd_is_target_special_symbol(this->execImage, sym) ||
-                    (char)syminfo.type == 'b' || (char)syminfo.type == 'r' || (char)syminfo.type == 'a' || bfd_is_undefined_symclass (syminfo.type)){
+        if((sym->flags & BSF_DEBUGGING) || (char)syminfo.type == 'b' || (char)syminfo.type == 'r' || (char)syminfo.type == 'a' || 
+                bfd_is_target_special_symbol(this->execImage, sym) || bfd_is_undefined_symclass (syminfo.type)){
             continue;
         }
 
@@ -315,29 +317,31 @@ void BFDWrapper::readSyms(){
 void BFDWrapper::readSrc(){
     std::vector<Section>::iterator sectionsIter, sectionsEnd;
     for(sectionsIter = this->secList.begin(), sectionsEnd = this->secList.end(); sectionsIter != sectionsEnd; sectionsIter++){
-        for(bfd_vma i = 0; i < sectionsIter->datasize; i += this->wordsize){
-            const char *filename = NULL;
-            const char *functionname = NULL;
-            unsigned int line = 0;
+        if( (sectionsIter->type & SEC_DATA) == 0 ) {
+            for(bfd_vma i = 0; i < sectionsIter->datasize; i += this->wordsize){
+                const char *filename = NULL;
+                const char *functionname = NULL;
+                unsigned int line = 0;
 
-            if(!bfd_find_nearest_line (this->execImage, sectionsIter->descriptor, this->sy, i, &filename,
-                        &functionname, &line)){
-                continue;
+                if(!bfd_find_nearest_line (this->execImage, sectionsIter->descriptor, this->sy, i, &filename,
+                            &functionname, &line)){
+                    continue;
+                }
+
+                if (filename != NULL && *filename == '\0')
+                    filename = NULL;
+                if (functionname != NULL && *functionname == '\0')
+                    functionname = NULL;
+
+                if (functionname != NULL  && this->addrToFunction.find(i + sectionsIter->startAddr) == this->addrToFunction.end()){
+                    char *name = bfd_demangle (this->execImage, functionname, DMGL_ANSI | DMGL_PARAMS);
+                    if(name == NULL)
+                        name = (char *)functionname;
+                    this->addrToFunction[i + sectionsIter->startAddr] = name;
+                }
+                if (line > 0 && this->addrToSrc.find(i + sectionsIter->startAddr) == this->addrToSrc.end())
+                    this->addrToSrc[i + sectionsIter->startAddr] = std::pair<std::string, unsigned int>(filename == NULL ? "???" : filename, line);
             }
-
-            if (filename != NULL && *filename == '\0')
-                filename = NULL;
-            if (functionname != NULL && *functionname == '\0')
-                functionname = NULL;
-
-            if (functionname != NULL && this->addrToFunction.find(i + sectionsIter->startAddr) == this->addrToFunction.end()){
-                char *name = bfd_demangle (this->execImage, functionname, DMGL_ANSI | DMGL_PARAMS);
-                if(name == NULL)
-                    name = (char *)functionname;
-                this->addrToFunction[i + sectionsIter->startAddr] = name;
-            }
-            if (line > 0 && this->addrToSrc.find(i + sectionsIter->startAddr) == this->addrToSrc.end())
-                this->addrToSrc[i + sectionsIter->startAddr] = std::pair<std::string, unsigned int>(filename == NULL ? "???" : filename, line);
         }
     }
 }

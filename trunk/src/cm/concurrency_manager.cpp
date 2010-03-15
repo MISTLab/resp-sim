@@ -1118,7 +1118,7 @@ void resp::ConcurrencyManager::postSem(int sem, unsigned int procId){
         existingSem[sem]->owner = toAwakeTh;
     }
     else { 
-        existingSem[sem]->owner = managedProc[procId]->runThread;
+        //existingSem[sem]->owner = managedProc[procId]->runThread;
         existingSem[sem]->value++;
     }
     #ifndef NDEBUG
@@ -1142,7 +1142,7 @@ void resp::ConcurrencyManager::waitSem(int sem, unsigned int procId){
     if(existingSem[sem]->value > 0) {
         existingSem[sem]->value--;
         existingSem[sem]->owner = managedProc[procId]->runThread;
-    } else if( existingSem[sem]->owner != managedProc[procId]->runThread ) {
+    } else { //if( existingSem[sem]->owner != managedProc[procId]->runThread ) {
         //Finally here I have to deschedule the current thread since the semaphore is empty
         Processor<unsigned int> *curProc = managedProc[procId];
         int th = curProc->deSchedule(nop_loop_address);
@@ -1189,150 +1189,176 @@ void resp::ConcurrencyManager::destroyCond(unsigned int procId, int cond){
     delete existingCond[cond];
     existingCond.erase(cond);
 }
-void resp::ConcurrencyManager::signalCond(int cond, bool broadcast, unsigned int procId){
-    std::cerr << "signal condition NOT IMPLEMENTED\n";
-//     //I simply have to awake the threads waiting on this condition;
-//     //note that when the thread is awaken, it has to acquire the mutex
-//     //associated with the condition variable; in case it cannot it
-//     //is not awaken, but simply moved in the queue of the
-//     //ccoresponding mutex
-//     #ifndef NDEBUG
-//     std::cerr << "waiting for lock to Signal condition variable " << cond << std::endl;
-//     #endif
-//
-//     while(schedulingLockBusy)
-//         wait(schedulingEvent);
-//     schedulingLockBusy = true;
-//
-//     #ifndef NDEBUG
-//     std::cerr << "Signaling condition variable " << cond << std::endl;
-//     #endif
-//
-//     if(existingCond.find(cond) == existingCond.end()){
-//         THROW_EXCEPTION("Cannot signal condition variable " << cond << ": unable to find it");
-//     }
-//
-//     if(existingCond[cond]->waitingTh.size() > 0){
-//         MutexEmu * mutex = NULL;
-//         if(existingCond[cond]->mutex == -1)
-//             THROW_EXCEPTION("Mutex associated to conditional variable " << cond << " is equal to -1");
-//         else{
-//             #ifndef NDEBUG
-//             if(existingMutex.find(existingCond[cond]->mutex) == existingMutex.end()){
-//                 THROW_EXCEPTION("Cannot get mutex " << existingCond[cond]->mutex << " unable to find it in condition variable " << cond);
-//             }
-//             #endif
-//             mutex = existingMutex[existingCond[cond]->mutex];
-//         }
-//         if(broadcast){
-//             std::list<ThreadEmu *>::iterator thIter, thEnd;
-//             thIter = existingCond[cond]->waitingTh.begin();
-//             std::map<ThreadEmu *, std::pair<double, int> >::iterator timedIter = timedThreads.find(*thIter);
-//             if(timedIter != timedThreads.end())
-//                 timedThreads.erase(timedIter);
-//             //Now I have to check if the mutex is free for the first thread and
-//             //lock it in case
-//             returnFromCond(*thIter, mutex);
-//
-//             for(thIter++, thEnd = existingCond[cond]->waitingTh.end(); thIter != thEnd; thIter++){
-//                 //Of course the mutex is busy for all the other threads since
-//                 //the first one has just locked it: I simply put those
-//                 //threads in the waiting queue of the mutex
-//                 mutex->waitingTh.push_back((*thIter));
-//                 timedIter = timedThreads.find(*thIter);
-//                 if(timedIter != timedThreads.end())
-//                     timedThreads.erase(timedIter);
-//             }
-//             existingCond[cond]->waitingTh.clear();
-//             existingCond[cond]->mutex = -1;
-//         }
-//         else{
-//             ThreadEmu * toAwakeTh = existingCond[cond]->waitingTh.front();
-//             existingCond[cond]->waitingTh.pop_front();
-//             std::map<ThreadEmu *, std::pair<double, int> >::iterator timedIter = timedThreads.find(toAwakeTh);
-//             if(timedIter != timedThreads.end())
-//                 timedThreads.erase(timedIter);
-//
-//             returnFromCond(toAwakeTh, mutex);
-//
-//             if(existingCond[cond]->waitingTh.size() == 0)
-//                 existingCond[cond]->mutex = -1;
-//
-//             #ifndef NDEBUG
-//             Processor &curProc = findProcessor(procId);
-//             std::cerr << "Thread " << curProc.runThread->id << " awaking thread " << toAwakeTh->id << std::endl;
-//             #endif
-//         }
-//     }
-//     schedulingLockBusy = false;
-//     schedulingEvent.notify();
+
+
+void resp::ConcurrencyManager::lockConditionMutex(ThreadEmu *thread, MutexEmu *mutex){
+    if(mutex->owner == thread){
+        //Reentrant mutex, I have to increment the recursive index
+        mutex->recursiveIndex++;
+        thread->status = ThreadEmu::READY;
+        readyQueue->push_back(thread);
+    }    
+    else if(mutex->status == MutexEmu::FREE){
+        // Free mutex
+        mutex->status = MutexEmu::LOCKED;
+        mutex->owner = thread;
+        #ifndef NDEBUG
+        std::cerr << "Thread " << mutex->owner->id << std::endl;
+        #endif
+        thread->status = ThreadEmu::READY;
+        readyQueue->push_back(thread);
+    }    
+    else{
+        #ifndef NDEBUG
+        std::cerr << "Thread " << thread->id << std::endl;
+        #endif
+        //Mutex already locked
+        mutex->waitingTh.push_back(thread);
+    }    
 }
+
+
+void resp::ConcurrencyManager::signalCond(int cond, bool broadcast, unsigned int procId){
+    //I simply have to awake the threads waiting on this condition;
+    //note that when the thread is awaken, it has to acquire the mutex
+    //associated with the condition variable; in case it cannot it
+    //is not awaken, but simply moved in the queue of the
+    //ccoresponding mutex
+    #ifndef NDEBUG
+    std::cerr << "waiting for lock to Signal condition variable " << cond << std::endl;
+    #endif
+
+    this->schedLock.lock();
+
+    #ifndef NDEBUG
+    std::cerr << "Signaling condition variable " << cond << std::endl;
+    #endif
+
+    if(existingCond.find(cond) == existingCond.end()){
+        THROW_EXCEPTION("Cannot signal condition variable " << cond << ": unable to find it");
+    }
+
+    if(existingCond[cond]->waitingTh.size() > 0){
+        MutexEmu * mutex = NULL;
+        if(existingCond[cond]->mutex == -1)
+            THROW_EXCEPTION("Mutex associated to conditional variable " << cond << " is equal to -1");
+        else{
+            #ifndef NDEBUG
+            if(existingMutex.find(existingCond[cond]->mutex) == existingMutex.end()){
+                THROW_EXCEPTION("Cannot get mutex " << existingCond[cond]->mutex << " unable to find it in condition variable " << cond);
+            }
+            #endif
+            mutex = existingMutex[existingCond[cond]->mutex];
+        }
+        if(broadcast){
+            std::list<ThreadEmu *>::iterator thIter, thEnd;
+            thIter = existingCond[cond]->waitingTh.begin();
+            //std::map<ThreadEmu *, std::pair<double, int> >::iterator timedIter = timedThreads.find(*thIter);
+            //if(timedIter != timedThreads.end())
+            //    timedThreads.erase(timedIter);
+            //Now I have to check if the mutex is free for the first thread and
+            //lock it in case
+            lockConditionMutex(*thIter, mutex);
+
+            for(thIter++, thEnd = existingCond[cond]->waitingTh.end(); thIter != thEnd; thIter++){
+                //Of course the mutex is busy for all the other threads since
+                //the first one has just locked it: I simply put those
+                //threads in the waiting queue of the mutex
+                mutex->waitingTh.push_back((*thIter));
+                //timedIter = timedThreads.find(*thIter);
+                //if(timedIter != timedThreads.end())
+                //    timedThreads.erase(timedIter);
+            }
+            existingCond[cond]->waitingTh.clear();
+            existingCond[cond]->mutex = -1;
+        }
+        else{
+            ThreadEmu * toAwakeTh = existingCond[cond]->waitingTh.front();
+            existingCond[cond]->waitingTh.pop_front();
+            //std::map<ThreadEmu *, std::pair<double, int> >::iterator timedIter = timedThreads.find(toAwakeTh);
+            //if(timedIter != timedThreads.end())
+            //    timedThreads.erase(timedIter);
+
+            lockConditionMutex(toAwakeTh, mutex);
+
+            if(existingCond[cond]->waitingTh.size() == 0)
+                existingCond[cond]->mutex = -1;
+
+            #ifndef NDEBUG
+            Processor<unsigned int> *curProc = managedProc[procId];
+            std::cerr << "Thread " << curProc->runThread->id << " awaking thread " << toAwakeTh->id << std::endl;
+            #endif
+        }
+    }
+
+    this->schedLock.unlock();
+}
+
 int resp::ConcurrencyManager::waitCond(int cond, int mutex, double time, unsigned int procId){
-    std::cerr << "wait condition NOT IMPLEMENTED\n";
-//     while(schedulingLockBusy)
-//         wait(schedulingEvent);
-//     schedulingLockBusy = true;
-//
-//     #ifndef NDEBUG
-//     if(time > 0 && tk == NULL)
-//         THROW_EXCEPTION("Trying to do a timed wait on a condition variable while the Time Keeper is not existing");
-//     #endif
-//     if(existingCond.find(cond) == existingCond.end()){
-//         THROW_EXCEPTION("Cannot wait on condition variable " << cond << ": unable to find it");
-//     }
-//     if(existingCond[cond]->mutex != -1 && existingCond[cond]->mutex != mutex){
-//         #ifndef NDEBUG
-//         std::cerr << "Condition variable " << cond << " has assigned mutex " << existingCond[cond]->mutex << " but proc " << procId << " is trying to use mutex " << mutex << std::endl;
-//         #endif
-//         return EINVAL;
-//     }
-//
-//     if(existingCond[cond]->mutex == -1)
-//         existingCond[cond]->mutex = mutex;
-//     #ifndef NDEBUG
-//     std::cerr << "Issn condition variable " << cond << " is going to unlock mutex " << existingCond[cond]->mutex << std::endl;
-//     #endif
-//     schedulingLockBusy = false;
-//     unLockMutex(mutex, procId);
-//     schedulingLockBusy = true;
-//
-//     Processor &curProc = findProcessor(procId);
-//     int th = curProc.deSchedule();
-//     if(time <= 0 || sc_time_stamp().to_double() >= time*1000)
-//         existingCond[cond]->waitingTh.push_back(existingThreads[th]);
-//     #ifndef NDEBUG
-//     std::cerr << "DeScheduling thread " << th << " because waiting on condition variable " << cond << std::endl;
-//     #endif
-//     //Now I get the first ready thread and I schedule it on the processor
-//     ThreadEmu * readTh = findReadyThread();
-//     if(readTh != NULL){
-//         curProc.schedule(readTh);
-//     }
-//
-//     if(time > 0){
-//         if(sc_time_stamp().to_double() >= time*1000){
-//             #ifndef NDEBUG
-//             std::cerr << "Thread " << th << " not waiting on condition variable " << cond << " beacause " << time << " has elapsed :-) " << std::endl;
-//             #endif
-//             //I set the error return value
-//             existingThreads[th]->setSyscRetVal = true;
-//             existingThreads[th]->syscallRetVal = ETIMEDOUT;
-//             //And I move back the thread in the ready queue
-//             returnFromCond(existingThreads[th], existingMutex[mutex]);
-//         }
-//         else{
-//             #ifndef NDEBUG
-//             std::cerr << "Thread " << th << " time waiting on condition variable " << cond << " time " << time << std::endl;
-//             #endif
-//             std::pair<ThreadEmu *, std::pair<double, int> > tTh(existingThreads[th], std::pair<double, int>(time*1000, mutex));
-//             timedThreads.insert(tTh);
-//             tk->startCount.notify();
-//         }
-//     }
-//     schedulingLockBusy = false;
-//     schedulingEvent.notify();
-//
-//     return 0;
+
+    this->schedLock.lock();    
+
+//    #ifndef NDEBUG
+//    if(time > 0 && tk == NULL)
+//        THROW_EXCEPTION("Trying to do a timed wait on a condition variable while the Time Keeper is not existing");
+//    #endif
+    if(existingCond.find(cond) == existingCond.end()){
+        THROW_EXCEPTION("Cannot wait on condition variable " << cond << ": unable to find it");
+    }
+    if(existingCond[cond]->mutex != -1 && existingCond[cond]->mutex != mutex){
+        #ifndef NDEBUG
+        std::cerr << "Condition variable " << cond << " has assigned mutex " << existingCond[cond]->mutex << " but proc " << procId << " is trying to use mutex " << mutex << std::endl;
+        #endif
+        return -1;
+    }
+
+    if(existingCond[cond]->mutex == -1)
+        existingCond[cond]->mutex = mutex;
+    #ifndef NDEBUG
+    std::cerr << "Issn condition variable " << cond << " is going to unlock mutex " << existingCond[cond]->mutex << std::endl;
+    #endif
+
+    this->schedLock.unlock();    
+    unLockMutex(mutex, procId);
+    this->schedLock.lock();    
+
+    Processor<unsigned int> *curProc = managedProc[procId];
+    int th = curProc->deSchedule(nop_loop_address);
+//    if(time <= 0 || sc_time_stamp().to_double() >= time*1000)
+    existingCond[cond]->waitingTh.push_back(existingThreads[th]);
+    #ifndef NDEBUG
+    std::cerr << "DeScheduling thread " << th << " because waiting on condition variable " << cond << std::endl;
+    #endif
+    //Now I get the first ready thread and I schedule it on the processor
+    ThreadEmu * readTh = findReadyThread();
+    if(readTh != NULL){
+        curProc->schedule(readTh);
+    }
+
+//    if(time > 0){
+//        if(sc_time_stamp().to_double() >= time*1000){
+//            #ifndef NDEBUG
+//            std::cerr << "Thread " << th << " not waiting on condition variable " << cond << " beacause " << time << " has elapsed :-) " << std::endl;
+//            #endif
+//            //I set the error return value
+//            existingThreads[th]->setSyscRetVal = true;
+//            existingThreads[th]->syscallRetVal = ETIMEDOUT;
+//            //And I move back the thread in the ready queue
+//            returnFromCond(existingThreads[th], existingMutex[mutex]);
+//        }
+//        else{
+//            #ifndef NDEBUG
+//            std::cerr << "Thread " << th << " time waiting on condition variable " << cond << " time " << time << std::endl;
+//            #endif
+//            std::pair<ThreadEmu *, std::pair<double, int> > tTh(existingThreads[th], std::pair<double, int>(time*1000, mutex));
+//            timedThreads.insert(tTh);
+//            tk->startCount.notify();
+//        }
+//    }
+
+    this->schedLock.unlock();    
+
+    return 0;
 }
 
 ///***************************************************************
