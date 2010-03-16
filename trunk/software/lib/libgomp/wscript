@@ -27,6 +27,6 @@ def build(bld):
         obj.env.append_unique('CFLAGS', [ '-g3'] )
         obj.env.append_unique('CPPFLAGS',  additionalFlags )
         obj.name         = 'gomp_'+arch
-        obj.target       = 'gomp'
+        obj.target       = 'gomp_'+arch
         obj.export_incdirs = '.'
         #ecos_version = obj.clone_object
