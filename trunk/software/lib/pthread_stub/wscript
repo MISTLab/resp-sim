@@ -11,10 +11,7 @@ def build(bld):
         obj = bld.new_task_gen('cc', 'staticlib')
         obj.env  = bld.env_of_name(arch).copy()
 
-        if arch.startswith('ecos'):
-            obj.source = 'empty.c'
-        else:
-            obj.find_sources_in_dirs('.')
+        obj.find_sources_in_dirs('.')
         obj.name         = 'pthread_stub_'+arch
         obj.target       = 'pthread_stub_'+arch
         obj.export_incdirs = '.'

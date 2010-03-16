@@ -7,7 +7,7 @@ def build(bld):
         
         local_libs = 'ompsrc_cpp_%s gomp_%s pthread_stub_%s' % ( arch, arch, arch)
 
-        obj = bld.new_task_gen('cxx','program')
+        obj = bld.new_task_gen(features='cxx cprogram')
         obj.env = bld.env_of_name(arch).copy()
         obj.source = """
             cpp_qsomp1.cpp
@@ -21,7 +21,7 @@ def build(bld):
         obj.env.append_unique('CXXFLAGS', '-gstabs')
         obj.env.append_unique('LINKFLAGS', '-lm')
 
-        obj = bld.new_task_gen('cxx','program')
+        obj = bld.new_task_gen(features='cxx cprogram')
         obj.env = bld.env_of_name(arch).copy()
         obj.source = """
             cpp_qsomp2.cpp
@@ -34,7 +34,7 @@ def build(bld):
         obj.env.append_unique('CXXFLAGS', '-fopenmp')
         obj.env.append_unique('LINKFLAGS', '-lm')
 
-        obj = bld.new_task_gen('cxx','program')
+        obj = bld.new_task_gen(features='cxx cprogram')
         obj.env = bld.env_of_name(arch).copy()
         obj.source = """
             cpp_qsomp3.cpp
@@ -47,7 +47,7 @@ def build(bld):
         obj.env.append_unique('CXXFLAGS', '-fopenmp')
         obj.env.append_unique('LINKFLAGS', '-lm')
 
-        obj = bld.new_task_gen('cxx','program')
+        obj = bld.new_task_gen(features='cxx cprogram')
         obj.env = bld.env_of_name(arch).copy()
         obj.source = """
             cpp_qsomp4.cpp
@@ -60,7 +60,7 @@ def build(bld):
         obj.env.append_unique('CXXFLAGS', '-fopenmp')
         obj.env.append_unique('LINKFLAGS', '-lm')
 
-        obj = bld.new_task_gen('cxx','program')
+        obj = bld.new_task_gen(features='cxx cprogram')
         obj.env = bld.env_of_name(arch).copy()
         obj.source = """
             cpp_qsomp5.cpp
@@ -73,7 +73,7 @@ def build(bld):
         obj.env.append_unique('CXXFLAGS', '-fopenmp')
         obj.env.append_unique('LINKFLAGS', '-lm')
 
-        obj = bld.new_task_gen('cxx','program')
+        obj = bld.new_task_gen(features='cxx cprogram')
         obj.env = bld.env_of_name(arch).copy()
         obj.source = """
             cpp_qsomp6.cpp

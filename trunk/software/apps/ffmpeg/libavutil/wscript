@@ -8,7 +8,7 @@ def build(bld):
     for arch in bld.lst_variants:
         if arch == 'default': continue
 
-        obj = bld.new_task_gen('cc','staticlib')
+        obj = bld.new_task_gen(features='cc cstaticlib')
         obj.env = bld.env_of_name(arch).copy()
         obj.find_sources_in_dirs('.')
         obj.includes     = obj.env['FFMPEG_SUBDIRS_INCLUDES']
