@@ -7,7 +7,7 @@ def build(bld):
     for arch in bld.lst_variants:
         if arch == 'default': continue
 
-        obj = bld.new_task_gen('cc','program')
+        obj = bld.new_task_gen(features='cc cprogram')
         obj.env = bld.env_of_name(arch).copy()
         obj.source = """
             c_loopA.solution1.c
@@ -19,7 +19,7 @@ def build(bld):
         obj.env.append_unique('CCFLAGS', '-fopenmp')
         obj.env.append_unique('LINKFLAGS', '-lm')
 
-        obj = bld.new_task_gen('cc','program')
+        obj = bld.new_task_gen(features='cc cprogram')
         obj.env = bld.env_of_name(arch).copy()
         obj.source = """
             c_loopA.solution2.c
@@ -31,7 +31,7 @@ def build(bld):
         obj.env.append_unique('CCFLAGS', '-fopenmp')
         obj.env.append_unique('LINKFLAGS', '-lm')
 
-        obj = bld.new_task_gen('cc','program')
+        obj = bld.new_task_gen(features='cc cprogram')
         obj.env = bld.env_of_name(arch).copy()
         obj.source = """
             c_loopA.solution3.c
@@ -43,7 +43,7 @@ def build(bld):
         obj.env.append_unique('CCFLAGS', '-fopenmp')
         obj.env.append_unique('LINKFLAGS', '-lm')
 
-        obj = bld.new_task_gen('cc','program')
+        obj = bld.new_task_gen(features='cc cprogram')
         obj.env = bld.env_of_name(arch).copy()
         obj.source = """
             c_loopB.pipelineSolution.c

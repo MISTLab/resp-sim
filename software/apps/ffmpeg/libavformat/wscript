@@ -8,7 +8,7 @@ def build(bld):
     for arch in bld.lst_variants:
         if arch == 'default': continue
 
-        obj = bld.new_task_gen('cc','staticlib')
+        obj = bld.new_task_gen(features='cc cstaticlib')
         obj.env = bld.env_of_name(arch).copy()
         obj.source = """
         allformats.c cutils.c os_support.c sdp.c utils.c avio.c aviobuf.c raw.c adtsenc.c aiff.c riff.c amr.c apc.c ape.c asf.c asfcrypt.c asf-enc.c au.c avidec.c avienc.c swf.c avs.c vocdec.c voc.c bethsoftvid.c c93.c crcenc.c daud.c dsicin.c dv.c dvenc.c dxa.c eacdata.c electronicarts.c ffm.c flic.c flvdec.c flvenc.c 4xm.c framecrcenc.c gif.c gifdec.c gxf.c gxfenc.c idcin.c iff.c img2.c ipmovie.c movenc.c isom.c avc.c lmlm4.c matroskaenc.c matroska.c matroskadec.c mm.c mmf.c mov.c mp3.c mpc.c mpc8.c mpegenc.c mpeg.c mpegts.c mpegtsenc.c mpjpeg.c msnwc_tcp.c mtv.c mxf.c nsvdec.c nutdec.c nut.c nutenc.c nuv.c oggdec.c oggparseflac.c oggparseogm.c oggparsespeex.c oggparsetheora.c oggparsevorbis.c oggenc.c pva.c rl2.c rmdec.c rmenc.c idroq.c rpl.c segafilm.c siff.c smacker.c sol.c psxstr.c thp.c tiertexseq.c tta.c txd.c vc1test.c sierravmd.c vocenc.c wav.c wc3movie.c westwood.c wv.c yuv4mpeg.c file.c 

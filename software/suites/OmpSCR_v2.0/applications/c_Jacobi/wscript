@@ -19,7 +19,7 @@ def build(bld):
 #        obj.env.append_unique('CCFLAGS', '-fopenmp')
 #        obj.env.append_unique('LINKFLAGS', '-lm')
 
-        obj = bld.new_task_gen('cc','program')
+        obj = bld.new_task_gen(features='cc cprogram')
         obj.env = bld.env_of_name(arch).copy()
         obj.source = """
             c_jacobi01.c
@@ -31,7 +31,7 @@ def build(bld):
         obj.env.append_unique('CCFLAGS', '-fopenmp')
         obj.env.append_unique('LINKFLAGS', '-lm')
 
-        obj = bld.new_task_gen('cc','program')
+        obj = bld.new_task_gen(features='cc cprogram')
         obj.env = bld.env_of_name(arch).copy()
         obj.source = """
             c_jacobi02.c

@@ -5,8 +5,10 @@ import sys,os
 def build( bld ):
    for arch in bld.lst_variants:
        if arch == 'default': continue
-       obj = bld.new_task_gen('cc','program')
-       obj.env      = bld.env_of_name(arch).copy()
+       obj = bld.new_task_gen(features ='cxx cprogram', 
+                              name='extract_skel',
+                              target='extract_skel',
+                              uselib_local = 'gomp_'+arch+' pthread_stub_'+arch,
+                              env = bld.env_of_name(arch).copy()
+                             )
        obj.find_sources_in_dirs('.')
-       obj.target = 'extract_skel'
-       obj.uselib_local = 'gomp_'+arch+' pthread_stub_'+arch

@@ -6,7 +6,7 @@ def build(bld):
 
         bld.add_subdirs('libavutil libavdevice libavformat libavfilter libavcodec llrint')
         libs = 'avutil_' + arch + ' pthread_stub_'+arch # + ' interrupt_' + arch + ' avutil_' + arch
-        obj = bld.new_task_gen('cc','program')
+        obj = bld.new_task_gen(features='cc cprogram')
         obj.env = bld.env_of_name(arch).copy()
         obj.add_objects = 'avcodec_' + arch + ' lrint_' + arch + ' avformat_' + arch + ' avdevice_' + arch
         obj.find_sources_in_dirs('.')
