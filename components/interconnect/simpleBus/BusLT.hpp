@@ -50,8 +50,10 @@
  *
  *
  *
- *   (c) Fabio Arlati
- *       arlati.fabio@gmail.com
+ *   (c) Giovanni Beltrame, Luca Fossati
+ *       Giovanni.Beltrame@esa.int fossati@elet.polimi.it
+ *
+ *   Component developed by: Fabio Arlati arlati.fabio@gmail.com
  *
 \***************************************************************************/
 
@@ -157,23 +159,28 @@ public:
 	sc_time latency;
 	unsigned int numAccesses;
 	unsigned int numWords;
+	unsigned int *accessCounter;
+	unsigned int numMasters;
 	target_socket_type targetSocket;
 	initiator_socket_type initiatorSocket;
 
 	BusLT(sc_module_name module_name, sc_time latency = SC_ZERO_TIME, unsigned int numMasters = 0) : 
 			initiatorSocket((boost::lexical_cast<std::string>(module_name) + "_initSock").c_str()),
 			targetSocket((boost::lexical_cast<std::string>(module_name) + "_targSock").c_str()),
-			latency(latency) {
+			latency(latency), numMasters(numMasters) {
+		this->numAccesses = 0;
+		this->numWords = 0;
+		this->accessCounter = (unsigned int*) malloc(2*numMasters*sizeof(unsigned int));
 		for(int i = 0; i < numMasters; i++){
 			events[i].first = new sc_event;
 			events[i].second = false;
+			accessCounter[2*i]=0;
+			accessCounter[2*i+1]=0;
 		}
 		this->targetSocket.register_b_transport(this, &BusLT::b_transport);
 		this->targetSocket.register_get_direct_mem_ptr(this, &BusLT::get_direct_mem_ptr);
 		this->targetSocket.register_transport_dbg(this, &BusLT::transport_dbg);
 		this->busy = false;
-		this->numAccesses = 0;
-		this->numWords = 0;
 		this->curr_target_port_rank = 0;
 		end_module();
 	}
@@ -183,6 +190,7 @@ public:
 				map != m_address_map_list.end(); map ++) {
 			if ((*map)) delete (*map);
 		}
+		free(accessCounter);
 	}
 
 	/*---------------------------------------------------------
@@ -238,6 +246,16 @@ public:
 		}
 	}
 
+	/*---------------------------------------
+	 * Prints out the number of bus accesses
+	 *---------------------------------------*/
+	void printAccesses() {
+		for (unsigned int i = 0; i < numMasters; i++) {
+			cout << "Accesses with tag " << i << ":\t" << accessCounter[i] << endl;
+		}
+		cout << "Total Accesses:\t\t" << numAccesses << endl;
+	}
+
 	/*-----------------------------------
 	 * b_transport method implementation
 	 *-----------------------------------*/
@@ -282,6 +300,7 @@ public:
 		if (len%sizeof(BUSWIDTH) != 0) words++;
 		delay += words*this->latency;
 //		wait(words*this->latency);
+		this->accessCounter[tag]++;
 		this->numAccesses++;
 		this->numWords+=words;
 		trans.set_dmi_allowed(false);			// Disables DMI in order to insert the bus latency for each transaction

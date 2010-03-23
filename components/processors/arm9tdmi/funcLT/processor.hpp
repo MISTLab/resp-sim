@@ -90,6 +90,7 @@ namespace arm9tdmi_funclt_trap{
 
     class Processor_arm9tdmi_funclt : public sc_module{
         private:
+        bool resetCalled;
         Decoder decoder;
         tlm_utils::tlm_quantumkeeper quantKeeper;
         unsigned int profStartAddr;
@@ -98,7 +99,7 @@ namespace arm9tdmi_funclt_trap{
         bool historyEnabled;
         bool instrExecuting;
         sc_event instrEndEvent;
-        static Instruction * * INSTRUCTIONS;
+        Instruction * * INSTRUCTIONS;
         template_map< unsigned int, CacheElem > instrCache;
         static int numInstances;
 
@@ -138,6 +139,7 @@ namespace arm9tdmi_funclt_trap{
         unsigned int undumpedHistElems;
         unsigned int numInstructions;
         unsigned int ENTRY_POINT;
+        unsigned int MPROC_ID;
         unsigned int PROGRAM_LIMIT;
         unsigned int PROGRAM_START;
         void setProfilingRange( unsigned int startAddr, unsigned int endAddr );

@@ -47,7 +47,7 @@ PROCESSOR_NUMBER  = 4             #
 try:
     PROCESSOR_NAMESPACE
 except:
-    PROCESSOR_NAMESPACE = arm7tdmi_funcLT_wrapper.Processor_arm7tdmi_funclt
+    PROCESSOR_NAMESPACE = arm9tdmi_funcLT_wrapper.Processor_arm9tdmi_funclt
 
 # Memory/bus
 MEMORY_SIZE        = 32              # MBytes
@@ -71,21 +71,13 @@ CACHE_REMOVE_LAT   = 0.0             # ns
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'c_pi'
+    SOFTWARE = 'scalopes'
 
 if SOFTWARE:
     try:
         ARGS
     except:
         ARGS = []
-        ARGS.append('ffmpeg')
-        ARGS.append('-i')
-        ARGS.append('software/apps/ffmpeg/minimal.mpg')
-        ARGS.append('-b')
-        ARGS.append('64000')
-        ARGS.append('-threads')
-        ARGS.append(str(PROCESSOR_NUMBER))
-        ARGS.append('software/apps/ffmpeg/minimal2.mpg')
 
 OS_EMULATION = True     # True or False
 
@@ -197,7 +189,6 @@ if not os.path.exists(SOFTWARE):
     raise Exception('Error, ' + str(SOFTWARE) + ' does not exists')
 
 loader = loader_wrapper.Loader(SOFTWARE)
-#Initialization of the processors and loading in memory of the application program
 print "Writing memory"
 loader.loadProgInMemory(mem)
 
@@ -206,8 +197,8 @@ for i in range(0, PROCESSOR_NUMBER):
     processors[i].ENTRY_POINT = loader.getProgStart()
     processors[i].PROGRAM_LIMIT = loader.getProgDim() + loader.getDataStart()
     processors[i].PROGRAM_START = loader.getDataStart()
-    processors[i].resetOp();
     # Set the processor ID
+    processors[i].resetOp();
     processors[i].MP_ID.immediateWrite(i)
 
 # Now I initialize the OS emulator
@@ -229,4 +220,4 @@ if OS_EMULATION:
     trapwrapper.OSEmulatorBase.set_environ('OMP_NUM_THREADS', str(PROCESSOR_NUMBER)) 
 
 # We can finally run the simulation
-#run_simulation()
+run_simulation()

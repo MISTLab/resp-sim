@@ -28,6 +28,20 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Lesser General Public License for more details.
  *
+ *
+ *   The following code is derived, directly or indirectly, from the SystemC
+ *   source code Copyright (c) 1996-2004 by all Contributors.
+ *   All Rights reserved.
+ *
+ *   The contents of this file are subject to the restrictions and limitations
+ *   set forth in the SystemC Open Source License Version 2.4 (the "License");
+ *   You may not use this file except in compliance with such restrictions and
+ *   limitations. You may obtain instructions on how to receive a copy of the
+ *   License at http://www.systemc.org/. Software distributed by Contributors
+ *   under the License is distributed on an "AS IS" basis, WITHOUT WARRANTY OF
+ *   ANY KIND, either express or implied. See the License for the specific
+ *   language governing rights and limitations under the License.
+ *
  *   You should have received a copy of the GNU Lesser General Public License
  *   along with this program; if not, write to the
  *   Free Software Foundation, Inc.,
@@ -36,11 +50,12 @@
  *
  *
  *
- *   (c) Fabio Arlati
- *       arlati.fabio@gmail.com
+ *   (c) Giovanni Beltrame, Luca Fossati
+ *       Giovanni.Beltrame@esa.int fossati@elet.polimi.it
+ *
+ *   Component developed by: Fabio Arlati arlati.fabio@gmail.com
  *
 \***************************************************************************/
-
 
 #ifndef COCACHELT_HPP
 #define COCACHELT_HPP
@@ -595,7 +610,7 @@ public:
 				// We load the block from memory...
 				curBlock = CacheBlock();
 				curBlock.block = (unsigned char*) malloc (blockSize*sizeof(unsigned char));
-				curBlock.base_address = adr - adr % blockSize;
+				curBlock.base_address = curBaseAddress;
 
 				// ... but, first, we simulate a WRITE THROUGH for the directory, in order to flush blocks exclusively held by other caches
 				sc_time delay = SC_ZERO_TIME;

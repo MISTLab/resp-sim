@@ -37,6 +37,8 @@
 #   (c) Giovanni Beltrame, Luca Fossati
 #       Giovanni.Beltrame@esa.int fossati@elet.polimi.it
 #
+#   Architecture written by: Fabio Arlati arlati.fabio@gmail.com
+#
 ##############################################################################
 
 ###### GENERAL PARAMETERS #####
@@ -45,7 +47,7 @@ PROCESSOR_NUMBER  = 1             #
 try:
     PROCESSOR_NAMESPACE
 except:
-    PROCESSOR_NAMESPACE = arm9tdmi_funcLT_wrapper.Processor_arm9tdmi_funclt
+    PROCESSOR_NAMESPACE = arm7tdmi_funcLT_wrapper.Processor_arm7tdmi_funclt
 
 # Memory/bus
 MEMORY_SIZE       = 32              # MBytes
@@ -62,7 +64,7 @@ if SOFTWARE:
     try:
         ARGS
     except:
-        ARGS = None
+        ARGS = []
 
 OS_EMULATION = True     # True or False
 
@@ -174,16 +176,20 @@ if not os.path.exists(SOFTWARE):
 
 loader = loader_wrapper.Loader(SOFTWARE)
 #Initialization of the processors and loading in memory of the application program
-for i in range(0, loader.getProgDim()):
-    mem.write_byte_dbg(i + loader.getDataStart(), loader.getProgDataValue(i))
+print "Writing memory"
+loader.loadProgInMemory(mem)
 
+print "Setting up CPU registers"
 for i in range(0, PROCESSOR_NUMBER):
     processors[i].ENTRY_POINT = loader.getProgStart()
     processors[i].PROGRAM_LIMIT = loader.getProgDim() + loader.getDataStart()
     processors[i].PROGRAM_START = loader.getDataStart()
+    processors[i].resetOp();
 
 # Now I initialize the OS emulator
+print "Setting up OS Emulation"
 if OS_EMULATION:
+    trapwrapper.OSEmulatorBase.set_program_args(ARGS)
     for i in range(0, PROCESSOR_NUMBER):
         curEmu = trapwrapper.OSEmulator32(processors[i].getInterface())
         curEmu.initSysCalls(SOFTWARE)
@@ -210,4 +216,4 @@ cE.recEmu.printRegisteredFunctions()
 cE.printSystemStatus()
 
 # We can finally run the simulation
-run_simulation()
+#run_simulation()

@@ -52,4 +52,4 @@ instSlave = testSlave_wrapper.testSlave('slave')
 connectPortsForce(instMaster, instMaster.initSocket, instSlave, instSlave.targetSocket)
 
 #finally we start the simulation for 10 NS
-run_simulation(10)
+#run_simulation(10)
