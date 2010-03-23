@@ -90,6 +90,7 @@ namespace arm7tdmi_funclt_trap{
 
     class Processor_arm7tdmi_funclt : public sc_module{
         private:
+        bool resetCalled;
         Decoder decoder;
         tlm_utils::tlm_quantumkeeper quantKeeper;
         unsigned int profStartAddr;
@@ -134,6 +135,7 @@ namespace arm7tdmi_funclt_trap{
         unsigned int undumpedHistElems;
         unsigned int numInstructions;
         unsigned int ENTRY_POINT;
+        unsigned int MPROC_ID;
         unsigned int PROGRAM_LIMIT;
         unsigned int PROGRAM_START;
         void setProfilingRange( unsigned int startAddr, unsigned int endAddr );

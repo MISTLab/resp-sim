@@ -53,5 +53,3 @@ connectPortsForce(instMaster, instMaster.initSocket, instSlave, instSlave.target
 
 import breakpoints
 register_breakpoint(instMaster, 'count', breakpoints.equals(5))
-
-

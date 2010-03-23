@@ -60,6 +60,10 @@ bool arm9tdmi_funclt_trap::ARM9TDMI_ABIIf::isLittleEndian() const throw(){
     return true;
 }
 
+int arm9tdmi_funclt_trap::ARM9TDMI_ABIIf::getProcessorID() const throw(){
+    return (MP_ID);
+}
+
 bool arm9tdmi_funclt_trap::ARM9TDMI_ABIIf::isInstrExecuting() const throw(){
     return this->instrExecuting;
 }
@@ -114,8 +118,6 @@ unsigned char * arm9tdmi_funclt_trap::ARM9TDMI_ABIIf::getState() const throw(){
     unsigned char * curState = new unsigned char[148];
     unsigned char * curStateTemp = curState;
     *((unsigned int *)curStateTemp) = this->CPSR.readNewValue();
-    curStateTemp += 4;
-    *((unsigned int *)curStateTemp) = this->MP_ID.readNewValue();
     curStateTemp += 4;
     *((unsigned int *)curStateTemp) = this->RB[0].readNewValue();
     curStateTemp += 4;
@@ -193,8 +195,6 @@ unsigned char * arm9tdmi_funclt_trap::ARM9TDMI_ABIIf::getState() const throw(){
 void arm9tdmi_funclt_trap::ARM9TDMI_ABIIf::setState( unsigned char * state ) throw(){
     unsigned char * curStateTemp = state;
     this->CPSR.immediateWrite(*((unsigned int *)curStateTemp));
-    curStateTemp += 4;
-    this->MP_ID.immediateWrite(*((unsigned int *)curStateTemp));
     curStateTemp += 4;
     this->RB[0].immediateWrite(*((unsigned int *)curStateTemp));
     curStateTemp += 4;
