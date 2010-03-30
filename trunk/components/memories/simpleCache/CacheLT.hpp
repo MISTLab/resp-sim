@@ -135,7 +135,7 @@ private:
 	// Tha actual cache memory
 	map< sc_dt::uint64, deque<CacheBlock> > cache;
 
-	CacheBlock loadCacheBlock(sc_dt::uint64 address, sc_time& delay) {
+	CacheBlock loadCacheBlock(sc_dt::uint64 address) {
 		CacheBlock nB;
 		tlm_generic_payload message;
 		sc_time memLatency = SC_ZERO_TIME;
@@ -147,35 +147,30 @@ private:
 		message.set_read();
 		message.set_address(nB.base_address);
 		message.set_response_status(TLM_INCOMPLETE_RESPONSE);
-		this->initSocket->b_transport(message,delay);
+		this->initSocket->b_transport(message,memLatency);
 		if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while reading from main memory");
 
 		this->numReadBusAcc++;
-		delay += this->cacheLoadLatency;
 		return nB;
 	}
 
-	void storeCacheBlock(CacheBlock cB, sc_time& delay) {
+	void storeCacheBlock(CacheBlock cB) {
 		tlm_generic_payload message;
 		sc_time memLatency = SC_ZERO_TIME;
-		if (cB.block == NULL) {
+		if (cB.block == NULL)
 			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Something wrong happened in the cache, a block cannot be stored since it has no data");
-			return;
-		}
 		message.set_data_length(blockSize);
 		message.set_data_ptr(cB.block);
 		message.set_write();
 		message.set_address(cB.base_address);
 		message.set_response_status(TLM_INCOMPLETE_RESPONSE);
-		this->initSocket->b_transport(message,delay);
+		this->initSocket->b_transport(message,memLatency);
 		if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while writing to main memory");
 
 		this->numWriteBusAcc++;
-		delay += this->cacheStoreLatency;
-		return;
 	}
 
-	void removeCacheBlock(sc_dt::uint64 tag, sc_time& delay) {
+	void removeCacheBlock(sc_dt::uint64 tag) {
 		CacheBlock evicted;
 		if (removePolicy == RANDOM) {
 			// I have to randomly chose an element to be replaced
@@ -190,9 +185,9 @@ private:
 			evicted = this->cache[tag].back();
 			this->cache[tag].pop_back();
 		}
-		delay += this->cacheRemoveLatency;
+
 		// Write-Back should write the block in memory if it has been modified
-		if (this->writePolicy == BACK && evicted.dirty) storeCacheBlock(evicted,delay);
+		if (this->writePolicy == BACK && evicted.dirty) {storeCacheBlock(evicted); wait(this->cacheStoreLatency);}
 	}
 
 public:
@@ -261,7 +256,7 @@ public:
 
 		// Checking if scratchpad start address is lower than memory mapped peripherals
 		if(scratchStart > cacheLimit){
-			THROW_EXCEPTION(__PRETTY_FUNCTION__ << " Error in the value of parameter scratchStart: " << scratchStart << " It should be lower than " << cacheLimit);
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error in the value of parameter scratchStart: " << scratchStart << " It should be lower than " << cacheLimit);
 		}
 		// Checking if scratchpad start address is a power of 2
 		unsigned int numOnes = 0;
@@ -269,7 +264,7 @@ public:
 			if((scratchStart & (0x1 << i)) != 0) numOnes++;
 		}
 		if(numOnes != 1){
-			THROW_EXCEPTION(__PRETTY_FUNCTION__ << " Error in the value of parameter scratchStart: " << scratchStart << " It should be a power of 2");
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error in the value of parameter scratchStart: " << scratchStart << " It should be a power of 2");
 		}
 		this->scratchStart = scratchStart;
 
@@ -279,7 +274,7 @@ public:
 			if((scratchSize & (0x1 << i)) != 0) numOnes++;
 		}
 		if(numOnes != 1){
-			THROW_EXCEPTION(__PRETTY_FUNCTION__ << " Error in the value of parameter scratchSize: " << scratchSize << " It should be a power of 2");
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error in the value of parameter scratchSize: " << scratchSize << " It should be a power of 2");
 		}
 		this->scratchSize = scratchSize;
 
@@ -297,12 +292,13 @@ public:
 	void setStoreLatency(sc_time latency) {this->cacheStoreLatency = latency;}
 	void setRemoveLatency(sc_time latency) {this->cacheRemoveLatency = latency;}
 
-	sc_time readFromCache(sc_dt::uint64 address, unsigned char *data, unsigned int dataLen) {
+	void readFromCache(sc_dt::uint64 address, unsigned char *data, unsigned int dataLen) {
 		// Calculating the TAG associated to the required memory position
 		sc_dt::uint64 tag = GET_TAG(address);
 
 		// Declaring some support variables...
-		sc_time delay = SC_ZERO_TIME;
+
+
 		deque<CacheBlock>::iterator tagIter;
 		bool hit;
 		CacheBlock curBlock;
@@ -314,6 +310,7 @@ public:
 
 		// For each block containing part of the requested data...
 		for (curBaseAddress = address - (address % this->blockSize); curBaseAddress < address+dataLen; curBaseAddress += this->blockSize) {
+
 			hit = false;
 			// For each block cached...
 			// N.B. If no blocks are currently cached, cache[tag] is an ampty queue!
@@ -321,7 +318,7 @@ public:
 				// If the required block is cached...
 				if (tagIter->base_address == curBaseAddress) {
 					// We have a HIT!
-//					cerr << "Hit!" << endl;
+//					cerr << "Read Hit! @" << curBaseAddress << endl;
 					hit = true;
 					this->numReadHit++;
 
@@ -338,17 +335,16 @@ public:
 			// If we didn't hit...
 			if (!hit) {
 				// We have a MISS...
-//				cerr << "Miss!" << endl;
+//				cerr << "Read Miss! @" << curBaseAddress << endl;
 				this->numReadMiss++;
 				// We load the block from memory...
-				curBlock = this->loadCacheBlock(curBaseAddress,delay);
+				curBlock = this->loadCacheBlock(curBaseAddress);
+				wait(this->cacheLoadLatency);
 
 				// And we add it to the cache (after checking that it isn't already full, or worse...)
-				if (this->cache[tag].size() == this->numWays) this->removeCacheBlock(tag,delay);
-				else if (this->cache[tag].size() > this->numWays) {
+				if (this->cache[tag].size() == this->numWays) {this->removeCacheBlock(tag); wait(this->cacheRemoveLatency);}
+				else if (this->cache[tag].size() > this->numWays)
 					THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Something wrong happened in the cache, too many blocks under the same tag");
-					return SC_ZERO_TIME;
-				}
 				this->cache[tag].push_front(curBlock);
 			}
 
@@ -362,20 +358,18 @@ public:
 			if (partLen + cachePointerModifier > this->blockSize) partLen = this->blockSize - cachePointerModifier;
 			// We perform the effective read...
 			memcpy(dataPointer, curBlock.block + cachePointerModifier, partLen*sizeof(unsigned char));
-			delay += this->cacheReadLatency;
+			wait(this->cacheReadLatency);
 			// And we update the pointer to the required data for eventual subsequent reads
 			remLen -= partLen;
 			dataPointer += partLen;
 		}
-		return delay;
 	}
 
-	sc_time writeToCache(sc_dt::uint64 address, unsigned char *data, unsigned int dataLen) {
+	void writeToCache(sc_dt::uint64 address, unsigned char *data, unsigned int dataLen) {
 		// Calculating the TAG associated to the required memory position
 		sc_dt::uint64 tag = GET_TAG(address);
 
 		// Declaring some support variables...
-		sc_time delay = SC_ZERO_TIME;
 		deque<CacheBlock>::iterator tagIter;
 		bool hit;
 		CacheBlock curBlock;
@@ -387,6 +381,7 @@ public:
 
 		// For each block containing part of the target data...
 		for (curBaseAddress = address - (address % this->blockSize); curBaseAddress < address+dataLen; curBaseAddress += this->blockSize) {
+
 			hit = false;
 			// For each block cached...
 			// N.B. If no blocks are currently cached, cache[tag] is an ampty queue!
@@ -394,7 +389,7 @@ public:
 				// If the required block is cached...
 				if (tagIter->base_address == curBaseAddress) {
 					// We have a HIT!
-//					cerr << "Hit!" << endl;
+//					cerr << "Write Hit! @" << curBaseAddress << endl;
 					hit = true;
 					this->numWriteHit++;
 
@@ -412,20 +407,19 @@ public:
 			// If we didn't hit...
 			if (!hit) {
 				// We have a MISS...
-//				cerr << "Miss!" << endl;
+//				cerr << "Write Miss! @" << curBaseAddress << endl;
 				this->numWriteMiss++;
 				// If we have a Write-Back or Write-Through-All policy...
 				if (this->writePolicy == BACK || this->writePolicy == THROUGH_ALL) {
 					// We load the block from memory...
-					curBlock = this->loadCacheBlock(curBaseAddress,delay);
+					curBlock = this->loadCacheBlock(curBaseAddress);
 					curBlock.dirty = true;
+					wait(this->cacheLoadLatency);
 
 					// And we add it to the cache (after checking that it isn't already full, or worse...)
-					if (this->cache[tag].size() == this->numWays) this->removeCacheBlock(tag,delay);
-					else if (this->cache[tag].size() > numWays) {
+					if (this->cache[tag].size() == this->numWays) {this->removeCacheBlock(tag); wait(this->cacheRemoveLatency);}
+					else if (this->cache[tag].size() > numWays)
 						THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Something wrong happened in the cache, too many blocks under the same tag");
-						return SC_ZERO_TIME;
-					}
 					this->cache[tag].push_front(curBlock);
 				}
 			}
@@ -440,7 +434,7 @@ public:
 				if (partLen + cachePointerModifier > this->blockSize) partLen = this->blockSize - cachePointerModifier;
 				// We perform the effective write...
 				memcpy(curBlock.block + cachePointerModifier, dataPointer, partLen*sizeof(unsigned char));
-				delay += this->cacheWriteLatency;
+				wait(this->cacheWriteLatency);
 				// And we update the pointer to the required data for eventual subsequent writes
 				remLen -= partLen;
 				dataPointer += partLen;
@@ -456,7 +450,6 @@ public:
 				dataPointer += partLen;
 			}
 		}
-		return delay;
 	}
 
 	void b_transport(tlm_generic_payload& trans, sc_time& delay){
@@ -485,8 +478,7 @@ public:
 				memcpy(&scratchMemory[adr - this->scratchStart], ptr, len);
 			else THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Undefined TLM command");
 			this->numScratchAcc++;
-			delay += words*this->scratchLatency;
-//			wait(words*this->latency);
+			wait(words*this->scratchLatency);
 			trans.set_response_status(TLM_OK_RESPONSE);
 			return;
 		}
@@ -495,11 +487,11 @@ public:
 		}
 		else {
 			if (cmd == TLM_READ_COMMAND) {
-				delay += this->readFromCache(adr, ptr, len);
+				this->readFromCache(adr, ptr, len);
 				trans.set_response_status(TLM_OK_RESPONSE);
 			}
 			else if (cmd == TLM_WRITE_COMMAND) {
-				delay += this->writeToCache(adr, ptr, len);
+				this->writeToCache(adr, ptr, len);
 				if (writePolicy == THROUGH || writePolicy == THROUGH_ALL) {
 					this->initSocket->b_transport(trans,delay);
 				}
@@ -508,6 +500,8 @@ public:
 			else THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Undefined TLM command");
 			this->numAccesses++;
 		}
+
+		trans.set_dmi_allowed(false);			// Disables DMI in order to insert the cache latency for each transaction
 	}
 
 	// TLM-2 DMI method
@@ -541,6 +535,24 @@ public:
 		unsigned int remLen = len;
 		unsigned char *dataPointer = ptr;
 
+		if(this->scratchpadEn && adr >= this->scratchStart && adr + len <= (this->scratchStart + this->scratchSize)) {
+			//Using local scratchpad
+			if(this->scratchMemory == NULL){
+				THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Trying to access a NULL scratchpad");
+			}
+			if(cmd == TLM_READ_COMMAND)
+				memcpy(ptr, &scratchMemory[adr - this->scratchStart], len);
+			else if(cmd == TLM_WRITE_COMMAND)
+				memcpy(&scratchMemory[adr - this->scratchStart], ptr, len);
+			else THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Undefined TLM command");
+			trans.set_response_status(TLM_OK_RESPONSE);
+			return len;
+		}
+		else if (adr > cacheLimit){
+			return this->initSocket->transport_dbg(trans);
+		}
+
+		// else ...
 		// For each block containing part of the requested data...
 		for (curBaseAddress = adr - (adr % this->blockSize); curBaseAddress < adr+len; curBaseAddress += this->blockSize) {
 			hit = false;
@@ -550,9 +562,8 @@ public:
 				// If the required block is cached...
 				if (tagIter->base_address == curBaseAddress) {
 					// We have a HIT!
-//					cerr << "DBG Hit!" << endl;
+//					cerr << "DBG Hit! @" << curBaseAddress << endl;
 					hit = true;
-
 					// We save the current block...
 					curBlock = *(tagIter);
 					// And we upgrade the queue order if we use an LRU policy
@@ -565,12 +576,12 @@ public:
 			}
 			if (!hit) {
 				// We have a MISS...
-//				cerr << "Miss!" << endl;
+//				cerr << "DBG Miss!" @<< curBaseAddress << endl;
 
 				// We load the block from memory...
 				curBlock = CacheBlock();
 				curBlock.block = (unsigned char*) malloc (blockSize*sizeof(unsigned char));
-				curBlock.base_address = adr - adr % blockSize;
+				curBlock.base_address = curBaseAddress;
 
 				message.set_data_length(blockSize);
 				message.set_data_ptr(curBlock.block);
@@ -610,7 +621,6 @@ public:
 		}
 		trans.set_response_status(TLM_OK_RESPONSE);
 		return len;
-//		return this->initSocket->transport_dbg(trans);
 	}
 };
 

@@ -132,13 +132,13 @@ mem = MemoryLT32.MemoryLT32( 'mem', memorySize, latencyMem)
 
 if BUS_ACTIVE:
     latencyBus = scwrapper.sc_time(BUS_LATENCY, scwrapper.SC_NS)
-    bus  = BusLT32.BusLT32('bus',latencyBus,2*PROCESSOR_NUMBER)
+    bus  = BusLT32.BusLT32('bus',2*PROCESSOR_NUMBER,latencyBus)
     connectPortsForce(bus, bus.initiatorSocket, mem, mem.targetSocket)
     # Add memory mapping
-    bus.addBinding("mem",0x0,memorySize,False)
+    bus.addBinding("mem",0x0,memorySize)
 
 if DATA_CACHE_ACTIVE or INSTR_CACHE_ACTIVE:
-    directory = DirectoryLT32.DirectoryLT32('dir')
+    directory = DirectoryLT32.DirectoryLT32('dir',2*PROCESSOR_NUMBER)
 
 ##### CACHE, BUS, AND MEMORY CONNECTIONS #####
 dataCaches = []

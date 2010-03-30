@@ -128,10 +128,10 @@ mem = MemoryLT32.MemoryLT32( 'mem', memorySize, latencyMem)
 
 if BUS_ACTIVE:
     latencyBus = scwrapper.sc_time(BUS_LATENCY, scwrapper.SC_NS)
-    bus  = BusLT32.BusLT32('bus',latencyBus,2)
+    bus  = BusLT32.BusLT32('bus',2,latencyBus)
     connectPortsForce(bus, bus.initiatorSocket, mem, mem.targetSocket)
     # Add memory mapping
-    bus.addBinding("mem",0x0,memorySize,False)
+    bus.addBinding("mem",0x0,memorySize)
 
 ##### CACHE, BUS, AND MEMORY CONNECTIONS #####
 if DATA_CACHE_ACTIVE:

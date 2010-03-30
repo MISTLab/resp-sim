@@ -39,6 +39,8 @@
  *   (c) Giovanni Beltrame, Luca Fossati
  *       Giovanni.Beltrame@esa.int fossati@elet.polimi.it
  *
+ *   Component modified by: Fabio Arlati arlati.fabio@gmail.com
+ *
 \***************************************************************************/
 
 
@@ -47,7 +49,7 @@
 
 #include <systemc.h>
 #include <tlm.h>
-#include <tlm_utils/multi_passthrough_target_socket.h>
+#include <tlm_utils/simple_target_socket.h>
 #include <boost/lexical_cast.hpp>
 #include <string>
 #include <string.h>
@@ -68,7 +70,7 @@ private:
 	unsigned char * mem;
 
 public:
-	multi_passthrough_target_socket<MemoryLT, sizeof(BUSWIDTH)*8> targetSocket;
+	simple_target_socket<MemoryLT, sizeof(BUSWIDTH)*8> targetSocket;
 	unsigned int numAccesses;
 	unsigned int numWords;
 
@@ -92,7 +94,7 @@ public:
 		delete this->mem;
 	}
 
-	void b_transport(int tag, tlm_generic_payload& trans, sc_time& delay){
+	void b_transport(tlm_generic_payload& trans, sc_time& delay){
 		tlm_command cmd = trans.get_command();
 		sc_dt::uint64    adr = trans.get_address();
 		unsigned char*   ptr = trans.get_data_ptr();
@@ -106,7 +108,7 @@ public:
 		// Checking consistency of the request
 		if(adr > this->size || adr + len > this->size) {
 			trans.set_response_status(TLM_ADDRESS_ERROR_RESPONSE);
-			THROW_EXCEPTION(__PRETTY_FUNCTION__ << "Error requesting address " << showbase << hex << adr << dec << endl);
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error requesting address " << showbase << hex << adr << dec << endl);
 			return;
 		}
 
@@ -117,11 +119,13 @@ public:
 			memcpy(&mem[adr], ptr, len);
 		}
 
-		// Use temporal decoupling: add memory latency to delay argument
 		unsigned int words = len / sizeof(BUSWIDTH);
 		if (len%sizeof(BUSWIDTH) != 0) words++;
-		delay += words*this->latency;
-//		wait(words*this->latency);
+
+		// THIS METHOD IS NOT CORRECT! THE BUS TRANSACTION SEEMS TO BE INSTANTANEOUS AND CONCURRENT ACCESSES CANNOT BE CORRECTLY MODELED
+		//	delay += words*this->latency;
+
+		wait(words*this->latency);
 		this->numAccesses++;
 		this->numWords+=words;
 
@@ -130,7 +134,7 @@ public:
 	}
 
 	// TLM-2 DMI method
-	bool get_direct_mem_ptr(int tag, tlm_generic_payload& trans, tlm_dmi& dmi_data){
+	bool get_direct_mem_ptr(tlm_generic_payload& trans, tlm_dmi& dmi_data){
 		// Permit read and write access
 		dmi_data.allow_read_write();
 //		cerr << "Going DMI" << endl;
@@ -146,7 +150,7 @@ public:
 	}
 
 	// TLM-2 debug transaction method
-	unsigned int transport_dbg(int tag, tlm_generic_payload& trans){
+	unsigned int transport_dbg(tlm_generic_payload& trans){
 		tlm_command cmd = trans.get_command();
 		sc_dt::uint64    adr = trans.get_address();
 		unsigned char*   ptr = trans.get_data_ptr();
@@ -155,7 +159,7 @@ public:
 		// Checking consistency of the request
 		if(adr > this->size || adr + len > this->size) {
 			trans.set_response_status(TLM_ADDRESS_ERROR_RESPONSE);
-			THROW_EXCEPTION(__PRETTY_FUNCTION__ << "Error requesting address " << showbase << hex << adr << dec << endl);
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error requesting address " << showbase << hex << adr << dec << endl);
 			return 0;
 		}
 
@@ -174,7 +178,7 @@ public:
 	//application program into memory
 	void write_byte_dbg(const unsigned int & address, const unsigned char & datum){
 		if(address >= this->size){
-			THROW_EXCEPTION("Address " << hex << showbase << address << " out of memory");
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Address " << hex << showbase << address << " out of memory");
 		}
 		this->mem[address] = datum;
 	}
