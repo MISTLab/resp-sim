@@ -131,12 +131,14 @@ template<typename BUSWIDTH> class BusLT: public sc_module {
 	typedef multi_passthrough_initiator_socket<BusLT, sizeof(BUSWIDTH)*8> initiator_socket_type;
 	typedef address_map<sc_dt::uint64> address_map_type;
 
-protected:
+private:
 	vector<address_map_type*> m_address_map_list;			// List of address_map objects
 	unsigned int curr_target_port_rank;
-	map<unsigned int, pair<sc_event*, bool> > events;
-	queue<unsigned int> requests;
 
+	bool busy;
+	bool locking;
+	map<unsigned int, sc_event* > events;
+	queue<unsigned int> requests;
 
 	/*----------------------------------------------------------------------------------
 	 * If the given address matches one address map, returns a reference on the address
@@ -154,8 +156,32 @@ protected:
 		return initiatorSocket.size();
 	}
 
+	void lock(int tag) {
+		// If there is more than one master component, requests have to be queued: there is an array of events, one
+		// for each master component connected: the master component waits on this element (if the master is busy);
+		// when it becomes free it goes on (and sets the bus to busy): at the end of its requests, it notifies the
+		// next element in queue.
+		if( this->busy ) {
+//			cerr << "bus" << ": Queuing request" << endl;
+			this->requests.push(tag);
+			wait(*(this->events[tag]));
+		}
+		if (locking)
+			this->busy = true;
+	}
+
+	void unlock() {
+		//Now we check if there are some elements which need to be awakened
+		this->busy = false;
+		if( !requests.empty() ) {
+			unsigned int front = this->requests.front();
+//			cerr << "bus" << ": Waking up a queued request" << endl;
+			this->requests.pop();
+			(this->events[front])->notify();
+		}
+	}
+
 public:
-	bool busy;
 	sc_time latency;
 	unsigned int numAccesses;
 	unsigned int numWords;
@@ -164,7 +190,7 @@ public:
 	target_socket_type targetSocket;
 	initiator_socket_type initiatorSocket;
 
-	BusLT(sc_module_name module_name, sc_time latency = SC_ZERO_TIME, unsigned int numMasters = 0) : 
+	BusLT(sc_module_name module_name, unsigned int numMasters, sc_time latency = SC_ZERO_TIME) : 
 			initiatorSocket((boost::lexical_cast<std::string>(module_name) + "_initSock").c_str()),
 			targetSocket((boost::lexical_cast<std::string>(module_name) + "_targSock").c_str()),
 			latency(latency), numMasters(numMasters) {
@@ -172,8 +198,7 @@ public:
 		this->numWords = 0;
 		this->accessCounter = (unsigned int*) malloc(2*numMasters*sizeof(unsigned int));
 		for(int i = 0; i < numMasters; i++){
-			events[i].first = new sc_event;
-			events[i].second = false;
+			events[i] = new sc_event;
 			accessCounter[2*i]=0;
 			accessCounter[2*i+1]=0;
 		}
@@ -205,7 +230,7 @@ public:
 		address_map_type* map = new address_map_type(portName, startAddr, endAddr, lock);
 
 		if(endAddr < startAddr){
-			THROW_EXCEPTION("Mapping of " << portName << " End address " << endAddr << " smaller than start address " << startAddr);
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Mapping of " << portName << " - End address " << endAddr << " smaller than start address " << startAddr);
 		}
 
 		map->set_target_port_rank(curr_target_port_rank++);
@@ -228,8 +253,8 @@ public:
 						<< showbase << hex  << " \"" << (*other_map)->get_entry_port_name() << "\" map definition ("
 						<< (*other_map)->get_start_address() << " - " << (*other_map)->get_end_address() << ")"<< endl
 						<< "\t\toverlaps map defined for \"" << (*map)->get_entry_port_name() << "\" ("
-						<< (*map)->get_start_address() << " - " << (*map)->get_end_address() << ")" << endl;
-					THROW_EXCEPTION("Collision among bus addresses detected: " << stream.str());
+						<< (*map)->get_start_address() << " - " << (*map)->get_end_address() << ")";
+					THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Collision among bus addresses detected: " << stream.str());
 				}
 			}
 		}
@@ -262,44 +287,29 @@ public:
 	void b_transport(int tag, tlm_generic_payload& trans, sc_time& delay) {
 
 		sc_dt::uint64 addr = trans.get_address();
-		bool locking;
-//		cerr << "Incoming address was " << addr;
-/*		if(addr == PROC_NUM_ADDR){
-			//I want to read the number of processors present in the system
-			response.set_data(target_port.size());
-			response.get_status().set_ok();
-			return;
-		}
-*/		unsigned int portId = decode(addr,locking);
+//		cerr << "Incoming address was " << addr << " from " << tag;
+		unsigned int portId = decode(addr,this->locking);
 		if ( portId >= initiatorSocket.size() ) {
 			trans.set_response_status(TLM_ADDRESS_ERROR_RESPONSE);
 			ostringstream stream;
-			stream << "ERROR: " << name() << showbase << hex << ": No target at this address: "
-				<< addr << " Requesting Master: " << dec << tag << " Decoded device: "
-				<< portId << endl;
-			THROW_EXCEPTION(stream.str());
+			stream << " " << name() << showbase << hex << ": No target at this address: "
+				<< addr << " Requesting Master: " << dec << tag << " Decoded device: " << portId;
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << stream.str());
 		}
-
 //		cerr << ": requested " << addr << " on device # " << portId << endl;
 		trans.set_address(addr);
 
-		// If there is more than one master component, requests have to be queued: there is an array of events, one for
-		// each master component connected: the master component waits on this element (if the master is busy);
-		// when it becomes free it goes on (and sets the bus to busy): at the end of its requests it notifies the
-		// next element in queue (following a round robin procedure)
-		if(this->targetSocket.size() > 1) {
-			if( this->busy ) {
-				this->requests.push(tag);
-				wait(*(this->events[tag].first));
-			}
-			if(locking) this->busy = true;
-		}
+		this->lock(tag);
+
 		initiatorSocket[portId]->b_transport(trans,delay);
 		unsigned int len = trans.get_data_length();
 		unsigned int words = len / sizeof(BUSWIDTH);
 		if (len%sizeof(BUSWIDTH) != 0) words++;
-		delay += words*this->latency;
-//		wait(words*this->latency);
+
+		// THIS METHOD IS NOT CORRECT! THE BUS TRANSACTION SEEMS TO BE INSTANTANEOUS AND CONCURRENT ACCESSES CANNOT BE CORRECTLY MODELED
+		//	delay += words*this->latency;
+
+		wait(words*this->latency);
 		this->accessCounter[tag]++;
 		this->numAccesses++;
 		this->numWords+=words;
@@ -311,15 +321,7 @@ public:
 //		if (trans.get_data_length() == 4) outFile << " " << (unsigned int) (*trans.get_data_ptr()) << endl;
 //		else outFile << endl;
 
-		//Now I check if there are some elements which need to be awakened
-		if(this->targetSocket.size() > 1) {
-			this->busy = false;
-			if( !requests.empty() ) {
-				unsigned int front = this->requests.front();
-				this->requests.pop();
-				(this->events[front].first)->notify();
-			}
-		}
+		this->unlock();
 	}
 
 	bool get_direct_mem_ptr(int tag, tlm_generic_payload& trans, tlm_dmi& dmi_data){
@@ -327,35 +329,37 @@ public:
 		return false;
 	}
 
-	unsigned int transport_dbg(int tag, tlm::tlm_generic_payload& trans){
-//		cerr << "transport_dbg called from port " << tag << endl;
+	unsigned int transport_dbg(int tag, tlm::tlm_generic_payload& trans) {
+
 		sc_dt::uint64 addr = trans.get_address();
-		bool locking;
-//		cerr << "Incoming address was " << addr;
+//		cerr << "DBG - Incoming address was " << addr << " from " << tag;
 /*		if(addr == PROC_NUM_ADDR){
 			//I want to read the number of processors present in the system
 			response.set_data(target_port.size());
 			response.get_status().set_ok();
 			return;
 		}
-*/
-		unsigned int portId = decode(addr,locking);
+*/		unsigned int portId = decode(addr,this->locking);
 		if ( portId >= initiatorSocket.size() ) {
 			trans.set_response_status(TLM_ADDRESS_ERROR_RESPONSE);
 			ostringstream stream;
-			stream << "ERROR: " << name() << showbase << hex << ": No target at this address: "
-				<< addr << " Requesting Master: " << dec << tag << " Decoded device: "
-				<< portId << endl;
-			THROW_EXCEPTION(stream.str());
+			stream << " " << name() << showbase << hex << ": No target at this address: "
+				<< addr << " Requesting Master: " << dec << tag << " Decoded device: " << portId;
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << stream.str());
 		}
 //		cerr << ": requested " << addr << " on device # " << portId << endl;
 		trans.set_address(addr);
+
+		this->lock(tag);
+
 		unsigned int retVal = initiatorSocket[portId]->transport_dbg(trans);
 
 //		ofstream outFile("bus.txt", ios::app);
 //		outFile << /*sc_time_stamp()*/tag << " " << trans.get_address() << " " << /*trans.get_data_length() << " " <<*/ trans.is_write();
 //		if (trans.get_data_length() == 4) outFile << " " << (unsigned int) (*trans.get_data_ptr()) << endl;
 //		else outFile << endl;
+
+		this->unlock();
 
 		return retVal;
 	}

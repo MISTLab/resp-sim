@@ -102,7 +102,7 @@ mem = MemoryLT32.MemoryLT32( 'mem', memorySize, latencyMem)
 
 if BUS_ACTIVE:
     latencyBus = scwrapper.sc_time(BUS_LATENCY, scwrapper.SC_NS)
-    bus  = BusLT32.BusLT32('bus',latencyBus,2)
+    bus  = BusLT32.BusLT32('bus',2,latencyBus)
 
     ##### BUS CONNECTIONS #####
     # Connecting the master components to the bus
@@ -113,7 +113,7 @@ if BUS_ACTIVE:
     connectPortsForce(bus, bus.initiatorSocket, mem, mem.targetSocket)
 
     # Add memory mapping
-    bus.addBinding("mem",0x0,memorySize,False)
+    bus.addBinding("mem",0x0,memorySize)
 else:
     if PROCESSOR_NUMBER > 1:
         raise Exception('Multi-core systems need to have an interconnection layer between processors and memory')

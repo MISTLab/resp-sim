@@ -97,7 +97,7 @@ mem = MemoryLT32.MemoryLT32( 'mem', memorySize, latencyMem)
 ##### INTERCONNECTIONS #########################
 ################################################
 
-bus  = BusLT32.BusLT32('bus',scwrapper.SC_ZERO_TIME)
+bus  = BusLT32.BusLT32('bus',2*PROCESSOR_NUMBER,scwrapper.SC_ZERO_TIME)
 
 ##### BUS CONNECTIONS #####
 # Connecting the master components to the bus
@@ -108,7 +108,7 @@ for i in range(0, PROCESSOR_NUMBER):
 connectPortsForce(bus, bus.initiatorSocket, mem, mem.targetSocket)
 
 # Add memory mapping
-bus.addBinding("mem",0x0,memorySize,False)
+bus.addBinding("mem",0x0,memorySize)
 
 ################################################
 ##### SYSTEM INIT ##############################

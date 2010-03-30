@@ -115,7 +115,7 @@ eF2 = eFPGA_wrapper.eFPGA('eF2',60,200,scwrapper.sc_time(0.005, scwrapper.SC_NS)
 ################################################
 
 latencyBus = scwrapper.sc_time(BUS_LATENCY, scwrapper.SC_NS)
-bus  = BusLT32.BusLT32('bus',latencyBus,2)
+bus  = BusLT32.BusLT32('bus',3,latencyBus)
 
 ##### BUS CONNECTIONS #####
 # Connecting the master components to the bus
@@ -126,7 +126,7 @@ for i in range(0, PROCESSOR_NUMBER):
 connectPortsForce(bus, bus.initiatorSocket, mem, mem.targetSocket)
 
 # Add memory mapping
-bus.addBinding("mem",0x0,memorySize,False)
+bus.addBinding("mem",0x0,memorySize)
 
 ##### RECONFIGURABLE COMPONENTS CONNECTIONS #####
 connectPortsForce(cE, cE.busSocket, bus, bus.targetSocket)
