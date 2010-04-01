@@ -107,6 +107,7 @@ private:
 //			cerr << "dir" << ": Waking up queued request " << front << endl;
 			this->requests.pop();
 			(this->events[front])->notify();
+			this->busy = true;
 		}
 	}
 

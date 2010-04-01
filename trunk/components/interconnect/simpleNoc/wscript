@@ -1,0 +1,23 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+def build(bld):
+    obj = bld.new_task_gen('pypp')
+    obj.source ='''
+        NocLT.hpp
+    '''
+    obj.target='NocLT32';
+    obj.uselib = 'BOOST BOOST_PYTHON TLM SYSTEMC_H'
+    obj.uselib_local = 'systemc utils'
+    obj.include = 'scwrapper tlmwrapper'
+    obj.start_decls = 'NocLT'
+    obj.templates = ['NocLT<unsigned int>']
+    obj.custom_code = """
+mb.global_ns.enumerations('TopologyType').include()
+cls = mb.global_ns.classes(lambda decl : decl.name.startswith('NocLT') )
+cls.include()
+for i in cls:
+    i.alias = 'NocLT32'
+    i.variable('numAccesses').include()
+    i.variable('numWords').include()
+"""

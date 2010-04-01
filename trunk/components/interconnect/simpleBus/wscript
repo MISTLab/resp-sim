@@ -19,6 +19,7 @@ cls.include()
 for i in cls:
     i.alias = 'BusLT32'
     i.variable('numAccesses').include()
+    i.variable('numWords').include()
     try:
         i.member_function('decode').exclude()
     except:

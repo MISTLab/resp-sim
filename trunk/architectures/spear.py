@@ -52,10 +52,12 @@ except:
 # Memory/bus
 MEMORY_SIZE        = 32              # MBytes
 MEM_LATENCY        = 10.0            # ns
-BUS_ACTIVE         = True
+BUS_ACTIVE         = False
 BUS_LATENCY        = 10.0            # ns
-DATA_CACHE_ACTIVE  = False
-INSTR_CACHE_ACTIVE = False
+NOC_ACTIVE         = True
+NOC_LATENCY        = 10.0            # ns
+DATA_CACHE_ACTIVE  = True
+INSTR_CACHE_ACTIVE = True
 CACHE_SIZE         = 8               # MBytes
 CACHE_BLOCK_SIZE   = 32              # words
 CACHE_WAYS         = 8
@@ -71,13 +73,21 @@ CACHE_REMOVE_LAT   = 0.0             # ns
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'scalopes'
+    SOFTWARE = 'c_pi'
 
 if SOFTWARE:
     try:
         ARGS
     except:
         ARGS = []
+        ARGS.append('ffmpeg')
+        ARGS.append('-i')
+        ARGS.append('sheep.mpg')
+        ARGS.append('-b')
+        ARGS.append('64000')
+        ARGS.append('-threads')
+        ARGS.append(str(PROCESSOR_NUMBER))
+        ARGS.append('sheep2.mpg')
 
 OS_EMULATION = True     # True or False
 
@@ -87,9 +97,13 @@ def statsPrinter():
     print '\x1b[31m' + str(controller.get_simulated_time()) + '\x1b[0m'
     if BUS_ACTIVE:
         print '\x1b[34m\x1b[1mBus Accesses:\x1b[0m'
-        print '\x1b[31m' + str(bus.numAccesses) + '\x1b[0m'
-        print '\x1b[34m\x1b[1mBus Words:\x1b[0m'
-        print '\x1b[31m' + str(bus.numWords) + '\x1b[0m'
+        bus.printAccesses()
+#        print '\x1b[31m' + str(bus.numAccesses) + '\x1b[0m'
+#        print '\x1b[34m\x1b[1mBus Words:\x1b[0m'
+#        print '\x1b[31m' + str(bus.numWords) + '\x1b[0m'
+    if NOC_ACTIVE:
+        print '\x1b[34m\x1b[1mNOC Accesses:\x1b[0m'
+        noc.printAccesses()
 
 ################################################
 ##### AUTO VARIABLE SETUP ######################
@@ -122,12 +136,22 @@ mem = MemoryLT32.MemoryLT32( 'mem', memorySize, latencyMem)
 ##### INTERCONNECTIONS #########################
 ################################################
 
+if NOC_ACTIVE and BUS_ACTIVE:
+    raise Exception('NOC and BUS cannot be activated at the same time')
+
 if BUS_ACTIVE:
     latencyBus = scwrapper.sc_time(BUS_LATENCY, scwrapper.SC_NS)
     bus  = BusLT32.BusLT32('bus',2*PROCESSOR_NUMBER,latencyBus)
     connectPortsForce(bus, bus.initiatorSocket, mem, mem.targetSocket)
-    # Add memory mapping
+   # Add memory mapping
     bus.addBinding("mem",0x0,memorySize)
+
+if NOC_ACTIVE:
+    latencyNoc = scwrapper.sc_time(NOC_LATENCY, scwrapper.SC_NS)
+    noc = NocLT32.NocLT32('noc',2*PROCESSOR_NUMBER,1,NocLT32.RING,latencyNoc)
+    connectPortsForce(noc, noc.initiatorSocket, mem, mem.targetSocket)
+    # Add memory mapping
+    noc.addBinding(0x0,memorySize)
 
 if DATA_CACHE_ACTIVE or INSTR_CACHE_ACTIVE:
     directory = DirectoryLT32.DirectoryLT32('dir',2*PROCESSOR_NUMBER)
@@ -149,11 +173,15 @@ for i in range(0, PROCESSOR_NUMBER):
         connectPortsForce(directory, directory.initSocket, dataCaches[i], dataCaches[i].dirTargetSocket)
         if BUS_ACTIVE:
             connectPortsForce(dataCaches[i], dataCaches[i].initSocket, bus, bus.targetSocket)
+        elif NOC_ACTIVE:
+            connectPortsForce(dataCaches[i], dataCaches[i].initSocket, noc, noc.targetSocket)
         else:
             connectPortsForce(dataCaches[i], dataCaches[i].initSocket, mem, mem.targetSocket)
     else:
         if BUS_ACTIVE:
             connectPortsForce(processors[i], processors[i].dataMem.initSocket, bus, bus.targetSocket)
+        elif NOC_ACTIVE:
+            connectPortsForce(processors[i], processors[i].dataMem.initSocket, noc, noc.targetSocket)
         else:
             connectPortsForce(processors[i], processors[i].dataMem.initSocket, mem, mem.targetSocket)
 
@@ -170,11 +198,15 @@ for i in range(0, PROCESSOR_NUMBER):
         connectPortsForce(directory, directory.initSocket, instrCaches[i], instrCaches[i].dirTargetSocket)
         if BUS_ACTIVE:
             connectPortsForce(instrCaches[i], instrCaches[i].initSocket, bus, bus.targetSocket)
+        elif NOC_ACTIVE:
+            connectPortsForce(instrCaches[i], instrCaches[i].initSocket, noc, noc.targetSocket)
         else:
             connectPortsForce(instrCaches[i], instrCaches[i].initSocket, mem, mem.targetSocket)
     else:
         if BUS_ACTIVE:
             connectPortsForce(processors[i], processors[i].instrMem.initSocket, bus, bus.targetSocket)
+        elif NOC_ACTIVE:
+            connectPortsForce(processors[i], processors[i].instrMem.initSocket, noc, noc.targetSocket)
         else:
             connectPortsForce(processors[i], processors[i].instrMem.initSocket, mem, mem.targetSocket)
 
