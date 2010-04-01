@@ -44,5 +44,5 @@
 # Build
 
 def build(bld):
-    bld.add_subdirs('simpleBus')
+    bld.add_subdirs('simpleBus simpleNoc')
 

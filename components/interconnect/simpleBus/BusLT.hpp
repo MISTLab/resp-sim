@@ -178,6 +178,8 @@ private:
 //			cerr << "bus" << ": Waking up a queued request" << endl;
 			this->requests.pop();
 			(this->events[front])->notify();
+			if (locking)
+				this->busy = true;
 		}
 	}
 
@@ -193,7 +195,7 @@ public:
 	BusLT(sc_module_name module_name, unsigned int numMasters, sc_time latency = SC_ZERO_TIME) : 
 			initiatorSocket((boost::lexical_cast<std::string>(module_name) + "_initSock").c_str()),
 			targetSocket((boost::lexical_cast<std::string>(module_name) + "_targSock").c_str()),
-			latency(latency), numMasters(numMasters) {
+			sc_module(module_name), latency(latency), numMasters(numMasters) {
 		this->numAccesses = 0;
 		this->numWords = 0;
 		this->accessCounter = (unsigned int*) malloc(2*numMasters*sizeof(unsigned int));
