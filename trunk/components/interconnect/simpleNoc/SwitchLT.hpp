@@ -112,7 +112,7 @@ private:
 		// when it becomes free it goes on (and sets the bus to busy): at the end of its requests, it notifies the
 		// next element in queue.
 		if( this->busy ) {
-//			cerr << "noc-switch" << this->myId << ": Queuing request #" << tag << endl;
+//			cerr << sc_time_stamp() << " - noc-switch" << this->myId << ": Queuing request #" << tag << endl;
 			this->requests.push(tag);
 			wait(*(this->events[tag]));
 		}
@@ -125,7 +125,7 @@ private:
 		this->busy = false;
 		if( !requests.empty() ) {
 			unsigned int front = this->requests.front();
-//			cerr << "noc-switch" << this->myId << ": Waking up queued request #" << front << endl;
+//			cerr << sc_time_stamp() << " - noc-switch" << this->myId << ": Waking up queued request #" << front << endl;
 			this->requests.pop();
 			(this->events[front])->notify();
 			if (locking)
@@ -182,31 +182,50 @@ public:
 		ticket = (ticket+1)%maxQueue;
 		this->lock(ticketOld);
 
-		unsigned int destination = -1;
+		unsigned int destination = -1, destinationPort = -1;
+		tlm_command cmd = trans.get_command();
 		unsigned int adr = trans.get_address();
 		unsigned int len = trans.get_data_length();
 		unsigned int words = len / sizeof(BUSWIDTH);
 		if (len%sizeof(BUSWIDTH) != 0) words++;
 
-//		cerr << sc_time_stamp() << endl;
-//		cerr << this->myId << " - Received request for address " << adr << endl;
 //		this->printTables();
-
 		for (forwardMap_t::iterator fMiter = forwardMap.begin(); fMiter != forwardMap.end(); fMiter++) {
 			if (adr >= (fMiter->first).first && adr <= (fMiter->first).second) {
-				destination = outgoingEdges[fMiter->second];
+				destination = fMiter->second;
+				destinationPort = outgoingEdges[destination];
 			}
 		}
 		if (destination == -1) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Destination port for address " << adr << " is not listed in the routing maps");
 
-		wait(words*this->latency);
+//		cerr << sc_time_stamp() << " - noc-switch" << this->myId << ": Received " << cmd << " request for address " << adr << endl;
+		if (cmd == TLM_READ_COMMAND) {
+			// Here we only forward the packet containing the requested address (we assume this packet is only 1 word)
+			wait(this->latency);
+		}
+		else if(cmd == TLM_WRITE_COMMAND){
+			// On the other hand, WRITE request already contain the entire data
+			wait(words*this->latency);
+		}
+
 		this->numAccesses++;
 		this->numWords+=words;
-
 		this->unlock();
 
-//		cerr << this->myId << " - Routing request to port " << destination << endl;
-		this->initSocket[destination]->b_transport(trans, delay);
+//		cerr << sc_time_stamp() << " - noc-switch" << this->myId << ": Routing request to " << destination << " on port " << destinationPort << endl;
+		this->initSocket[destinationPort]->b_transport(trans, delay);
+
+		if (cmd == TLM_READ_COMMAND) {
+			ticketOld = ticket;
+			ticket = (ticket+1)%maxQueue;
+			this->lock(ticketOld);
+
+			// Finally, we route back the packet containing the data READ from memory
+//			cerr << sc_time_stamp() << " - noc-switch" << this->myId << ": Receiving back the response packet" << endl;
+			wait(words*this->latency);
+
+			this->unlock();
+		}
 	}
 
 	bool get_direct_mem_ptr(int tag, tlm_generic_payload& trans, tlm_dmi& dmi_data){
@@ -219,37 +238,49 @@ public:
 		ticket = (ticket+1)%maxQueue;
 		this->lock(ticketOld);
 
-		unsigned int destination = -1;
+		unsigned int destination = -1, destinationPort = -1;
+		tlm_command cmd = trans.get_command();
 		unsigned int adr = trans.get_address();
 
-//		cerr << sc_time_stamp() << endl;
-//		cerr << this->myId << " - DBG Received request for address " << adr << endl;
 //		this->printTables();
-
 		for (forwardMap_t::iterator fMiter = forwardMap.begin(); fMiter != forwardMap.end(); fMiter++) {
 			if (adr >= (fMiter->first).first && adr <= (fMiter->first).second) {
-				destination = outgoingEdges[fMiter->second];
+				destination = fMiter->second;
+				destinationPort = outgoingEdges[destination];
 			}
 		}
 		if (destination == -1) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Destination port for address " << adr << " is not listed in the routing maps");
 
+//		cerr << sc_time_stamp() << " - DBG noc-switch" << this->myId << ": Received " << cmd << " request for address " << adr << endl;
+
 		this->unlock();
 
-//		cerr << this->myId << " - DBG Routing request to port " << destination << endl;
-		this->initSocket[destination]->transport_dbg(trans);
+//		cerr << sc_time_stamp() << " - DBG noc-switch" << this->myId << ": Routing request to " << destination << " on port " << destinationPort << endl;
+		this->initSocket[destinationPort]->transport_dbg(trans);
+
+		if (cmd == TLM_READ_COMMAND) {
+			ticketOld = ticket;
+			ticket = (ticket+1)%maxQueue;
+			this->lock(ticketOld);
+
+			// Finally, we route back the packet containing the data READ from memory
+//			cerr << sc_time_stamp() << " - DBG noc-switch" << this->myId << ": Receiving back the response packet" << endl;
+
+			this->unlock();
+		}
 	}
 
 	void printTables() {
-		cerr << myId << " - My edge table is: " << endl;
+		cerr << sc_time_stamp() << " - noc-switch" << this->myId << " - My edge table is: " << endl;
 		for (targetToPortMap_t::iterator oEiter = outgoingEdges.begin(); oEiter != outgoingEdges.end(); oEiter++) {
-			cout << "\t" << oEiter->first << "->" << oEiter->second << endl;
+			cerr << "\t" << oEiter->first << "->" << oEiter->second << endl;
 		}
-		cerr << myId << " - My routing table is: " << endl;
+		cerr << sc_time_stamp() << " - noc-switch" << this->myId << " - My routing table is: " << endl;
 		for (forwardMap_t::iterator fMiter = forwardMap.begin(); fMiter != forwardMap.end(); fMiter++) {
 			cerr << "\t" << (fMiter->first).first << "-" << (fMiter->first).second << "\t";
 			cerr << "routed to switch " << fMiter->second << " on port " << outgoingEdges[fMiter->second] << endl;
 		}
-		cout << endl;
+		cerr << endl;
 	}
 
 	void printAccesses() {
