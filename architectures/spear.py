@@ -73,7 +73,7 @@ CACHE_REMOVE_LAT   = 0.0             # ns
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'c_pi'
+    SOFTWARE = 'scalopes'
 
 if SOFTWARE:
     try:
@@ -82,12 +82,14 @@ if SOFTWARE:
         ARGS = []
         ARGS.append('ffmpeg')
         ARGS.append('-i')
-        ARGS.append('sheep.mpg')
+#        ARGS.append('sheep.mpg')
+        ARGS.append('software/apps/ffmpeg/minimal.mpg')
         ARGS.append('-b')
         ARGS.append('64000')
         ARGS.append('-threads')
         ARGS.append(str(PROCESSOR_NUMBER))
-        ARGS.append('sheep2.mpg')
+#        ARGS.append('sheep2.mpg')
+        ARGS.append('software/apps/ffmpeg/minimal2.mpg')
 
 OS_EMULATION = True     # True or False
 
@@ -148,7 +150,7 @@ if BUS_ACTIVE:
 
 if NOC_ACTIVE:
     latencyNoc = scwrapper.sc_time(NOC_LATENCY, scwrapper.SC_NS)
-    noc = NocLT32.NocLT32('noc',2*PROCESSOR_NUMBER,1,NocLT32.RING,latencyNoc)
+    noc = NocLT32.NocLT32('noc',2*PROCESSOR_NUMBER,1,NocLT32.TREE,latencyNoc)
     connectPortsForce(noc, noc.initiatorSocket, mem, mem.targetSocket)
     # Add memory mapping
     noc.addBinding(0x0,memorySize)

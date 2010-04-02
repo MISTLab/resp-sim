@@ -108,6 +108,42 @@ private:
 	multi_passthrough_initiator_socket<NocLT, sizeof(BUSWIDTH)*8> intInitSocket;
 	multi_passthrough_target_socket<NocLT, sizeof(BUSWIDTH)*8> intTargetSocket;
 
+	unsigned int buildTree(unsigned int startSwitch, unsigned int endSwitch, Edge_desc* edges, int* weights, unsigned int *edgeCounter) {
+
+		if (startSwitch==endSwitch) return 0;
+
+		SwitchLT<BUSWIDTH>* allocSwitch;
+		unsigned int nextTag = endSwitch+1;
+		unsigned int numEdges;
+		unsigned int extraSwitchCounter = 0;
+//		cerr << "Building a level of the tree between switch #" << startSwitch << " and switch #" << endSwitch << endl;
+		for (numEdges=startSwitch; numEdges <= endSwitch; numEdges+=2) {
+//			cerr << "Allocating switch #" << nextTag << endl;
+			allocSwitch = new SwitchLT<BUSWIDTH>(nextTag,this->switchLatency,locking,maxSwitchQueue);
+			switches[nextTag] = allocSwitch;
+			extraSwitchCounter++;
+
+//			cerr << "Linking switch #" << numEdges << " to switch #" << nextTag << endl;
+			switches[numEdges]->initSocketBind(switches[nextTag]->targetSocket,nextTag);
+			switches[nextTag]->initSocketBind(switches[numEdges]->targetSocket,numEdges);
+			edges[*edgeCounter] = Edge_desc(numEdges,nextTag);
+			weights[*edgeCounter] = 1;
+			(*edgeCounter)++;
+
+			if (numEdges+1 <= endSwitch) {
+//				cout << "Linking switch #" << numEdges+1 << " to switch #" << nextTag << endl;
+				switches[numEdges+1]->initSocketBind(switches[nextTag]->targetSocket,nextTag);
+				switches[nextTag]->initSocketBind(switches[numEdges+1]->targetSocket,numEdges+1);
+				edges[*edgeCounter] = Edge_desc(numEdges+1,nextTag);
+				weights[*edgeCounter] = 1;
+				(*edgeCounter)++;
+			}
+			nextTag++;
+		}
+		extraSwitchCounter += buildTree(endSwitch+1,nextTag-1,edges,weights,edgeCounter);
+		return extraSwitchCounter;
+	}
+
 	void makeNocMap() {
 		Edge_desc* edges;
 		int* weights;
@@ -197,6 +233,12 @@ private:
 			numEdges = edgeCounter;
 			break;
 		case TREE:
+			edgeCounter = numMasters+numSlaves;
+			if (edgeCounter%2 != 0) edgeCounter++;
+			edges = (Edge_desc*) malloc( 2 * (edgeCounter-1) * sizeof(Edge_desc) );
+			weights = (int*) malloc( 2 * (edgeCounter-1) * sizeof(int) );
+			numEdges = 0;
+			extraSwitches = buildTree(1,numMasters+numSlaves,edges,weights,&numEdges);
 			break;
 		default:
 			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": The given topology is unknown, NOC cannot be created");
