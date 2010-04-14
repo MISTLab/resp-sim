@@ -55,7 +55,7 @@
 class testMaster: public sc_module{
     public:
     int count;
-    tlm_utils::simple_initiator_socket< testMaster, 8 > initSocket;
+    tlm_utils::simple_initiator_socket< testMaster, 32 > initSocket;
 
     SC_HAS_PROCESS(testMaster);
     testMaster(sc_module_name name);

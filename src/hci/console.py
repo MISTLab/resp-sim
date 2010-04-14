@@ -102,7 +102,7 @@ class Console(code.InteractiveConsole):
         self.init_history(os.path.expanduser("~/.resp-history"))
         if not locals_ns:
             locals_ns = resp_kernel.get_namespace()
-            for i in ['srcdir', 'SC_PREFIX', 'TLM_PREFIX', 'argv', 'atexit', 'blddir', 'curPath', 'cwd', 'environ', 'files', 'filterNames', 'get_namespace', 'hash', 'line', 'lockFile', 'option', 'stats', 'RespKernel', 'RespOutFile']:
+            for i in ['srcdir', 'argv', 'atexit', 'curPath', 'cwd', 'environ', 'files', 'filterNames', 'get_namespace', 'hash', 'line', 'lockFile', 'options', 'RespKernel', 'RespOutFile']: #'blddir'
                 try:
                     locals_ns.pop(i)
                 except:

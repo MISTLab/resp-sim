@@ -46,57 +46,48 @@ architecture"""
 from connectionNode import ConnectionNode
 from respkernel import blddir
 import exceptions
-from exc import *
 import component
 import types
 import os
-#import string
 import sys
 import helper
 
 
 class ComponentManager:
-    """Manages the components present in the loaded architecture: this class
-    is mainly used during two phases of the simulation: at the beggining it
-    it used to load and connect together all the components, at the end of
-    the simulation it can be used to debug the components themselves.
-    The internal representation of the components is a directed graph,
-    where the source of an edge represents the initiator component of the
-    connection identified by that edge, and the target represents the target
-    port."""
+    """Manages the components present in the loaded architecture: it
+    offers functionalities for connecting components and for keeping track of these connections.
+    """
 
     def __init__(self, components, scwrapper):
         """Inizializer of the class; components is a list containing the
         imported component modules"""
-        # maps the name of an instance of a component (represented by a name) to a connection
-        # node
+        # maps the name of an instance of a component (represented by a name) to a connection node 
+        #(connection node contains the list of all connections of the component)
         self.compToConnection = {}
-        # counts how many unnamed components has been inserted so far
-        # in the simulator
-        self.unnamedId = 0
-        # keeps track of the names associated to the unnamed components
-        # encountered so far
-        self.unknownComNames = {}
         # keeps track of the imported components modules
         self.components = components
         self.scwrapper = scwrapper
 
-    def connect(self, source, target,
-                sourceParams = None, targParams = None,
-                sourceConnParams = None, targConnParams = None):
+    def __repr__(self):
+        """Returns a formal representation of this class"""
+        representation = 'Component manager:\n\n'
+        for elem in self.compToConnection.values():
+            representation += repr(elem) + '\n'
+        return representation
+
+    def __str__(self):
+        """Returns an informal string representation of this class"""
+        return repr(self)
+
+    def connect(self, source, target):
         """Connects the source component with target; in case only one
         initiator port is present in source and one target port in target
         these two ports are connected, otherwise the user is requested
-        to specify the correct ports. Parameters can be specified for the
-        source and target connection; these parameters are a couple of
-        values which specify the starting and ending mapping value of
-        the connection.
+        to specify the correct ports by using the connectPorts method. 
         Note that source and target must represent the instances of the components
         that we wish to connect together, not their names
-        sourceParams and targParams are a list of the parameters which must be
-        passed to the component during its construction; it this list is not
-        None, then it must have at least an element, the name of the component expressed
-        as a string"""
+        """
+        
         # First of all I get all the initiator ports from source and all
         # the target ports from target: they are maps: the index of the
         # map is formed the tlm of the tlm interface and the content of
@@ -111,14 +102,13 @@ class ComponentManager:
             except TypeError:
                 continue
             except Exception:
-                raise exceptions.Exception('Error in getting the instance of source port with name ' + srcP +
+                raise exceptions.Exception('Error in getting the reference of the attribute ' + srcP +
                       ' from component ' + str(source))
             varName = portInstance.__class__.__name__
-            print portInstance.__class__.__name__
             portType = ''
             try:
                 portType = helper.getTLMPortType(varName, 'source')
-            except NotAPort:
+            except Exception:
                 continue
             if sourcePorts.has_key(portType):
                 sourcePorts[portType].append([portInstance, srcP])
@@ -135,11 +125,10 @@ class ComponentManager:
                 raise exceptions.Exception('Error in getting the instance of source port with name ' + tgtP +
                       ' from component ' + str(target))
             varName = portInstance.__class__.__name__
-            print portInstance.__class__.__name__
             portType = ''
             try:
                 portType = helper.getTLMPortType(varName, 'target')
-            except NotAPort:
+            except Exception:
                 continue
             if targetPorts.has_key(portType):
                 targetPorts[portType].append([portInstance, tgtP])
@@ -175,19 +164,12 @@ class ComponentManager:
         else:
             print('Connecting ' + str(source) + ' and ' + str(target) +
                   ' repectively using ports ' + candidates[0][0][1] + ' and ' + candidates[0][1][1])
-            self.connectPorts(source, candidates[0][0][1], target, candidates[0][1][1],
-                              sourceParams, targParams, sourceConnParams, targConnParams)
+            self.connectPorts(source, candidates[0][0][1], target, candidates[0][1][1])
 
-    def connectPorts(self, source, sourcePortName, target, targetPortName,
-                     sourceParams = None, targParams = None,
-                     sourceConnParams = None, targConnParams = None,
-                     sourcePortId = None, targetPortId = None):
+    def connectPorts(self, source, sourcePortName, target, targetPortName, sourcePortId = None, targetPortId = None):
         """Connects the source component with target; the name of
         the initiator port (in the source component) and target port
-        (in the target component) are specified. Parameters can be specified for the
-        source and target connection; these parameters are a couple of
-        values which specify the starting and ending mapping value of
-        the connection. Note that a check is performed to be sure that
+        (in the target component) are specified. Note that a check is performed to be sure that
         the type of the source and target port match: I go down on the
         inheritace chain of the types of the ports, and if I find the same
         type at some point OK, otherwise if I get to the empty tuple it
@@ -197,40 +179,26 @@ class ComponentManager:
         from None it means that sourcePortName and targetPortName are the names
         for arrays of ports and the port id refers to the array index of the
         desired port
-        Note that source and target may either be the name of the classes of the source
-        and target component or the instance of the component itself; the methods
-        should work in both the situations
-        sourceParams and targParams are a list of the parameters which must be
-        passed to the component during its construction; it this list is not
-        None, then it must have at least an element, the name of the component"""
-        # first of all I check to see if source and target are strings and in
-        # case I create the instance of the corresponding component
-        if type(source) == types.StringType:
-            source = helper.getInstance(source, sourceParams, self.components)
-            if type(source) == types.StringType:
-                raise exceptions.Exception('Error, there is no class with the name ' + source + ' to be used as source component')
-        if type(target) == types.StringType:
-            target = helper.getInstance(target, targParams, self.components)
-            if type(target) == types.StringType:
-                raise exceptions.Exception('Error, there is no class with the name ' + target + ' to be used as target component')
+        """
 
-
-        # ok, now I can check if the components contain the port with the
-        # specified name
+        #I check if the source components contains the port with the specified name
         try:
-            sourcePort = helper.getAttrInstance2(source, sourcePortName)
+            sourcePort = helper.getAttrInstance(source, sourcePortName)
         except Exception:
             raise exceptions.Exception('There is no port with name ' + sourcePortName + ' in the source component')
+        #use the port id in case the port is contained in a vector
         if sourcePortId is not None and hasattr(sourcePort,'__getitem__'):
             if type(sourcePortId) is int:
                 sourcePort = sourcePort[sourcePortId]
             else:
                 raise exceptions.Exception('The source port ID must be an integer')
 
+        # ok, now I can check if the target component contains the port with the specified name
         try:
-            targetPort = helper.getAttrInstance2(target, targetPortName)
+            targetPort = helper.getAttrInstance(target, targetPortName)
         except Exception:
             raise exceptions.Exception('There is no port with name ' + targetPortName + ' in the target component')
+        #use the port id in case the port is contained in a vector
         if targetPortId is not None and hasattr(targetPort,'__getitem__'):
             if type(targetPortId) is int:
                 targetPort = targetPort[targetPortId]
@@ -243,57 +211,49 @@ class ComponentManager:
         # tlm_initiator_port or tlm_target_port; then I can check the types and
         # connect them
         try:
-            sourcePortTypeName = helper.getBase('tlm_initiator_port', sourcePort.__class__)
-            targetPortTypeName = helper.getBase('tlm_target_port', targetPort.__class__)
-        except BaseNotFound, e:
-            raise exceptions.Exception('ports ' + sourcePortName + ' and ' + targetPortName + ' cannot be connected because' +
-                  'of the following error ' + str(e))
+            sourcePortTypeName = helper.getBase('simple_initiator_socket', sourcePort.__class__)
+        except Exception, e:
+            try:
+                sourcePortTypeName = helper.getBase('multi_passthrough_initiator_socket', sourcePort.__class__)
+            except Exception, e:
+              raise exceptions.Exception('ports ' + sourcePortName + ' and ' + targetPortName + ' cannot be connected because' +
+                    'of the following error ' + str(e))
+        try:
+            targetPortTypeName = helper.getBase('simple_target_socket', targetPort.__class__)
+        except Exception, e:
+            try:
+                targetPortTypeName = helper.getBase('multi_passthrough_target_socket', targetPort.__class__)
+            except  Exception, e:
+              raise exceptions.Exception('ports ' + sourcePortName + ' and ' + targetPortName + ' cannot be connected because' +
+                    'of the following error ' + str(e))
 
         if helper.getTLMPortType(sourcePortTypeName) != helper.getTLMPortType(targetPortTypeName):
             raise exceptions.Exception('ports ' + sourcePortName + ' and ' + targetPortName + ' are not compatible')
 
-        sourceName = ''
-        targetName = ''
-        if sourceParams:
-            sourceName = sourceParams[0]
-        else:
-            if not self.unknownComNames.has_key(source):
-                self.unknownComNames[source] = 'component' + str(self.unnamedId)
-                self.unnamedId = self.unnamedId + 1
-            sourceName = self.unknownComNames[source]
-        if targParams:
-            targetName = targParams[0]
-        else:
-            if not self.unknownComNames.has_key(target):
-                self.unknownComNames[target] = 'component' + str(self.unnamedId)
-                self.unnamedId = self.unnamedId + 1
-            targetName = self.unknownComNames[target]
+        self.connectPortsForce(source, sourcePort, target, targetPort)
 
 
-        self.connectPortsForce(source, sourcePort,
-                                    target, targetPort,
-                                sourceConnParams, targConnParams)
-
-    def connectPortsForce(self, source, sourcePort, target,
-                           targetPort, sourceConnParams = None, targConnParams = None):
+    def connectPortsForce(self, source, sourcePort, target, targetPort):
         """Method used to connect two ports whose name is not directly visibile from
         python (such as for example ports which are inserted inside a vector): in this
         case we can't specify the name of the ports which must be connected, but we
-        directly have to pass the instance of the port itself to python. Note that in
-        these situations it is not possible to use the xml input configuration
-        file, but we must directly use the python script to specify the architecture
+        directly have to pass the instance of the port itself to python.
         Note that in this case no checks are performed to be sure that the ports
-        are compatible
-        Actually this method may also be used to generically connect two components
-        without checking that the types of the ports we are connectins match"""
+        are compatible. 
+        """
         # ok, I simply have to allocate a new element in the compToConnection; note
         # that if an element already exists in this map I don't have to allocate a
         # new one, but I have to add a connection to the node
+        
+        #if self.areConnected(source, sourcePort, target, targetPort):
+        #    print '\nThe two ports are already connected!\n'
+        #    return
+        
         if not 'name' in dir(target):
-            raise NotAPort('Component ' + str(target) + ' doesn\'t have the method name; probably it is not an sc_module')
+            raise exceptions.Exception('Component ' + str(target) + ' doesn\'t have the method name; probably it is not an sc_module')
 
         if not 'name' in dir(source):
-            raise NotAPort('Component ' + str(source) + ' doesn\'t have the method name; probably it is not an sc_module')
+            raise exceptions.Exception('Component ' + str(source) + ' doesn\'t have the method name; probably it is not an sc_module')
 
         sourceName = super(self.scwrapper.sc_module, source).name()
         if self.compToConnection.has_key(sourceName):
@@ -312,13 +272,11 @@ class ComponentManager:
             self.compToConnection[targetName] = targetNode
 
         if not 'bind' in dir(sourcePort):
-            raise NotAPort('Component ' + sourceName + ' doesn\'t have the method bind among the ones of the port ' + str(sourcePort))
+            raise exceptions.Exception('Component ' + sourceName + ' doesn\'t have the method bind among the ones of the port ' + str(sourcePort))
 
         sourceNode.addTarget(targetName, targetPort, sourcePort)
         targetNode.addSource(sourceName, sourcePort, targetPort)
 
-        #TODO: I would need to go down in the hierarchy of classes on the port and cast the sourcePort to the class which is really the port
-        #something similar to what I did to detrmine the name of the components
         sourcePort.bind(targetPort)
 
     def connectSyscPorts(self, source, sourcePort, target,
@@ -359,10 +317,10 @@ class ComponentManager:
                 raise exceptions.Exception('There is no port with name ' + str(targetPort) + ' in the target component')
 
         if not 'name' in dir(target):
-            raise NotAPort('Component ' + str(target) + ' doesn\'t have the method name; probably it is not an sc_module')
+            raise exceptions.Exception('Component ' + str(target) + ' doesn\'t have the method name; probably it is not an sc_module')
 
         if not 'name' in dir(source):
-            raise NotAPort('Component ' + str(source) + ' doesn\'t have the method name; probably it is not an sc_module')
+            raise exceptions.Exception('Component ' + str(source) + ' doesn\'t have the method name; probably it is not an sc_module')
 
         sourceName = super(self.scwrapper.sc_module, source).name()
         targetName = super(self.scwrapper.sc_module, target).name()
@@ -384,9 +342,9 @@ class ComponentManager:
             self.compToConnection[targetName] = targetNode
 
         if not 'bind' in dir(sourcePort):
-            raise NotAPort('Component ' + sourceName + ' doesn\'t have the method bind among the ones of the port ' + str(sourcePort))
+            raise exceptions.Exception('Component ' + sourceName + ' doesn\'t have the method bind among the ones of the port ' + str(sourcePort))
         if not 'bind' in dir(targetPort):
-            raise NotAPort('Component ' + targetName + ' doesn\'t have the method bind among the ones of the port ' + str(targetPort))
+            raise exceptions.Exception('Component ' + targetName + ' doesn\'t have the method bind among the ones of the port ' + str(targetPort))
 
         # now I create the signal, connect the components with it and finally
         # add the connection node; note that the signal depends on the type of
@@ -394,27 +352,21 @@ class ComponentManager:
         # deterimine it
         try:
             sourcePortTypeName = helper.getBase('sc_out', sourcePort.__class__)
-        except BaseNotFound:
+        except Exception, e:
             try:
                 sourcePortTypeName = helper.getBase('sc_inout', sourcePort.__class__)
-            except BaseNotFound:
+            except Exception, e:
                 raise exceptions.Exception('ports ' + str(sourcePort) + ' and ' + str(targetPort) + ' cannot be connected because' +
                       'No classes in the inheritance chain of ' + str(sourcePort.__class__.__name__) + ' starts with sc_inout or sc_in')
-        except Exception, e:
-            raise exceptions.Exception('ports ' + str(sourcePort) + ' and ' + str(targetPort) + ' cannot be connected because' +
-                  'of the following error ' + str(e))
 
         try:
             targetPortTypeName = helper.getBase('sc_in', targetPort.__class__)
-        except BaseNotFound:
+        except Exception, e:
             try:
                 targetPortTypeName = helper.getBase('sc_inout', targetPort.__class__)
-            except BaseNotFound:
+            except Exception, e:
                 raise exceptions.Exception('ports ' + str(sourcePort) + ' and ' + str(targetPort) + ' cannot be connected because' +
                       'No classes in the inheritance chain of ' + str(targetPort.__class__.__name__) + ' starts with sc_inout or sc_out')
-        except Exception, e:
-            raise exceptions.Exception('ports ' + str(sourcePort) + ' and ' + str(targetPort) + ' cannot be connected because' +
-                  'of the following error ' + str(e))
 
         sourcePortType = helper.getSysCPortType(sourcePortTypeName)
         targetPortType = helper.getSysCPortType(targetPortTypeName)
@@ -472,10 +424,10 @@ class ComponentManager:
                 raise exceptions.Exception('There is no port with name ' + targetPort + ' in the target component')
 
         if not 'name' in dir(target):
-            raise NotAPort('Component ' + str(target) + ' doesn\'t have the method name; probably it is not an sc_module')
+            raise exceptions.Exception('Component ' + str(target) + ' doesn\'t have the method name; probably it is not an sc_module')
 
         if not 'name' in dir(source):
-            raise NotAPort('Component ' + str(source) + ' doesn\'t have the method name; probably it is not an sc_module')
+            raise exceptions.Exception('Component ' + str(source) + ' doesn\'t have the method name; probably it is not an sc_module')
 
         sourceName = source.name()
         targetName = target.name()
@@ -497,7 +449,7 @@ class ComponentManager:
             self.compToConnection[targetName] = targetNode
 
         if not 'bind' in dir(targetPort):
-            raise NotAPort('Component ' + targetName + ' doesn\'t have the method bind among the ones of the port ' + str(targetPort))
+            raise exceptions.Exception('Component ' + targetName + ' doesn\'t have the method bind among the ones of the port ' + str(targetPort))
 
         # now I create the signal, connect the components with it and finally
         # add the connection node; note that the signal depends on the type of
@@ -511,18 +463,15 @@ class ComponentManager:
 
         try:
             targetPortTypeName = helper.getBase('sc_out', targetPort.__class__)
-        except BaseNotFound:
+        except Exception, e:
             try:
                 targetPortTypeName = helper.getBase('sc_inout', targetPort.__class__)
-            except BaseNotFound, e:
+            except Exception, e:
                 try:
                    targetPortTypeName = helper.getBase('sc_in', targetPort.__class__)
-                except BaseNotFound, e:
+                except Exception, e:
                    raise exceptions.Exception(str(sourceSignal) + ' and ' + str(targetPort) + ' cannot be connected because' +
                          'of the following error ' + str(e))
-        except Exception, e:
-            raise exceptions.Exception(str(sourceSignal) + ' and ' + str(targetPort) + ' cannot be connected because' +
-                  'of the following error ' + str(e))
 
         sourceSignalType = helper.getSysCSignalType(sourceSignalTypeName)
         targetPortType = helper.getSysCPortType(targetPortTypeName)
@@ -537,6 +486,7 @@ class ComponentManager:
     def getConnectionSignal(self, sourceComp, targetComp, sourcePort, targetPort):
         """In case sourcePort and targetPort are connected through a SystemC port, the
         signal used to connect the ports is returned"""
+        #TODO to be implemented
         pass
 
     def getComponents(self):
@@ -559,7 +509,7 @@ class ComponentManager:
         of the component"""
         if type(component) == types.StringType:
             if not self.compToConnection.has_key(component):
-                raise ComponentNotFound('Component ' + component + ' not present in the loaded architecture')
+                raise exceptions.Exception('Component ' + component + ' not present in the loaded architecture')
             return self.compToConnection[component].getTargets()
         else:
             #I now have to discover the the name of the component
@@ -574,7 +524,7 @@ class ComponentManager:
         of the component"""
         if type(component) == types.StringType:
             if not self.compToConnection.has_key(component):
-                raise ComponentNotFound('Component ' + component + ' not present in the loaded architecture')
+                raise exceptions.Exception('Component ' + component + ' not present in the loaded architecture')
             return self.compToConnection[component].getSources()
         else:
             #I now have to discover the the name of the component
@@ -583,38 +533,66 @@ class ComponentManager:
                     return self.compToConnection[connNode.componentName].getSources()
         return ()
 
-    def areConnected(self, source, srcPortName, target, tgtPortName):
+    def areConnected(self, source, sourcePort, target, targetPort):
         """Checks whether source and target are already connected together
         on ports srcPort and tgtPort. source and target may represent
         both the instance of the component or its name. On the other
         hand srcPortName and tgtPortName represents the name of
         the source and target ports inside those components"""
-        sourceName = ''
-        targetName = ''
-        if type(source) == types.StringType:
-            sourceName = source
-        else:
-            for comp, connNode in self.compToConnection.items():
-                if source == connNode.component:
-                    sourceName = connNode.componentName
-                    break
-        if type(target) == types.StringType:
-            targetName = target
-        else:
-            for comp, connNode in self.compToConnection.items():
-                if target == connNode.component:
-                    targetName = connNode.componentName
-                    break
-        if not self.compToConnection.has_key(sourceName):
-            return False
-        if targetName in self.compToConnection[sourceName].getTargets():
-            return True
-        else:
-            return False
+        #it cannot compare port references. In fact when a port is saved in the compToConnection the python wrapper is copied
+        #thus it is a different object w.r.t. the python wrapper called when accessing the reference of the port inside the component instance
+        #it can be solved comparing the names of the ports but name method is not exported for tlm ports
+        
+#        #get components names
+#        sourceName = ''
+#        targetName = ''
+#        if type(source) == types.StringType:
+#            sourceName = source
+#        else:
+#            for comp, connNode in self.compToConnection.items():
+#                if source == connNode.component:
+#                    sourceName = connNode.componentName
+#                    break
+#        if type(target) == types.StringType:
+#            targetName = target
+#        else:
+#            for comp, connNode in self.compToConnection.items():
+#                if target == connNode.component:
+#                    targetName = connNode.componentName
+#                    break
+#                           
+#        #both the target and the source are checked to be present in the compToConnection
+#        #it is necessary to avoid following computation
+#        if not self.compToConnection.has_key(sourceName):
+#            return False
+#        if not self.compToConnection.has_key(targetName):
+#            return False
+#        
+#        #get ports references. Both the components are included in the compToConnection 
+#        #thus it is possible to get their reference by using getCompInstance method
+#        if type(source) == types.StringType:
+#            source = getCompInstance(source)
+#        if type(target) == types.StringType:
+#            target = getCompInstance(target)
+#            
+#        targetPortName = ''
+#        sourcePortName = ''
+#        if type(sourcePort) == types.StringType:
+#            sourcePortName = sourcePort
+#            sourcePort = getattr(source,sourcePortName)
+#        if type(targetPort) == types.StringType:
+#            targetPortName = targetPort
+#            targetPort = getattr(target,targetPortName)
+#            
+#        targets = self.compToConnection[sourceName]
+#        if targetName in self.compToConnection[sourceName].getTargets():
+#            return True
+#        else:
+#            return False
 
 
     def getCompInstance(self, name):
-        """Given the component's name this method returns its instance"""
+        """Given the component's systemc name this method returns its instance"""
         if self.compToConnection.has_key(name):
             return self.compToConnection[name].component
         else:
@@ -624,24 +602,13 @@ class ComponentManager:
         """Takes as input two strings: the first one represents the full path
         of a python object representing a parameters inside a component; the second
         one represents the value which has to be assigned to that component"""
-        [instance, attrName] = helper.getAttrInstance(name, env)
+        [instance, attrName] = helper.getAttrInstanceHelper(name, env)
         try:
             castedVal = getattr(instance, attrName).__class__(value)
         except:
             print 'It is not possible to convert value ' + value + ' to an object of type ' + str(getattr(instance, attrName).__class__)
             sys.exit()
         setattr(instance, attrName, value)
-
-    def __repr__(self):
-        """Returns a formal representation of this class"""
-        representation = ''
-        for elem in self.compToConnection.values():
-            representation += repr(elem) + '\n'
-        return representation
-
-    def __str__(self):
-        """Returns an informal string representation of this class"""
-        return repr(self)
 
     def listComponents(self):
         """Returns the list of the current available architectural components"""
@@ -695,10 +662,10 @@ class ComponentManager:
         """Shows the graph of the archtiecture using dotty"""
         nodes = ""
         edges = ""
-        for c in ComponentManager.getComponents(self):
+        for c in self.getComponents():
             nodes = nodes + "\t"+str(c)+"[shape=box]\n"
             nodes = nodes + "\n"
-            for out in ComponentManager.getTargets(self,c):
+            for out in self.getTargets(c):
                 edges = edges + "\t" + str(c) + "->"+ str(out) +"\n"
 
         code = "digraph simple_hierarchy {\n" + nodes + "\n" + edges + "\n}"
@@ -710,6 +677,7 @@ class ComponentManager:
         os.system('rm __tmpGraph.dot')
 
     def reset(self):
+        """Resets the component manager"""
         self.compToConnection = {}
         self.unknownComNames = {}
         self.unnamedId = 0

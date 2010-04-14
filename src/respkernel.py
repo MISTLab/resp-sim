@@ -81,6 +81,7 @@ sys.path.append(os.path.abspath(os.path.join(srcdir, 'src', 'manager')))
 sys.path.append(os.path.abspath(os.path.join(srcdir, 'src', 'controller')))
 sys.path.append(os.path.abspath(os.path.join(srcdir, 'src', 'hci')))
 sys.path.append(os.path.abspath(os.path.join(srcdir, 'src', 'power')))
+sys.path.append(os.path.abspath(os.path.join(srcdir, 'src', 'fi')))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'controller')))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'sc_wrapper')))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'tlm_wrapper')))
@@ -90,8 +91,7 @@ sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'utils'))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'bfdFrontend')))
 sys.path.append(os.path.abspath(os.path.join(blddir, 'default', 'src', 'loader')))
 
-import power; 
-
+import power
 import colors
 
 # END General Init code ########################################################
@@ -201,7 +201,7 @@ class RespKernel:
 
         # Now I start performing the parsing of the command line options
         if options:
-            self.interactive = not (options.silent or not options.interactive) #TODO ????? check it
+            self.interactive = not (options.silent) # or not options.interactive) #TODO ????? check it
             self.verbose = options.verbose
             if options.color:                
                 colors.enable_colors()
@@ -316,13 +316,14 @@ class RespKernel:
     def setup_scripting_commands(self):
         """Creates some convenience functions, used to run scripts without the need to refer to RespKernel, controller or manager objects"""
 
-        global connectPortsForce, connectPorts, connectSyscPorts, connectSyscSignal, listComponents,  printComponents, getCompInstance, areConnected, \
-                getSources,  getTargets, getConnected, getComponents, getAttrInstance,  getInstance, getBase, run_simulation, \
+        global connect, connectPortsForce, connectPorts, connectSyscPorts, connectSyscSignal, listComponents,  printComponents, getCompInstance, \
+                areConnected, getSources,  getTargets, getConnected, getComponents, getAttrInstance,  getInstance, run_simulation, \
                 pause_simulation, stop_simulation,  get_simulated_time, get_real_time, run_up_to, reload_architecture, \
                 enable_fault_injection, showArchitecture, reset, load_architecture, reload_architecture, get_architecture_filename, register_breakpoint
 
         # Assign scripting commands to manager, helper and controller methods
         reload_architecture = self.reload_architecture
+        connect = self.manager.connect
         connectPortsForce = self.manager.connectPortsForce
         connectPorts = self.manager.connectPorts
         connectSyscPorts = self.manager.connectSyscPorts
@@ -343,7 +344,6 @@ class RespKernel:
         import helper
         getAttrInstance =  helper.getAttrInstance
         getInstance = helper.getInstance
-        getBase = helper.getBase
 
         run_simulation = self.controller.run_simulation
         run_up_to = self.controller.run_up_to
@@ -360,11 +360,12 @@ class RespKernel:
         enable_fault_injection  = self.enable_fault_injection #TODO
 
         # List commands in an internal array for reference
-        self.scripting_commands = [connectPortsForce, connectPorts, connectSyscPorts, connectSyscSignal, listComponents,  printComponents, \
+        self.scripting_commands = [connect, connectPortsForce, connectPorts, connectSyscPorts, connectSyscSignal, listComponents,  printComponents, \
                                    getCompInstance, areConnected, getSources,  getTargets, getConnected, getComponents, \
-                                   getAttrInstance,  getInstance, getBase, run_simulation, pause_simulation, \
+                                   getAttrInstance,  getInstance, run_simulation, pause_simulation, \
                                    stop_simulation, get_simulated_time, get_real_time, run_up_to, enable_fault_injection, showArchitecture, reset, \
                                    load_architecture, reload_architecture, get_architecture_filename, register_breakpoint]
+
         
     def load_components(self, componentListFile):
         """Loads all components included in the ReSP. The complete list is contained in the componentListFile that has been built during compiling"""
@@ -478,6 +479,7 @@ class RespKernel:
         """ Deletes all the object instances in namespaces whose base type is
         Boost.Python.instance. DO NOTE: it should not be called directly since it
         may cause ReSP crash if the simulation is still running"""
+        
         for name in globals().keys():
             if name == 'controller':
                 continue
@@ -572,60 +574,29 @@ class RespKernel:
 
     def enable_fault_injection(self, value = True): #TODO
         """ Enables oe disables the fault injection environment"""
+        try:
+            import fiCompManager
+        except:
+            print "Fault injection not supported"
+            return
+        
+        from compManager import ComponentManager
         global manager
+
         if len(self.manager.getComponents()) > 0:
             print 'An architecture is instantiated. A reset is required for enabling the fault injiection'
 
-        from injectionCompManager import InjectionComponentManager
-        from compManager import ComponentManager
+        from fiCompManager import FaultInjectionComponentManager
         if value:
-            if not isinstance(self.manager,InjectionComponentManager):
+            if not isinstance(self.manager,FaultInjectionComponentManager):
                 #enable fault injection environment
-                self.manager = manager = InjectionComponentManager(self.components, scwrapper, archcwrap)
-
-                global createComponent, addMemoryMapping, initProc, callComponentFunction, getSaboteurs, \
-                    getNominalComponents, getGoldenComponents, getGoldenCompInstance, enableGoldenModel, injector, getProcFromId
-
-                createComponent = self.manager.createComponent
-                addMemoryMapping = self.manager.addMemoryMapping
-                initProc = self.manager.initProc
-                callComponentFunction = self.manager.callComponentFunction
-                getSaboteurs = self.manager.getSaboteurs
-                getNominalComponents = self.manager.getNominalComponents
-                getGoldenComponents = self.manager.getGoldenComponents
-                getGoldenCompInstance = self.manager.getGoldenCompInstance
-                enableGoldenModel = self.manager.enableGoldenModel
-                getProcFromId = self.manager.getProcFromId
-
-                import faultInjector
-                injector = faultInjector.faultInjector()
-
+                self.manager = manager = FaultInjectionComponentManager(self.components, scwrapper)                
                 self.setup_scripting_commands()
-                self.scripting_commands.append(createComponent)
-                self.scripting_commands.append(addMemoryMapping)
-                self.scripting_commands.append(initProc)
-                self.scripting_commands.append(callComponentFunction)
-                self.scripting_commands.append(getSaboteurs)
-                self.scripting_commands.append(getNominalComponents)
-                self.scripting_commands.append(getGoldenComponents)
-                self.scripting_commands.append(getGoldenCompInstance)
-                self.scripting_commands.append(enableGoldenModel)
-                self.scripting_commands.append(getProcFromId)
         else:
-            if isinstance(self.manager,InjectionComponentManager):
+            if isinstance(self.manager,FaultInjectionComponentManager):
                 #disable fault injection environment
-                self.manager = manager = ComponentManager(self.components, scwrapper, archcwrap)
-                del(globals()['createComponent'])
-                del(globals()['addMemoryMapping'])
-                del(globals()['initProc'])
-                del(globals()['callComponentFunction'])
-                del(globals()['getSaboteurs'])
-                del(globals()['getNominalComponents'])
-                del(globals()['getGoldenComponents'])
-                del(globals()['getGoldenCompInstance'])
-                del(globals()['injector'])
-                del(globals()['enableGoldenModel'])
-                del(globals()['getProcFromId'])
+                self.manager = manager = ComponentManager(self.components, scwrapper)
+                self.setup_scripting_commands()
 
 
 def get_namespace():
