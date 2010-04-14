@@ -43,14 +43,10 @@
 among two components: note it is not sufficient to specify the components
 which are being connected, but also the ports which connect them are necessary"""
 
-# Here goes the GPL header...
-
-from exc import *
-
 class ConnectionNode:
     """Represents a node in the connection graph: it is an abstract
     representation of a component; the connections among this component
-    and the other components of the arfchitecture are kept in a map:
+    and the other components of the architecture are kept in a map:
     the key of the map represents the port of the current component
     to which I am connected; then there is a list of pairs (acutally
     a list of tuples): the first element of the pair represents the name
@@ -120,11 +116,12 @@ class ConnectionNode:
 
     def __repr__(self):
         """Returns a formal representation of this class"""
-        representation = 'Component: ' + self.componentName + '\n'
-        representation += '\tTLM Connections to SourcePorts: ' + str(self.TLMsourceConn)
-        representation += '\tTLM Connections to TargetPorts: ' + str(self.TLMtargetConn)
-        representation += '\tSystemC Connections to SourcePorts: ' + str(self.SysCsourceConn)
-        representation += '\tSystemC Connections to TargetPorts: ' + str(self.SysCtargetConn)
+        representation = 'Component: ' + self.componentName
+        representation += '\n\tTLM Connections to SourcePorts: ' + str(self.TLMsourceConn)
+        representation += '\n\tTLM Connections to TargetPorts: ' + str(self.TLMtargetConn)
+        representation += '\n\tSystemC Connections to SourcePorts: ' + str(self.SysCsourceConn)
+        representation += '\n\tSystemC Connections to TargetPorts: ' + str(self.SysCtargetConn)
+        representation += '\n'
         return representation
 
     def __str__(self):

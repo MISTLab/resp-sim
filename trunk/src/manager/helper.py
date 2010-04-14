@@ -42,8 +42,6 @@
 """ Module containing some generic helper methods used in the manager classes"""
 
 from connectionNode import ConnectionNode
-from exc import *
-#import types
 import string
 import sys
 import exceptions
@@ -59,10 +57,10 @@ def getClass(className, symbolNamespace):
             pass
     return None
 
-def getAttrInstance(path, env):
-    """Given the string representing the full path of an attribute inside an object,
-    it returns the instance of the object and the name of the attribute; the
-    instance of the object pointed by path must be present in the current namespace"""
+def getAttrInstanceHelper(path, env):
+    """Given the string representing the full path of an object attribute w.r.t. the namespace env,
+    it returns the instance of the object and the name of the attribute
+    """
     if not path:
         print 'Error, the path of which we are trying to get an instance is None'
         sys.exit()
@@ -75,11 +73,10 @@ def getAttrInstance(path, env):
             objInstance = getattr(objInstance, pathElem)
     except Exception, e:
         print 'Unable to get attribute ' + path + ' --> ' + str(e)
-        sys.exit()
 
     return [objInstance, attributeName]
 
-def getAttrInstance2(component, attribute):
+def getAttrInstance(component, attribute):
     """Given a component instance reference and a string representing the path of
     the attribute in the object, it return the reference of the attribute"""
     if type(attribute) is not str:
@@ -95,38 +92,30 @@ def getAttrInstance2(component, attribute):
 
 
 def getInstance(name, params, components):
-    """given the name of a class it builds an instance
-    of that class and returns it; the name itself is returned if no
-    class matching name is found in the global namespace"""
+    """given the name of a component class (module.class) it builds an instance
+    of that class and returns it and return it to the caller"""
     # first of all, name may contain the indication of a module
     # so I split it to separate the module indications from
     # the real name of the class
     modNames = name.split('.')
-    modNamesRev = modNames
-    modNamesRev.reverse()
-    foundNameSpace = None
+    if len(modNames) != 2:
+        raise exceptions.Exception(name + ' is not a name of a component class')      
+    moduleName = modNames[0]
+    className = modNames[1]
+    module = None
+    
     found = False
-    for elemMod in modNamesRev:
-        if found:
+    for comp in components:
+        if moduleName == comp.__name__:
+            module = comp
+            found = True
             break
-        for comp in components:
-            if elemMod == comp:
-                foundNameSpace = modNames[modNames.index(elemMod) + 1:]
-                curModule = comp
-                found = True
-                break
 
-    # Now I have to go up in the namespace of the object until
-    # I get to the object itself: then I can create the necessary
-    # instance
-    if not foundNameSpace:
-        return name
-    for modules in foundNameSpace:
-        try:
-            curModule = getattr(curModule, modules)
-        except Exception:
-            return name
-    return curModule()
+    # Instantiate the object
+    if not module:
+        raise exceptions.Exception('Component ' + name + ' does not exist in the components list')
+    curModule = getattr(module,className)
+    return curModule('ciao')
 
 def getBase(startingName, classToCheck):
     """given an object, it checks if in its inheritance chain there
@@ -138,21 +127,20 @@ def getBase(startingName, classToCheck):
     else:
         baseClasses = classToCheck.__bases__
         if len(baseClasses) == 0:
-            raise BaseNotFound('No classes in the inheritance chain of ' +
+            raise exceptions.Exception('No classes in the inheritance chain of ' +
                                classToCheck.__name__ + ' starts with ' + startingName)
         foundBases = []
         for base in baseClasses:
-            foundBases.append(getBaseRecusrive(startingName, base))
+            foundBases.append(getBaseRecursive(startingName, base))
 
         for curBase in foundBases:
             if curBase != '':
                 return curBase
 
-        raise BaseNotFound('No classes in the inheritance chain of ' +
+        raise exceptions.Exception('No classes in the inheritance chain of ' +
                            classToCheck.__name__ + ' starts with ' + startingName)
 
-
-def getBaseRecusrive(startingName, classToCheck):
+def getBaseRecursive(startingName, classToCheck):
     """given an object, it checks if in its inheritance chain there
     is a class whose name is starting with startingName; in case it
     is found the name itself is returned"""
@@ -163,7 +151,7 @@ def getBaseRecusrive(startingName, classToCheck):
 
         foundBases = []
         for base in baseClasses:
-            foundBases.append(getBaseRecusrive(startingName, base))
+            foundBases.append(getBaseRecursive(startingName, base))
 
         for curBase in foundBases:
             if curBase != '':
@@ -202,26 +190,31 @@ def getTLMOutPort(object):
     return ports
 
 def isTLMInPort(portClass):
-    """Given a class it returns true if this can be a TLM port,
-    false otherwise"""
+    """Given a class it returns true if this can be a TLM port, false otherwise"""
     try:
-        getBase('tlm_target_port', portClass)
+        getBase('simple_target_socket', portClass)
         return True
     except:
-        return False
+        try:
+            getBase('multi_passthrough_target_socket', portClass)
+            return True
+        except:          
+            return False
 
 def isTLMOutPort(portClass):
-    """Given a class it returns true if this can be a TLM port,
-    false otherwise"""
+    """Given a class it returns true if this can be a TLM port, false otherwise"""
     try:
-        getBase('tlm_initiator_port', portClass)
+        getBase('simple_initiator_socket', portClass)
         return True
     except:
-        return False
+        try:
+            getBase('multi_passthrough_initiator_socket', portClass)
+            return True
+        except:          
+            return False
 
 def isSystemCInPort(portClass):
-    """Given a class it returns true if this can be a SystemC port,
-    false otherwise"""
+    """Given a class it returns true if this can be a SystemC port, false otherwise"""
     try:
         getBase('sc_in', portClass)
         return True
@@ -229,8 +222,7 @@ def isSystemCInPort(portClass):
         return False
 
 def isSystemCOutPort(portClass):
-    """Given a class it returns true if this can be a SystemC port,
-    false otherwise"""
+    """Given a class it returns true if this can be a SystemC port, false otherwise"""
     try:
         getBase('sc_out', portClass)
         return True
@@ -238,8 +230,7 @@ def isSystemCOutPort(portClass):
         return False
 
 def isSystemCInOutPort(portClass):
-    """Given a class it returns true if this can be a SystemC port,
-    false otherwise"""
+    """Given a class it returns true if this can be a SystemC port, false otherwise"""
     try:
         getBase('sc_inout', portClass)
         return True
@@ -247,17 +238,84 @@ def isSystemCInOutPort(portClass):
         return False
 
 def isSystemCSignal(portClass):
-    """Given a class it returns true if this can be a SystemC port,
-    false otherwise"""
+    """Given a class it returns true if this can be a SystemC port, false otherwise"""
     try:
         getBase('sc_signal', portClass)
         return True
     except:
         return False
 
+def getTLMPortType(portName, type = None): # OK!
+    """it parses the name of the port to extract the type of the
+    data communicated over the port; the name of the type is returned
+    type is a string that specifies which port must be returned: if
+    type == 'target' then only the type for TLM target ports must
+    be returned, if type == 'source' then only the type for TLM
+    source ports, if type == None all the ports"""
+    tempStr = string.split(portName, '_less_')
+    # ok, now the first element of the list should be the type of
+    # the port, then the second element should be the type of the
+    # template.
+    if len(tempStr) < 2:
+        raise exceptions.Exception(portName + 'doesn\'t represent a TLM port: no _less_ found')
+    if ((tempStr[0] == 'simple_initiator_socket' or tempStr[0] == 'multi_passthrough_initiator_socket') and (type == 'source' or not type)) \
+            or ((tempStr[0] == 'simple_target_socket' or tempStr[0] == 'multi_passthrough_target_socket') and (type == 'target' or not type)):
+        tempStr = portName.replace('_less_','')
+        tempStr = tempStr.replace('_greater_','')        
+        tempStr = string.split(tempStr, '_comma_')
+        for i in range(len(tempStr)-1,-1,-1):
+            if tempStr[i] == '_tlm_scope_tlm_base_protocol_types' and i > 0:
+                return tempStr[i-1]   
+        raise exceptions.Exception(portName + 'doesn\'t represent a TLM port: no _tlm_scope_tlm_base_protocol_types found')
+    else:
+        raise exceptions.Exception(portName + 'doesn\'t represent a TLM port')
+
+def getSysCPortType(portName):
+    """it parses the name of the port to extract the type of the
+    data communicated over the port; the name of the type is returned"""
+    tempStr = string.split(portName, '_less_')
+    # ok, now the first element of the list should be the type of
+    # the port, then the second element should be the type of the
+    # template.
+    if len(tempStr) < 2:
+        raise exceptions.Exception(portName + 'doesn\'t represent a SystemC port: no _less_ found')
+    if tempStr[0] == 'sc_in':
+        templTypes = string.split(tempStr[1], '_greater')
+        if len(templTypes) < 2:
+            raise exceptions.Exception(portName + 'doesn\'t represent a SystemC port: no _greater found')
+        return templTypes[0]
+    elif tempStr[0] == 'sc_out':
+        templTypes = string.split(tempStr[1], '_greater')
+        if len(tempStr) < 2:
+            raise exceptions.Exception(portName + 'doesn\'t represent a SystemC port: no _greater 2 found')
+        return templTypes[0]
+    elif tempStr[0] == 'sc_inout':
+        templTypes = string.split(tempStr[1], '_greater')
+        if len(tempStr) < 2:
+            raise exceptions.Exception(portName + 'doesn\'t represent a SystemC port: no _greater 3 found')
+        return templTypes[0]
+    else:
+        raise exceptions.Exception(portName + 'doesn\'t represent a SystemC port')
+
+def getSysCSignalType(signalName):
+    """it parses the name of the port to extract the type of the
+    data communicated over the port; the name of the type is returned"""
+    tempStr = string.split(signalName, '_less_')
+    # ok, now the first element of the list should be the type of
+    # the port, then the second element should be the type of the
+    # template.
+    if len(tempStr) < 2:
+        raise exceptions.Exception(signalName + 'doesn\'t represent a SystemC signal: no _less_ found')
+    if tempStr[0] == 'sc_signal':
+        templTypes = string.split(tempStr[1], '_greater')
+        if len(templTypes) < 2:
+            raise exceptions.Exception(signalName + 'doesn\'t represent a SystemC signal: no _greater found')
+        return templTypes[0]
+    else:
+        raise exceptions.Exception(signalName + 'doesn\'t represent a SystemC signal')
+
 def extractFunctionRetVal(function):
-    """Given a function it extracts a string representing its
-    C++ return value"""
+    """Given a function it extracts a string representing its C++ return value"""
     #In order to determine the attribute type, I use the docstring
     if not '__doc__' in dir(function):
         return ('', '')
@@ -405,79 +463,6 @@ def extractConstrSig(constructor):
         if equal != -1:
             params.append((param[:equal].lstrip().rstrip(), param[equal + 1:].lstrip().rstrip()))
     return params
-
-def getTLMPortType(portName, type = None):
-    """it parses the name of the port to extract the type of the
-    data communicated over the port; the name of the type is returned
-    type is a string that specifies which port must be returned: if
-    type == 'target' then only the type for TLM target ports must
-    be returned, if type == 'source' then only the type for TLM
-    source ports, if type == None all the ports"""
-    tempStr = string.split(portName, '_less_')
-    # ok, now the first element of the list should be the type of
-    # the port, then the second element should be the type of the
-    # template.
-    if len(tempStr) < 2:
-        raise NotAPort(portName + 'doesn\'t represent a TLM port: no _less_ found')
-    if tempStr[0] == 'tlm_initiator_port' and (type == 'source' or not type):
-        tempStr = string.split(tempStr[1], '_greater_')
-        if len(tempStr) < 2:
-            raise NotAPort(portName + 'doesn\'t represent a TLM port: no _greater_ found')
-        templTypes = string.split(tempStr[0], '_comma_')
-        if len(templTypes) < 2:
-            raise NotAPort(portName + 'doesn\'t represent a TLM port: no _comma_ found')
-        return templTypes[0]
-    elif tempStr[0] == 'tlm_target_port' and (type == 'target' or not type):
-        templTypes = string.split(tempStr[1], '_greater_')
-        if len(tempStr) < 2:
-            raise NotAPort(portName + 'doesn\'t represent a TLM port: no _greater_ 2 found')
-        return templTypes[0]
-    else:
-        raise NotAPort(portName + 'doesn\'t represent a TLM port')
-
-def getSysCPortType(portName):
-    """it parses the name of the port to extract the type of the
-    data communicated over the port; the name of the type is returned"""
-    tempStr = string.split(portName, '_less_')
-    # ok, now the first element of the list should be the type of
-    # the port, then the second element should be the type of the
-    # template.
-    if len(tempStr) < 2:
-        raise NotAPort(portName + 'doesn\'t represent a SystemC port: no _less_ found')
-    if tempStr[0] == 'sc_in':
-        templTypes = string.split(tempStr[1], '_greater')
-        if len(templTypes) < 2:
-            raise NotAPort(portName + 'doesn\'t represent a SystemC port: no _greater found')
-        return templTypes[0]
-    elif tempStr[0] == 'sc_out':
-        templTypes = string.split(tempStr[1], '_greater')
-        if len(tempStr) < 2:
-            raise NotAPort(portName + 'doesn\'t represent a SystemC port: no _greater 2 found')
-        return templTypes[0]
-    elif tempStr[0] == 'sc_inout':
-        templTypes = string.split(tempStr[1], '_greater')
-        if len(tempStr) < 2:
-            raise NotAPort(portName + 'doesn\'t represent a SystemC port: no _greater 3 found')
-        return templTypes[0]
-    else:
-        raise NotAPort(portName + 'doesn\'t represent a SystemC port')
-
-def getSysCSignalType(signalName):
-    """it parses the name of the port to extract the type of the
-    data communicated over the port; the name of the type is returned"""
-    tempStr = string.split(signalName, '_less_')
-    # ok, now the first element of the list should be the type of
-    # the port, then the second element should be the type of the
-    # template.
-    if len(tempStr) < 2:
-        raise NotAPort(signalName + 'doesn\'t represent a SystemC signal: no _less_ found')
-    if tempStr[0] == 'sc_signal':
-        templTypes = string.split(tempStr[1], '_greater')
-        if len(templTypes) < 2:
-            raise NotAPort(signalName + 'doesn\'t represent a SystemC signal: no _greater found')
-        return templTypes[0]
-    else:
-        raise NotAPort(signalName + 'doesn\'t represent a SystemC signal')
 
 def findConnectionsRecv(comp, realComp, pathList,  scwrapper, symbolNamespace):
     """Given a component and its symbolic representation

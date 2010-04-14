@@ -60,6 +60,9 @@
 #ifndef NOCLT_HPP
 #define NOCLT_HPP
 
+//needed to compile wtih boost graphs 1.42
+#define BOOST_NO_0X_HDR_INITIALIZER_LIST
+
 #include "SwitchLT.hpp"
 
 #include <boost/config.hpp>

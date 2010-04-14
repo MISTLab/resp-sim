@@ -34,14 +34,13 @@
 #
 #
 #
-#   (c) Giovanni Beltrame, Luca Fossati
-#       Giovanni.Beltrame@esa.int fossati@elet.polimi.it
+#   (c) Antonio Miele
+#       miele@elet.polimi.it
 #
 ##############################################################################
 
-""" Manager
+""" Controller
 
-    This package contains all the python code for the component manager,
-    i.e. all the classes and routines which keep track of the loaded
-    components.
+    This package contains all the python code for the simulation controller,
+    i.e. all the classes and routines which manages the breakpoints.
 """

@@ -85,7 +85,7 @@ if __name__ == '__main__':
     parser.add_option("-g", "--debug", dest="debug", default=False, action="store_true",
                   help="specifies whether a GDB instance should be opened together with the simulator (it may be used to detect unespected segfaults): [default: %default]")
     parser.add_option("-s", "--server", dest="server", type="int", default=0, help="starts a command server on the specified port")
-    parser.add_option("-i", "--no-interactive", dest="interactive", default=True, action="store_false", help="disables interactive mode")
+    #parser.add_option("-i", "--no-interactive", dest="interactive", default=True, action="store_false", help="disables interactive mode")
     parser.add_option("-b", "--batch", dest="batch", type="string",
                   help="Starts the simulation in batch mode: a python script containing the main loop of the batch simulation has to be passed to this option",  metavar="FILE")
     parser.add_option("--silent", dest="silent", default=False, action="store_true",
