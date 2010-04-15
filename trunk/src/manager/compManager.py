@@ -245,9 +245,9 @@ class ComponentManager:
         # that if an element already exists in this map I don't have to allocate a
         # new one, but I have to add a connection to the node
         
-        #if self.areConnected(source, sourcePort, target, targetPort):
-        #    print '\nThe two ports are already connected!\n'
-        #    return
+        if self.areConnected(source, sourcePort, target, targetPort):
+            print '\nThe two ports are already connected!\n'
+            return
         
         if not 'name' in dir(target):
             raise exceptions.Exception('Component ' + str(target) + ' doesn\'t have the method name; probably it is not an sc_module')
@@ -274,8 +274,8 @@ class ComponentManager:
         if not 'bind' in dir(sourcePort):
             raise exceptions.Exception('Component ' + sourceName + ' doesn\'t have the method bind among the ones of the port ' + str(sourcePort))
 
-        sourceNode.addTarget(targetName, targetPort, sourcePort)
-        targetNode.addSource(sourceName, sourcePort, targetPort)
+        sourceNode.addTarget(targetName, targetPort.name(), sourcePort.name())
+        targetNode.addSource(sourceName, sourcePort.name(), targetPort.name())
 
         sourcePort.bind(targetPort)
 
@@ -543,52 +543,56 @@ class ComponentManager:
         #thus it is a different object w.r.t. the python wrapper called when accessing the reference of the port inside the component instance
         #it can be solved comparing the names of the ports but name method is not exported for tlm ports
         
-#        #get components names
-#        sourceName = ''
-#        targetName = ''
-#        if type(source) == types.StringType:
-#            sourceName = source
-#        else:
-#            for comp, connNode in self.compToConnection.items():
-#                if source == connNode.component:
-#                    sourceName = connNode.componentName
-#                    break
-#        if type(target) == types.StringType:
-#            targetName = target
-#        else:
-#            for comp, connNode in self.compToConnection.items():
-#                if target == connNode.component:
-#                    targetName = connNode.componentName
-#                    break
-#                           
-#        #both the target and the source are checked to be present in the compToConnection
-#        #it is necessary to avoid following computation
-#        if not self.compToConnection.has_key(sourceName):
-#            return False
-#        if not self.compToConnection.has_key(targetName):
-#            return False
-#        
-#        #get ports references. Both the components are included in the compToConnection 
-#        #thus it is possible to get their reference by using getCompInstance method
-#        if type(source) == types.StringType:
-#            source = getCompInstance(source)
-#        if type(target) == types.StringType:
-#            target = getCompInstance(target)
-#            
-#        targetPortName = ''
-#        sourcePortName = ''
-#        if type(sourcePort) == types.StringType:
-#            sourcePortName = sourcePort
-#            sourcePort = getattr(source,sourcePortName)
-#        if type(targetPort) == types.StringType:
-#            targetPortName = targetPort
-#            targetPort = getattr(target,targetPortName)
-#            
-#        targets = self.compToConnection[sourceName]
-#        if targetName in self.compToConnection[sourceName].getTargets():
-#            return True
-#        else:
-#            return False
+        #get components names
+        sourceName = ''
+        targetName = ''
+        if type(source) == types.StringType:
+            sourceName = source
+        else:
+            for comp, connNode in self.compToConnection.items():
+                if source == connNode.component:
+                    sourceName = connNode.componentName
+                    break
+        if type(target) == types.StringType:
+            targetName = target
+        else:
+            for comp, connNode in self.compToConnection.items():
+                if target == connNode.component:
+                    targetName = connNode.componentName
+                    break
+                           
+        #both the target and the source are checked to be present in the compToConnection
+        #it is necessary to avoid following computation
+        if not self.compToConnection.has_key(sourceName):
+            return False
+        if not self.compToConnection.has_key(targetName):
+            return False
+        
+        #get components references. Both the components are included in the compToConnection 
+        #thus it is possible to get their reference by using getCompInstance method
+        if type(source) == types.StringType:
+            source = self.getCompInstance(source)
+        if type(target) == types.StringType:
+            target = self.getCompInstance(target)
+        
+        #get ports names
+        targetPortName = ''
+        sourcePortName = ''
+        if type(sourcePort) == types.StringType:
+            sourcePortName = sourcePort
+        else:
+            sourcePortName = sourcePort.name()
+        if type(targetPort) == types.StringType:
+            targetPortName = targetPort
+        else:
+            targetPortName = targetPort.name()
+        
+        #final check if the ports are connected
+        sourceNode = self.compToConnection[sourceName]
+        if sourceNode.checkTarget(targetName,targetPortName,sourcePortName):
+            return True
+        else:
+            return False
 
 
     def getCompInstance(self, name):

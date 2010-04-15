@@ -176,6 +176,24 @@ sc_obj.member_functions(lambda decl: decl.name.endswith('name')).include()
 sc_obj.member_functions(lambda decl: decl.name.startswith('sc_object')).exclude()
 sc_obj.variables(lambda decl: decl.name.startswith('m_name')).exclude()
 
+#print 'Including sc_port'
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_port') , allow_empty=True)
+for i in cls:
+    i.include()
+    for k in i.member_functions(allow_empty=True):
+        k.exclude()
+    for k in i.member_operators(allow_empty=True):
+        k.exclude()
+
+#print 'Including sc_export'
+cls = mb.global_ns.classes(lambda decl: decl.name.startswith('sc_export') , allow_empty=True)
+for i in cls:
+    i.include()
+    for k in i.member_functions(allow_empty=True):
+        k.exclude()
+    for k in i.member_operators(allow_empty=True):
+        k.exclude()
+
 #print "Including free functions"
 sc_start_decl = mb.global_ns.free_functions('sc_start', allow_empty=True)
 for i in sc_start_decl:
@@ -246,4 +264,8 @@ for cur_namespace in sc_names:
         ,'sc_dt::sc_bv<16>'
         ,'sc_dt::sc_bv<32>'
         ,'sc_dt::sc_bv<64>'
+        ,'sc_core::sc_port<tlm::tlm_fw_transport_if< tlm::tlm_base_protocol_types>,0,sc_core::SC_ZERO_OR_MORE_BOUND >'
+        ,'sc_core::sc_port<tlm::tlm_fw_transport_if< tlm::tlm_base_protocol_types>,1,sc_core::SC_ZERO_OR_MORE_BOUND >'
+        ,'sc_core::sc_port<tlm::tlm_fw_transport_if< tlm::tlm_base_protocol_types>,1,sc_core::SC_ONE_OR_MORE_BOUND >'
+        ,'sc_core::sc_export<tlm::tlm_fw_transport_if<tlm::tlm_base_protocol_types> >'
     ]
