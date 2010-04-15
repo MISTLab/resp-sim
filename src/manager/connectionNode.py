@@ -94,6 +94,29 @@ class ConnectionNode:
             else:
                 self.SysCsourceConn[thisPort] = [(sourceName, sourcePort, SCsignal)]
 
+    def checkTarget(self, targetName, targetPort, thisPort, SCsignal = None):
+        """Check if a target port of a specified target component is connected on the thisPort"""
+        if not SCsignal:
+            if self.TLMsourceConn.has_key(thisPort):
+                for (currTarget, currTargetPort) in self.TLMsourceConn[thisPort]:
+                    if currTarget == targetName and currTargetPort == targetPort:
+                        return True
+        else:
+            raise exceptions.Exception('checkTarget is not supported on SystemC ports') 
+        return False
+
+    def checkTarget(self, sourceName, sourcePort, thisPort, SCsignal = None):
+        """Check if a source port of a specified source component is connected on the thisPort"""
+        if not SCsignal:
+            if self.TLMtargetConn.has_key(thisPort):
+                for (currSource, currSourcePort) in self.TLMtargetConn[thisPort]:
+                    if currSource == sourceName and currSourcePort == sourcePort:
+                        return True
+        else:
+            raise exceptions.Exception('checkSource is not supported on SystemC ports') 
+        return False
+
+        
     def getSources(self):
         """Returns a tuple listing the names of all the components currently
         connected as masters to the component represented by this node"""
