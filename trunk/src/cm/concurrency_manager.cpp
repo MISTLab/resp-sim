@@ -1035,6 +1035,7 @@ int resp::ConcurrencyManager::unLockMutex(int mutex, unsigned int procId){
         #ifndef NDEBUG
         std::cerr << "Thread " << curProc->runThread->id << " giving mutex " << mutex << " to thread " << toAwakeTh->id << std::endl;
         #endif
+        attemptScheduling();
 
         this->schedLock.unlock();
         return toAwakeTh->id;
@@ -1116,6 +1117,7 @@ void resp::ConcurrencyManager::postSem(int sem, unsigned int procId){
         std::cerr << "Thread " << managedProc[procId]->runThread->id << " giving semaphore " << sem << " to thread " << toAwakeTh->id << std::endl;
         #endif
         existingSem[sem]->owner = toAwakeTh;
+        attemptScheduling();
     }
     else { 
         //existingSem[sem]->owner = managedProc[procId]->runThread;
@@ -1290,6 +1292,8 @@ void resp::ConcurrencyManager::signalCond(int cond, bool broadcast, unsigned int
             #endif
         }
     }
+
+    attemptScheduling();
 
     this->schedLock.unlock();
 }
