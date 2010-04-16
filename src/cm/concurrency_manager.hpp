@@ -60,6 +60,9 @@ namespace std {
   using ::time;
 }
 #endif
+#ifdef NDEBUG
+//#undef NDEBUG
+#endif
 #include "concurrency_structures.hpp"
 
 ///Variables necessary to implement a SystemC lock:
@@ -448,6 +451,23 @@ class ConcurrencyManager{
         void pushCleanupHandler(unsigned int procId, unsigned int routineAddress, unsigned int arg);
         void popCleanupHandler(unsigned int procId, bool execute);
         void execCleanupHandlerTop(unsigned int procId);
+
+
+        void attemptScheduling() {
+            // Schedule free processors if any!
+            std::map<unsigned int, Processor<unsigned int>* >::iterator it;
+            ThreadEmu* th = findReadyThread();
+            if( th != NULL ) {
+                for( it = managedProc.begin(); it != managedProc.end() ; it++ ) {
+                    if( it->second->runThread == NULL ) {
+                        it->second->schedule(th);
+                        th = findReadyThread();
+                        if( th == NULL ) return;
+                    }
+                }
+            }
+        }
+
 
         ///*********** Mutex related routines *******************
         ///Destroys a previously allocated mutex, exception if the mutex does not exist
