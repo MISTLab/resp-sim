@@ -98,6 +98,15 @@ extern "C" {
 #define DMGL_GNU_V3      (1 << 14)
 #define DMGL_GNAT        (1 << 15)
 
+//binutils versions older than 2.18 do use cplus_demangle instead of the bfd_demangle
+//function; note how this function is only internally used by binutils, so it
+//is not available in any header file and it needs to be declared as external
+#ifdef OLD_BFD
+extern "C" {
+extern char * cplus_demangle (const char *mangled, int options);
+}
+#endif
+
 std::map<std::string, BFDWrapper *> BFDWrapper::bfdInstances;
 
 BFDWrapper & BFDWrapper::getInstance(std::string fileName){
@@ -272,7 +281,7 @@ unsigned int BFDWrapper::getSymAddr(const std::string &symbol, bool &valid) cons
 ///Accesses the BFD internal structures in order to get the dissassbly of the symbols
     void BFDWrapper::readSyms(){
     //make sure there are symbols in the file
-    if ((bfd_get_file_flags (execImage) & HAS_SYMS) == 0)
+    if ((bfd_get_file_flags (this->execImage) & HAS_SYMS) == 0)
         return;
 
     long symcount = 0;
@@ -333,13 +342,19 @@ void BFDWrapper::readSrc(){
                 if (functionname != NULL && *functionname == '\0')
                     functionname = NULL;
 
-                if (functionname != NULL  && this->addrToFunction.find(i + sectionsIter->startAddr) == this->addrToFunction.end()){
+                //if (functionname != NULL && this->addrToFunction.find(i + sectionsIter->startAddr) == this->addrToFunction.end()){
+                if (functionname != NULL){
+                    #ifdef OLD_BFD
+                    char *name = cplus_demangle(functionname, DMGL_ANSI | DMGL_PARAMS);
+                    #else
                     char *name = bfd_demangle (this->execImage, functionname, DMGL_ANSI | DMGL_PARAMS);
+                    #endif
                     if(name == NULL)
                         name = (char *)functionname;
                     this->addrToFunction[i + sectionsIter->startAddr] = name;
                 }
-                if (line > 0 && this->addrToSrc.find(i + sectionsIter->startAddr) == this->addrToSrc.end())
+                //if (line > 0 && this->addrToSrc.find(i + sectionsIter->startAddr) == this->addrToSrc.end())
+                if (line > 0)
                     this->addrToSrc[i + sectionsIter->startAddr] = std::pair<std::string, unsigned int>(filename == NULL ? "???" : filename, line);
             }
         }
