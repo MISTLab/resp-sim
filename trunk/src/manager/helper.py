@@ -192,26 +192,18 @@ def getTLMOutPort(object):
 def isTLMInPort(portClass):
     """Given a class it returns true if this can be a TLM port, false otherwise"""
     try:
-        getBase('simple_target_socket', portClass)
+        getBase('tlm_base_target_socket_b', portClass)
         return True
     except:
-        try:
-            getBase('multi_passthrough_target_socket', portClass)
-            return True
-        except:          
-            return False
+        return False
 
 def isTLMOutPort(portClass):
     """Given a class it returns true if this can be a TLM port, false otherwise"""
     try:
-        getBase('simple_initiator_socket', portClass)
+        getBase('tlm_base_initiator_socket_b', portClass)
         return True
     except:
-        try:
-            getBase('multi_passthrough_initiator_socket', portClass)
-            return True
-        except:          
-            return False
+        return False
 
 def isSystemCInPort(portClass):
     """Given a class it returns true if this can be a SystemC port, false otherwise"""
@@ -258,14 +250,21 @@ def getTLMPortType(portName, type = None): # OK!
     # template.
     if len(tempStr) < 2:
         raise exceptions.Exception(portName + 'doesn\'t represent a TLM port: no _less_ found')
-    if ((tempStr[0] == 'simple_initiator_socket' or tempStr[0] == 'multi_passthrough_initiator_socket') and (type == 'source' or not type)) \
-            or ((tempStr[0] == 'simple_target_socket' or tempStr[0] == 'multi_passthrough_target_socket') and (type == 'target' or not type)):
-        tempStr = portName.replace('_less_','')
+        
+#    if ((tempStr[0] == 'simple_initiator_socket' or tempStr[0] == 'multi_passthrough_initiator_socket') and (type == 'source' or not type)) \
+#            or ((tempStr[0] == 'simple_target_socket' or tempStr[0] == 'multi_passthrough_target_socket') and (type == 'target' or not type)):
+    if ((tempStr[0] == 'tlm_base_initiator_socket_b') and (type == 'source' or not type)) \
+            or ((tempStr[0] == 'tlm_base_target_socket_b') and (type == 'target' or not type)):
+        tempStr = portName.replace('tlm_base_initiator_socket_b','')
+        tempStr = tempStr.replace('tlm_base_target_socket_b','')
+        tempStr = tempStr.replace('_less_','')
         tempStr = tempStr.replace('_greater_','')        
         tempStr = string.split(tempStr, '_comma_')
-        for i in range(len(tempStr)-1,-1,-1):
-            if tempStr[i] == '_tlm_scope_tlm_base_protocol_types' and i > 0:
-                return tempStr[i-1]   
+        #for i in range(len(tempStr)-1,-1,-1):
+        #    if tempStr[i] == '_tlm_scope_tlm_base_protocol_types' and i > 0:
+        #        return tempStr[i-1]
+        print    tempStr[0]
+        return tempStr[0]   
         raise exceptions.Exception(portName + 'doesn\'t represent a TLM port: no _tlm_scope_tlm_base_protocol_types found')
     else:
         raise exceptions.Exception(portName + 'doesn\'t represent a TLM port')

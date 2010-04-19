@@ -211,21 +211,15 @@ class ComponentManager:
         # tlm_initiator_port or tlm_target_port; then I can check the types and
         # connect them
         try:
-            sourcePortTypeName = helper.getBase('simple_initiator_socket', sourcePort.__class__)
+            sourcePortTypeName = helper.getBase('tlm_base_initiator_socket_b', sourcePort.__class__)
         except Exception, e:
-            try:
-                sourcePortTypeName = helper.getBase('multi_passthrough_initiator_socket', sourcePort.__class__)
-            except Exception, e:
-              raise exceptions.Exception('ports ' + sourcePortName + ' and ' + targetPortName + ' cannot be connected because' +
-                    'of the following error ' + str(e))
+            raise exceptions.Exception('ports ' + sourcePortName + ' and ' + targetPortName + ' cannot be connected because' +
+                  'of the following error ' + str(e))
         try:
-            targetPortTypeName = helper.getBase('simple_target_socket', targetPort.__class__)
+            targetPortTypeName = helper.getBase('tlm_base_target_socket_b', targetPort.__class__)
         except Exception, e:
-            try:
-                targetPortTypeName = helper.getBase('multi_passthrough_target_socket', targetPort.__class__)
-            except  Exception, e:
-              raise exceptions.Exception('ports ' + sourcePortName + ' and ' + targetPortName + ' cannot be connected because' +
-                    'of the following error ' + str(e))
+            raise exceptions.Exception('ports ' + sourcePortName + ' and ' + targetPortName + ' cannot be connected because' +
+                  'of the following error ' + str(e))
 
         if helper.getTLMPortType(sourcePortTypeName) != helper.getTLMPortType(targetPortTypeName):
             raise exceptions.Exception('ports ' + sourcePortName + ' and ' + targetPortName + ' are not compatible')
