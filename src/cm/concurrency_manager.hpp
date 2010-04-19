@@ -61,7 +61,7 @@ namespace std {
 }
 #endif
 #ifdef NDEBUG
-//#undef NDEBUG
+#undef NDEBUG
 #endif
 #include "concurrency_structures.hpp"
 
@@ -108,8 +108,8 @@ template <class wordSize> struct Processor{
     void schedule(ThreadEmu * thread){
         std::vector< wordSize > args;
         args.push_back(thread->args);
-        //TODO: ok, here, when scheduling the thread, we also have to remeber to
-        //set the thread returtn value in case it was joined!!
+        //TODO: ok, here, when scheduling the thread, we also have to remember to
+        //set the thread return value in case it was joined!!
 
         // Set thread state
         this->runThread = thread;
@@ -218,7 +218,7 @@ public:
 namespace resp{
 
 ///Main class of the concurrency manager: it is in charge of implementing the
-///behavior of the thread related constructs, includuing thread creation, destruction,
+///behavior of the thread related constructs, including thread creation, destruction,
 ///synchronization management (mutex, condition variables, semaphores, etc.)
 class ConcurrencyManager{
     private:
@@ -468,7 +468,7 @@ class ConcurrencyManager{
                     if( it->second->runThread == NULL ) {
                         it->second->schedule(th);
                         th = findReadyThread();
-                        if( th == NULL ) break;
+                        if( th == NULL ) return;
                     }
                 }
                 readyQueue->push_front(th);
