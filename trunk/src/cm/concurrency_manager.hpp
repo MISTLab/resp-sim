@@ -458,13 +458,20 @@ class ConcurrencyManager{
             std::map<unsigned int, Processor<unsigned int>* >::iterator it;
             ThreadEmu* th = findReadyThread();
             if( th != NULL ) {
+                #ifndef NDEBUG
+                std::cout << "Attempting Scheduling Thread " << th->id << std::endl;
+                #endif
                 for( it = managedProc.begin(); it != managedProc.end() ; it++ ) {
+                    #ifndef NDEBUG
+                    std::cout << "\t Attempting proc " << it->second->processorInstance.getProcessorID() << std::endl;
+                    #endif
                     if( it->second->runThread == NULL ) {
                         it->second->schedule(th);
                         th = findReadyThread();
-                        if( th == NULL ) return;
+                        if( th == NULL ) break;
                     }
                 }
+                readyQueue->push_front(th);
             }
         }
 
