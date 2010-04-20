@@ -84,10 +84,11 @@ private:
 	float wordarea, cellarea;
 	sc_time latword;
 
-
-public:
 	//Component name
 	string name;
+
+
+public:
 
 	//The local allocation table
 	eFPGAAllocationTable tab;
