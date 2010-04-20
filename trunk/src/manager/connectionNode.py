@@ -116,7 +116,6 @@ class ConnectionNode:
             raise exceptions.Exception('checkSource is not supported on SystemC ports') 
         return False
 
-        
     def getSources(self):
         """Returns a tuple listing the names of all the components currently
         connected as masters to the component represented by this node"""

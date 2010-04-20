@@ -45,17 +45,32 @@ from connectionNode import ConnectionNode
 import string
 import sys
 import exceptions
+import scwrapper
 
-def getClass(className, symbolNamespace):
-    """Given a class name it looks for the instance of the class itself; it looks
-    inside the ArchC wrapper and in all the elements in the component folder"""
-    for i in symbolNamespace:
-        try:
-            if className in dir(i):
-                return getattr(i, className)
-        except:
-            pass
-    return None
+def isSystemCComponent(obj):
+    """Check if a give object is a SystemC component or not"""
+    if hasattr(obj,'__class__'):
+        if issubclass(obj.__class__,scwrapper.sc_object):
+            return True
+    return False
+
+
+def getAllChildScObjects(obj):
+    """Given a SystemC component, it looks for all the contained sc_object. The list of the names
+    of the contained SystemC object is returned"""
+    if not hasattr(obj,'name'):
+        raise exceptions.Exception(str(obj) + ' must be a SystemC component')
+    toBeChecked = [obj]
+    for i in toBeChecked:
+        if hasattr(i,'get_child_objects'):
+            currList = i.get_child_objects()
+            for i in range(0,len(currList)):
+                toBeChecked.append(currList[i])
+    l = []
+    for i in toBeChecked:
+        if hasattr(i,'name'):
+            l.append(i.name())
+    return l 
 
 def getAttrInstanceHelper(path, env):
     """Given the string representing the full path of an object attribute w.r.t. the namespace env,
@@ -90,8 +105,7 @@ def getAttrInstance(component, attribute):
             raise exceptions.Exception('There is no attribute with name ' + attribute + ' in the component ' + str(component))
     return attributeRef
 
-
-def getInstance(name, params, components):
+def instantiateComponent(name, params, components):
     """given the name of a component class (module.class) it builds an instance
     of that class and returns it and return it to the caller"""
     # first of all, name may contain the indication of a module
@@ -160,6 +174,7 @@ def getBaseRecursive(startingName, classToCheck):
         return ''
 
 def getTLMInPort(object):
+    """Returns the list of target ports in the specified component"""
     ports = []
     if hasattr(object, "get_child_objects"):
         vet = object.get_child_objects()
@@ -175,6 +190,7 @@ def getTLMInPort(object):
     return ports
 
 def getTLMOutPort(object):
+    """Returns the list of target ports in the specified component"""
     ports = []
     if hasattr(object, "get_child_objects"):
         vet = object.get_child_objects()
@@ -462,6 +478,17 @@ def extractConstrSig(constructor):
         if equal != -1:
             params.append((param[:equal].lstrip().rstrip(), param[equal + 1:].lstrip().rstrip()))
     return params
+
+def getClass(className, symbolNamespace):
+    """Given a class name it looks for the instance of the class itself; it looks
+    inside the ArchC wrapper and in all the elements in the component folder"""
+    for i in symbolNamespace:
+        try:
+            if className in dir(i):
+                return getattr(i, className)
+        except:
+            pass
+    return None
 
 def findConnectionsRecv(comp, realComp, pathList,  scwrapper, symbolNamespace):
     """Given a component and its symbolic representation

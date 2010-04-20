@@ -1103,9 +1103,9 @@ sc_simcontext::get_child_objects() const
     if ( warn_get_child_objects )
     {
 	warn_get_child_objects = false;
-	SC_REPORT_INFO(SC_ID_IEEE_1666_DEPRECATION_,
-	    "sc_simcontext::get_child_objects() is deprecated,\n" \
-            " use sc_get_top_level_objects()" );
+//	SC_REPORT_INFO(SC_ID_IEEE_1666_DEPRECATION_,
+//	    "sc_simcontext::get_child_objects() is deprecated,\n" \
+//            " use sc_get_top_level_objects()" );
     }
     return m_child_objects;
 }
