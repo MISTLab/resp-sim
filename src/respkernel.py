@@ -267,7 +267,7 @@ class RespKernel:
         # create the component manager
         from compManager import ComponentManager
         global manager
-        self.manager = manager = ComponentManager(self.components, scwrapper)
+        self.manager = manager = ComponentManager(self.components)
         self.fileName = ''
 
         # instantiate controller and register the
@@ -316,8 +316,8 @@ class RespKernel:
     def setup_scripting_commands(self):
         """Creates some convenience functions, used to run scripts without the need to refer to RespKernel, controller or manager objects"""
 
-        global connect, connectPortsForce, connectPorts, connectSyscPorts, connectSyscSignal, listComponents,  printComponents, getCompInstance, \
-                areConnected, getSources,  getTargets, getConnected, getComponents, getAttrInstance,  getInstance, run_simulation, \
+        global connect, connectPortsForce, connectPorts, listComponents, printComponents, getCompInstance, \
+                areConnected, getInstantiatedComponents, getAttrInstance,  instantiateComponent, run_simulation, \
                 pause_simulation, stop_simulation,  get_simulated_time, get_real_time, run_up_to, reload_architecture, \
                 enable_fault_injection, showArchitecture, reset, load_architecture, reload_architecture, get_architecture_filename, register_breakpoint
 
@@ -326,16 +326,11 @@ class RespKernel:
         connect = self.manager.connect
         connectPortsForce = self.manager.connectPortsForce
         connectPorts = self.manager.connectPorts
-        connectSyscPorts = self.manager.connectSyscPorts
-        connectSyscSignal = self.manager.connectSyscSignal
         listComponents = self.manager.listComponents
         printComponents = self.manager.printComponents
         getCompInstance = self.manager.getCompInstance
         areConnected = self.manager.areConnected
-        getSources = self.manager.getSources
-        getTargets = self.manager.getTargets
-        getConnected = self.manager.getConnected
-        getComponents = self.manager.getComponents
+        getInstantiatedComponents = self.manager.getInstantiatedComponents
         showArchitecture = self.manager.showArchitecture
         
         import breakpoints
@@ -343,7 +338,7 @@ class RespKernel:
       
         import helper
         getAttrInstance =  helper.getAttrInstance
-        getInstance = helper.getInstance
+        instantiateComponent = helper.instantiateComponent
 
         run_simulation = self.controller.run_simulation
         run_up_to = self.controller.run_up_to
@@ -357,12 +352,12 @@ class RespKernel:
         reload_architecture = self.reload_architecture
         get_architecture_filename = self.get_architecture_filename
 
-        enable_fault_injection  = self.enable_fault_injection #TODO
+        enable_fault_injection  = self.enable_fault_injection
 
         # List commands in an internal array for reference
-        self.scripting_commands = [connect, connectPortsForce, connectPorts, connectSyscPorts, connectSyscSignal, listComponents,  printComponents, \
-                                   getCompInstance, areConnected, getSources,  getTargets, getConnected, getComponents, \
-                                   getAttrInstance,  getInstance, run_simulation, pause_simulation, \
+        self.scripting_commands = [connect, connectPortsForce, connectPorts, listComponents,  printComponents, \
+                                   getCompInstance, areConnected, getInstantiatedComponents, \
+                                   getAttrInstance,  instantiateComponent, run_simulation, pause_simulation, \
                                    stop_simulation, get_simulated_time, get_real_time, run_up_to, enable_fault_injection, showArchitecture, reset, \
                                    load_architecture, reload_architecture, get_architecture_filename, register_breakpoint]
 
@@ -572,10 +567,10 @@ class RespKernel:
         self.setup_controller(self.interactive)
         self.setup_scripting_commands()
 
-    def enable_fault_injection(self, value = True): #TODO
+    def enable_fault_injection(self, value = True):
         """ Enables oe disables the fault injection environment"""
         try:
-            import fiCompManager
+            from fi import fiCompManager
         except:
             print "Fault injection not supported"
             return
@@ -583,20 +578,34 @@ class RespKernel:
         from compManager import ComponentManager
         global manager
 
-        if len(self.manager.getComponents()) > 0:
+        if len(self.manager.getInstantiatedComponents()) > 0:
             print 'An architecture is instantiated. A reset is required for enabling the fault injiection'
 
         from fiCompManager import FaultInjectionComponentManager
         if value:
             if not isinstance(self.manager,FaultInjectionComponentManager):
                 #enable fault injection environment
-                self.manager = manager = FaultInjectionComponentManager(self.components, scwrapper)                
+                self.manager = manager = FaultInjectionComponentManager(self.components)                
                 self.setup_scripting_commands()
+                
+                global getProbe, getProbes, getProbePosition, registerComponent
+                getProbe = manager.getProbe
+                getProbes = manager.getProbes
+                getProbePosition = manager.getProbePosition
+                registerComponent = manager.registerComponent
+                self.scripting_commands.append(getProbe)
+                self.scripting_commands.append(getProbes)
+                self.scripting_commands.append(getProbePosition)
+                self.scripting_commands.append(registerComponent)
         else:
             if isinstance(self.manager,FaultInjectionComponentManager):
                 #disable fault injection environment
-                self.manager = manager = ComponentManager(self.components, scwrapper)
+                self.manager = manager = ComponentManager(self.components)
                 self.setup_scripting_commands()
+                del globals()['getProbe']
+                del globals()['getProbes']
+                del globals()['getProbePosition']
+                del globals()['registerComponent']
 
 
 def get_namespace():

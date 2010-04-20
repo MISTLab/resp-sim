@@ -130,6 +130,7 @@ sc_simcontext_decls = mb.global_ns.class_('sc_simcontext')
 sc_simcontext_decls.exclude()
 sc_simcontext_decls.ignore = False
 sc_simcontext_decls.member_function('reset').include()
+sc_simcontext_decls.member_function('get_child_objects').include()
 
 #print "Including bind"
 bind_decl = mb.global_ns.member_functions( 'bind' )

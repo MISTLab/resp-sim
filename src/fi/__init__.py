@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 ##############################################################################
 #
@@ -35,14 +34,12 @@
 #
 #
 #
-#   (c) Giovanni Beltrame, Luca Fossati
-#       Giovanni.Beltrame@esa.int fossati@elet.polimi.it
+#   (c) Antonio Miele
+#       miele@elet.polimi.it
 #
 ##############################################################################
 
+""" Fault injector
 
-# Build
-
-def build(bld):
-    bld.add_subdirs('simpleBus simpleNoc simpleProbe simpleSaboteur')
-
+    This package contains all the python code for the fault injection manager.
+"""

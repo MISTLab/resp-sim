@@ -61,7 +61,7 @@ namespace std {
 }
 #endif
 #ifdef NDEBUG
-#undef NDEBUG
+//#undef NDEBUG
 #endif
 #include "concurrency_structures.hpp"
 
