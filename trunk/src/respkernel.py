@@ -316,7 +316,7 @@ class RespKernel:
     def setup_scripting_commands(self):
         """Creates some convenience functions, used to run scripts without the need to refer to RespKernel, controller or manager objects"""
 
-        global connect, connectPortsForce, connectPorts, listComponents, printComponents, getCompInstance, \
+        global connect, connectPorts, connectPortsByPathName, listComponents, printComponents, getCompInstance, \
                 areConnected, getInstantiatedComponents, getAttrInstance,  instantiateComponent, run_simulation, \
                 pause_simulation, stop_simulation,  get_simulated_time, get_real_time, run_up_to, reload_architecture, \
                 enable_fault_injection, showArchitecture, reset, load_architecture, reload_architecture, get_architecture_filename, register_breakpoint
@@ -324,8 +324,8 @@ class RespKernel:
         # Assign scripting commands to manager, helper and controller methods
         reload_architecture = self.reload_architecture
         connect = self.manager.connect
-        connectPortsForce = self.manager.connectPortsForce
         connectPorts = self.manager.connectPorts
+        connectPortsByPathName = self.manager.connectPortsByPathName
         listComponents = self.manager.listComponents
         printComponents = self.manager.printComponents
         getCompInstance = self.manager.getCompInstance
@@ -355,7 +355,7 @@ class RespKernel:
         enable_fault_injection  = self.enable_fault_injection
 
         # List commands in an internal array for reference
-        self.scripting_commands = [connect, connectPortsForce, connectPorts, listComponents,  printComponents, \
+        self.scripting_commands = [connect, connectPorts, connectPortsByPathName, listComponents,  printComponents, \
                                    getCompInstance, areConnected, getInstantiatedComponents, \
                                    getAttrInstance,  instantiateComponent, run_simulation, pause_simulation, \
                                    stop_simulation, get_simulated_time, get_real_time, run_up_to, enable_fault_injection, showArchitecture, reset, \

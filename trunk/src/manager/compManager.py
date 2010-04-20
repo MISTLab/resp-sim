@@ -70,11 +70,15 @@ class ComponentManager:
         """Returns a formal representation of this class"""
         #TODO improve it to consider components not yet connected to anyone
         representation = 'Component manager:\n\n'
-        #compList = self.getInstantiatedComponents()
-        #for elem in compList:
-        #    if 
-        for elem in self.compToConnection.values():
-            representation += repr(elem) + '\n'
+        compList = self.getInstantiatedComponents()
+        for elem in compList:
+            if self.compToConnection.has_key(elem):
+                representation += repr(self.compToConnection[elem]) + '\n'
+            else:
+                tmp = ConnectionNode(self.getCompInstance(elem),elem)
+                representation += repr(tmp) + '\n'
+        #for elem in self.compToConnection.values():
+        #    representation += repr(elem) + '\n'
         return representation
 
     def __str__(self):
@@ -83,7 +87,7 @@ class ComponentManager:
 
     def connect(self, source, target):
         """Connects the source component with target; in case only one initiator port is present in source and one target port in target
-        these two ports are connected, otherwise the user is requested to specify the correct ports by using the connectPorts method. 
+        these two ports are connected, otherwise the user is requested to specify the correct ports by using the connectPortsByPathName method. 
         Note that source and target must represent the instances of the components that we wish to connect together, not their names
         """
         
@@ -113,14 +117,14 @@ class ComponentManager:
             errorString = errorString + 'The candidates sourcePort, targetPort are:'
             for candTemp in candidates:
                 errorString = errorString + candTemp[0][1] + ' -> ' + candTemp[1][1]
-            errorString = errorString + 'Please call connectPorts or connectPortsForce specifying ' + 'the ports you wish to connect'
+            errorString = errorString + 'Please call connectPortsByPathName or connectPorts specifying ' + 'the ports you wish to connect'
             raise exceptions.Exception(errorString)
         else: #connect the two identified ports
             print('Connecting ' + source.name() + ' and ' + target.name() +
                   ' repectively using ports ' + candidates[0][0].name() + ' and ' + candidates[0][1].name())
-            self.connectPortsForce(source, candidates[0][0], target, candidates[0][1])
+            self.connectPorts(source, candidates[0][0], target, candidates[0][1])
 
-    def connectPorts(self, source, sourcePortName, target, targetPortName, sourcePortId = None, targetPortId = None):
+    def connectPortsByPathName(self, source, sourcePortName, target, targetPortName, sourcePortId = None, targetPortId = None):
         """Connects the source component with a target one; the path of the initiator port (in the source component) and target port
         (in the target component) are specified. Note that a check is performed to be sure that the type of the source and target port match.
         It is also possible to specify the Ids of the ports: if they are different from None it means that sourcePortName and 
@@ -175,10 +179,10 @@ class ComponentManager:
         if helper.getTLMPortType(sourcePortTypeName) != helper.getTLMPortType(targetPortTypeName):
             raise exceptions.Exception('ports ' + sourcePortName + ' and ' + targetPortName + ' are not compatible')
 
-        self.connectPortsForce(source, sourcePort, target, targetPort)
+        self.connectPorts(source, sourcePort, target, targetPort)
 
 
-    def connectPortsForce(self, source, sourcePort, target, targetPort):
+    def connectPorts(self, source, sourcePort, target, targetPort):
         """Connect two ports given their instances
         """
         #check if source and target are SystemC components

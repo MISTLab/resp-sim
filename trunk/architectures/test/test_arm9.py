@@ -107,10 +107,10 @@ if BUS_ACTIVE:
     ##### BUS CONNECTIONS #####
     # Connecting the master components to the bus
     for i in range(0, PROCESSOR_NUMBER):
-        connectPortsForce(processors[i], processors[i].instrMem.initSocket, bus, bus.targetSocket)
-        connectPortsForce(processors[i], processors[i].dataMem.initSocket, bus, bus.targetSocket)
+        connectPorts(processors[i], processors[i].instrMem.initSocket, bus, bus.targetSocket)
+        connectPorts(processors[i], processors[i].dataMem.initSocket, bus, bus.targetSocket)
 
-    connectPortsForce(bus, bus.initiatorSocket, mem, mem.targetSocket)
+    connectPorts(bus, bus.initiatorSocket, mem, mem.targetSocket)
 
     # Add memory mapping
     bus.addBinding("mem",0x0,memorySize)
@@ -120,8 +120,8 @@ else:
     else:
         ##### MEMORY CONNECTIONS #####
         # Connecting the master component to the memory
-        connectPortsForce(processors[0], processors[0].instrMem.initSocket, mem, mem.targetSocket)
-        connectPortsForce(processors[0], processors[0].dataMem.initSocket, mem, mem.targetSocket)
+        connectPorts(processors[0], processors[0].instrMem.initSocket, mem, mem.targetSocket)
+        connectPorts(processors[0], processors[0].dataMem.initSocket, mem, mem.targetSocket)
 
 ################################################
 ##### SYSTEM INIT ##############################

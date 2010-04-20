@@ -120,22 +120,22 @@ bus  = BusLT32.BusLT32('bus',3,latencyBus)
 ##### BUS CONNECTIONS #####
 # Connecting the master components to the bus
 for i in range(0, PROCESSOR_NUMBER):
-    connectPortsForce(processors[i], processors[i].instrMem.initSocket, bus, bus.targetSocket)
-    connectPortsForce(processors[i], processors[i].dataMem.initSocket, bus, bus.targetSocket)
+    connectPorts(processors[i], processors[i].instrMem.initSocket, bus, bus.targetSocket)
+    connectPorts(processors[i], processors[i].dataMem.initSocket, bus, bus.targetSocket)
 
-connectPortsForce(bus, bus.initiatorSocket, mem, mem.targetSocket)
+connectPorts(bus, bus.initiatorSocket, mem, mem.targetSocket)
 
 # Add memory mapping
 bus.addBinding("mem",0x0,memorySize)
 
 ##### RECONFIGURABLE COMPONENTS CONNECTIONS #####
-connectPortsForce(cE, cE.busSocket, bus, bus.targetSocket)
-connectPortsForce(bus, bus.initiatorSocket, bS, bS.targetSocket)
+connectPorts(cE, cE.busSocket, bus, bus.targetSocket)
+connectPorts(bus, bus.initiatorSocket, bS, bS.targetSocket)
 # Add bitstream sink binding
 bus.addBinding("bS", memorySize+1, memorySize+1)
 
-connectPortsForce(cE, cE.initiatorSocket, eF1, eF1.targetSocket)
-connectPortsForce(cE, cE.initiatorSocket, eF2, eF2.targetSocket)
+connectPorts(cE, cE.initiatorSocket, eF1, eF1.targetSocket)
+connectPorts(cE, cE.initiatorSocket, eF2, eF2.targetSocket)
 
 ################################################
 ##### SYSTEM INIT ##############################

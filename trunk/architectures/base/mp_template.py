@@ -102,10 +102,10 @@ bus  = BusLT32.BusLT32('bus',2*PROCESSOR_NUMBER,scwrapper.SC_ZERO_TIME)
 ##### BUS CONNECTIONS #####
 # Connecting the master components to the bus
 for i in range(0, PROCESSOR_NUMBER):
-    connectPortsForce(processors[i], processors[i].instrMem.initSocket, bus, bus.targetSocket)
-    connectPortsForce(processors[i], processors[i].dataMem.initSocket, bus, bus.targetSocket)
+    connectPorts(processors[i], processors[i].instrMem.initSocket, bus, bus.targetSocket)
+    connectPorts(processors[i], processors[i].dataMem.initSocket, bus, bus.targetSocket)
 
-connectPortsForce(bus, bus.initiatorSocket, mem, mem.targetSocket)
+connectPorts(bus, bus.initiatorSocket, mem, mem.targetSocket)
 
 # Add memory mapping
 bus.addBinding("mem",0x0,memorySize)

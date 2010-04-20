@@ -49,7 +49,7 @@ instMaster = testMaster_wrapper.testMaster('master')
 instSlave = testSlave_wrapper.testSlave('slave')
 
 #Connection of the ports: first we specify the source component and its ports; then the target component and its port.
-connectPortsForce(instMaster, instMaster.initSocket, instSlave, instSlave.targetSocket)
+connectPorts(instMaster, instMaster.initSocket, instSlave, instSlave.targetSocket)
 
 #finally we start the simulation for 10 NS
 #run_simulation(10)

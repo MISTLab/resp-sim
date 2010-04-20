@@ -129,7 +129,7 @@ mem = MemoryLT32.MemoryLT32( 'mem', memorySize, latencyMem)
 if BUS_ACTIVE:
     latencyBus = scwrapper.sc_time(BUS_LATENCY, scwrapper.SC_NS)
     bus  = BusLT32.BusLT32('bus',2,latencyBus)
-    connectPortsForce(bus, bus.initiatorSocket, mem, mem.targetSocket)
+    connectPorts(bus, bus.initiatorSocket, mem, mem.targetSocket)
     # Add memory mapping
     bus.addBinding("mem",0x0,memorySize)
 
@@ -142,16 +142,16 @@ if DATA_CACHE_ACTIVE:
     dataCache.setStoreLatency(scwrapper.sc_time(CACHE_STORE_LAT,scwrapper.SC_NS))
     dataCache.setRemoveLatency(scwrapper.sc_time(CACHE_REMOVE_LAT,scwrapper.SC_NS))
     #dataCache.setScratchpad(4194304,1048576,scwrapper.sc_time(0.001,scwrapper.SC_NS))
-    connectPortsForce(processors[0], processors[0].dataMem.initSocket, dataCache, dataCache.targetSocket)
+    connectPorts(processors[0], processors[0].dataMem.initSocket, dataCache, dataCache.targetSocket)
     if BUS_ACTIVE:
-        connectPortsForce(dataCache, dataCache.initSocket, bus, bus.targetSocket)
+        connectPorts(dataCache, dataCache.initSocket, bus, bus.targetSocket)
     else:
-        connectPortsForce(dataCache, dataCache.initSocket, mem, mem.targetSocket)
+        connectPorts(dataCache, dataCache.initSocket, mem, mem.targetSocket)
 else:
     if BUS_ACTIVE:
-        connectPortsForce(processors[0], processors[0].dataMem.initSocket, bus, bus.targetSocket)
+        connectPorts(processors[0], processors[0].dataMem.initSocket, bus, bus.targetSocket)
     else:
-        connectPortsForce(processors[0], processors[0].dataMem.initSocket, mem, mem.targetSocket)
+        connectPorts(processors[0], processors[0].dataMem.initSocket, mem, mem.targetSocket)
 
 if INSTR_CACHE_ACTIVE:
     instrCache = CacheLT32.CacheLT32('instrCache', CACHE_SIZE*1024*1024, memorySize, CACHE_WAYS, CACHE_BLOCK_SIZE, CACHE_REM_POLICY, CACHE_WR_POLICY)
@@ -161,16 +161,16 @@ if INSTR_CACHE_ACTIVE:
     instrCache.setStoreLatency(scwrapper.sc_time(CACHE_STORE_LAT,scwrapper.SC_NS))
     instrCache.setRemoveLatency(scwrapper.sc_time(CACHE_REMOVE_LAT,scwrapper.SC_NS))
     #instrCache.setScratchpad(4194304,1048576,scwrapper.sc_time(0.001,scwrapper.SC_NS))
-    connectPortsForce(processors[0], processors[0].instrMem.initSocket, instrCache, instrCache.targetSocket)
+    connectPorts(processors[0], processors[0].instrMem.initSocket, instrCache, instrCache.targetSocket)
     if BUS_ACTIVE:
-        connectPortsForce(instrCache, instrCache.initSocket, bus, bus.targetSocket)
+        connectPorts(instrCache, instrCache.initSocket, bus, bus.targetSocket)
     else:
-        connectPortsForce(instrCache, instrCache.initSocket, mem, mem.targetSocket)
+        connectPorts(instrCache, instrCache.initSocket, mem, mem.targetSocket)
 else:
     if BUS_ACTIVE:
-        connectPortsForce(processors[0], processors[0].instrMem.initSocket, bus, bus.targetSocket)
+        connectPorts(processors[0], processors[0].instrMem.initSocket, bus, bus.targetSocket)
     else:
-        connectPortsForce(processors[0], processors[0].instrMem.initSocket, mem, mem.targetSocket)
+        connectPorts(processors[0], processors[0].instrMem.initSocket, mem, mem.targetSocket)
 
 ################################################
 ##### SYSTEM INIT ##############################

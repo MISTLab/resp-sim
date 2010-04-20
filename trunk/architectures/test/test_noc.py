@@ -107,11 +107,11 @@ if NOC_ACTIVE:
     ##### NOC CONNECTIONS #####
     # Connecting the master components to the NOC
     for i in range(0, PROCESSOR_NUMBER):
-#        connectPortsForce(processors[i], processors[i].instrMem.initSocket, noc, noc.targetSocket)
+#        connectPorts(processors[i], processors[i].instrMem.initSocket, noc, noc.targetSocket)
 	processors[i].instrMem.initSocket.bind(noc.targetSocket)
-        connectPortsForce(processors[i], processors[i].dataMem.initSocket, noc, noc.targetSocket)
+        connectPorts(processors[i], processors[i].dataMem.initSocket, noc, noc.targetSocket)
 
-    connectPortsForce(noc, noc.initiatorSocket, mem, mem.targetSocket)
+    connectPorts(noc, noc.initiatorSocket, mem, mem.targetSocket)
 
     # Add memory mapping
     noc.addBinding(0x0,memorySize)
@@ -122,8 +122,8 @@ else:
     else:
         ##### MEMORY CONNECTIONS #####
         # Connecting the master component to the memory
-        connectPortsForce(processors[0], processors[0].instrMem.initSocket, mem, mem.targetSocket)
-        connectPortsForce(processors[0], processors[0].dataMem.initSocket, mem, mem.targetSocket)
+        connectPorts(processors[0], processors[0].instrMem.initSocket, mem, mem.targetSocket)
+        connectPorts(processors[0], processors[0].dataMem.initSocket, mem, mem.targetSocket)
 
 ################################################
 ##### SYSTEM INIT ##############################
