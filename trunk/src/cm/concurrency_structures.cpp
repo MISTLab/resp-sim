@@ -54,6 +54,7 @@ AttributeEmu::AttributeEmu(unsigned int stackSize) : stackSize(stackSize) {
 ThreadEmu::ThreadEmu(int id, unsigned int thread_routine, unsigned int args, unsigned int stackBase, unsigned int tlsAddress, AttributeEmu *attr) : id(id), thread_routine(thread_routine), args(args), stackBase(stackBase), tlsAddress(tlsAddress), attr(attr) {
     this->state = NULL;
     this->isIRQ = false;
+    this->status = READY;
 }
 ThreadEmu::~ThreadEmu(){
 }
