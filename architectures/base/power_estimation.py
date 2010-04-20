@@ -63,8 +63,8 @@ def benchmarking(test,  numProc):
                        , icacheSubstsPolicy, icacheWritePolicy, 2, False, 4, 0, 0)
         caches[i].status[UnifiedCache32.UnifiedCache32.DATA_CACHE] = UnifiedCache32.UnifiedCache32.ENABLED;
         caches[i].status[UnifiedCache32.UnifiedCache32.INSTR_CACHE] = UnifiedCache32.UnifiedCache32.ENABLED;
-        connectPortsForce(proc[i], proc[i].DATA_MEM_port.memory_port, caches[i], caches[i].dataInPort)
-        connectPortsForce(proc[i], proc[i].PROG_MEM_port.memory_port, caches[i], caches[i].instrInPort)
+        connectPorts(proc[i], proc[i].DATA_MEM_port.memory_port, caches[i], caches[i].dataInPort)
+        connectPorts(proc[i], proc[i].PROG_MEM_port.memory_port, caches[i], caches[i].instrInPort)
 
 
     # Create memories
@@ -75,9 +75,9 @@ def benchmarking(test,  numProc):
 
     # Connect components
     for i in range(0, numProc):
-        connectPortsForce(caches[i], caches[i].cacheOutPort, bus, bus.target_port[i])
+        connectPorts(caches[i], caches[i].cacheOutPort, bus, bus.target_port[i])
 
-    manager.connectPortsForce(bus, bus.initiator_port, mem, mem.memPort)
+    manager.connectPorts(bus, bus.initiator_port, mem, mem.memPort)
 
     # Add memory maps
     bus.addBinding("mem.mem_SimpleMemPort", 0x0, memsize)

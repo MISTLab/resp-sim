@@ -133,7 +133,7 @@ mem = MemoryLT32.MemoryLT32( 'mem', memorySize, latencyMem)
 if BUS_ACTIVE:
     latencyBus = scwrapper.sc_time(BUS_LATENCY, scwrapper.SC_NS)
     bus  = BusLT32.BusLT32('bus',2*PROCESSOR_NUMBER,latencyBus)
-    connectPortsForce(bus, bus.initiatorSocket, mem, mem.targetSocket)
+    connectPorts(bus, bus.initiatorSocket, mem, mem.targetSocket)
     # Add memory mapping
     bus.addBinding("mem",0x0,memorySize)
 
@@ -152,18 +152,18 @@ for i in range(0, PROCESSOR_NUMBER):
         dataCaches[i].setStoreLatency(scwrapper.sc_time(CACHE_STORE_LAT,scwrapper.SC_NS))
         dataCaches[i].setRemoveLatency(scwrapper.sc_time(CACHE_REMOVE_LAT,scwrapper.SC_NS))
         #dataCaches[i].setScratchpad(4194304,1048576,scwrapper.sc_time(0.001,scwrapper.SC_NS))
-        connectPortsForce(processors[i], processors[i].dataMem.initSocket, dataCaches[i], dataCaches[i].targetSocket)
-        connectPortsForce(dataCaches[i], dataCaches[i].dirInitSocket, directory, directory.targetSocket)
-        connectPortsForce(directory, directory.initSocket, dataCaches[i], dataCaches[i].dirTargetSocket)
+        connectPorts(processors[i], processors[i].dataMem.initSocket, dataCaches[i], dataCaches[i].targetSocket)
+        connectPorts(dataCaches[i], dataCaches[i].dirInitSocket, directory, directory.targetSocket)
+        connectPorts(directory, directory.initSocket, dataCaches[i], dataCaches[i].dirTargetSocket)
         if BUS_ACTIVE:
-            connectPortsForce(dataCaches[i], dataCaches[i].initSocket, bus, bus.targetSocket)
+            connectPorts(dataCaches[i], dataCaches[i].initSocket, bus, bus.targetSocket)
         else:
-            connectPortsForce(dataCaches[i], dataCaches[i].initSocket, mem, mem.targetSocket)
+            connectPorts(dataCaches[i], dataCaches[i].initSocket, mem, mem.targetSocket)
     else:
         if BUS_ACTIVE:
-            connectPortsForce(processors[i], processors[i].dataMem.initSocket, bus, bus.targetSocket)
+            connectPorts(processors[i], processors[i].dataMem.initSocket, bus, bus.targetSocket)
         else:
-            connectPortsForce(processors[i], processors[i].dataMem.initSocket, mem, mem.targetSocket)
+            connectPorts(processors[i], processors[i].dataMem.initSocket, mem, mem.targetSocket)
 
     if INSTR_CACHE_ACTIVE:
         instrCaches.append(CoherentCacheLT32.CoherentCacheLT32('instrCache_' + str(i), CACHE_SIZE*1024*1024, memorySize, CACHE_WAYS, CACHE_BLOCK_SIZE, CACHE_REM_POLICY, CACHE_WR_POLICY))
@@ -173,18 +173,18 @@ for i in range(0, PROCESSOR_NUMBER):
         instrCaches[i].setStoreLatency(scwrapper.sc_time(CACHE_STORE_LAT,scwrapper.SC_NS))
         instrCaches[i].setRemoveLatency(scwrapper.sc_time(CACHE_REMOVE_LAT,scwrapper.SC_NS))
         #instrCaches[i].setScratchpad(4194304,1048576,scwrapper.sc_time(0.001,scwrapper.SC_NS))
-        connectPortsForce(processors[i], processors[i].instrMem.initSocket, instrCaches[i], instrCaches[i].targetSocket)
-        connectPortsForce(instrCaches[i], instrCaches[i].dirInitSocket, directory, directory.targetSocket)
-        connectPortsForce(directory, directory.initSocket, instrCaches[i], instrCaches[i].dirTargetSocket)
+        connectPorts(processors[i], processors[i].instrMem.initSocket, instrCaches[i], instrCaches[i].targetSocket)
+        connectPorts(instrCaches[i], instrCaches[i].dirInitSocket, directory, directory.targetSocket)
+        connectPorts(directory, directory.initSocket, instrCaches[i], instrCaches[i].dirTargetSocket)
         if BUS_ACTIVE:
-            connectPortsForce(instrCaches[i], instrCaches[i].initSocket, bus, bus.targetSocket)
+            connectPorts(instrCaches[i], instrCaches[i].initSocket, bus, bus.targetSocket)
         else:
-            connectPortsForce(instrCaches[i], instrCaches[i].initSocket, mem, mem.targetSocket)
+            connectPorts(instrCaches[i], instrCaches[i].initSocket, mem, mem.targetSocket)
     else:
         if BUS_ACTIVE:
-            connectPortsForce(processors[i], processors[i].instrMem.initSocket, bus, bus.targetSocket)
+            connectPorts(processors[i], processors[i].instrMem.initSocket, bus, bus.targetSocket)
         else:
-            connectPortsForce(processors[i], processors[i].instrMem.initSocket, mem, mem.targetSocket)
+            connectPorts(processors[i], processors[i].instrMem.initSocket, mem, mem.targetSocket)
 
 ################################################
 ##### SYSTEM INIT ##############################

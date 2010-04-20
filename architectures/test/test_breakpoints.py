@@ -49,7 +49,7 @@ instMaster = testMaster_wrapper.testMaster('master')
 instSlave = testSlave_wrapper.testSlave('slave')
 
 #Connection of the ports: first we specify the source component and its ports; then the target component and its port.
-connectPortsForce(instMaster, instMaster.initSocket, instSlave, instSlave.targetSocket)
+connectPorts(instMaster, instMaster.initSocket, instSlave, instSlave.targetSocket)
 
 import breakpoints
 register_breakpoint(instMaster, 'count', breakpoints.equals(5))

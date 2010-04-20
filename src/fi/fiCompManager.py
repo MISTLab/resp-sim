@@ -141,7 +141,7 @@ class FaultInjectionComponentManager(ComponentManager):
         #return the locaion
         return classLocations
 
-    def connectPortsForce(self, source, sourcePort, target, targetPort, enableProbe = True):
+    def connectPorts(self, source, sourcePort, target, targetPort, enableProbe = True):
         """Connects two specified components on the specified ports. The references of the components and the ports to be connected
            are required. Moreover, if specified, a probe is introduced on the connection, i.e., the source component is connected to the target
            port of the probe and the target component is connected to the initiator port of the sabouter"""
@@ -163,14 +163,14 @@ class FaultInjectionComponentManager(ComponentManager):
             if len(probeOutPort) != 1:
                 raise exceptions.Exception('The probe must have exactly one initiator port')
             #interconnect the components
-            ComponentManager.connectPortsForce(self, source, sourcePort, probeInst, probeInPort[0])
-            ComponentManager.connectPortsForce(self, probeInst, probeOutPort[0], target, targetPort)
+            ComponentManager.connectPorts(self, source, sourcePort, probeInst, probeInPort[0])
+            ComponentManager.connectPorts(self, probeInst, probeOutPort[0], target, targetPort)
             #keep track of the connected probe
             key = (sourcePort.name(), targetPort.name())
             self.__probes[key] = ProbeConnectionNode(probeInst, source.name(), sourcePort.name(), target.name(), targetPort.name()) 
             return probeInst
         else:
-            ComponentManager.connectPortsForce(self, source, sourcePort, target, targetPort)
+            ComponentManager.connectPorts(self, source, sourcePort, target, targetPort)
                             
     def getProbe(self, sourcePort, targetPort):
         """Returns the probe connected between the two specified ports. If there is no probe or the two ports are not connected, it returns None"""
@@ -279,8 +279,8 @@ class FaultInjectionComponentManager(ComponentManager):
                     ld = locationDescriptor(component, attribute, wrapperClass, lines, wordSize)
                     self.__faultLocations.append(ld)
 
-    def connectPorts(self, source, sourcePortName, target, targetPortName, sourcePortId = None, targetPortId = None, enableProbe = True):
-        raise exceptions.Exception('connect method is not supported in the fiComponentManager. Please use other connection methods')      
+    def connectPortsByPathName(self, source, sourcePortName, target, targetPortName, sourcePortId = None, targetPortId = None, enableProbe = True):
+        raise exceptions.Exception('connectPortsByPathName method is not supported in the fiComponentManager. Please use other connection methods')      
 
     def connect(self, source, target):
         raise exceptions.Exception('connect method is not supported in the fiComponentManager. Please use other connection methods')      
