@@ -11,7 +11,7 @@ def build(bld):
             module.c 
         """
         obj.target = 'nested'
-        #obj.includes = '../../include'
+        obj.includes = '../../suites/OmpSCR_v2.0/include'
         obj.uselib_local = 'ompsrc_cc_'+arch+'  gomp_'+arch+' pthread_stub_'+arch 
         obj.env.append_unique('CFLAGS', '-fopenmp')
         obj.env.append_unique('CCFLAGS', '-fopenmp')
@@ -23,8 +23,5 @@ def build(bld):
             module2.c 
         """
         obj.target = 'nested2'
-        #obj.includes = '../../include'
-        obj.uselib_local = 'ompsrc_cc_'+arch+'  gomp_'+arch+' pthread_stub_'+arch 
-        obj.env.append_unique('CFLAGS', '-fopenmp')
-        obj.env.append_unique('CCFLAGS', '-fopenmp')
-        obj.env.append_unique('LINKFLAGS', '-lm')
+        obj.uselib_local = 'pthread_stub_'+arch 
+
