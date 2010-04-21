@@ -79,8 +79,6 @@ using namespace tlm_utils;
 
 template<typename BUSWIDTH> class CoherentCacheLT: public sc_module {
 private:
-	string name;
-
 	// Scratchpad Memory
 	bool scratchpadEn;
 	sc_time scratchLatency;
@@ -209,13 +207,11 @@ public:
 	unsigned int numReadBusAcc;
 	unsigned int numWriteBusAcc;
 
-	unsigned int myTag;
-
 	CoherentCacheLT(sc_module_name module_name, sc_dt::uint64 size, sc_dt::uint64 limit, unsigned int wordsPerBlock, unsigned int numWays, removePolicyType rP = LRU, writePolicyType wP = BACK, 			unsigned int tag = 0, sc_time readLatency = SC_ZERO_TIME, sc_time writeLatency = SC_ZERO_TIME, sc_time loadLatency = SC_ZERO_TIME, sc_time storeLatency = SC_ZERO_TIME, sc_time 		removeLatency = SC_ZERO_TIME) :
-			sc_module(module_name), name(module_name), size(size), cacheLimit(limit),
+			sc_module(module_name), size(size), cacheLimit(limit),
 			wordsPerBlock(wordsPerBlock), numWays(numWays),removePolicy(rP),writePolicy(wP),
 			cacheReadLatency(readLatency), cacheWriteLatency(writeLatency), cacheLoadLatency(loadLatency),
-			cacheStoreLatency(storeLatency), cacheRemoveLatency(removeLatency), myTag(tag),
+			cacheStoreLatency(storeLatency), cacheRemoveLatency(removeLatency), 
 			targetSocket((boost::lexical_cast<std::string>(module_name) + "_targSock").c_str()),
 			initSocket((boost::lexical_cast<std::string>(module_name) + "_initSock").c_str()),
 			dirTargetSocket((boost::lexical_cast<std::string>(module_name) + "_dirTargSock").c_str()),
@@ -341,7 +337,9 @@ public:
 				// If the required block is cached...
 				if (tagIter->base_address == curBaseAddress) {
 					// We have a HIT!
-//					cerr << this->myTag << " - Read Hit! @" << curBaseAddress << endl;
+					#ifdef DEBUGMODE
+					cerr << sc_time_stamp() << ": " << name() << " - Read Hit! @" << curBaseAddress << endl;
+					#endif
 					hit = true;
 					this->numReadHit++;
 
@@ -358,7 +356,9 @@ public:
 			// If we didn't hit...
 			if (!hit) {
 				// We have a MISS...
-//				cerr << this->myTag << " - Read Miss! @" << curBaseAddress << endl;
+				#ifdef DEBUGMODE
+				cerr << sc_time_stamp() << ": " << name() << " - Read Miss! @" << curBaseAddress << endl;
+				#endif			
 				this->numReadMiss++;
 				// We load the block from memory...
 				curBlock = this->loadCacheBlock(curBaseAddress);
@@ -428,7 +428,9 @@ public:
 				// If the required block is cached...
 				if (tagIter->base_address == curBaseAddress) {
 					// We have a HIT!
-//					cerr << this->myTag << " - Write Hit! @" << curBaseAddress << endl;
+					#ifdef DEBUGMODE
+					cerr << sc_time_stamp() << ": " << name() << " - Write Hit! @" << curBaseAddress << endl;
+					#endif			
 					hit = true;
 					this->numWriteHit++;
 
@@ -446,7 +448,9 @@ public:
 			// If we didn't hit...
 			if (!hit) {
 				// We have a MISS...
-//				cerr << this->myTag << " - Write Miss! @" << curBaseAddress << endl;
+				#ifdef DEBUGMODE
+				cerr << sc_time_stamp() << ": " << name() <<  " - Write Miss! @" << curBaseAddress << endl;
+				#endif			
 				this->numWriteMiss++;
 				// If we have a Write-Back or Write-Through-All policy...
 				if (this->writePolicy == BACK || this->writePolicy == THROUGH_ALL) {
@@ -510,9 +514,12 @@ public:
 		unsigned char*   byt = trans.get_byte_enable_ptr();
 		unsigned int     wid = trans.get_streaming_width();
 
-//		cerr << "Cache " << this->name << "\tAdr: " << adr << "\tLen: " << len << "\tWid: " << wid << endl;
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << ": " << name() << " - Transaction " << trans.is_write() << " for Address " << adr << " with ";
+		cerr << "data length " << len << " and streaming width " << wid << endl;
 //		ofstream outFile("cache.txt", ios::app);
 //		outFile << sc_time_stamp() << " " << trans.get_address() << " " << trans.get_data_length() << " " << trans.is_write() << endl;
+		#endif			
 
 		unsigned int words = len / sizeof(BUSWIDTH);
 		if (len%sizeof(BUSWIDTH) != 0) words++;
@@ -551,11 +558,11 @@ public:
 			this->numAccesses++;
 		}
 
-//		if (this->myTag > 1) {
-//			cerr << this->name << "\tAddress: " << adr << "\tTransaction: " << trans.is_write() << "\tTime: " << sc_time_stamp() << " ";
-//			if (trans.get_data_length() == 4) cerr << (unsigned int) (*trans.get_data_ptr()) << endl;
-//			else cerr << endl;
-//		}
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << ": " << name() << " - Transaction " << trans.is_write() << " for Address " << adr << " completed with data ";
+		if (trans.get_data_length() == 4) cerr << (unsigned int) (*trans.get_data_ptr()) << endl;
+		else cerr << "ND" << endl;
+		#endif			
 
 		trans.set_dmi_allowed(false);			// Disables DMI in order to insert the cache latency for each transaction
 	}
@@ -575,7 +582,10 @@ public:
 		unsigned char*   ptr = trans.get_data_ptr();
 		unsigned int     len = trans.get_data_length();
 
-//		cerr << "DBG Cache " << this->name << "\tAdr: " << adr << "\tLen: " << len << endl;
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << ": " << name() << " - DBG Transaction " << trans.is_write() << " for Address " << adr << " with ";
+		cerr << "data length " << len << endl;
+		#endif			
 
 		// Calculating the TAG associated to the required memory position
 		sc_dt::uint64 tag = GET_TAG(adr);
@@ -620,7 +630,9 @@ public:
 				// If the required block is cached...
 				if (tagIter->base_address == curBaseAddress) {
 					// We have a HIT!
-//					cerr << this->myTag << " - DBG Hit! @" << curBaseAddress << endl;
+					#ifdef DEBUGMODE
+					cerr << sc_time_stamp() << ": " << name() << " - DBG Hit! @" << curBaseAddress << endl;
+					#endif			
 					hit = true;
 					// We save the current block...
 					curBlock = *(tagIter);
@@ -634,7 +646,9 @@ public:
 			}
 			if (!hit) {
 				// We have a MISS...
-//				cerr << this->myTag << " - DBG Miss!" @<< curBaseAddress << endl;
+				#ifdef DEBUGMODE
+				cerr << sc_time_stamp() << ": " << name() << " - DBG Miss! @ " << curBaseAddress << endl;
+				#endif			
 
 				// We load the block from memory...
 				curBlock = CacheBlock();
@@ -693,11 +707,11 @@ public:
 		}
 		trans.set_response_status(TLM_OK_RESPONSE);
 
-//		if (this->myTag > 1) {
-//			cerr << this->name << "\tDBG Address: " << adr << "\tTransaction: " << trans.is_write() << "\tTime: " << sc_time_stamp() << " ";
-//			if (trans.get_data_length() == 4) cerr << (unsigned int) (*trans.get_data_ptr()) << endl;
-//			else cerr << endl;
-//		}
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << ": " << name() << " - DBG Transaction " << trans.is_write() << " for Address " << adr << " completed with data ";
+		if (trans.get_data_length() == 4) cerr << (unsigned int) (*trans.get_data_ptr()) << endl;
+		else cerr << "ND" << endl;
+		#endif			
 
 		return len;
 	}
@@ -705,12 +719,14 @@ public:
 	void dir_transport(tlm_generic_payload& trans, sc_time& delay){
 		sc_dt::uint64 adr = trans.get_address();
 		tlm_command cmd = trans.get_command();
-/*		cerr << this->myTag << " - Received command ";
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << ": " << name() << " - Received command ";
 		if (cmd == FLUSH) cerr << "FLUSH";
 		else if (cmd == INVALIDATE) cerr << "INVALIDATE";
 		else cerr << "UNKNOWN";
-		cerr << " for block at address " << adr << " @" << sc_time_stamp() << endl;
-*/
+		cerr << " for block at address " << adr << endl;
+		#endif
+
 		// Calculating the TAG associated to the required memory position
 		sc_dt::uint64 tag = GET_TAG(adr);
 		sc_time intDelay = SC_ZERO_TIME;
@@ -719,7 +735,12 @@ public:
 		bool hit = false;
 		CacheBlock curBlock;
 
-		if (this->busyBus) { /*cerr << "Cache answer to Directory - Waiting for LOAD/STORE" << endl;*/ wait(wakeupDir); }
+		if (this->busyBus) {
+			#ifdef DEBUGMODE
+			cerr << name() << " - Cache answer to Directory: Waiting for LOAD/STORE" << endl;
+			#endif			
+			wait(wakeupDir);
+		}
 		busyDir = true;
 
 		for (tagIter = this->cache[tag].begin(); tagIter != this->cache[tag].end(); tagIter++) {
@@ -734,7 +755,7 @@ public:
 		}
 		// If we didn't hit...
 		if (!hit) {
-			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error in cache #" << this->myTag << " - The block with address " << adr << " cannot be FLUSHED/INVALIDATED!");
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error in cache " << name() << " - The block with address " << adr << " cannot be FLUSHED/INVALIDATED!");
 		}
 
 		if (cmd == FLUSH) {
@@ -752,7 +773,7 @@ public:
 	}
 
 	void printCache() {
-		cout << "*****  CACHE " << this->name << "    *****" << endl;
+		cout << "*****  CACHE " << name() << "    *****" << endl;
 		map<sc_dt::uint64, deque<CacheBlock> >::iterator cacheIter;
 		deque<CacheBlock>::iterator blockIter;
 		for (cacheIter = cache.begin(); cacheIter!=cache.end(); cacheIter++) {
