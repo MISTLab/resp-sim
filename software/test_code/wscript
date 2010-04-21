@@ -21,4 +21,4 @@ def build( bld ):
             else:
                 obj.clone(arch)
 
-    bld.add_subdirs('pthread')
+    bld.add_subdirs('pthread nested')
