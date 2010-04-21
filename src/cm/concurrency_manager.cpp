@@ -452,11 +452,9 @@ int resp::ConcurrencyManager::createThread(unsigned int procId, unsigned int thr
                 else
                     curPrio = curAttr->priority;
             }
-            #ifndef NDEBUG
             if(curPrio < resp::ConcurrencyManager::SYSC_PRIO_MIN || curPrio > resp::ConcurrencyManager::SYSC_PRIO_MAX + 1){
                 THROW_EXCEPTION("Non valid priority value " << curPrio);
             }
-            #endif
             this->readyQueue[curPrio].push_back(th);
             if(curPrio == resp::ConcurrencyManager::SYSC_PRIO_MAX + 1)
                 std::sort(this->readyQueue[curPrio].begin(), this->readyQueue[curPrio].end(), deadlineSort);

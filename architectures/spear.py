@@ -43,7 +43,7 @@
 
 ###### GENERAL PARAMETERS #####
 PROCESSOR_FREQUENCY = 1000         # MHz
-PROCESSOR_NUMBER  = 4             #
+PROCESSOR_NUMBER  = 2             #
 try:
     PROCESSOR_NAMESPACE
 except:
@@ -52,9 +52,9 @@ except:
 # Memory/bus
 MEMORY_SIZE        = 32              # MBytes
 MEM_LATENCY        = 10.0            # ns
-BUS_ACTIVE         = False
+BUS_ACTIVE         = True
 BUS_LATENCY        = 10.0            # ns
-NOC_ACTIVE         = True
+NOC_ACTIVE         = False
 NOC_LATENCY        = 10.0            # ns
 DATA_CACHE_ACTIVE  = True
 INSTR_CACHE_ACTIVE = True
@@ -63,17 +63,17 @@ CACHE_BLOCK_SIZE   = 32              # words
 CACHE_WAYS         = 8
 CACHE_REM_POLICY   = CacheLT32.LRU
 CACHE_WR_POLICY    = CacheLT32.BACK
-CACHE_READ_LAT     = 0.0             # ns
-CACHE_WRITE_LAT    = 0.0             # ns
-CACHE_LOAD_LAT     = 0.0             # ns
-CACHE_STORE_LAT    = 0.0             # ns
-CACHE_REMOVE_LAT   = 0.0             # ns
+CACHE_READ_LAT     = 10.0             # ns
+CACHE_WRITE_LAT    = 10.0             # ns
+CACHE_LOAD_LAT     = 10.0             # ns
+CACHE_STORE_LAT    = 10.0             # ns
+CACHE_REMOVE_LAT   = 10.0             # ns
 
 # Software
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'scalopes'
+    SOFTWARE = 'nested'
 
 if SOFTWARE:
     try:

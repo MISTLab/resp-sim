@@ -47,8 +47,10 @@
 #include "concurrency_structures.hpp"
 
 AttributeEmu::AttributeEmu(){
+    priority = 0;
 }
 AttributeEmu::AttributeEmu(unsigned int stackSize) : stackSize(stackSize) {
+    priority = 0;
 }
 
 ThreadEmu::ThreadEmu(int id, unsigned int thread_routine, unsigned int args, unsigned int stackBase, unsigned int tlsAddress, AttributeEmu *attr) : id(id), thread_routine(thread_routine), args(args), stackBase(stackBase), tlsAddress(tlsAddress), attr(attr) {

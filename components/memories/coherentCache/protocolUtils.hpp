@@ -65,4 +65,6 @@ enum privilegeType {INVALID = 0, SHARED, EXCLUSIVE};
 #define INVALIDATE TLM_READ_COMMAND
 #define FLUSH TLM_WRITE_COMMAND
 
+//#define DEBUGMODE
+
 #endif // PROTO_UTILS

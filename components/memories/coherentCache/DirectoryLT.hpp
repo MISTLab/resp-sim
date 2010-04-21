@@ -92,7 +92,9 @@ private:
 		// when it becomes free it goes on (and sets the bus to busy): at the end of its requests, it notifies the
 		// next element in queue.
 		if( this->busy ) {
-//			cerr << "dir" << ": Queuing request " << tag << endl;
+			#ifdef DEBUGMODE
+			cerr << sc_time_stamp() << ": " << name() << " - Queuing request " << tag << endl;
+			#endif
 			this->requests.push(tag);
 			wait(*(this->events[tag]));
 		}
@@ -104,7 +106,9 @@ private:
 		this->busy = false;
 		if( !requests.empty() ) {
 			unsigned int front = this->requests.front();
-//			cerr << "dir" << ": Waking up queued request " << front << endl;
+			#ifdef DEBUGMODE
+			cerr << sc_time_stamp() << ": " << name() << " - Waking up queued request " << front << endl;
+			#endif
 			this->requests.pop();
 			(this->events[front])->notify();
 			this->busy = true;
@@ -136,16 +140,25 @@ public:
 
 		if (cmd != REMOVE) {this->lock(tag);}
 //		this->printDir();
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << ": " << name() << " - ";
+		#endif
 
 		if ( blockPrivilege.find(adr) == blockPrivilege.end() ) {
 			// The requested block is currently not loaded in any cache
-			//cerr << "Block at address " << adr << " not loaded:";
+			#ifdef DEBUGMODE
+			cerr << "Block at address " << adr << " not loaded:";
+			#endif
 			if (cmd == TLM_READ_COMMAND) {
-				//cerr << " adding SHARED privilege for Cache #" << tag << endl;
+				#ifdef DEBUGMODE
+				cerr << " adding SHARED privilege for Cache #" << tag << endl;
+				#endif
 				blockPrivilege[adr]=SHARED;
 			}
 			else if (cmd == TLM_WRITE_COMMAND) {
-				//cerr << " adding EXCLUSIVE privilege for Cache #" << tag << endl;
+				#ifdef DEBUGMODE
+				cerr << " adding EXCLUSIVE privilege for Cache #" << tag << endl;
+				#endif
 				blockPrivilege[adr]=EXCLUSIVE;
 			}
 			else if (cmd == REMOVE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Trying to remove a block that is not loaded in any cache...");
@@ -167,10 +180,14 @@ public:
 					}
 					if (!alreadyIn) {
 						blockCachedIn[adr].push_back(tag);
-						//cerr << "Adding Cache #" << tag << " with SHARED privilege for address " << adr << endl;
+						#ifdef DEBUGMODE
+						cerr << "Adding Cache #" << tag << " with SHARED privilege for address " << adr << endl;
+						#endif
 					}
 					else {
-						//cerr << adr << " already SHARED for Cache #" << tag << endl;
+						#ifdef DEBUGMODE
+						cerr << adr << " already SHARED for Cache #" << tag << endl;
+						#endif
 					}
 					trans.set_response_status(TLM_OK_RESPONSE);
 					this->unlock(tag);
@@ -179,7 +196,9 @@ public:
 				else if (cmd == TLM_WRITE_COMMAND) {
 					// For write accesses, we have to remove the SHARED block for all the caches in the list, except for the requesting cache
 					// Furthermore, we have to add an EXCLUSIVE privilege to the requesting cache
-					//cerr << "Converting address " << adr << " to an EXCLUSIVE entry for Cache #" << tag << endl;
+					#ifdef DEBUGMODE
+					cerr << "Converting address " << adr << " to an EXCLUSIVE entry for Cache #" << tag << endl;
+					#endif
 					for (cacheListIter = blockCachedIn[adr].begin(); cacheListIter != blockCachedIn[adr].end(); cacheListIter++) {
 						if (*cacheListIter != tag) {
 							message.set_command(INVALIDATE);
@@ -199,7 +218,9 @@ public:
 				}
 				else if (cmd == REMOVE) {
 					// Whenever a block it's removed from a cache, its SHARED entry should be removed from the Directory
-					//cerr << "Removing SHARED entry of Cache #" << tag << " for block at address " << adr << endl;
+					#ifdef DEBUGMODE
+					cerr << "Removing SHARED entry of Cache #" << tag << " for block at address " << adr << endl;
+					#endif
 					for (cacheListIter = blockCachedIn[adr].begin(); cacheListIter != blockCachedIn[adr].end(); ) {
 						if (*cacheListIter == tag) {
 							tmpIter = cacheListIter;
@@ -228,7 +249,9 @@ public:
 					// For read accesses, we have to flush the content of the cache with EXLUCSIVE privilege and to perform a privilege downgrade
 					// THIS HAPPENS ONLY IF THE REQUESTING CACHE IS DIFFERENT THAN THE ONE WITH EXLUSIVE PRIVILEGE
 					if (tag != blockCachedIn[adr].front() ) {
-						//cerr << "Downgrading Cache #" << blockCachedIn[adr].front() << " privilege to SHARED for block at address " << adr << endl;
+						#ifdef DEBUGMODE
+						cerr << "Downgrading Cache #" << blockCachedIn[adr].front() << " privilege to SHARED for block at address " << adr << endl;
+						#endif
 						blockPrivilege[adr]=SHARED;
 						message.set_command(FLUSH);
 						message.set_address(adr);
@@ -237,11 +260,15 @@ public:
 						this->initSocket[cacheNum]->b_transport(message,delay);
 						if (message.get_response_status() != TLM_OK_RESPONSE)
 							THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while FLUSHING block at address " << adr << " with TAG " << tag);
-						//cerr << "Adding Cache #" << tag << " with SHARED privilege for address " << adr << endl;
+						#ifdef DEBUGMODE
+						cerr << "Adding Cache #" << tag << " with SHARED privilege for address " << adr << endl;
+						#endif
 						blockCachedIn[adr].push_back(tag);
 					}
 					else {
-						//cerr << "EXCLUSIVE privilege already assigned to Cache #" << tag << " for address " << adr << endl;
+						#ifdef DEBUGMODE
+						cerr << "EXCLUSIVE privilege already assigned to Cache #" << tag << " for address " << adr << endl;
+						#endif
 					}
 					trans.set_response_status(TLM_OK_RESPONSE);
 					this->unlock(tag);
@@ -251,7 +278,9 @@ public:
 					// For write accesses, we have to remove the assigned EXCLUSIVE privilege, and reassign it to the cache performing the request
 					// THIS HAPPENS ONLY IF THE REQUESTING CACHE IS DIFFERENT THAN THE ONE WITH EXLUSIVE PRIVILEGE
 					if (tag != blockCachedIn[adr].front() ) {
-						//cerr << "Re-assigning to Cache #" << tag << " the EXCLUSIVE privilege for address " << adr << endl;
+						#ifdef DEBUGMODE
+						cerr << "Re-assigning to Cache #" << tag << " the EXCLUSIVE privilege for address " << adr << endl;
+						#endif
 						blockPrivilege[adr]=EXCLUSIVE;
 						message.set_command(INVALIDATE);
 						message.set_address(adr);
@@ -264,7 +293,9 @@ public:
 						blockCachedIn[adr].push_back(tag);
 					}
 					else {
-						//cerr << "EXCLUSIVE privilege already assigned to Cache #" << tag << " for address " << adr << endl;
+						#ifdef DEBUGMODE
+						cerr << "EXCLUSIVE privilege already assigned to Cache #" << tag << " for address " << adr << endl;
+						#endif
 					}
 					trans.set_response_status(TLM_OK_RESPONSE);
 					this->unlock(tag);
@@ -272,7 +303,9 @@ public:
 				}
 				else if (cmd == REMOVE) {
 					// Whenever a block it's removed from a cache, its EXCLUSIVE entry should be removed from the Directory
-					//cerr << "Removing EXCLUSIVE entry of Cache #" << tag << " for block at address " << adr << endl;
+					#ifdef DEBUGMODE
+					cerr << "Removing EXCLUSIVE entry of Cache #" << tag << " for block at address " << adr << endl;
+					#endif
 					blockCachedIn[adr].clear();
 					typename map<sc_dt::uint64,privilegeType>::iterator bPiter = blockPrivilege.find(adr);
 					if (bPiter == blockPrivilege.end())
