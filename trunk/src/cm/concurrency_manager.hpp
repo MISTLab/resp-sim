@@ -61,7 +61,7 @@ namespace std {
 }
 #endif
 #ifdef NDEBUG
-//#undef NDEBUG
+#undef NDEBUG
 #endif
 #include "concurrency_structures.hpp"
 
@@ -133,7 +133,7 @@ template <class wordSize> struct Processor{
         }
 
         #ifndef NDEBUG
-        std::cerr << "Scheduled thread " << this->runThread->id << " on processor " << this->processorInstance.getProcessorID() << std::endl;
+        std::cerr << "Scheduled thread " << this->runThread->id << " at " << this->processorInstance.readPC() << " on processor " << this->processorInstance.getProcessorID() << std::endl;
         #endif
 
         // Notify halted processors
@@ -145,7 +145,7 @@ template <class wordSize> struct Processor{
             THROW_EXCEPTION("Trying to deschedule a NULL thread");
         }
         ThreadEmu *tempThread = this->runThread;
-        this->runThread = NULL;
+        //this->runThread = NULL;
         
         if(saveStatus) {
             tempThread->status = ThreadEmu::WAITING;
@@ -453,7 +453,7 @@ class ConcurrencyManager{
         void execCleanupHandlerTop(unsigned int procId);
 
 
-        void attemptScheduling() {
+        void attemptScheduling(int curProc) {
             // Schedule free processors if any!
             std::map<unsigned int, Processor<unsigned int>* >::iterator it;
             ThreadEmu* th = findReadyThread();
@@ -462,6 +462,7 @@ class ConcurrencyManager{
                 std::cout << "Attempting Scheduling Thread " << th->id << std::endl;
                 #endif
                 for( it = managedProc.begin(); it != managedProc.end() ; it++ ) {
+                    if( it->second->processorInstance.getProcessorID() == curProc ) continue;
                     #ifndef NDEBUG
                     std::cout << "\t Attempting proc " << it->second->processorInstance.getProcessorID() << std::endl;
                     #endif

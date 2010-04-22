@@ -872,6 +872,7 @@ void resp::ConcurrencyManager::idleLoop(unsigned int procId){
     if(curProcIter == this->managedProc.end())
         THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
 
+    curProcIter->second->runThread = NULL;
     wait(curProcIter->second->idleEvent);
 }
 
@@ -1033,7 +1034,7 @@ int resp::ConcurrencyManager::unLockMutex(int mutex, unsigned int procId){
         #ifndef NDEBUG
         std::cerr << "Thread " << curProc->runThread->id << " giving mutex " << mutex << " to thread " << toAwakeTh->id << std::endl;
         #endif
-        attemptScheduling();
+        attemptScheduling(procId);
 
         this->schedLock.unlock();
         return toAwakeTh->id;
@@ -1115,7 +1116,7 @@ void resp::ConcurrencyManager::postSem(int sem, unsigned int procId){
         std::cerr << "Thread " << managedProc[procId]->runThread->id << " giving semaphore " << sem << " to thread " << toAwakeTh->id << std::endl;
         #endif
         existingSem[sem]->owner = toAwakeTh;
-        attemptScheduling();
+        attemptScheduling(procId);
     }
     else { 
         //existingSem[sem]->owner = managedProc[procId]->runThread;
@@ -1291,7 +1292,7 @@ void resp::ConcurrencyManager::signalCond(int cond, bool broadcast, unsigned int
         }
     }
 
-    attemptScheduling();
+    attemptScheduling(procId);
 
     this->schedLock.unlock();
 }
