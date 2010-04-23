@@ -872,8 +872,10 @@ void resp::ConcurrencyManager::idleLoop(unsigned int procId){
     if(curProcIter == this->managedProc.end())
         THROW_EXCEPTION("Processor with ID = " << procId << " not found among the registered processors");
 
-    curProcIter->second->runThread = NULL;
-    wait(curProcIter->second->idleEvent);
+//    curProcIter->second->runThread = NULL;
+    if (curProcIter->second->runThread == NULL) {
+        wait(curProcIter->second->idleEvent);
+    }
 }
 
 void resp::ConcurrencyManager::pushCleanupHandler(unsigned int procId, unsigned int routineAddress, unsigned int arg){

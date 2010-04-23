@@ -138,6 +138,8 @@ public:
 		tlm_generic_payload message;
 		typename list<int>::iterator cacheListIter, tmpIter;
 
+		delay = SC_ZERO_TIME;
+
 		if (cmd != REMOVE) {this->lock(tag);}
 //		this->printDir();
 		#ifdef DEBUGMODE
