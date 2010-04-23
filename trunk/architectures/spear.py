@@ -43,7 +43,7 @@
 
 ###### GENERAL PARAMETERS #####
 PROCESSOR_FREQUENCY = 1000         # MHz
-PROCESSOR_NUMBER  = 2             #
+PROCESSOR_NUMBER  = 4             #
 try:
     PROCESSOR_NAMESPACE
 except:
@@ -73,7 +73,7 @@ CACHE_REMOVE_LAT   = 10.0             # ns
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'nested'
+    SOFTWARE = 'scalopes'
 
 if SOFTWARE:
     try:
@@ -234,6 +234,10 @@ for i in range(0, PROCESSOR_NUMBER):
     # Set the processor ID
     processors[i].resetOp();
     processors[i].MP_ID.immediateWrite(i)
+#    if DATA_CACHE_ACTIVE or INSTR_CACHE_ACTIVE:
+#        processors[i].enableHistory('outProc'+str(i))
+#    else:
+#        processors[i].enableHistory('outProcNC'+str(i))
 
 # Now I initialize the OS emulator
 print "Setting up OS Emulation"

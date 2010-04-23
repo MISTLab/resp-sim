@@ -61,7 +61,7 @@ namespace std {
 }
 #endif
 #ifdef NDEBUG
-#undef NDEBUG
+//#undef NDEBUG
 #endif
 #include "concurrency_structures.hpp"
 
@@ -145,7 +145,7 @@ template <class wordSize> struct Processor{
             THROW_EXCEPTION("Trying to deschedule a NULL thread");
         }
         ThreadEmu *tempThread = this->runThread;
-        //this->runThread = NULL;
+        this->runThread = NULL;
         
         if(saveStatus) {
             tempThread->status = ThreadEmu::WAITING;
