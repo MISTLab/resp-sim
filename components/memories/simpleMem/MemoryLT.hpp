@@ -174,8 +174,10 @@ public:
 		return len;
 	}
 
-	//Method used to directly write a word into memory; it is mainly used to load the
+	//Method used to directly write a byte into memory; it is mainly used to load the
 	//application program into memory
+	// TODO: address should be of type sc_dt::uint64. For the sake of simplicity its currently an unsigned int
+	// In order to modify this method it is necessary to modify its signature in resp::DebugMemory
 	void write_byte_dbg(const unsigned int & address, const unsigned char & datum){
 		if(address >= this->size){
 			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Address " << hex << showbase << address << " out of memory");
@@ -183,6 +185,31 @@ public:
 		this->mem[address] = datum;
 	}
 
+	//Method used to directly write a word in memory
+	void write_word_dbg(const sc_dt::uint64 & address, const BUSWIDTH & datum){
+		if(address >= this->size){
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Address " << hex << showbase << address << " out of memory");
+		}
+		memcpy(&mem[address],&datum,sizeof(BUSWIDTH));
+	}
+
+	//Method used to directly read a byte from memory
+	unsigned char read_byte_dbg(const sc_dt::uint64 & address){
+		if(address >= this->size){
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Address " << hex << showbase << address << " out of memory");
+		}
+		return this->mem[address];
+	}
+
+	//Method used to directly read a word from memory
+	BUSWIDTH read_word_dbg(const sc_dt::uint64 & address){
+		if(address >= this->size){
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Address " << hex << showbase << address << " out of memory");
+		}
+		BUSWIDTH datum;
+		memcpy(&datum,&mem[address],sizeof(BUSWIDTH));
+		return datum;
+	}
 };
 
 #endif

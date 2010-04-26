@@ -73,7 +73,7 @@ CACHE_REMOVE_LAT   = 10.0             # ns
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'scalopes'
+    SOFTWARE = 'c_fft6'
 
 if SOFTWARE:
     try:
