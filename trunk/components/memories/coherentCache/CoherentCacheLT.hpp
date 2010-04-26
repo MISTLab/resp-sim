@@ -176,6 +176,7 @@ private:
 			this->cache[tag].pop_back();
 		}
 
+		#ifdef EXPLICIT_REMOVE
 		// HERE WE SHOULD INFORM THE DIRECTORY OF THE POSSIBLE BLOCK REMOVAL (REMOVE REQUEST ARE IMMEDIATELY EXECUTED BY THE DIRECTORY, NO RISKS OF DEADLOCKS)
 		tlm_generic_payload message;
 		sc_time delay = SC_ZERO_TIME;
@@ -184,6 +185,7 @@ private:
 		message.set_response_status(TLM_INCOMPLETE_RESPONSE);
 		this->dirInitSocket->b_transport(message,delay);
 		if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while removing " << evicted.base_address << " from directory");
+		#endif
 
 		// Write-Back should write the block in memory if it has been modified
 		if (this->writePolicy == BACK && evicted.dirty) {storeCacheBlock(evicted); wait(this->cacheStoreLatency);}
@@ -207,7 +209,7 @@ public:
 	unsigned int numReadBusAcc;
 	unsigned int numWriteBusAcc;
 
-	CoherentCacheLT(sc_module_name module_name, sc_dt::uint64 size, sc_dt::uint64 limit, unsigned int wordsPerBlock, unsigned int numWays, removePolicyType rP = LRU, writePolicyType wP = BACK, 			unsigned int tag = 0, sc_time readLatency = SC_ZERO_TIME, sc_time writeLatency = SC_ZERO_TIME, sc_time loadLatency = SC_ZERO_TIME, sc_time storeLatency = SC_ZERO_TIME, sc_time 		removeLatency = SC_ZERO_TIME) :
+	CoherentCacheLT(sc_module_name module_name, sc_dt::uint64 size, sc_dt::uint64 limit, unsigned int wordsPerBlock, unsigned int numWays, removePolicyType rP = LRU, writePolicyType wP = BACK, 			sc_time readLatency = SC_ZERO_TIME, sc_time writeLatency = SC_ZERO_TIME, sc_time loadLatency = SC_ZERO_TIME, sc_time storeLatency = SC_ZERO_TIME, sc_time removeLatency = SC_ZERO_TIME) :
 			sc_module(module_name), size(size), cacheLimit(limit),
 			wordsPerBlock(wordsPerBlock), numWays(numWays),removePolicy(rP),writePolicy(wP),
 			cacheReadLatency(readLatency), cacheWriteLatency(writeLatency), cacheLoadLatency(loadLatency),
@@ -301,12 +303,11 @@ public:
 	void setRemoveLatency(sc_time latency) {this->cacheRemoveLatency = latency;}
 
 	void readFromCache(sc_dt::uint64 address, unsigned char *data, unsigned int dataLen) {
-		// Calculating the TAG associated to the required memory position
-		sc_dt::uint64 tag = GET_TAG(address);
 
 		// Declaring some support variables...
 		tlm_generic_payload message;
 		sc_time delay = SC_ZERO_TIME;
+		sc_dt::uint64 tag;
 		deque<CacheBlock>::iterator tagIter;
 		bool hit;
 		CacheBlock curBlock;
@@ -318,6 +319,9 @@ public:
 
 		// For each block containing part of the requested data...
 		for (curBaseAddress = address - (address % this->blockSize); curBaseAddress < address+dataLen; curBaseAddress += this->blockSize) {
+
+			// Calculating the TAG associated to the required memory position
+			tag = GET_TAG(curBaseAddress);
 
 			// FIRST, WE SHOULD OBTAIN AT LEAST A 'SHARED' PRIVILEGE FROM THE DIR IN ORDER TO READ
 			message.set_command(TLM_READ_COMMAND);
@@ -392,12 +396,11 @@ public:
 	}
 
 	void writeToCache(sc_dt::uint64 address, unsigned char *data, unsigned int dataLen) {
-		// Calculating the TAG associated to the required memory position
-		sc_dt::uint64 tag = GET_TAG(address);
 
 		// Declaring some support variables...
 		tlm_generic_payload message;
 		sc_time delay = SC_ZERO_TIME;
+		sc_dt::uint64 tag;
 		deque<CacheBlock>::iterator tagIter;
 		bool hit;
 		CacheBlock curBlock;
@@ -409,6 +412,9 @@ public:
 
 		// For each block containing part of the target data...
 		for (curBaseAddress = address - (address % this->blockSize); curBaseAddress < address+dataLen; curBaseAddress += this->blockSize) {
+
+			// Calculating the TAG associated to the required memory position
+			tag = GET_TAG(curBaseAddress);
 
 			// FIRST, WE SHOULD OBTAIN AN 'EXCLUSIVE' PRIVILEGE FROM THE DIR IN ORDER TO READ
 			message.set_command(TLM_WRITE_COMMAND);
@@ -492,6 +498,7 @@ public:
 				remLen -= partLen;
 				dataPointer += partLen;
 
+				#ifdef EXPLICIT_REMOVE
 				// HERE WE SHOULD INFORM THE DIRECTORY THAT THE BLOCK HAS BEEN 'REMOVED' (EXCLUSIVE PRIVILEGE IS RELEASED)
 				// N.B. REMOVE REQUEST ARE IMMEDIATELY EXECUTED BY THE DIRECTORY, NO RISKS OF DEADLOCKS
 				message.set_command(REMOVE);
@@ -499,6 +506,7 @@ public:
 				message.set_response_status(TLM_INCOMPLETE_RESPONSE);
 				this->dirInitSocket->b_transport(message,delay);
 				if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while removing " << curBaseAddress << " from directory");
+				#endif
 			}
 
 			this->busyBus = false;
@@ -587,11 +595,9 @@ public:
 		cerr << "data length " << len << endl;
 		#endif			
 
-		// Calculating the TAG associated to the required memory position
-		sc_dt::uint64 tag = GET_TAG(adr);
-
 		// Declaring some support variables...
 		tlm_generic_payload message;
+		sc_dt::uint64 tag;
 		deque<CacheBlock>::iterator tagIter;
 		bool hit;
 		CacheBlock curBlock;
@@ -623,6 +629,10 @@ public:
 		// else ...
 		// For each block containing part of the requested data...
 		for (curBaseAddress = adr - (adr % this->blockSize); curBaseAddress < adr+len; curBaseAddress += this->blockSize) {
+
+			// Calculating the TAG associated to the required memory position
+			tag = GET_TAG(curBaseAddress);
+
 			hit = false;
 			// For each block cached...
 			// N.B. If no blocks are currently cached, cache[tag] is an ampty queue!
@@ -663,11 +673,13 @@ public:
 				this->dirInitSocket->b_transport(message,delay);
 				if (message.get_response_status() != TLM_OK_RESPONSE)
 					THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while asking EXCLUSIVE privilege for block at address " << curBaseAddress);
+				#ifdef EXPLICIT_REMOVE
 				message.set_command(REMOVE);
 				message.set_address(curBlock.base_address);
 				message.set_response_status(TLM_INCOMPLETE_RESPONSE);
 				this->dirInitSocket->b_transport(message,delay);
 				if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while removing " << curBaseAddress << " from directory");
+				#endif
 
 				message.set_data_length(blockSize);
 				message.set_data_ptr(curBlock.block);
@@ -738,7 +750,7 @@ public:
 		if (this->busyBus) {
 			#ifdef DEBUGMODE
 			cerr << name() << " - Cache answer to Directory: Waiting for LOAD/STORE" << endl;
-			#endif			
+			#endif
 			wait(wakeupDir);
 		}
 		busyDir = true;
@@ -753,19 +765,22 @@ public:
 				break;
 			}
 		}
-		// If we didn't hit...
-		if (!hit) {
-			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error in cache " << name() << " - The block with address " << adr << " cannot be FLUSHED/INVALIDATED!");
-		}
 
-		if (cmd == FLUSH) {
-			if (curBlock.dirty) {storeCacheBlock(curBlock); wait(this->cacheStoreLatency);}
+//		if (!hit) {
+//			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error in cache " << name() << " - The block with address " << adr << " cannot be FLUSHED/INVALIDATED!");
+//		}
+
+		// If we hit...
+		if (hit) {
+			if (cmd == FLUSH) {
+				if (curBlock.dirty) {storeCacheBlock(curBlock); wait(this->cacheStoreLatency);}
+			}
+			else if (cmd == INVALIDATE) {
+				if (curBlock.dirty) {storeCacheBlock(curBlock); wait(this->cacheStoreLatency);}
+				cache[tag].erase(tagIter);
+			}
+			else THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Undefined TLM command");
 		}
-		else if (cmd == INVALIDATE) {
-			if (curBlock.dirty) {storeCacheBlock(curBlock); wait(this->cacheStoreLatency);}
-			cache[tag].erase(tagIter);
-		}
-		else THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Undefined TLM command");
 		trans.set_response_status(TLM_OK_RESPONSE);
 
 		this->busyDir = false;
@@ -785,6 +800,24 @@ public:
 			}
 		}
 		cout << "***********************" << endl;
+	}
+
+	void printBlockAt(sc_dt::uint64 address) {
+		sc_dt::uint64 tag = GET_TAG(address);
+		deque<CacheBlock>::iterator tagIter;
+		bool hit = false;
+		for (tagIter = this->cache[tag].begin(); tagIter != this->cache[tag].end(); tagIter++) {
+			// If the required block is cached...
+			if (tagIter->base_address <= address && tagIter->base_address+this->blockSize >= address) {
+				// We have a HIT!
+				hit = true;
+				cout << "Hit on " << name() << " - Tag is " << tag << ", base address is " << tagIter->base_address << ", and content is: " << endl;
+				for (int i=0; i<blockSize; i++) cout << (unsigned int) *(tagIter->block + i) << " ";
+				cout << endl;
+			}
+		}
+		if (!hit) cout << "The required address is not currently loaded in cache" << endl;
+
 	}
 
 };

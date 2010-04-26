@@ -674,6 +674,7 @@ template<class issueWidth> class ConcurrencyEmulator: public trap::ToolsIf<issue
             //callback.
             typename template_map<issueWidth, trap::SyscallCB<issueWidth>* >::const_iterator foundSysc = this->syscCallbacks.find(curPC);
             if(foundSysc != this->syscCallbacksEnd){
+//		cout << typeid(*(foundSysc->second)).name() << endl;
                 return (*(foundSysc->second))();
             }
             return false;
