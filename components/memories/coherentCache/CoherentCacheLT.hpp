@@ -654,7 +654,18 @@ public:
 					break;
 				}
 			}
-			if (!hit) {
+			if (hit) {
+				// In case of HIT...
+				// ...we shall communicate to the directory our request
+				sc_time delay = SC_ZERO_TIME;
+				message.set_command(cmd);
+				message.set_address(curBlock.base_address);
+				message.set_response_status(TLM_INCOMPLETE_RESPONSE);
+				this->dirInitSocket->b_transport(message,delay);
+				if (message.get_response_status() != TLM_OK_RESPONSE)
+					THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while asking some privilege for block at address " << curBaseAddress);
+			}
+			else {
 				// We have a MISS...
 				#ifdef DEBUGMODE
 				cerr << sc_time_stamp() << ": " << name() << " - DBG Miss! @ " << curBaseAddress << endl;
@@ -690,15 +701,15 @@ public:
 				if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while reading from main memory");
 			}
 
-			// Finally, we can actually read the required data from the block...
+			// Finally, we can actually read/write the required data from/to the block...
 
 			// We calculate the displacement of the data in the cache block...
 			cachePointerModifier = adr - curBlock.base_address;
 			if (cachePointerModifier < 0) cachePointerModifier = 0;
-			// And the length of the data to be read
+			// And the length of the data to be read/written
 			partLen = remLen;
 			if (partLen + cachePointerModifier > this->blockSize) partLen = this->blockSize - cachePointerModifier;
-			// We perform the effective read...
+			// We perform the effective read/write...
 			if(cmd == TLM_READ_COMMAND)
 				memcpy(dataPointer, curBlock.block + cachePointerModifier, partLen*sizeof(unsigned char));
 			else if(cmd == TLM_WRITE_COMMAND) {
@@ -749,7 +760,7 @@ public:
 
 		if (this->busyBus) {
 			#ifdef DEBUGMODE
-			cerr << name() << " - Cache answer to Directory: Waiting for LOAD/STORE" << endl;
+			cerr << sc_time_stamp() << ": " << name() << " - Cache answer to Directory: Waiting for LOAD/STORE" << endl;
 			#endif
 			wait(wakeupDir);
 		}

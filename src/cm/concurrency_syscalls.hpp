@@ -157,10 +157,6 @@ template<class wordSize> class pthread_mutex_destroySysCall : public trap::Sysca
 
             std::vector< wordSize > callArgs = this->processorInstance.readArgs();
             mutexId = this->processorInstance.readMem(callArgs[0]);
-
-		cerr << "destroy mutex @ " << callArgs[0] << ": " << mutexId << endl;
-		
-
             this->cm->destroyMutex(this->processorInstance.getProcessorID(), mutexId);
             this->processorInstance.setRetVal(0);
             this->processorInstance.returnFromCall();
@@ -186,10 +182,6 @@ template<class wordSize> class pthread_mutex_initSysCall : public trap::SyscallC
             this->processorInstance.preCall();
 
             this->processorInstance.writeMem(this->processorInstance.readArgs()[0], mutexId);
-
-		cerr << "init mutex @ " << this->processorInstance.readArgs()[0] << ": " << mutexId << endl;
-
-
             this->processorInstance.setRetVal(0);
             this->processorInstance.returnFromCall();
 

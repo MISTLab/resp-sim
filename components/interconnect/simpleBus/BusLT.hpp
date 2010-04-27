@@ -283,6 +283,11 @@ public:
 		cout << "Total Accesses:\t\t" << numAccesses << endl;
 	}
 
+	unsigned int getAccesses(unsigned int pos) {
+		if (pos>=numMasters) return 0;
+		return accessCounter[pos];
+	}
+
 	/*-----------------------------------
 	 * b_transport method implementation
 	 *-----------------------------------*/

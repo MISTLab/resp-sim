@@ -73,7 +73,7 @@ CACHE_REMOVE_LAT   = 10.0             # ns
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'c_fft6'
+    SOFTWARE = 'nested'
 
 if SOFTWARE:
     try:
@@ -106,6 +106,24 @@ def statsPrinter():
     if NOC_ACTIVE:
         print '\x1b[34m\x1b[1mNOC Accesses:\x1b[0m'
         noc.printAccesses()
+
+    writeHeader = not os.path.exists('architectures/results.txt')
+    output = open('architectures/results.txt','a')
+    if writeHeader:
+        print >> output, "Benchmark;Processors;Cache;Real Time (s);Simulated Time (ns);BusAcc#0;BusAcc#1;BusAcc#2;BusAcc#3;BusAcc#4;BusAcc#5;BusAcc#6;BusAcc#7;BusAcc#8;BusAcc#9;"
+    output.write(os.path.basename(SOFTWARE)+';')
+    output.write(str(PROCESSOR_NUMBER)+';')
+    if DATA_CACHE_ACTIVE or INSTR_CACHE_ACTIVE:
+        output.write(str(CACHE_WR_POLICY)+';')
+    else:
+        output.write('NONE;')
+    output.write(str(controller.print_real_time())+';')
+    output.write(str(controller.get_simulated_time())+';')
+    for i in range(0,10):
+        output.write(str(bus.getAccesses(i))+';')
+    output.write('\n')
+    output.close()
+
 
 ################################################
 ##### AUTO VARIABLE SETUP ######################

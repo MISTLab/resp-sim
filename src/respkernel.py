@@ -448,6 +448,7 @@ class RespKernel:
         #if simulation commands are not specified in the architecture file, execute the whole simulation
         if not controller.has_started():
             run_simulation(duration)
+	statsPrinter()
 
     def start_debugger(self):
         '''Starts the GBD debugger'''
