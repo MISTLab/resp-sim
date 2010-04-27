@@ -121,6 +121,15 @@ BFDWrapper & BFDWrapper::getInstance(std::string fileName){
     }
 }
 
+void BFDWrapper::reset(){
+    while (BFDWrapper::bfdInstances.size() > 0){
+        BFDWrapper * tmp = (BFDWrapper::bfdInstances.begin())->second;
+        BFDWrapper::bfdInstances.erase(BFDWrapper::bfdInstances.begin());
+        delete tmp;
+    }
+}
+
+
 BFDWrapper::BFDWrapper(std::string binaryName) : execImage(NULL){
     char ** matching = NULL;
     this->sy = NULL;

@@ -104,6 +104,9 @@ class ConcurrencyEmulatorBase{
         ///Sets the thread-local-storage data which is going to be used
         ///for the thread private storage
         static void setTLSdata(const std::vector<unsigned char> tlsData);
+        
+        ///Resets the concurrency emulator by deleting all the instantiated concurrency managers
+        static void resetCEBase();
 };
 
 ///This class is in charge of performing initialization of all
