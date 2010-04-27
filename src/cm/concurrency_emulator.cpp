@@ -91,3 +91,16 @@ void resp::ConcurrencyEmulatorBase::setTLSdata(std::vector<unsigned char> tlsDat
         resp::ConcurrencyManager::tlsData[i] = tlsData[i];
     }
 }
+
+void resp::ConcurrencyEmulatorBase::resetCEBase(){
+    while (resp::ConcurrencyEmulatorBase::cm.size() > 0){
+        resp::ConcurrencyManager * tmp = (resp::ConcurrencyEmulatorBase::cm.begin())->second;
+        resp::ConcurrencyEmulatorBase::cm.erase(resp::ConcurrencyEmulatorBase::cm.begin());
+        delete tmp;
+    }
+    resp::ConcurrencyManager::defThreadInfo.clear();
+    resp::ConcurrencyManager::interruptServiceRoutines.clear();
+    delete[] resp::ConcurrencyManager::tlsData;
+    resp::ConcurrencyManager::tlsData = NULL;
+    resp::ConcurrencyManager::tlsSize = 0;
+}
