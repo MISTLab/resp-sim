@@ -75,7 +75,7 @@ class ComponentManager:
             if self.compToConnection.has_key(elem):
                 representation += repr(self.compToConnection[elem]) + '\n'
             else:
-                tmp = ConnectionNode(self.getCompInstance(elem),elem)
+                tmp = ConnectionNode(self.getCompInstance(elem).name(),elem)
                 representation += repr(tmp) + '\n'
         #for elem in self.compToConnection.values():
         #    representation += repr(elem) + '\n'
@@ -600,7 +600,7 @@ class ComponentManager:
             currComp = tmpList[i]
             if hasattr(currComp,'name'):
                 if currComp.name() == name:
-                    return currComp.name()
+                    return currComp
         return None
         
         #Old strategy based on the compToConnection

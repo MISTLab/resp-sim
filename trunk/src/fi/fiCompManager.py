@@ -80,7 +80,7 @@ class FaultInjectionComponentManager(ComponentManager):
     
     def reset(self):
         """Reset the fault injection component manager"""
-        ComponentManager.reset()
+        ComponentManager.reset(self)
         import ProbeLT32
         self.__probeClass = ProbeLT32.ProbeLT32
         self.__probeID = 0
@@ -210,7 +210,7 @@ class FaultInjectionComponentManager(ComponentManager):
         """Returns the list of all probes introduced in the architecture"""
         l = []
         for i in self.__probes.items():
-            l.append(i.probe)
+            l.append(i[1].probe)
         return l
         
     def registerComponent(self, component, attributes=None): 
