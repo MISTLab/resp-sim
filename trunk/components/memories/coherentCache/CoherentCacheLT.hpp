@@ -120,22 +120,22 @@ private:
 	sc_time cacheRemoveLatency;
 
 	// Tha actual cache memory
-	map< sc_dt::uint64, deque<CacheBlock> > cache;
+	map< sc_dt::uint64, deque<CacheBlock*> > cache;
 
 	bool busyBus, busyDir;
 	sc_event wakeupBus,wakeupDir;
 
-	CacheBlock loadCacheBlock(sc_dt::uint64 address) {
-		CacheBlock nB;
+	CacheBlock* loadCacheBlock(sc_dt::uint64 address) {
+		CacheBlock *nB = (CacheBlock*) malloc (sizeof(CacheBlock));
 		tlm_generic_payload message;
 		sc_time memLatency = SC_ZERO_TIME;
-		nB.base_address = address - address % blockSize;
-		nB.block = (unsigned char*) malloc (blockSize*sizeof(unsigned char));
+		nB->base_address = address - address % blockSize;
+		nB->block = (unsigned char*) malloc (blockSize*sizeof(unsigned char));
 
 		message.set_data_length(blockSize);
-		message.set_data_ptr(nB.block);
+		message.set_data_ptr(nB->block);
 		message.set_read();
-		message.set_address(nB.base_address);
+		message.set_address(nB->base_address);
 		message.set_response_status(TLM_INCOMPLETE_RESPONSE);
 		this->initSocket->b_transport(message,memLatency);
 		if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while reading from main memory");
@@ -144,15 +144,15 @@ private:
 		return nB;
 	}
 
-	void storeCacheBlock(CacheBlock cB) {
+	void storeCacheBlock(CacheBlock *cB) {
 		tlm_generic_payload message;
 		sc_time memLatency = SC_ZERO_TIME;
-		if (cB.block == NULL)
+		if (cB->block == NULL)
 			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Something wrong happened in the cache, a block cannot be stored since it has no data");
 		message.set_data_length(blockSize);
-		message.set_data_ptr(cB.block);
+		message.set_data_ptr(cB->block);
 		message.set_write();
-		message.set_address(cB.base_address);
+		message.set_address(cB->base_address);
 		message.set_response_status(TLM_INCOMPLETE_RESPONSE);
 		this->initSocket->b_transport(message,memLatency);
 		if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while writing to main memory");
@@ -161,11 +161,11 @@ private:
 	}
 
 	void removeCacheBlock(sc_dt::uint64 tag) {
-		CacheBlock evicted;
+		CacheBlock* evicted;
 		if (removePolicy == RANDOM) {
 			// I have to randomly chose an element to be replaced
 			unsigned int toReplace = rand()%this->cache[tag].size();
-			deque<CacheBlock>::iterator blockIter = this->cache[tag].begin();
+			deque<CacheBlock*>::iterator blockIter = this->cache[tag].begin();
 			for (unsigned int i=0; i<toReplace; i++) blockIter++;
 			evicted = *(blockIter);
 			this->cache[tag].erase(blockIter);
@@ -184,11 +184,12 @@ private:
 		message.set_address(evicted.base_address);
 		message.set_response_status(TLM_INCOMPLETE_RESPONSE);
 		this->dirInitSocket->b_transport(message,delay);
-		if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while removing " << evicted.base_address << " from directory");
+		if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while removing " << evicted->base_address << " from directory");
 		#endif
 
 		// Write-Back should write the block in memory if it has been modified
-		if (this->writePolicy == BACK && evicted.dirty) {storeCacheBlock(evicted); wait(this->cacheStoreLatency);}
+		if (this->writePolicy == BACK && evicted->dirty) {storeCacheBlock(evicted); wait(this->cacheStoreLatency);}
+		delete evicted;
 	}
 
 public:
@@ -258,6 +259,14 @@ public:
 
 	~CoherentCacheLT(){
 		if (scratchMemory!=NULL) delete this->scratchMemory;
+
+		map<sc_dt::uint64, deque<CacheBlock*> >::iterator cacheIter;
+		deque<CacheBlock*>::iterator blockIter;
+		for (cacheIter = cache.begin(); cacheIter!=cache.end(); cacheIter++) {
+			for (blockIter = cacheIter->second.begin(); blockIter != cacheIter->second.end(); blockIter++) {
+				delete (*blockIter);
+			}
+		}
 	}
 
 	void setScratchpad(sc_dt::uint64 scratchStart, sc_dt::uint64 scratchSize, sc_time latency = SC_ZERO_TIME) {
@@ -308,9 +317,9 @@ public:
 		tlm_generic_payload message;
 		sc_time delay = SC_ZERO_TIME;
 		sc_dt::uint64 tag;
-		deque<CacheBlock>::iterator tagIter;
+		deque<CacheBlock*>::iterator tagIter;
 		bool hit;
-		CacheBlock curBlock;
+		CacheBlock *curBlock;
 		sc_dt::uint64 curBaseAddress;
 		int cachePointerModifier;
 		unsigned int partLen;
@@ -339,7 +348,7 @@ public:
 			// N.B. If no blocks are currently cached, cache[tag] is an ampty queue!
 			for (tagIter = this->cache[tag].begin(); tagIter != this->cache[tag].end(); tagIter++) {
 				// If the required block is cached...
-				if (tagIter->base_address == curBaseAddress) {
+				if ((*tagIter)->base_address == curBaseAddress) {
 					// We have a HIT!
 					#ifdef DEBUGMODE
 					cerr << sc_time_stamp() << ": " << name() << " - Read Hit! @" << curBaseAddress << endl;
@@ -378,13 +387,13 @@ public:
 			// Finally, we can actually read the required data from the block...
 
 			// We calculate the displacement of the data in the cache block...
-			cachePointerModifier = address - curBlock.base_address;
+			cachePointerModifier = address - curBlock->base_address;
 			if (cachePointerModifier < 0) cachePointerModifier = 0;
 			// And the length of the data to be read
 			partLen = remLen;
 			if (partLen + cachePointerModifier > this->blockSize) partLen = this->blockSize - cachePointerModifier;
 			// We perform the effective read...
-			memcpy(dataPointer, curBlock.block + cachePointerModifier, partLen*sizeof(unsigned char));
+			memcpy(dataPointer, curBlock->block + cachePointerModifier, partLen*sizeof(unsigned char));
 			wait(this->cacheReadLatency);
 			// And we update the pointer to the required data for eventual subsequent reads
 			remLen -= partLen;
@@ -401,9 +410,9 @@ public:
 		tlm_generic_payload message;
 		sc_time delay = SC_ZERO_TIME;
 		sc_dt::uint64 tag;
-		deque<CacheBlock>::iterator tagIter;
+		deque<CacheBlock*>::iterator tagIter;
 		bool hit;
-		CacheBlock curBlock;
+		CacheBlock *curBlock;
 		sc_dt::uint64 curBaseAddress;
 		int cachePointerModifier;
 		unsigned int partLen;
@@ -432,7 +441,7 @@ public:
 			// N.B. If no blocks are currently cached, cache[tag] is an ampty queue!
 			for (tagIter = this->cache[tag].begin(); tagIter != this->cache[tag].end(); tagIter++) {
 				// If the required block is cached...
-				if (tagIter->base_address == curBaseAddress) {
+				if ((*tagIter)->base_address == curBaseAddress) {
 					// We have a HIT!
 					#ifdef DEBUGMODE
 					cerr << sc_time_stamp() << ": " << name() << " - Write Hit! @" << curBaseAddress << endl;
@@ -441,7 +450,7 @@ public:
 					this->numWriteHit++;
 
 					// We save the current block...
-					tagIter->dirty = true;
+					(*tagIter)->dirty = true;
 					curBlock = *(tagIter);
 					// And we upgrade the queue order if we use an LRU policy
 					if (this->removePolicy==LRU) {
@@ -462,7 +471,7 @@ public:
 				if (this->writePolicy == BACK || this->writePolicy == THROUGH_ALL) {
 					// We load the block from memory...
 					curBlock = this->loadCacheBlock(curBaseAddress);
-					curBlock.dirty = true;
+					curBlock->dirty = true;
 					wait(this->cacheLoadLatency);
 
 					// And we add it to the cache (after checking that it isn't already full, or worse...)
@@ -476,13 +485,13 @@ public:
 			// Finally, we can actually write the given data in the block (if there is a block)...
 			if (hit || this->writePolicy == BACK || this->writePolicy == THROUGH_ALL) {
 				// We calculate the displacement of the data in the cache block...
-				cachePointerModifier = address - curBlock.base_address;
+				cachePointerModifier = address - curBlock->base_address;
 				if (cachePointerModifier < 0) cachePointerModifier = 0;
 				// And the length of the data to be written
 				partLen = remLen;
 				if (partLen + cachePointerModifier > this->blockSize) partLen = this->blockSize - cachePointerModifier;
 				// We perform the effective write...
-				memcpy(curBlock.block + cachePointerModifier, dataPointer, partLen*sizeof(unsigned char));
+				memcpy(curBlock->block + cachePointerModifier, dataPointer, partLen*sizeof(unsigned char));
 				wait(this->cacheWriteLatency);
 				// And we update the pointer to the required data for eventual subsequent writes
 				remLen -= partLen;
@@ -596,11 +605,11 @@ public:
 		#endif			
 
 		// Declaring some support variables...
-		tlm_generic_payload message;
 		sc_dt::uint64 tag;
-		deque<CacheBlock>::iterator tagIter;
+		tlm_generic_payload message;
+		deque<CacheBlock*>::iterator tagIter;
 		bool hit;
-		CacheBlock curBlock;
+		CacheBlock *curBlock;
 		sc_dt::uint64 curBaseAddress;
 		int cachePointerModifier;
 		unsigned int partLen;
@@ -638,11 +647,11 @@ public:
 			// N.B. If no blocks are currently cached, cache[tag] is an ampty queue!
 			for (tagIter = this->cache[tag].begin(); tagIter != this->cache[tag].end(); tagIter++) {
 				// If the required block is cached...
-				if (tagIter->base_address == curBaseAddress) {
+				if ((*tagIter)->base_address == curBaseAddress) {
 					// We have a HIT!
 					#ifdef DEBUGMODE
 					cerr << sc_time_stamp() << ": " << name() << " - DBG Hit! @" << curBaseAddress << endl;
-					#endif			
+					#endif
 					hit = true;
 					// We save the current block...
 					curBlock = *(tagIter);
@@ -659,7 +668,7 @@ public:
 				// ...we shall communicate to the directory our request
 				sc_time delay = SC_ZERO_TIME;
 				message.set_command(cmd);
-				message.set_address(curBlock.base_address);
+				message.set_address(curBlock->base_address);
 				message.set_response_status(TLM_INCOMPLETE_RESPONSE);
 				this->dirInitSocket->b_transport(message,delay);
 				if (message.get_response_status() != TLM_OK_RESPONSE)
@@ -672,30 +681,30 @@ public:
 				#endif			
 
 				// We load the block from memory...
-				curBlock = CacheBlock();
-				curBlock.block = (unsigned char*) malloc (blockSize*sizeof(unsigned char));
-				curBlock.base_address = curBaseAddress;
+				curBlock = (CacheBlock *) malloc(sizeof(CacheBlock));
+				curBlock->block = (unsigned char*) malloc (blockSize*sizeof(unsigned char));
+				curBlock->base_address = curBaseAddress;
 
 				// ... but, first, we simulate a WRITE THROUGH for the directory, in order to flush blocks exclusively held by other caches
 				sc_time delay = SC_ZERO_TIME;
 				message.set_command(TLM_WRITE_COMMAND);
-				message.set_address(curBlock.base_address);
+				message.set_address(curBlock->base_address);
 				message.set_response_status(TLM_INCOMPLETE_RESPONSE);
 				this->dirInitSocket->b_transport(message,delay);
 				if (message.get_response_status() != TLM_OK_RESPONSE)
 					THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while asking EXCLUSIVE privilege for block at address " << curBaseAddress);
 				#ifdef EXPLICIT_REMOVE
 				message.set_command(REMOVE);
-				message.set_address(curBlock.base_address);
+				message.set_address(curBlock->base_address);
 				message.set_response_status(TLM_INCOMPLETE_RESPONSE);
 				this->dirInitSocket->b_transport(message,delay);
 				if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while removing " << curBaseAddress << " from directory");
 				#endif
 
 				message.set_data_length(blockSize);
-				message.set_data_ptr(curBlock.block);
+				message.set_data_ptr(curBlock->block);
 				message.set_read();
-				message.set_address(curBlock.base_address);
+				message.set_address(curBlock->base_address);
 				message.set_response_status(TLM_INCOMPLETE_RESPONSE);
 				this->initSocket->transport_dbg(message);
 				if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while reading from main memory");
@@ -704,21 +713,21 @@ public:
 			// Finally, we can actually read/write the required data from/to the block...
 
 			// We calculate the displacement of the data in the cache block...
-			cachePointerModifier = adr - curBlock.base_address;
+			cachePointerModifier = adr - curBlock->base_address;
 			if (cachePointerModifier < 0) cachePointerModifier = 0;
 			// And the length of the data to be read/written
 			partLen = remLen;
 			if (partLen + cachePointerModifier > this->blockSize) partLen = this->blockSize - cachePointerModifier;
 			// We perform the effective read/write...
 			if(cmd == TLM_READ_COMMAND)
-				memcpy(dataPointer, curBlock.block + cachePointerModifier, partLen*sizeof(unsigned char));
+				memcpy(dataPointer, curBlock->block + cachePointerModifier, partLen*sizeof(unsigned char));
 			else if(cmd == TLM_WRITE_COMMAND) {
-				memcpy(curBlock.block + cachePointerModifier, dataPointer, partLen*sizeof(unsigned char));
+				memcpy(curBlock->block + cachePointerModifier, dataPointer, partLen*sizeof(unsigned char));
 
 				message.set_data_length(blockSize);
-				message.set_data_ptr(curBlock.block);
+				message.set_data_ptr(curBlock->block);
 				message.set_write();
-				message.set_address(curBlock.base_address);
+				message.set_address(curBlock->base_address);
 				message.set_response_status(TLM_INCOMPLETE_RESPONSE);
 				this->initSocket->transport_dbg(message);
 				if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while reading from main memory");
@@ -754,9 +763,9 @@ public:
 		sc_dt::uint64 tag = GET_TAG(adr);
 		sc_time intDelay = SC_ZERO_TIME;
 
-		deque<CacheBlock>::iterator tagIter;
+		deque<CacheBlock*>::iterator tagIter;
 		bool hit = false;
-		CacheBlock curBlock;
+		CacheBlock *curBlock;
 
 		if (this->busyBus) {
 			#ifdef DEBUGMODE
@@ -768,7 +777,7 @@ public:
 
 		for (tagIter = this->cache[tag].begin(); tagIter != this->cache[tag].end(); tagIter++) {
 			// If the required block is cached...
-			if (tagIter->base_address == adr) {
+			if ((*tagIter)->base_address == adr) {
 				// We have a HIT!
 				hit = true;
 				// We save the current block...
@@ -784,10 +793,10 @@ public:
 		// If we hit...
 		if (hit) {
 			if (cmd == FLUSH) {
-				if (curBlock.dirty) {storeCacheBlock(curBlock); wait(this->cacheStoreLatency);}
+				if (curBlock->dirty) {storeCacheBlock(curBlock); wait(this->cacheStoreLatency);}
 			}
 			else if (cmd == INVALIDATE) {
-				if (curBlock.dirty) {storeCacheBlock(curBlock); wait(this->cacheStoreLatency);}
+				if (curBlock->dirty) {storeCacheBlock(curBlock); wait(this->cacheStoreLatency);}
 				cache[tag].erase(tagIter);
 			}
 			else THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Undefined TLM command");
@@ -800,14 +809,12 @@ public:
 
 	void printCache() {
 		cout << "*****  CACHE " << name() << "    *****" << endl;
-		map<sc_dt::uint64, deque<CacheBlock> >::iterator cacheIter;
-		deque<CacheBlock>::iterator blockIter;
+		map<sc_dt::uint64, deque<CacheBlock*> >::iterator cacheIter;
+		deque<CacheBlock*>::iterator blockIter;
 		for (cacheIter = cache.begin(); cacheIter!=cache.end(); cacheIter++) {
 			cout << "Tag: " << cacheIter->first << endl;
 			for (blockIter = cacheIter->second.begin(); blockIter != cacheIter->second.end(); blockIter++) {
-				cout << "Base Address: " << blockIter->base_address << endl;
-				//for (int i=0; i<blockSize; i++) cout << (unsigned int) *(blockIter->block + i) << " ";
-				//cout << endl;
+				cout << "Base Address: " << (*blockIter)->base_address << endl;
 			}
 		}
 		cout << "***********************" << endl;
@@ -815,15 +822,15 @@ public:
 
 	void printBlockAt(sc_dt::uint64 address) {
 		sc_dt::uint64 tag = GET_TAG(address);
-		deque<CacheBlock>::iterator tagIter;
+		deque<CacheBlock*>::iterator tagIter;
 		bool hit = false;
 		for (tagIter = this->cache[tag].begin(); tagIter != this->cache[tag].end(); tagIter++) {
 			// If the required block is cached...
-			if (tagIter->base_address <= address && tagIter->base_address+this->blockSize >= address) {
+			if ((*tagIter)->base_address <= address && (*tagIter)->base_address+this->blockSize >= address) {
 				// We have a HIT!
 				hit = true;
-				cout << "Hit on " << name() << " - Tag is " << tag << ", base address is " << tagIter->base_address << ", and content is: " << endl;
-				for (int i=0; i<blockSize; i++) cout << (unsigned int) *(tagIter->block + i) << " ";
+				cout << "Hit on " << name() << " - Tag is " << tag << ", base address is " << (*tagIter)->base_address << ", and content is: " << endl;
+				for (int i=0; i<blockSize; i++) cout << (unsigned int) *((*tagIter)->block + i) << " ";
 				cout << endl;
 			}
 		}

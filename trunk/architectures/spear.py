@@ -61,7 +61,7 @@ INSTR_CACHE_ACTIVE = True
 CACHE_SIZE         = 8               # MBytes
 CACHE_BLOCK_SIZE   = 32              # words
 CACHE_WAYS         = 8
-CACHE_REM_POLICY   = CacheLT32.LRU
+CACHE_REM_POLICY   = CacheLT32.RANDOM
 CACHE_WR_POLICY    = CacheLT32.BACK
 CACHE_READ_LAT     = 10.0             # ns
 CACHE_WRITE_LAT    = 10.0             # ns
@@ -73,7 +73,7 @@ CACHE_REMOVE_LAT   = 10.0             # ns
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'nested'
+    SOFTWARE = 'c_pi'
 
 if SOFTWARE:
     try:
@@ -82,14 +82,14 @@ if SOFTWARE:
         ARGS = []
         ARGS.append('ffmpeg')
         ARGS.append('-i')
-#        ARGS.append('sheep.mpg')
-        ARGS.append('software/apps/ffmpeg/minimal.mpg')
+        ARGS.append('sheep.mpg')
+#        ARGS.append('software/apps/ffmpeg/minimal.mpg')
         ARGS.append('-b')
         ARGS.append('64000')
         ARGS.append('-threads')
         ARGS.append(str(PROCESSOR_NUMBER))
-#        ARGS.append('sheep2.mpg')
-        ARGS.append('software/apps/ffmpeg/minimal2.mpg')
+        ARGS.append('sheep2.mpg')
+#        ARGS.append('software/apps/ffmpeg/minimal2.mpg')
 
 OS_EMULATION = True     # True or False
 
