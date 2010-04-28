@@ -83,8 +83,8 @@ template<typename BUSDATATYPE> class ProbeLT: public sc_module {
 
   //they are necessary since the payload contains only a pointer. Thus, it is necessary to
   //assign to the pointer an actual position where to save transmitted data
-  BUSDATATYPE last_request_data;
-  BUSDATATYPE last_response_data;
+  BUSDATATYPE* last_request_data;
+  BUSDATATYPE* last_response_data;
 
 public:
   tlm_utils::simple_target_socket<ProbeLT, sizeof(BUSDATATYPE)*8>  targetSocket;
@@ -99,8 +99,12 @@ public:
     this->targetSocket.register_b_transport(this, &ProbeLT::b_transport);
     this->targetSocket.register_transport_dbg(this, &ProbeLT::transport_dbg);
     
-    this->last_request.set_data_ptr(reinterpret_cast<unsigned char*>(&last_request_data));
-    this->last_response.set_data_ptr(reinterpret_cast<unsigned char*>(&last_response_data));
+    last_request_data = NULL;
+    this->last_request.set_data_length(0);
+    this->last_request.set_data_ptr(reinterpret_cast<unsigned char*>(last_request_data));
+    last_response_data = NULL;
+    this->last_request.set_data_length(0);
+    this->last_response.set_data_ptr(reinterpret_cast<unsigned char*>(last_response_data));
     
     end_module();
   }
@@ -111,10 +115,27 @@ public:
    * b_transport method implementation
    *-----------------------------------*/
   void b_transport(tlm_generic_payload& trans, sc_time& delay) {
+    if(trans.get_data_length() != this->last_request.get_data_length()){
+      delete[] last_request_data;
+      if(trans.get_data_length()>0){
+        last_request_data = new BUSDATATYPE[trans.get_data_length()];
+      } else {
+        last_request_data = NULL;
+      }
+      this->last_request.set_data_ptr(reinterpret_cast<unsigned char*>(last_request_data));      
+    }
     this->last_request.deep_copy_from(trans);
     initiatorSocket->b_transport(trans, delay);
+    if(trans.get_data_length() != this->last_response.get_data_length()){
+      delete[] last_response_data;
+      if(trans.get_data_length()>0){
+        last_response_data = new BUSDATATYPE[trans.get_data_length()];
+      } else {
+        last_response_data = NULL;
+      }
+      this->last_response.set_data_ptr(reinterpret_cast<unsigned char*>(last_response_data));      
+    }
     this->last_response.deep_copy_from(trans);
-    unsigned char*   ptr = this->last_response.get_data_ptr();
   }
 
   /*-----------------------------------
@@ -122,9 +143,27 @@ public:
    *-----------------------------------*/
   unsigned int transport_dbg(tlm::tlm_generic_payload& trans) {
     unsigned int result;
+    if(trans.get_data_length() != this->last_request.get_data_length()){
+      delete[] last_request_data;
+      if(trans.get_data_length()>0){
+        last_request_data = new BUSDATATYPE[trans.get_data_length()];
+      } else {
+        last_request_data = NULL;
+      }
+      this->last_request.set_data_ptr(reinterpret_cast<unsigned char*>(last_request_data));      
+    }
     this->last_request.deep_copy_from(trans);
     result = initiatorSocket->transport_dbg(trans);
-    this->last_response.deep_copy_from(trans);    
+    if(trans.get_data_length() != this->last_response.get_data_length()){
+      delete[] last_response_data;
+      if(trans.get_data_length()>0){
+        last_response_data = new BUSDATATYPE[trans.get_data_length()];
+      } else {
+        last_response_data = NULL;
+      }
+      this->last_response.set_data_ptr(reinterpret_cast<unsigned char*>(last_response_data));      
+    }
+    this->last_response.deep_copy_from(trans);
     return result;
   }
 };
