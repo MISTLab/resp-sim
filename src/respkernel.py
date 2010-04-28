@@ -476,42 +476,37 @@ class RespKernel:
         Boost.Python.instance. DO NOTE: it should not be called directly since it
         may cause ReSP crash if the simulation is still running"""
         
-        to_be_kept = ['BusLT32', 'CacheLT32', 'CoherentCacheLT32', 'DirectoryLT32', 'MemoryAT32', 'MemoryLT32', 'NocLT32', 'ProbeLT32', 'SaboteurLT32', '__builtins__', '__doc__', '__file__', '__name__', '__package__', '__revision__', '__version__', 'areConnected', 'arm7tdmi_funcLT_wrapper', 'arm9tdmi_funcLT_wrapper', 'bS_wrapper', 'bfdwrapper', 'blddir', 'cE_wrapper', 'cm_wrapper', 'colors', 'commands', 'compManager', 'connect', 'connectPorts', 'connectPortsByPathName', 'controller', 'converters', 'debugmemory', 'disable_colors', 'eFPGA_wrapper', 'ecacti_wrapper', 'enable_colors', 'enable_fault_injection', 'eosCb', 'findInFolder', 'getAttrInstance', 'getCompInstance', 'getCppName', 'getInstantiatedComponents', 'get_architecture_filename', 'get_real_time', 'get_simulated_time', 'instantiateComponent', 'leon3_funcAT_wrapper', 'leon3_funcLT_wrapper', 'listComponents', 'load_architecture', 'loader_wrapper', 'manager', 'os', 'pause_simulation', 'power', 'printComponents', 'register_breakpoint', 'reload_architecture', 'reset', 'run_simulation', 'run_up_to', 'sc_controller_wrapper', 'scwrapper', 'showArchitecture', 'show_commands', 'stop_simulation', 'sys', 'testMaster_wrapper', 'testSlave_wrapper', 'tlmwrapper', 'trapwrapper']
-
-        
         for name in globals().keys():
-            if to_be_kept.count(name) == 0:
+            if name == 'controller':
+                continue
+            comp = globals()[name]
+            try:
+                base = comp.__class__.__bases__[0]
+                # Remove stray power models
+                if base.__name__ == 'model':
+                    del globals()[name]
+                    continue
+                # Remove all boost.python references
+                while base.__name__ != "instance" and base.__name__ != "object":
+                    base = base.__bases__[0]
+                if base.__name__ == "instance":
+                    if self.verbose:
+                        print 'deleting ' + str(name)
+                    del globals()[name]
+                    if self.verbose:
+                        print 'deleted ' + str(name)
+            except:
+                pass
+
+        for name in globals().keys():
+            if name == 'controller':
+                continue
+            comp = globals()[name]
+            if (isinstance( comp , list) or isinstance( comp, dict ) or isinstance( comp, bool ) or isinstance( comp, int ) \
+                    or isinstance( comp, float ) or isinstance( comp, str )) and not name.startswith('__'):
                 del globals()[name]
-#            if name == 'controller':
-#                continue
-#            comp = globals()[name]
-#            try:
-#                base = comp.__class__.__bases__[0]
-#                # Remove stray power models
-#                if base.__name__ == 'model':
-#                    del globals()[name]
-#                    continue
-#                # Remove all boost.python references
-#                while base.__name__ != "instance" and base.__name__ != "object":
-#                    base = base.__bases__[0]
-#                if base.__name__ == "instance":
-#                    if self.verbose:
-#                        print 'deleting ' + str(name)
-#                    del globals()[name]
-#                    if self.verbose:
-#                        print 'deleted ' + str(name)
-#            except:
-#                pass
-
-#        for name in globals().keys():
-#            if name == 'controller':
-#                continue
-#            comp = globals()[name]
-#            if (isinstance( comp , list) or isinstance( comp, dict )) and not name.startswith('__'):
-#                del globals()[name]
-#            elif hasattr (globals()[name], '__del__'):
-#                del globals()[name]
-
+            elif hasattr (globals()[name], '__del__'):
+                del globals()[name]
       
     def delete_all(self):
         """Deletes all the object instances in namespaces whose base type is
