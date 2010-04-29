@@ -448,7 +448,19 @@ class RespKernel:
         #if simulation commands are not specified in the architecture file, execute the whole simulation
         if not controller.has_started():
             run_simulation(duration)
-	statsPrinter()
+        
+        #force print stats. it is necessary since in batch simulation the simulation engine is not instantiated.                
+        try:
+            # Call a custom statsprinter if registered
+            statsPrinter()
+        except NameError:
+            # Print
+            print 'Real Elapsed Time (seconds):'
+            print self.controller.print_real_time()
+            print 'Simulated Elapsed Time (nano-seconds):'
+            print str(self.controller.get_simulated_time()) + '\n'
+        except Exception,  e:
+            print 'Error in the print of the statistics --> ' + str(e)
 
     def start_debugger(self):
         '''Starts the GBD debugger'''
