@@ -44,16 +44,15 @@
 #include <boost/statechart/transition.hpp>
 #include <boost/statechart/custom_reaction.hpp>
 #include <boost/mpl/list.hpp>
-#include <boost/timer.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/timer.hpp>
+#include "timer.hpp"
 
 #include "sc_state_machine.hpp"
 
 ///Constructor of the overall machine
-ControllerMachine::ControllerMachine(boost::timer & timeTracker, double & accumulatedTime) :
+ControllerMachine::ControllerMachine(timer & timeTracker, double & accumulatedTime) :
                                 timeTracker(timeTracker), accumulatedTime(accumulatedTime) {}
 
 controllerThread_interactive::controllerThread_interactive(boost::mutex & start_of_sim_mutex, boost::condition & start_of_sim_cond) :

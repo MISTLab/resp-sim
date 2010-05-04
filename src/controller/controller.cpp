@@ -55,7 +55,7 @@
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/timer.hpp>
+#include "timer.hpp"
 
 #include "Python.h"
 
