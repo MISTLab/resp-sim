@@ -61,7 +61,7 @@
 #include <boost/timer.hpp>
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/timer.hpp>
+#include "timer.hpp"
 
 #include <systemc.h>
 
@@ -102,8 +102,8 @@ struct EvStop : boost::statechart::event< EvStop > {};
 struct Reset_st;
 struct ControllerMachine : boost::statechart::state_machine<ControllerMachine, Reset_st> {
     // The state machine shall contain a reference to the
-    // boost.timer object used to track elapsed time.
-    boost::timer & timeTracker;
+    // timer object used to track elapsed time.
+    timer & timeTracker;
     double & accumulatedTime;
     // Event triggered to pause systemc simulation
     sc_event pauseEvent;
@@ -116,7 +116,7 @@ struct ControllerMachine : boost::statechart::state_machine<ControllerMachine, R
     // Condition for the end of simulation
     boost::condition end_condition;
 
-    ControllerMachine(boost::timer & timeTracker, double & accumulatedTime);
+    ControllerMachine(timer & timeTracker, double & accumulatedTime);
 };
 
 // Now I have to actually define the different states and the outgoing

@@ -50,7 +50,7 @@
 
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/timer.hpp>
+#include "timer.hpp"
 
 #include "callback.hpp"
 #include "simulation_engine.hpp"
@@ -96,7 +96,7 @@ public:
     bool error;
     std::string errorMessage;
     ///Variables used to keep track of the duration of the simulation in real time (not systemc time)
-    boost::timer timeTracker;
+    timer timeTracker;
     double accumulatedTime;
     ///True if simulation is interactive, so if it is managed through
     ///ReSP's console
