@@ -46,13 +46,17 @@ resp_kernel = None
 globalServer = None
 
 class RespRequestHandler(SocketServer.StreamRequestHandler):
-    """Manage a request from a client"""
+    """Manage a request from a client on a TCP socket connection"""
 
-    name_index = 0
+    #name_index = 0
 
     ############################################################
-    # RESP COMMANDS
+    # RESP COMMANDS.
     ############################################################
+    
+    #TODO: these commands does not work. they are referred to the old resp. 
+    #Moreover, they are not necessary. execute and quit commands are enought to do anything
+    
     def stop_simulation(self, arguments):
         resp_kernel.controller.stop_simulation()
         self.wfile.write(encode_string('OK'))
@@ -115,10 +119,9 @@ class RespRequestHandler(SocketServer.StreamRequestHandler):
     def execute(self, arguments):
         # First of all I try to evaluate the expression; in case
         # an error is returned it means that it is not an expression,
-        # so I execute it
-
+        # so I execute it from respkernel import get_namespace
         try:
-            retVal = eval(arguments, resp_kernel.get_namespace())
+            retVal = eval(arguments, resp_kernel.get_namespace())                        
             if retVal != None:
                 self.wfile.write(encode_string('OK'+encode_compound(retVal)))
             else:
@@ -126,10 +129,13 @@ class RespRequestHandler(SocketServer.StreamRequestHandler):
         except SyntaxError:
             try:
                 exec arguments in resp_kernel.get_namespace()
+                print globals().keys()
                 self.wfile.write(encode_string('OK'))
             except Exception, e:
                 self.wfile.write(encode_string('EE' + str(e)))
         except Exception, e:
+            import traceback
+            traceback.print_exc()
             self.wfile.write(encode_string('EE' + str(e)))
 
     def get_simulation_time(self, arguments):
@@ -270,6 +276,7 @@ class RespCommandServer:
         global resp_kernel, globalServer
         globalServer = None
         resp_kernel = kernel
+        #print resp_kernel.get_namespace()
         try:
             SocketServer.TCPServer.allow_reuse_address = True
             globalServer = self.tcpserver = SocketServer.TCPServer(('localhost', port), RespRequestHandler)
@@ -312,8 +319,8 @@ def encode_compound(lst):
     # If the item is not a composite, we might be at the end of the recursion
     if not type(lst) == dict and not type(lst) == list:
         # If it is a string, return it
-        if type(lst)  == str:
-            return 'S' + lst + ')'
+        if type(lst)  == str or type(lst)  == unicode:
+            return 'S' + str(lst) + ')'
         # If it is a number (int or long), return it
         elif type(lst) == bool: # pay attention: bool are int: isinstance(True,int) results True !!!!!!
             return 'B' + str(lst) + ')'
@@ -446,7 +453,6 @@ def decode_compound(message):
 
 def parse_message(message):
     """Parse an incoming message"""
-
     # Strip the payload delimiters
     message = message[1:-1]
 
@@ -455,5 +461,5 @@ def parse_message(message):
     for i in range(0, len(message)-1):
         if( i%2 ): continue
         buffer.append(chr(int(message[i]+message[i+1], 16)))
-
-    return ''.join(buffer)
+    print "qui: " + str(''.join(buffer))
+    return str(''.join(buffer))

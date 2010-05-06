@@ -42,6 +42,8 @@
 
 import subprocess
 
+#TODO not mantained
+
 class GDBManager():
     """ Opens and controls a GDB instance on a given process """
 

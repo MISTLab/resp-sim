@@ -81,6 +81,17 @@ class RespClient:
         self.s.close()
         return msg
 
+    def execute(self, string):
+        # EXEC
+        self.send('EXEC-'+server.encode_compound(string))
+        response = server.parse_message(self.receive())
+        if not response[0:2] == 'OK':
+            raise Exception(response[2:])
+        return response[2:]
+
+    #TODO: these commands does not work. they are referred to the old resp. 
+    #Moreover, they are not necessary. execute and quit commands are enought to do anything
+
     def list_components(self):
         # LISTCOMPONENTS
         self.send('LISTCOMP')
@@ -153,10 +164,3 @@ class RespClient:
         real_time = server.parse_message(self.receive())
         return float(real_time[2:])
 
-    def execute(self, string):
-        # EXEC
-        self.send('EXEC-'+server.encode_compound(string))
-        response = server.parse_message(self.receive())
-        if not response[0:2] == 'OK':
-            raise Exception(response[2:])
-        return response[2:]
