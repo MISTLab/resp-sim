@@ -133,7 +133,7 @@ template <class wordSize> struct Processor{
         }
 
         #ifndef NDEBUG
-        std::cerr << "Scheduled thread " << this->runThread->id << " at " << this->processorInstance.readPC() << " on processor " << this->processorInstance.getProcessorID() << std::endl;
+        std::cerr << sc_time_stamp() << ": Scheduled thread " << this->runThread->id << " at " << this->processorInstance.readPC() << " on processor " << this->processorInstance.getProcessorID() << std::endl;
         #endif
 
         // Notify halted processors
@@ -159,7 +159,7 @@ template <class wordSize> struct Processor{
         this->processorInstance.setLR(nop_loop_address);
         
         #ifndef NDEBUG
-        std::cerr << "Descheduled thread " << tempThread->id << " on processor " << processorInstance.getProcessorID() << std::endl;
+        std::cerr << sc_time_stamp() << ": Descheduled thread " << tempThread->id << " on processor " << processorInstance.getProcessorID() << std::endl;
         #endif
 
         return tempThread->id; 
@@ -364,7 +364,7 @@ class ConcurrencyManager{
 
             this->managedProc[processorInstance.getProcessorID()] = new Processor<wordSize>(processorInstance);
             #ifndef NDEBUG
-            std::cerr << "Instantiated processor " << processorInstance.getProcessorID() << std::endl;
+            std::cerr << sc_time_stamp() << ": Instantiated processor " << processorInstance.getProcessorID() << std::endl;
             #endif
             if(processorInstance.getProcessorID() + 1 > this->maxProcId)
                 this->maxProcId = processorInstance.getProcessorID() + 1;
@@ -459,7 +459,7 @@ class ConcurrencyManager{
             ThreadEmu* th = findReadyThread();
             if( th != NULL ) {
                 #ifndef NDEBUG
-                std::cout << "Attempting Scheduling Thread " << th->id << std::endl;
+                std::cout << sc_time_stamp() << ": Attempting Scheduling Thread " << th->id << std::endl;
                 #endif
                 for( it = managedProc.begin(); it != managedProc.end() ; it++ ) {
                     if( it->second->processorInstance.getProcessorID() == curProc ) continue;
