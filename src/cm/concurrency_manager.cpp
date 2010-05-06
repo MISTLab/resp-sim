@@ -49,9 +49,6 @@
 
 #include "bfdWrapper.hpp"
 #include "concurrency_manager.hpp"
-#ifdef NDEBUG
-//#undef NDEBUG
-#endif
 
 //Initialization of some static variables
 const int resp::ConcurrencyManager::SYSC_SCHED_FIFO = 0;
@@ -462,7 +459,7 @@ int resp::ConcurrencyManager::createThread(unsigned int procId, unsigned int thr
     }
 
     #ifndef NDEBUG
-    std::cerr << "Created thread Id = " << existingThreads.size() - 1 << \
+    std::cerr << sc_time_stamp() << ": Created thread Id = " << existingThreads.size() - 1 << \
                 " stack size = " << curStackSize/1024 << "KB" << " stack base " << \
                 std::showbase << std::hex << curStackBase << std::dec << " status " << \
                 th->status << " address " << std::hex << std::showbase << threadFun <<  std::endl << std::dec;
@@ -556,7 +553,7 @@ void resp::ConcurrencyManager::setStackSize(int attr, int stackSize){
     }
 
     #ifndef NDEBUG
-    std::cerr << "Setting stack " << stackSize << " for attribute " << attr << std::endl;
+    std::cerr << sc_time_stamp() <<  " Setting stack " << stackSize << " for attribute " << attr << std::endl;
     #endif
 
     foundAttr->second->stackSize = stackSize;
@@ -577,7 +574,7 @@ void resp::ConcurrencyManager::setPreemptive(int attr, int isPreemptive){
     }
 
     #ifndef NDEBUG
-    std::cerr << "Setting preemptive status " << isPreemptive << " for attribute " << attr << std::endl;
+    std::cerr << sc_time_stamp() <<  " Setting preemptive status " << isPreemptive << " for attribute " << attr << std::endl;
     #endif
 
     foundAttr->second->preemptive = (isPreemptive == resp::ConcurrencyManager::SYSC_PREEMPTIVE);
@@ -598,7 +595,7 @@ void resp::ConcurrencyManager::setSchedDeadline(int attr, unsigned int deadline)
     }
 
     #ifndef NDEBUG
-    std::cerr << "Setting scheduling deadline " << deadline << " for attribute " << attr << std::endl;
+    std::cerr << sc_time_stamp() << ": Setting scheduling deadline " << deadline << " for attribute " << attr << std::endl;
     #endif
 
     foundAttr->second->deadline = deadline;
@@ -619,7 +616,7 @@ void resp::ConcurrencyManager::setSchedPrio(int attr, int priority){
     }
 
     #ifndef NDEBUG
-    std::cerr << "Setting priority " << priority << " for attribute " << attr << std::endl;
+    std::cerr << sc_time_stamp() << ": Setting priority " << priority << " for attribute " << attr << std::endl;
     #endif
 
     foundAttr->second->priority = priority;
@@ -640,7 +637,7 @@ void resp::ConcurrencyManager::setSchedPolicy(int attr, int policy){
     }
 
     #ifndef NDEBUG
-    std::cerr << "Setting scheduling policy " << policy << " for attribute " << attr << std::endl;
+    std::cerr << sc_time_stamp() << ": Setting scheduling policy " << policy << " for attribute " << attr << std::endl;
     #endif
 
     foundAttr->second->schedPolicy = policy;
@@ -917,7 +914,7 @@ int resp::ConcurrencyManager::createMutex(){
     }
     this->existingMutex[newMutId] = new MutexEmu();
     #ifndef NDEBUG
-    std::cerr << "Creating mutex " << newMutId << std::endl;
+    std::cerr << sc_time_stamp() << ": Creating mutex " << newMutId << std::endl;
     #endif
 
     return newMutId;
@@ -954,7 +951,7 @@ bool resp::ConcurrencyManager::lockMutex(int mutex, unsigned int procId, bool no
         #ifndef NDEBUG
         if(existingMutex[mutex]->recursiveIndex != 0)
             THROW_EXCEPTION("Mutex " << mutex << " is free, but it has recursive index " << existingMutex[mutex]->recursiveIndex);
-        std::cerr << "Thread " << curProc->runThread->id << " locking free mutex " << mutex << std::endl;
+        std::cerr << sc_time_stamp() << ": Thread " << curProc->runThread->id << " locking free mutex " << mutex << std::endl;
         #endif
         this->schedLock.unlock();
         return true;
@@ -969,7 +966,7 @@ bool resp::ConcurrencyManager::lockMutex(int mutex, unsigned int procId, bool no
     #ifndef NDEBUG
     if(existingMutex[mutex]->owner->status == ThreadEmu::DEAD)
         THROW_EXCEPTION("Thread " << existingMutex[mutex]->owner->id << " died while being the owner of mutex " << mutex);
-     std::cerr << "Thread " << curProc->runThread->id << " waiting on mutex " << mutex << std::endl;
+     std::cerr << sc_time_stamp() << ": Thread " << curProc->runThread->id << " waiting on mutex " << mutex << std::endl;
      #endif
     //Finally here I have to deschedule the current thread since the mutex is busy
     int th = curProc->deSchedule(this->nop_loop_address);
@@ -1019,7 +1016,7 @@ int resp::ConcurrencyManager::unLockMutex(int mutex, unsigned int procId){
     //Now I check to see if I'm in a recursive situation
     if(existingMutex[mutex]->recursiveIndex > 0){
         #ifndef NDEBUG
-        std::cerr << "Exiting recursive mutex, current index " << existingMutex[mutex]->recursiveIndex << std::endl;
+        std::cerr << sc_time_stamp() << ": Exiting recursive mutex, current index " << existingMutex[mutex]->recursiveIndex << std::endl;
         #endif
         existingMutex[mutex]->recursiveIndex--;
         this->schedLock.unlock();
@@ -1034,7 +1031,7 @@ int resp::ConcurrencyManager::unLockMutex(int mutex, unsigned int procId){
         readyQueue->push_back(toAwakeTh);
         existingMutex[mutex]->owner = toAwakeTh;
         #ifndef NDEBUG
-        std::cerr << "Thread " << curProc->runThread->id << " giving mutex " << mutex << " to thread " << toAwakeTh->id << std::endl;
+        std::cerr << sc_time_stamp() << ": Thread " << curProc->runThread->id << " giving mutex " << mutex << " to thread " << toAwakeTh->id << std::endl;
         #endif
         attemptScheduling(procId);
 
@@ -1042,7 +1039,7 @@ int resp::ConcurrencyManager::unLockMutex(int mutex, unsigned int procId){
         return toAwakeTh->id;
     } else {
         #ifndef NDEBUG
-        std::cerr << "Thread " << curProc->runThread->id << " releasing mutex " << mutex << std::endl;
+        std::cerr << sc_time_stamp() << ": Thread " << curProc->runThread->id << " releasing mutex " << mutex << std::endl;
         #endif
         //Finally I can clear the mutex status
         existingMutex[mutex]->status = MutexEmu::FREE;
@@ -1078,7 +1075,7 @@ int resp::ConcurrencyManager::createSem(unsigned int procId, int initialValue){
     existingSem[newSemId] = new SemaphoreEmu(initialValue);
     existingSem[newSemId]->owner = managedProc[procId]->runThread;
     #ifndef NDEBUG
-    std::cerr << "Creating semaphore " << newSemId << " Thread " << managedProc[procId]->runThread->id << std::endl;
+    std::cerr << sc_time_stamp() << ": Creating semaphore " << newSemId << " Thread " << managedProc[procId]->runThread->id << std::endl;
     #endif
     return newSemId;
 }
@@ -1089,7 +1086,7 @@ void resp::ConcurrencyManager::destroySem(unsigned int procId, int sem){
     #ifndef NDEBUG
     if(existingSem[sem]->waitingTh.size() > 0)
         THROW_EXCEPTION("Cannot destroy semaphore " << sem << " there are waiting threads");
-    std::cerr << "Destroying semaphore " << sem << " Thread " << managedProc[procId]->runThread->id << std::endl;
+    std::cerr << sc_time_stamp() << ": Destroying semaphore " << sem << " Thread " << managedProc[procId]->runThread->id << std::endl;
     #endif
     delete existingSem[sem];
     existingSem.erase(sem);
@@ -1115,7 +1112,7 @@ void resp::ConcurrencyManager::postSem(int sem, unsigned int procId){
         toAwakeTh->status = ThreadEmu::READY;
         readyQueue->push_back(toAwakeTh);
         #ifndef NDEBUG
-        std::cerr << "Thread " << managedProc[procId]->runThread->id << " giving semaphore " << sem << " to thread " << toAwakeTh->id << std::endl;
+        std::cerr << sc_time_stamp() << ": Thread " << managedProc[procId]->runThread->id << " giving semaphore " << sem << " to thread " << toAwakeTh->id << std::endl;
         #endif
         existingSem[sem]->owner = toAwakeTh;
         attemptScheduling(procId);
@@ -1125,7 +1122,7 @@ void resp::ConcurrencyManager::postSem(int sem, unsigned int procId){
         existingSem[sem]->value++;
     }
     #ifndef NDEBUG
-    std::cerr << "Semaphore " << sem << " now owned by thread " << existingSem[sem]->owner->id << std::endl;
+    std::cerr << sc_time_stamp() << ": Semaphore " << sem << " now owned by thread " << existingSem[sem]->owner->id << std::endl;
     #endif    
 
     this->schedLock.unlock();
@@ -1151,7 +1148,7 @@ void resp::ConcurrencyManager::waitSem(int sem, unsigned int procId){
         int th = curProc->deSchedule(nop_loop_address);
         existingSem[sem]->waitingTh.push_back(existingThreads[th]);
         #ifndef NDEBUG
-        std::cerr << "DeScheduling thread " << th << " because semaphore " << sem << " (owner=" << existingSem[sem]->owner->id << ") has value " << existingSem[sem]->value << std::endl;
+        std::cerr << sc_time_stamp() << ": DeScheduling thread " << th << " because semaphore " << sem << " (owner=" << existingSem[sem]->owner->id << ") has value " << existingSem[sem]->value << std::endl;
         #endif
         //Now I get the first ready thread and I schedule it on the processor
         ThreadEmu * readTh = findReadyThread();
@@ -1206,14 +1203,14 @@ void resp::ConcurrencyManager::lockConditionMutex(ThreadEmu *thread, MutexEmu *m
         mutex->status = MutexEmu::LOCKED;
         mutex->owner = thread;
         #ifndef NDEBUG
-        std::cerr << "Thread " << mutex->owner->id << std::endl;
+        std::cerr << sc_time_stamp() << ": Thread " << mutex->owner->id << std::endl;
         #endif
         thread->status = ThreadEmu::READY;
         readyQueue->push_back(thread);
     }    
     else{
         #ifndef NDEBUG
-        std::cerr << "Thread " << thread->id << std::endl;
+        std::cerr << sc_time_stamp() << ": Thread " << thread->id << std::endl;
         #endif
         //Mutex already locked
         mutex->waitingTh.push_back(thread);
@@ -1228,13 +1225,13 @@ void resp::ConcurrencyManager::signalCond(int cond, bool broadcast, unsigned int
     //is not awaken, but simply moved in the queue of the
     //ccoresponding mutex
     #ifndef NDEBUG
-    std::cerr << "waiting for lock to Signal condition variable " << cond << std::endl;
+    std::cerr << sc_time_stamp() << ": waiting for lock to Signal condition variable " << cond << std::endl;
     #endif
 
     this->schedLock.lock();
 
     #ifndef NDEBUG
-    std::cerr << "Signaling condition variable " << cond << std::endl;
+    std::cerr << sc_time_stamp() << ": Signaling condition variable " << cond << std::endl;
     #endif
 
     if(existingCond.find(cond) == existingCond.end()){
@@ -1289,7 +1286,7 @@ void resp::ConcurrencyManager::signalCond(int cond, bool broadcast, unsigned int
 
             #ifndef NDEBUG
             Processor<unsigned int> *curProc = managedProc[procId];
-            std::cerr << "Thread " << curProc->runThread->id << " awaking thread " << toAwakeTh->id << std::endl;
+            std::cerr << sc_time_stamp() << ": Thread " << curProc->runThread->id << " awaking thread " << toAwakeTh->id << std::endl;
             #endif
         }
     }
@@ -1320,7 +1317,7 @@ int resp::ConcurrencyManager::waitCond(int cond, int mutex, double time, unsigne
     if(existingCond[cond]->mutex == -1)
         existingCond[cond]->mutex = mutex;
     #ifndef NDEBUG
-    std::cerr << "Issn condition variable " << cond << " is going to unlock mutex " << existingCond[cond]->mutex << std::endl;
+    std::cerr << sc_time_stamp() << ": Issn condition variable " << cond << " is going to unlock mutex " << existingCond[cond]->mutex << std::endl;
     #endif
 
     this->schedLock.unlock();    
@@ -1332,7 +1329,7 @@ int resp::ConcurrencyManager::waitCond(int cond, int mutex, double time, unsigne
 //    if(time <= 0 || sc_time_stamp().to_double() >= time*1000)
     existingCond[cond]->waitingTh.push_back(existingThreads[th]);
     #ifndef NDEBUG
-    std::cerr << "DeScheduling thread " << th << " because waiting on condition variable " << cond << std::endl;
+    std::cerr << sc_time_stamp() << ": DeScheduling thread " << th << " because waiting on condition variable " << cond << std::endl;
     #endif
     //Now I get the first ready thread and I schedule it on the processor
     ThreadEmu * readTh = findReadyThread();
