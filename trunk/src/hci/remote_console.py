@@ -41,7 +41,7 @@
 
 """Remote console"""
 
-import os, sys, code
+import os, sys, code, atexit
 from optparse import OptionParser
 curPath = os.path.abspath(os.path.join(os.path.dirname(sys.modules['__main__'].__file__),'..','..'))
 sys.path.append(os.path.abspath(os.path.join(curPath, 'src')))
@@ -54,20 +54,19 @@ from hci import console
 from console import Console
 
 class RemoteConsole(Console):
-    """
-        Console class for the ReSP interactive shell
+    """Console class for the ReSP interactive shell
     """
 
     def __init__(self, resp_port=2200, resp_server = 'localhost' , locals=None):
         #dummy stuff required by the Console...
         self.verbose = False
-        self.debug = False
         self.started = False
         self.error = False
 
         self.client = RespClient( resp_server, resp_port )
         self.init_history(os.path.expanduser("~/.resp-history"))
         code.InteractiveConsole.__init__(self,  locals = locals)
+        atexit.register(self.exit_handler)
         self.init_console()
 
     def runsource(self, source, filename="<input>", symbol="single"):
@@ -87,8 +86,8 @@ class RemoteConsole(Console):
         # Check for local commands!!!
         ####################################################################
         if source == 'quit' or source == 'exit()':
-          self.client.quit()
-          exit()
+            self.client.quit()
+            exit()
         try:
             print server.decode_compound(self.client.execute(source))
         except Exception, e:
@@ -101,12 +100,20 @@ class RemoteConsole(Console):
         self.client.shutdown()
         print '\n' + colors.colorMap['red'] + 'Simulation Paused' + colors.colorMap['none'] + '\n'
 
+    def exit_handler(self):
+        """Custom handler executed on the exit."""
+        #in case the connection has already been closed this statement will throw an exception. 
+        #actually it needs to be executed only on CTRL-D
+        try: 
+            self.client.quit()
+        except:
+            pass
 
     def show_commands(self):
         """It returns a string containing the list of the available commands with
         a short description on how they work: usefull to get started"""
 
-        ########## WRITE SOMETHING INTERESTING HERE
+        ########## TODO WRITE SOMETHING INTERESTING HERE
         pass
 
 
@@ -128,5 +135,7 @@ if __name__ == "__main__":
         #in case of bad parameter specification resp exits.
         #error message is just printed by the parser.
         sys.exit(0)
-
-    RemoteConsole(int(options.port),options.server).interact(hci.console.banner)
+    try:
+        RemoteConsole(int(options.port),options.server).interact(hci.console.banner)
+    except Exception, e:
+        print "Remote console crashed: " + str(e)
