@@ -554,7 +554,7 @@ class RespKernel:
 
         # Reset OSEmulation
         cm_wrapper.ConcurrencyEmulatorBase.resetCEBase()
-        bfdwrapper.BFDWrapper.reset()
+        bfdwrapper.BFDWrapper.resetBFDWrapper()
         trapwrapper.OSEmulatorBase.reset()
         
         # Reset component manager
