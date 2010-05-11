@@ -121,7 +121,7 @@ BFDWrapper & BFDWrapper::getInstance(std::string fileName){
     }
 }
 
-void BFDWrapper::reset(){
+void BFDWrapper::resetBFDWrapper(){
     while (BFDWrapper::bfdInstances.size() > 0){
         BFDWrapper * tmp = (BFDWrapper::bfdInstances.begin())->second;
         BFDWrapper::bfdInstances.erase(BFDWrapper::bfdInstances.begin());

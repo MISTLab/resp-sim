@@ -106,7 +106,7 @@ class ConcurrencyEmulatorBase{
         static void setTLSdata(const std::vector<unsigned char> tlsData);
         
         ///Resets the concurrency emulator by deleting all the instantiated concurrency managers
-        static void resetCEBase();
+        static void resetCEBase(); //if it is called reset, the function is not included in the python wrapper. we don't know why
 };
 
 ///This class is in charge of performing initialization of all
