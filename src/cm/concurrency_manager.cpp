@@ -931,7 +931,6 @@ bool resp::ConcurrencyManager::lockMutex(int mutex, unsigned int procId, bool no
     Processor<unsigned int> *curProc = curProcIter->second;
 
     if(curProc->runThread == NULL) {
-       std::cerr << (unsigned int) curProc->runThread << std::endl;
        THROW_EXCEPTION("Mutex " << mutex << ": Current processor " << procId << " is not running any thread");
     }
     if(existingMutex.find(mutex) == existingMutex.end()){
