@@ -102,7 +102,7 @@ class variableWrapper(object, baseAttributeWrapper):
     value = property(__getValue, __setValue) #define a property
 
     
-class saboteurAccess(object, baseAttributeWrapper):
+class saboteurAccess(object, baseAttributeWrapper): #TODO: to be updated
     """The wrapper for saboteurs"""
     def __init__(self, component, attribute, maskFunction, index = 0):
         """Constructor. It takes the reference of the component and the name of 
@@ -141,15 +141,25 @@ class saboteurAccess(object, baseAttributeWrapper):
 ########################################################################################
     
 class locationDescriptor:
-    """The descriptor of an attribute a component. It is used for describing a possible
-    fault location. A location is a single variable or an array or an object whose state can be
-    represented with a single variable or an array. 
-    The descriptor builds also the wrapper for access in a standard way to the fault location"""
+    """The descriptor of an attribute of a component. It is used for describing a possible
+    fault location (both as descriptor of the component class and of the component instance. 
+    A location is a single variable or an array or an object whose state can be
+    represented with a single variable or an array. The descriptor builds also the wrapper for 
+    access in a standard way to the fault location"""
     def __init__(self, component, attribute, wrapperClass, lines=1, wordSize=32):
-        """Constructor. It takes as input the component, the name of the object
-        attribute, the number of lines (base storage cells) composing the location, the size of the line 
-        and the name of the wrapper for this type of attribute (built-in type variable, ArchC register, 
-        ArchC register bank, ...)"""
+        """Constructor. If it is the descriptor of a location of a component instance, it takes as input
+        1) the component name, 
+        2) the name of the object attribute, 
+        3) the name of the wrapper class (built-in type variable, Trap register, Trap register bank, ...),
+        4) the number of lines (base storage cells),
+        5) the word size. 
+        If it is  the descriptor of a component class, it takes in input 
+        1) the class of the component, 
+        2) the name of the object attribute,
+        3) the name of the wrapper class (built-in type variable, Trap register, Trap register bank, ...),
+        4) the number of lines that may be also the name of the function to be called to get the actual value, and 
+        5) the word size that may be also the name of the function to be called to get the actual value, and         
+        """
         self.__component = component
         self.__attribute = attribute
         self.__wrapperClass = wrapperClass
@@ -158,8 +168,8 @@ class locationDescriptor:
     def __repr__(self):
         """Returns the string representation of the location descriptor"""
         return 'LocationDescriptor: [component: ' + str(self.__component) + ', attribute: ' +  str(self.__attribute) + \
-            ', wrapper:' + str(self.__wrapperClass) + ', number of lines: ' + str(self.__lines) + \
-            ', word lenght: ' + str(self.__wordSize) + ']'
+            ', wrapper: ' + str(self.__wrapperClass) + ', number of lines: ' + str(self.__lines) + \
+            ', word size: ' + str(self.__wordSize) + ']'
     def getComponent(self):
         """Returns the component name"""
         return self.__component   
