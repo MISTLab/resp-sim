@@ -54,6 +54,7 @@ from attributeWrapper import *
 import scwrapper
 import types
 
+
 class ProbeConnectionNode:
     """Utility class used for storing information on the position of each instantiated probe"""
     def __init__(self, probe, source, sourcePort, target, targetPort):
@@ -62,6 +63,8 @@ class ProbeConnectionNode:
         self.sourcePort = sourcePort
         self.target = target
         self.targetPort = targetPort
+        
+
 
 class FaultInjectionComponentManager(ComponentManager):
     """This manager extends the standard component mananger and has to be used in place of the basic one in case
@@ -73,9 +76,11 @@ class FaultInjectionComponentManager(ComponentManager):
         ComponentManager.__init__(self, components) # init the standard component manager
         import ProbeLT32
         self.__probeClass = ProbeLT32.ProbeLT32
-        self.__probeID = 0
-        self.__locationsDescriptors = self.__loadComponentFaultLocationDescriptors() #load the decriptors of the fault location of each component.
-        self.__faultLocations = []
+        self.__probeID = 0 #id used for probes
+        self.__locationDescriptors = self.__loadComponentFaultLocationDescriptors() #load the decriptors of the fault location of each component.
+        self.__architectureFaultLocations = [] #fault locations for the current architecture
+        #probes connected to the current architecture
+        # the key is a tuple containing the names of the involved source and target ports. The value is a ProbleConnectionNode object
         self.__probes = {}
     
     def reset(self):
@@ -84,9 +89,9 @@ class FaultInjectionComponentManager(ComponentManager):
         import ProbeLT32
         self.__probeClass = ProbeLT32.ProbeLT32
         self.__probeID = 0
-        self.__locationsDescriptors = self.__loadComponentFaultLocationDescriptors() #load the decriptors of the fault location of each component.
-        self.__faultLocations = []        
-        self.__probes = {} # the key is a tuple containing the names of the involved source and target ports. The value is a ProbleConnectionNode object
+        self.__locationDescriptors = self.__loadComponentFaultLocationDescriptors()
+        self.__architectureFaultLocations = []        
+        self.__probes = {} 
         
     def __loadComponentFaultLocationDescriptors(self, filename = 'src/fi/faultlocations.txt'):
         """Loads from a text file the descriptors of the locations for each component class. This list is used
@@ -96,9 +101,8 @@ class FaultInjectionComponentManager(ComponentManager):
         except:
             raise exceptions.Exception('Error while loading ' + filename + ' file')
 
-        #descriptors are stored in a dictinary. each entry contains the descriptors for a single component class. 
-        #the value is a list of all locations each location is a dictionary which entries are the attribute name, 
-        #the wrapper class, the number of lines and the word size
+        #descriptors are stored in a dictionary. each entry contains the descriptors for a single component class. 
+        #the value is a list of all locations. each location is represented by a locationDescriptor object
         classLocations = {}
 
         #scan all lines contained into the file
@@ -124,11 +128,7 @@ class FaultInjectionComponentManager(ComponentManager):
         
             #store data of current location in a dictionary
             #they will be checked when they are used
-            currLocationsDescriptor = {}
-            currLocationsDescriptor["attribute"] = entry[1]
-            currLocationsDescriptor["wrapperClass"] = entry[2]
-            currLocationsDescriptor["lines"] = entry[3]
-            currLocationsDescriptor["wordSize"] = entry[4]
+            currLocationsDescriptor = locationDescriptor(component, entry[1], entry[2], entry[3], entry[4])
             
             #store the dictionary in the list of the current component
             if classLocations.has_key(component):
@@ -144,7 +144,7 @@ class FaultInjectionComponentManager(ComponentManager):
     def connectPorts(self, source, sourcePort, target, targetPort, enableProbe = True):
         """Connects two specified components on the specified ports. The references of the components and the ports to be connected
            are required. Moreover, if specified, a probe is introduced on the connection, i.e., the source component is connected to the target
-           port of the probe and the target component is connected to the initiator port of the sabouter"""
+           port of the probe and the target component is connected to the initiator port of the probe"""
         #check if ports are already connected
         key = (sourcePort.name(),targetPort.name())
         if self.__probes.has_key(key):
@@ -210,20 +210,22 @@ class FaultInjectionComponentManager(ComponentManager):
         """Returns the list of all probes introduced in the architecture"""
         l = []
         for i in self.__probes.items():
-            l.append(i[1].probe)
+            l.append(i[1].probe) # item 0 is the key, item 1 the value 
         return l
         
     def registerComponent(self, component, attributes=None): 
+        """Registers a component instantiated in the architecture in the fault location list. It is possible to specify the attribute
+        to register; if no attribute is specified, all the possible attribute are registered"""
         #check if component is a valid object
         if not(helper.isSystemCComponent(component) and ComponentManager.getInstantiatedComponents(self).count(component.name()) == 1):
             raise exception.Exception(str(component) + ' is not a valid SystemC component instantiated in the architecture')
                     
         #it is necessary to create a descriptor for each instance of the component
-        if self.__locationsDescriptors.has_key(component.__class__):            
+        if self.__locationDescriptors.has_key(component.__class__):            
             #check if specified attributes exist in the component class
             compAttributes = []
-            for currLocationsDescriptor in self.__locationsDescriptors[component.__class__]:
-                compAttributes.append(currLocationsDescriptor["attribute"])
+            for currLocationsDescriptor in self.__locationDescriptors[component.__class__]:
+                compAttributes.append(currLocationsDescriptor.getAttribute())
             if attributes == None:
                 attributes = compAttributes 
             else:
@@ -232,12 +234,12 @@ class FaultInjectionComponentManager(ComponentManager):
                         raise exceptions.Exception(str(currAttr) + ' is not a valid attribute for component ' + str(component))
             
             #generate location descriptors for the specified component
-            for currLocationsDescriptor in self.__locationsDescriptors[component.__class__]:
-                if attributes.count(currLocationsDescriptor["attribute"]):
-                    attribute = currLocationsDescriptor["attribute"]
-                    lines = currLocationsDescriptor["lines"]
-                    wordSize = currLocationsDescriptor["wordSize"]
-                    wrapperClass = currLocationsDescriptor["wrapperClass"]
+            for currLocationsDescriptor in self.__locationDescriptors[component.__class__]:
+                if attributes.count(currLocationsDescriptor.getAttribute()):
+                    attribute = currLocationsDescriptor.getAttribute()
+                    lines = currLocationsDescriptor.getLines()
+                    wordSize = currLocationsDescriptor.getWordSize()
+                    wrapperClass = currLocationsDescriptor.getWrapperClass()
                     
                     #get the number of lines. 
                     #it may be a number or also the name of a function to be called in order to load the value dinamically  
@@ -276,9 +278,9 @@ class FaultInjectionComponentManager(ComponentManager):
                             raise exceptions.Exception(str(lines) + ' attribute has not been found in component ' + str(component))
                             
                     #create the location descriptor
-                    ld = locationDescriptor(component, attribute, wrapperClass, lines, wordSize)
-                    self.__faultLocations.append(ld)
-
+                    ld = locationDescriptor(component.name(), attribute, wrapperClass, lines, wordSize)
+                    self.__architectureFaultLocations.append(ld)
+        
     def connectPortsByPathName(self, source, sourcePortName, target, targetPortName, sourcePortId = None, targetPortId = None, enableProbe = True):
         raise exceptions.Exception('connectPortsByPathName method is not supported in the fiComponentManager. Please use other connection methods')      
 
@@ -293,4 +295,10 @@ class FaultInjectionComponentManager(ComponentManager):
 
     def getConnectionSignal(self, sourceComp, targetComp, sourcePort, targetPort):
         raise exceptions.Exception('getConnectionSignal method is not supported in the fiComponentManager')      
-
+  
+    def getFaultInjector(self):
+        import faultInjector
+        import faultDistribution
+        time = faultDistribution.uniformTimeDistribution()
+        locations = faultDistribution.uniformLocationsDistribution(self.__architectureFaultLocations)
+        return faultInjector.faultInjector(locations, time)

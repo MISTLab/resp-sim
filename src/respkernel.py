@@ -594,33 +594,40 @@ class RespKernel:
         global manager
 
         if len(self.manager.getInstantiatedComponents()) > 0:
-            print 'An architecture is instantiated. A reset is required for enabling the fault injiection'
+            print 'An architecture is instantiated. A reset is required for enabling the fault injection'
 
         from fiCompManager import FaultInjectionComponentManager
-        if value:
-            if not isinstance(self.manager,FaultInjectionComponentManager):
-                #enable fault injection environment
-                self.manager = manager = FaultInjectionComponentManager(self.components)                
-                self.setup_scripting_commands()
-                
-                global getProbe, getProbes, getProbePosition, registerComponent
-                getProbe = manager.getProbe
-                getProbes = manager.getProbes
-                getProbePosition = manager.getProbePosition
-                registerComponent = manager.registerComponent
-                self.scripting_commands.append(getProbe)
-                self.scripting_commands.append(getProbes)
-                self.scripting_commands.append(getProbePosition)
-                self.scripting_commands.append(registerComponent)
-        else:
-            if isinstance(self.manager,FaultInjectionComponentManager):
-                #disable fault injection environment
-                self.manager = manager = ComponentManager(self.components)
-                self.setup_scripting_commands()
-                del globals()['getProbe']
-                del globals()['getProbes']
-                del globals()['getProbePosition']
-                del globals()['registerComponent']
+        try:
+            if value:
+                if not isinstance(self.manager,FaultInjectionComponentManager):
+                    #enable fault injection environment
+                    self.manager = manager = FaultInjectionComponentManager(self.components)                
+                    self.setup_scripting_commands()
+                    
+                    global getProbe, getProbes, getProbePosition, registerComponent
+                    getProbe = manager.getProbe
+                    getProbes = manager.getProbes
+                    getProbePosition = manager.getProbePosition
+                    registerComponent = manager.registerComponent
+                    self.scripting_commands.append(getProbe)
+                    self.scripting_commands.append(getProbes)
+                    self.scripting_commands.append(getProbePosition)
+                    self.scripting_commands.append(registerComponent)
+            else:
+                if isinstance(self.manager,FaultInjectionComponentManager):
+                    #disable fault injection environment
+                    self.manager = manager = ComponentManager(self.components)
+                    self.setup_scripting_commands()
+                    del globals()['getProbe']
+                    del globals()['getProbes']
+                    del globals()['getProbePosition']
+                    del globals()['registerComponent']
+        except Exception, e:
+            print '\nError while loading fault injection  --> ' + str(e) + '\n'
+            if self.verbose:
+                import traceback
+                traceback.print_exc()
+                print ''
 
 
 def get_namespace():
