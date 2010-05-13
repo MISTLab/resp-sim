@@ -54,7 +54,7 @@ After the configuration successfully ends, compilation can be started with the u
 === Cross-compiled Software ===
 
 In order to run pieces of software on the Instruction Set Simulators, it is required to compile them using some specific cross-compilers. These can be downloaded from the [SftpPage project SFTP server].
-Once the compilers are decompressed, the applications can be properly cross-compiled using the _{arch}-elf-gcc/g++_ tool in the bin directory of the desired architecture. For the proper compilation of the applications making calls to operating system routines, the _-specs=osemu.specs_ command line option has to be passed to the compiler.
+Once the compilers are decompressed, the applications can be properly cross-compiled using the _{{{[arch]}}}-elf-{{{[gcc/g++]}}}_ tool in the bin directory of the desired architecture. For the proper compilation of the applications making calls to operating system routines, the _-specs=osemu.specs_ command line option has to be passed to the compiler.
 ReSP also provides a full set of example and benchmarks programs: the compilation of these applications can be automatically performed using the waf tool inside the _trunk/software_ directory of the SVN repository. The configuration options which can be passed to the _./waf configure_ command are:
 
   # _--arm-compiler=/PATH_TO/cross-compilers/arm/_ specifies the location of the ARM cross-compiler
