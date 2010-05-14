@@ -18,16 +18,10 @@
  *
  *   This file is part of ReSP.
  *
- *   TRAP is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Lesser General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
  *   This program is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Lesser General Public License for more details.
- *
  *
  *   The following code is derived, directly or indirectly, from the SystemC
  *   source code Copyright (c) 1996-2004 by all Contributors.
@@ -80,6 +74,7 @@ private:
 	bool busy;
 	map<unsigned int, sc_event* > events;
 	queue<unsigned int> requests;
+	unsigned int numCaches;
 
 	// Maintains a mapping between each cache block (represented by its base address) and the current privilege assigned to it
 	map<sc_dt::uint64,privilegeType> blockPrivilege;
@@ -119,7 +114,7 @@ public:
 	multi_passthrough_target_socket<DirectoryLT, sizeof(BUSWIDTH)*8> targetSocket;
 	multi_passthrough_initiator_socket<DirectoryLT, sizeof(BUSWIDTH)*8> initSocket;
 
-	DirectoryLT (sc_module_name module_name, unsigned int numCaches): sc_module(module_name),
+	DirectoryLT (sc_module_name module_name, unsigned int numCaches): sc_module(module_name), numCaches(numCaches),
 			targetSocket((boost::lexical_cast<std::string>(module_name) + "_targSock").c_str()),
 			initSocket((boost::lexical_cast<std::string>(module_name) + "_initSock").c_str()) {
 		this->targetSocket.register_b_transport(this, &DirectoryLT::b_transport);
@@ -129,7 +124,11 @@ public:
 		}
 		end_module();
 	}
-	~DirectoryLT() {}
+	~DirectoryLT() {
+		for(int i = 0; i < numCaches; i++){
+			delete events[i];
+		}
+	}
 
 	void b_transport(int tag, tlm_generic_payload& trans, sc_time& delay) {
 

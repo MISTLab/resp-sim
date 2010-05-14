@@ -18,16 +18,10 @@
  *
  *   This file is part of ReSP.
  *
- *   TRAP is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Lesser General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
  *   This program is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Lesser General Public License for more details.
- *
  *
  *   The following code is derived, directly or indirectly, from the SystemC
  *   source code Copyright (c) 1996-2004 by all Contributors.
@@ -72,8 +66,6 @@
 #include <vector>
 #include <map>
 
-#include "reconfEmulator.hpp"
-
 #include "../payloadData.hpp"
 #include "cEAllocationTable.hpp"
 
@@ -89,12 +81,13 @@ using namespace std;
 using namespace trap;
 using namespace tlm;
 using namespace tlm_utils;
-using namespace reconfEmu;
 
 class configEngine: public sc_module {
 
 private:
-	sc_dt::uint64 bitstream_source_address, bitstream_dest_address;
+	sc_dt::uint64 bitstream_source_address;
+	map<unsigned int, sc_dt::uint64> bitstream_dest_address;
+	unsigned int lastBinding;
 	sc_time requestDelay, execDelay, configDelay, removeDelay;
 
 	// The centralized map of the configured functions
@@ -110,9 +103,6 @@ public:
 //	void printStatus() {cout << "Configuration Engine Status: " << status << endl;}
 //	void changeStatus(int nw) {status = nw;}
 
-	// This is the Emulator used to perform the calls to hardware methods
-	reconfEmulator<unsigned int> recEmu;
-
 	// This is the port communicating with the devices
 	multi_passthrough_initiator_socket< configEngine, 32 > initiatorSocket;
 
@@ -125,9 +115,13 @@ public:
 	 * configuration is required and there is no more space on the fabrics.
 	 / 
 	 */
-	configEngine(sc_module_name name, ABIIf<unsigned int> &processorInstance, sc_dt::uint64 bitstreamSource, sc_dt::uint64 bitstreamDest,
-		deletionAlgorithm delAlg = LRU);
+	configEngine(sc_module_name name, sc_dt::uint64 bitstreamSource, deletionAlgorithm delAlg = LRU);
 
+	/*
+	 * Binds an address to a new device. This function is incremental, it starts from device 1 and each time automatically
+	 * refers to a new eFPGA. It returns the ID number of the device bound to the given address
+	 */
+	unsigned int bindFPGA(sc_dt::uint64 dest_addr);
 
 	/* 
 	 * Configures a fabric with function 'funcName', which has the given 'latency' and occupies 'width' X 'height' logic cells;
@@ -172,9 +166,6 @@ public:
 	void setExecDelay(sc_time new_time);
 	void setConfigDelay(sc_time new_time);
 	void setRemoveDelay(sc_time new_time);
-
-	void registerPythonCall(string funName, reconfCB<unsigned int> &callBack);
-	void registerCppCall(string funName, sc_time latency = SC_ZERO_TIME, unsigned int w=1, unsigned int h=1);
 
 };
 

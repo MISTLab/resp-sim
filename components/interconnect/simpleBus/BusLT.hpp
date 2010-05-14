@@ -18,16 +18,10 @@
  *
  *   This file is part of ReSP.
  *
- *   TRAP is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Lesser General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
  *   This program is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Lesser General Public License for more details.
- *
  *
  *   The following code is derived, directly or indirectly, from the SystemC
  *   source code Copyright (c) 1996-2004 by all Contributors.
@@ -75,6 +69,7 @@
 //#include "controller.hpp"
 #include "utils.hpp"
 
+//#define DEBUGMODE
 //#define PROC_NUM_ADDR 0xF0000004
 
 using namespace std;
@@ -162,7 +157,9 @@ private:
 		// when it becomes free it goes on (and sets the bus to busy): at the end of its requests, it notifies the
 		// next element in queue.
 		if( this->busy ) {
-//			cerr << "bus" << ": Queuing request" << endl;
+			#ifdef DEBUGMODE
+			cerr << name() << ": Queuing request" << endl;
+			#endif
 			this->requests.push(tag);
 			wait(*(this->events[tag]));
 		}
@@ -175,7 +172,9 @@ private:
 		this->busy = false;
 		if( !requests.empty() ) {
 			unsigned int front = this->requests.front();
-//			cerr << "bus" << ": Waking up a queued request" << endl;
+			#ifdef DEBUGMODE
+			cerr << name() << ": Waking up a queued request" << endl;
+			#endif
 			this->requests.pop();
 			(this->events[front])->notify();
 			if (locking)
@@ -294,7 +293,9 @@ public:
 	void b_transport(int tag, tlm_generic_payload& trans, sc_time& delay) {
 
 		sc_dt::uint64 addr = trans.get_address();
-//		cerr << "Incoming address was " << addr << " from " << tag;
+		#ifdef DEBUGMODE
+		cerr << "Incoming address was " << addr << " from " << tag;
+		#endif
 		unsigned int portId = decode(addr,this->locking);
 		if ( portId >= initiatorSocket.size() ) {
 			trans.set_response_status(TLM_ADDRESS_ERROR_RESPONSE);
@@ -303,7 +304,9 @@ public:
 				<< addr << " Requesting Master: " << dec << tag << " Decoded device: " << portId;
 			THROW_EXCEPTION(__PRETTY_FUNCTION__ << stream.str());
 		}
-//		cerr << ": requested " << addr << " on device # " << portId << endl;
+		#ifdef DEBUGMODE
+		cerr << ": requested " << addr << " on device # " << portId << endl;
+		#endif
 		trans.set_address(addr);
 
 		this->lock(tag);
@@ -339,7 +342,9 @@ public:
 	unsigned int transport_dbg(int tag, tlm::tlm_generic_payload& trans) {
 
 		sc_dt::uint64 addr = trans.get_address();
-//		cerr << "DBG - Incoming address was " << addr << " from " << tag;
+		#ifdef DEBUGMODE
+		cerr << "DBG - Incoming address was " << addr << " from " << tag;
+		#endif
 /*		if(addr == PROC_NUM_ADDR){
 			//I want to read the number of processors present in the system
 			response.set_data(target_port.size());
@@ -354,7 +359,9 @@ public:
 				<< addr << " Requesting Master: " << dec << tag << " Decoded device: " << portId;
 			THROW_EXCEPTION(__PRETTY_FUNCTION__ << stream.str());
 		}
-//		cerr << ": requested " << addr << " on device # " << portId << endl;
+		#ifdef DEBUGMODE
+		cerr << ": requested " << addr << " on device # " << portId << endl;
+		#endif
 		trans.set_address(addr);
 
 		this->lock(tag);

@@ -98,17 +98,20 @@ for i in range(0, PROCESSOR_NUMBER):
 ##### MEMORY INSTANTIATION #####
 memorySize = 1024*1024*MEMORY_SIZE
 latencyMem = scwrapper.sc_time(MEM_LATENCY, scwrapper.SC_NS)
-mem = MemoryLT32.MemoryLT32( 'mem', memorySize, latencyMem)
+mem = MemoryLT32.MemoryLT32('mem', memorySize, latencyMem)
 
 ##### RECONFIGURABLE COMPONENTS INSTANTIATION #####
 bS = bS_wrapper.bitstreamSink32('bS')
-cE = cE_wrapper.configEngine('cE',processors[0].getInterface(),0x0,memorySize+1,cE_wrapper.RANDOM)
+cE = cE_wrapper.configEngine('cE',0x0,cE_wrapper.RANDOM)
 #cE.setRequestDelay(scwrapper.sc_time(100000, scwrapper.SC_NS))
 #cE.setExecDelay(scwrapper.sc_time(100000, scwrapper.SC_NS))
 #cE.setConfigDelay(scwrapper.sc_time(100000, scwrapper.SC_NS))
 #cE.setRemoveDelay(scwrapper.sc_time(100000, scwrapper.SC_NS))
-eF1 = eFPGA_wrapper.eFPGA('eF1',50,100,scwrapper.sc_time(0.025, scwrapper.SC_NS),2,5)
-eF2 = eFPGA_wrapper.eFPGA('eF2',60,200,scwrapper.sc_time(0.005, scwrapper.SC_NS),4,10)
+eF = []
+eF.append(eFPGA_wrapper.eFPGA('eF1',50,100,scwrapper.sc_time(0.025, scwrapper.SC_NS),2,5) )
+eF.append(eFPGA_wrapper.eFPGA('eF2',60,200,scwrapper.sc_time(0.005, scwrapper.SC_NS),4,10) )
+EFPGA_NUMBER = eF.__len__()
+
 
 ################################################
 ##### INTERCONNECTIONS #########################
@@ -134,31 +137,32 @@ connectPorts(bus, bus.initiatorSocket, bS, bS.targetSocket)
 # Add bitstream sink binding
 bus.addBinding("bS", memorySize+1, memorySize+1)
 
-connectPorts(cE, cE.initiatorSocket, eF1, eF1.targetSocket)
-connectPorts(cE, cE.initiatorSocket, eF2, eF2.targetSocket)
+for i in range(0, EFPGA_NUMBER):
+    cE.bindFPGA(memorySize+1)
+    connectPorts(cE, cE.initiatorSocket, eF[i], eF[i].targetSocket)
 
 ################################################
 ##### SYSTEM INIT ##############################
 ################################################
 
 # Declare Python callbacks
-class printValueCall(cE_wrapper.reconfCB32):
+class printValueCall(recEmu_wrapper.reconfCB32):
      def __init__(self, latency, w, h):
-	cE_wrapper.reconfCB32.__init__(self, latency, w , h)
+        recEmu_wrapper.reconfCB32.__init__(self, latency, w , h)
      def __call__(self, processorInstance):
         processorInstance.preCall();
         callArgs = processorInstance.readArgs()
         param1 = callArgs.__getitem__(0)
 
-#	addr = 0
-#	addr = cE.configure('printValue', self.latency, self.width, self.height, False)
-#	cE.execute(addr)
-#	print '(Python) printValue allocated at address ' + str(addr);
+#        addr = 0
+#        addr = cE.configure('printValue', self.latency, self.width, self.height, False)
+#        cE.execute(addr)
+#        print '(Python) printValue allocated at address ' + str(addr);
 
-	cE.confexec('printValue', self.latency, self.width, self.height, False)
+        cE.confexec('printValue', self.latency, self.width, self.height, False)
 
-	cE.printSystemStatus()
-#	cE.manualRemove('printValue')
+        cE.printSystemStatus()
+#        cE.manualRemove('printValue')
 
         print '(Python) Value: ' + str(param1)
 #        print 'Width: ' + str(self.width) + '\tHeight: ' + str(self.height) + '\tLatency: ' + str(self.latency.to_string())
@@ -166,7 +170,7 @@ class printValueCall(cE_wrapper.reconfCB32):
         processorInstance.setRetVal(param1 + 1);
         processorInstance.returnFromCall();
         processorInstance.postCall();
-	return True
+        return True
 
 ##### LOAD SOFTWARE #####
 
@@ -184,35 +188,39 @@ for i in range(0, PROCESSOR_NUMBER):
     processors[i].ENTRY_POINT = loader.getProgStart()
     processors[i].PROGRAM_LIMIT = loader.getProgDim() + loader.getDataStart()
     processors[i].PROGRAM_START = loader.getDataStart()
-    processors[i].resetOp();
+    processors[i].resetOp()
 
 # Now I initialize the OS emulator
 print "Setting up OS Emulation"
+tools = list()
 if OS_EMULATION:
     trapwrapper.OSEmulatorBase.set_program_args(ARGS)
     for i in range(0, PROCESSOR_NUMBER):
         curEmu = trapwrapper.OSEmulator32(processors[i].getInterface())
         curEmu.initSysCalls(SOFTWARE)
         processors[i].toolManager.addTool(curEmu)
+        tools.append(curEmu)
 
+pytCalls = list()
 # Now I initialize the reconfiguration emulator
-cE.recEmu.initExec(SOFTWARE)
 for i in range(0, PROCESSOR_NUMBER):
-    processors[i].toolManager.addTool(cE.recEmu)
+    recEmu = recEmu_wrapper.reconfEmulator32(processors[i].getInterface(),cE,SOFTWARE)
+    processors[i].toolManager.addTool(recEmu)
+    tools.append(recEmu)
 
-# Registration of the callbacks
-printValueInstance = printValueCall(scwrapper.sc_time(0.100, scwrapper.SC_MS),50,100)			# REMEMBER: PYTHON USES ONLY NS!!
-cE.registerPythonCall('printValue', printValueInstance);
-#cE.registerCppCall('printValue', scwrapper.sc_time(0.050, scwrapper.SC_NS),25,50)
-#cE.registerCppCall('printValue')
+    # Registration of the callbacks
+    printValueInstance = printValueCall(scwrapper.sc_time(0.100, scwrapper.SC_MS),50,100)			# REMEMBER: PYTHON USES ONLY NS!!
+    recEmu.registerPythonCall('printValue', printValueInstance);
+    pytCalls.append(printValueInstance)
 
-cE.registerCppCall('generate', scwrapper.sc_time(1, scwrapper.SC_NS),1,1)
-
-cE.registerCppCall('sum');
+#    recEmu.registerCppCall('printValue', scwrapper.sc_time(0.050, scwrapper.SC_NS),25,50)
+#    recEmu.registerCppCall('printValue')
+    recEmu.registerCppCall('generate', scwrapper.sc_time(1, scwrapper.SC_NS),1,1)
+    recEmu.registerCppCall('sum');
+    recEmu.printRegisteredFunctions()
 
 # Printing some useful statistics before the simulation begins
 bus.printBindings()
-cE.recEmu.printRegisteredFunctions()
 cE.printSystemStatus()
 
 # We can finally run the simulation

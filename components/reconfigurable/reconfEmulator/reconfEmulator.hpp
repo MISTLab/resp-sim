@@ -1,32 +1,40 @@
 /***************************************************************************\
  *
  *
- *            ___        ___           ___           ___
- *           /  /\      /  /\         /  /\         /  /\
- *          /  /:/     /  /::\       /  /::\       /  /::\
- *         /  /:/     /  /:/\:\     /  /:/\:\     /  /:/\:\
- *        /  /:/     /  /:/~/:/    /  /:/~/::\   /  /:/~/:/
- *       /  /::\    /__/:/ /:/___ /__/:/ /:/\:\ /__/:/ /:/
- *      /__/:/\:\   \  \:\/:::::/ \  \:\/:/__\/ \  \:\/:/
- *      \__\/  \:\   \  \::/~~~~   \  \::/       \  \::/
- *           \  \:\   \  \:\        \  \:\        \  \:\
- *            \  \ \   \  \:\        \  \:\        \  \:\
- *             \__\/    \__\/         \__\/         \__\/
+ *         ___           ___           ___           ___
+ *        /  /\         /  /\         /  /\         /  /\
+ *       /  /::\       /  /:/_       /  /:/_       /  /::\
+ *      /  /:/\:\     /  /:/ /\     /  /:/ /\     /  /:/\:\
+ *     /  /:/~/:/    /  /:/ /:/_   /  /:/ /::\   /  /:/~/:/
+ *    /__/:/ /:/___ /__/:/ /:/ /\ /__/:/ /:/\:\ /__/:/ /:/
+ *    \  \:\/:::::/ \  \:\/:/ /:/ \  \:\/:/~/:/ \  \:\/:/
+ *     \  \::/~~~~   \  \::/ /:/   \  \::/ /:/   \  \::/
+ *      \  \:\        \  \:\/:/     \__\/ /:/     \  \:\
+ *       \  \:\        \  \::/        /__/:/       \  \:\
+ *        \__\/         \__\/         \__\/         \__\/
  *
  *
  *
  *
- *   This file is part of TRAP.
- *
- *   TRAP is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Lesser General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
+ *   This file is part of ReSP.
  *
  *   This program is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Lesser General Public License for more details.
+ *
+ *   The following code is derived, directly or indirectly, from the SystemC
+ *   source code Copyright (c) 1996-2004 by all Contributors.
+ *   All Rights reserved.
+ *
+ *   The contents of this file are subject to the restrictions and limitations
+ *   set forth in the SystemC Open Source License Version 2.4 (the "License");
+ *   You may not use this file except in compliance with such restrictions and
+ *   limitations. You may obtain instructions on how to receive a copy of the
+ *   License at http://www.systemc.org/. Software distributed by Contributors
+ *   under the License is distributed on an "AS IS" basis, WITHOUT WARRANTY OF
+ *   ANY KIND, either express or implied. See the License for the specific
+ *   language governing rights and limitations under the License.
  *
  *   You should have received a copy of the GNU Lesser General Public License
  *   along with this program; if not, write to the
@@ -36,9 +44,10 @@
  *
  *
  *
- *   (c) Luca Fossati, fossati@elet.polimi.it
+ *   (c) Giovanni Beltrame, Luca Fossati
+ *       Giovanni.Beltrame@esa.int fossati@elet.polimi.it
  *
- *   Component modified by: Fabio Arlati arlati.fabio@gmail.com
+ *   Component developed by: Fabio Arlati arlati.fabio@gmail.com
  *
 \***************************************************************************/
 
@@ -77,13 +86,9 @@
 #include "ABIIf.hpp"
 #include "ToolsIf.hpp"
 #include "instructionBase.hpp"
+#include "configEngine.hpp"
 
-#ifndef EXTERNAL_BFD
-#include "bfdFrontend.hpp"
-#else
 #include "bfdWrapper.hpp"
-#define BFDFrontend BFDWrapper
-#endif
 
 using namespace std;
 using namespace trap;
@@ -100,7 +105,7 @@ public:
 	map<int, unsigned int> heapPointer;
 };
 
-template<class issueWidth> class reconfCB {
+template<typename issueWidth> class reconfCB {
 public:
 	sc_time latency;
 	unsigned int width, height;
@@ -110,19 +115,22 @@ public:
 	virtual bool operator()(ABIIf<issueWidth> &processorInstance) = 0;
 };
 
-template<class issueWidth> class reconfEmulator: public ToolsIf<issueWidth>, reconfEmulatorBase {
+template<typename issueWidth> class reconfEmulator: public ToolsIf<issueWidth>, reconfEmulatorBase {
 private:
+	string execName;
 	template_map<issueWidth, reconfCB<issueWidth>* > syscCallbacks;
 	typename template_map<issueWidth, reconfCB<issueWidth>* >::const_iterator syscCallbacksEnd;
 	ABIIf<issueWidth> &processorInstance;
+	configEngine* cE;
 
 public:
-	reconfEmulator(ABIIf<issueWidth> &processorInstance) : processorInstance(processorInstance){
+	reconfEmulator(ABIIf<issueWidth> &processorInstance, configEngine &cEObj, string exec) : processorInstance(processorInstance), execName(exec) {
 		this->syscCallbacksEnd = this->syscCallbacks.end();
+		cE = &cEObj;
 	}
 
 	bool register_call(string funName, reconfCB<issueWidth> &callBack){
-		BFDFrontend &bfdFE = BFDFrontend::getInstance();
+		BFDWrapper &bfdFE = BFDWrapper::getInstance(this->execName);
 		bool valid = false;
 		unsigned int symAddr = bfdFE.getSymAddr(funName, valid);
 		if(!valid){
@@ -149,7 +157,7 @@ public:
 	}
 
 	set<string> getRegisteredFunctions(){
-		BFDFrontend &bfdFE = BFDFrontend::getInstance();
+		BFDWrapper &bfdFE = BFDWrapper::getInstance(this->execName);
 		set<string> registeredFunctions;
 		typename template_map<issueWidth, reconfCB<issueWidth>* >::iterator emuIter, emuEnd;
 		for(emuIter = this->syscCallbacks.begin(), emuEnd = this->syscCallbacks.end(); emuIter != emuEnd; emuIter++){
@@ -162,12 +170,6 @@ public:
 		set<string>::iterator tmp;
 		set<string> ss = this->getRegisteredFunctions();
 		for (tmp=ss.begin(); tmp!=ss.end(); tmp++) {cerr << *tmp << endl;}
-	}
-
-	void initExec(string execName, int group = 0) {
-//		if(reconfEmulatorBase::heapPointer.find(group) == reconfEmulatorBase::heapPointer.end())
-//			reconfEmulatorBase::heapPointer[group] = (unsigned int)this->processorInstance.getCodeLimit() + sizeof(unsigned int);
-		BFDFrontend::getInstance(execName);
 	}
 
 	///Method called at every instruction issue, it returns true in case the instruction
@@ -203,8 +205,13 @@ public:
 		reconfEmulatorBase::heapPointer.clear();
 	}
 
-	virtual ~reconfEmulator(){}
+	~reconfEmulator(){}
 
+	void registerPythonCall(string funName, reconfCB<issueWidth> &callBack){
+		this->register_call(funName, callBack);
+	}
+
+	void registerCppCall(string funName, sc_time latency = SC_ZERO_TIME, unsigned int w=1, unsigned int h=1);
 };
 
 };

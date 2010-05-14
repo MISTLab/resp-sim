@@ -18,16 +18,10 @@
  *
  *   This file is part of ReSP.
  *
- *   TRAP is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Lesser General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
  *   This program is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Lesser General Public License for more details.
- *
  *
  *   The following code is derived, directly or indirectly, from the SystemC
  *   source code Copyright (c) 1996-2004 by all Contributors.
@@ -57,7 +51,9 @@
  *
 \***************************************************************************/
 
-#include "configEngine.hpp"
+#include "reconfEmulator.hpp"
+
+namespace reconfEmu {
 
 /*
  * template<class issueWidth> class __EXAMPLE__Call : public reconfCB<issueWidth>{
@@ -80,7 +76,7 @@
  * };
  */
 
-template<class issueWidth> class printValueCall : public reconfCB<issueWidth>{
+template <typename issueWidth> class printValueCall : public reconfCB <issueWidth>{
 private:
 	configEngine* cE;
 public:
@@ -104,7 +100,7 @@ public:
 	}
 };
 
-template<class issueWidth> class sumCall : public reconfCB<issueWidth>{
+template<typename issueWidth> class sumCall : public reconfCB<issueWidth>{
 private:
 	configEngine* cE;
 public:
@@ -130,7 +126,7 @@ public:
 	}
 };
 
-template<class issueWidth> class generateCall : public reconfCB<issueWidth>{
+template<typename issueWidth> class generateCall : public reconfCB<issueWidth>{
 private:
 	configEngine* cE;
 public:
@@ -156,28 +152,29 @@ public:
 	}
 };
 
-void configEngine::registerCppCall(string funName, sc_time latency, unsigned int w, unsigned int h){
-/*
- *	if (funName=="__EXAMPLE__") {
+template<typename issueWidth> void reconfEmulator<issueWidth>::registerCppCall(string funName, sc_time latency, unsigned int w, unsigned int h) {
+
+/*	if (funName=="__EXAMPLE__") {
  *		__EXAMPLE__Call<unsigned int> *rcb = NULL;
  *		rcb = new __EXAMPLE__Call<unsigned int>(this,latency,w,h);
  *		if (!(this->recEmu.register_call(funName, *rcb))) delete rcb;
  *	}
  */
 	if (funName=="printValue") {
-		printValueCall<unsigned int> *rcb = NULL;
-		rcb = new printValueCall<unsigned int>(this,latency,w,h);
-		if (!(this->recEmu.register_call(funName, *rcb))) delete rcb;
+		printValueCall<issueWidth> *rcb = NULL;
+		rcb = new printValueCall<issueWidth>(cE,latency,w,h);
+		if (!(this->register_call(funName, *rcb))) delete rcb;
 	}
 	if (funName=="sum") {
-		sumCall<unsigned int> *rcb = NULL;
-		rcb = new sumCall<unsigned int>(this,latency,w,h);
-		if (!(this->recEmu.register_call(funName, *rcb))) delete rcb;
+		sumCall<issueWidth> *rcb = NULL;
+		rcb = new sumCall<issueWidth>(cE,latency,w,h);
+		if (!(this->register_call(funName, *rcb))) delete rcb;
 	}
 	if (funName=="generate") {
-		generateCall<unsigned int> *rcb = NULL;
-		rcb = new generateCall<unsigned int>(this,latency,w,h);
-		if (!(this->recEmu.register_call(funName, *rcb))) delete rcb;
+		generateCall<issueWidth> *rcb = NULL;
+		rcb = new generateCall<issueWidth>(cE,latency,w,h);
+		if (!(this->register_call(funName, *rcb))) delete rcb;
 	}
 }
 
+};

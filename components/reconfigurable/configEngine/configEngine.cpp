@@ -18,16 +18,10 @@
  *
  *   This file is part of ReSP.
  *
- *   TRAP is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Lesser General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
  *   This program is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Lesser General Public License for more details.
- *
  *
  *   The following code is derived, directly or indirectly, from the SystemC
  *   source code Copyright (c) 1996-2004 by all Contributors.
@@ -59,21 +53,31 @@
 
 #include "configEngine.hpp"
 
-configEngine::configEngine(sc_module_name name, ABIIf<unsigned int> &processorInstance, sc_dt::uint64 bitstreamSource, sc_dt::uint64 bitstreamDest, deletionAlgorithm delAlg):
+configEngine::configEngine(sc_module_name name, sc_dt::uint64 bitstreamSource, deletionAlgorithm delAlg):
 				initiatorSocket((boost::lexical_cast<std::string>(name) + "_initSock").c_str()),
 				busSocket((boost::lexical_cast<std::string>(name) + "_busSock").c_str()),
-				bitstream_source_address(bitstreamSource), bitstream_dest_address(bitstreamDest),
-				sc_module(name), tab(delAlg), recEmu(processorInstance) {
+				bitstream_source_address(bitstreamSource), sc_module(name), tab(delAlg) {
 	requestDelay = SC_ZERO_TIME;
 	execDelay = SC_ZERO_TIME;
 	configDelay = SC_ZERO_TIME;
 	removeDelay = SC_ZERO_TIME;
 	busy=false;
+	lastBinding=0;
 
 	end_module();
 
 	//status=0;
-	//cerr << "Configuration Engine created with name " << name << endl;
+	#ifdef DEBUGMODE
+	cerr << "Configuration Engine created with name " << name << endl;
+	#endif
+}
+
+unsigned int configEngine::bindFPGA(sc_dt::uint64 dest_addr) {
+	bitstream_dest_address[++lastBinding] = dest_addr;
+	#ifdef DEBUGMODE
+	cerr << "Bound eFPGA #" << lastBinding << " to destination address " << dest_addr << endl;
+	#endif
+	return lastBinding;
 }
 
 unsigned int configEngine::configure(string funcName, sc_time latency, unsigned int width, unsigned int height, bool reUse) {
@@ -91,7 +95,9 @@ unsigned int configEngine::configure(string funcName, sc_time latency, unsigned 
 	// If reUse is activated and the function is already mapped, the old address is returned
 	address=tab.getAddress(funcName);
 	if (reUse && address!=0) {
-		//cerr << "Reusing previous function " << address << endl;
+		#ifdef DEBUGMODE
+		cerr << "Reusing previous function " << address << endl;
+		#endif
 		return address;
 	}
 
@@ -115,8 +121,9 @@ unsigned int configEngine::configure(string funcName, sc_time latency, unsigned 
 	message.set_address(1);
 	message.set_response_status(TLM_INCOMPLETE_RESPONSE);
 	for (i = 0; i < initiatorSocket.size(); i++) {
+		delay = SC_ZERO_TIME;
 		this->initiatorSocket[i]->b_transport(message,delay);
-		if (message.get_response_status() != TLM_OK_RESPONSE) cerr << "Search: Response error!" << endl;
+		if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: TLM response not valid during search among devices!" << endl);
 		else {
 			responseValue = messageData.answer;
 			if (hasMin==-1 || (responseValue < min) ) {min=responseValue; hasMin=i;}
@@ -128,12 +135,13 @@ unsigned int configEngine::configure(string funcName, sc_time latency, unsigned 
 		cEAllocationTable tmpTable = tab;
 		whatDelete = tab.remove(&whereDelete);
 		if (whatDelete == 0) {
-			cerr << "Error signaled while removing from the central table: ";
-			cerr << "probably it is empty and the function you're trying to map is too big!" << endl;
-			THROW_EXCEPTION("ERROR: no more modules can be removed; function is too big for this device" << endl);
-			return 0;
+			ostringstream stream;
+			stream << " - ERROR: while removing from the central allocation table; probably it is already empty and the function you're trying to map is too big!" << endl;
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << stream.str());
 		}
-		//cerr << "Not enough space, removing at address " << whatDelete << "..." << endl;
+		#ifdef DEBUGMODE
+		cerr << "Not enough space, removing at address " << whatDelete << "..." << endl;
+		#endif
 
 		// Sends the removing command to device whereDelete-1
 		messageData.address = whatDelete;
@@ -144,12 +152,12 @@ unsigned int configEngine::configure(string funcName, sc_time latency, unsigned 
 		message.set_write();
 		message.set_address(1);
 		message.set_response_status(TLM_INCOMPLETE_RESPONSE);
+		delay = SC_ZERO_TIME;
 		this->initiatorSocket[whereDelete-1]->b_transport(message,delay);
 		if (message.get_response_status() != TLM_OK_RESPONSE) {
 			// Something wrong happened on the fabric...
 			tab=tmpTable;
-			THROW_EXCEPTION("ERROR: while removing from the device table!" << endl);
-			return 0;
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: TLM response not valid while removing from the device table!" << endl);
 		}
 
 		// Everything OK, function removed, inserting a fix delay
@@ -167,8 +175,9 @@ unsigned int configEngine::configure(string funcName, sc_time latency, unsigned 
 		message.set_address(1);
 		message.set_response_status(TLM_INCOMPLETE_RESPONSE);
 		for (i = 0; i < initiatorSocket.size(); i++) {
+			delay = SC_ZERO_TIME;
 			this->initiatorSocket[i]->b_transport(message,delay);
-			if (message.get_response_status() != TLM_OK_RESPONSE) cerr << "Search: Response error!" << endl;
+			if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: TLM response not valid during search among devices!" << endl);
 			else {
 				responseValue = messageData.answer;
 				if (hasMin==-1 || (responseValue < min) ) {min=responseValue; hasMin=i;}
@@ -176,14 +185,14 @@ unsigned int configEngine::configure(string funcName, sc_time latency, unsigned 
 		}
 	}
 
-	//cerr << "Best choice is # " << hasMin+1 << " with " << (int)min << endl;
+	#ifdef DEBUGMODE
+	cerr << "Best choice is # " << hasMin+1 << " with " << (int)min << endl;
+	#endif
 
 	// Inserts the new function data in the general table
 	address = tab.add(funcName,hasMin+1);
-	if (address == 0) {
-		THROW_EXCEPTION("ERROR: while inserting in the central table!" << endl);
-		return 0;
-	}
+	if (address == 0)
+		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: while inserting in the central table!" << endl);
 
 	// Inserts the new function data in the selected device table
 	messageData.address = address;
@@ -195,14 +204,12 @@ unsigned int configEngine::configure(string funcName, sc_time latency, unsigned 
 	message.set_write();
 	message.set_address(0);
 	message.set_response_status(TLM_INCOMPLETE_RESPONSE);
+	delay = SC_ZERO_TIME;
 	this->initiatorSocket[hasMin]->b_transport(message,delay);
 	// Gets back the number of words of the bitstream, to be transferred from memory to device
-	if (message.get_response_status() != TLM_OK_RESPONSE) {
+	if (message.get_response_status() != TLM_OK_RESPONSE)
 		// Something wrong happened on the fabric...
-		THROW_EXCEPTION("ERROR: signaled while inserting in the device table!" << endl);
-		if (tab.remove(address,&whereDelete)==0) THROW_EXCEPTION("ERROR: This shouldn't be happening...didn't found just inserted function..." << endl);
-		return 0;
-	}
+		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: TLM response not valid while inserting in the device table!" << endl);
 	responseValue = messageData.answer;
 
 	// Function successfully configured, inserting a fix delay
@@ -216,25 +223,23 @@ unsigned int configEngine::configure(string funcName, sc_time latency, unsigned 
         message.set_data_length(bitstream_length);		// using the appropriate length!
 	message.set_data_ptr((unsigned char*)bitstream);
 	message.set_response_status(TLM_INCOMPLETE_RESPONSE);
-//	cout << "Got here 1" << endl;
-	this->busSocket->b_transport(message,delay);
-//	cout << "Got here 2" << endl;
-	wait(delay);
 	delay = SC_ZERO_TIME;
+	this->busSocket->b_transport(message,delay);
 
 	// 'WRITEs' the bitstream on the selected device
 	message.set_write();
-	message.set_address(bitstream_dest_address);
-//	cout << "Got here 3 " << sc_time_stamp().to_default_time_units() << endl;
+	map<unsigned int, sc_dt::uint64>::iterator dest_address = bitstream_dest_address.find(hasMin+1);
+	if (dest_address == bitstream_dest_address.end()) THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: device " << hasMin+1 << " is not bound to any address!" << endl);
+	message.set_address(dest_address->second);
+	delay = SC_ZERO_TIME;
 	this->busSocket->b_transport(message,delay);		// We send the 'write' message to the bitstream sink
-//	cout << "Got here 4" << endl;
-	wait(delay);
-//	cout << "Got here 5" << endl;
 
-	//cerr << tab.getName(address) << " configured at address " << address << " on device # " << tab.getDevice(address) << ";";
-	//cerr << " configuration required " << responseValue << " words." << endl;
-	//cerr << " --> it uses " << width << " X " << height << " cells and its execution will take " << latency << endl;
-	//cerr << " --> the reuse option is " << reUse << endl;
+	#ifdef DEBUGMODE
+	cerr << tab.getName(address) << " configured at address " << address << " on device # " << tab.getDevice(address) << ";";
+	cerr << " configuration required " << responseValue << " words." << endl;
+	cerr << " --> it uses " << width << " X " << height << " cells and its execution will take " << latency << endl;
+	cerr << " --> the reuse option is " << reUse << endl;
+	#endif
 
 	busy = false;
 	configFree.notify();
@@ -246,16 +251,16 @@ bool configEngine::execute(unsigned int funcAddr) {
 
 	string name = tab.getName(funcAddr);
 	unsigned int device = tab.getDevice(funcAddr);
-	if ( device == 0 || name.length()==0) {
-		THROW_EXCEPTION(funcAddr << " not in the Configuration Engine table" << endl);
-		return false;
-	}
+	if ( device == 0 || name.length()==0)
+		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: " << funcAddr << " not in the Configuration Engine table" << endl);
 
-	//cerr << "Launching " << name << " on device " << device << endl;
+	#ifdef DEBUGMODE
+	cerr << "Launching " << name << " on device " << device << endl;
+	#endif
 	// Inserting a fix delay in the simulated communication Processing Element -> eFPGA
 	wait(execDelay);
 
-	sc_time delay = sc_time(18,SC_PS);
+	sc_time delay = SC_ZERO_TIME;
 	tlm_generic_payload message;
 	payloadData messageData;
 	unsigned char* payload_buffer = (unsigned char*) &messageData;
@@ -271,17 +276,11 @@ bool configEngine::execute(unsigned int funcAddr) {
 	message.set_response_status(TLM_INCOMPLETE_RESPONSE);
 	this->initiatorSocket[device-1]->b_transport(message,delay);
 
-	if ( message.get_response_status() != TLM_OK_RESPONSE ) {
-		THROW_EXCEPTION("ERROR: while executing from the device!" << endl);
-		return false;
-	}
-	else {
-		if (!tab.exec(funcAddr)) {
-			THROW_EXCEPTION("ERROR: This shouldn't be happening...the function existed at the beginning of the execution..." << endl);
-			return false;
-		}
-		return true;
-	}
+	if ( message.get_response_status() != TLM_OK_RESPONSE )
+		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: TLM response not valid while executing from the device!" << endl);
+	else if (!tab.exec(funcAddr))
+		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: This shouldn't be happening...the function existed at the beginning of the execution..." << endl);
+	else return true;
 }
 
 bool configEngine::confexec(string funcName, sc_time latency, unsigned int width, unsigned int height, bool reUse) {
@@ -301,10 +300,8 @@ bool configEngine::manualRemove(unsigned int funcAddr) {
 	cEAllocationTable tmpTable = tab;
 	unsigned int whatDelete, whereDelete;
 	whatDelete = tab.remove(funcAddr,&whereDelete);
-	if (whatDelete == 0) {
-		THROW_EXCEPTION("ERROR: while removing in the central table!" << endl);
-		return false;
-	}
+	if (whatDelete == 0)
+		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: while manual removing in the central table!" << endl);
 
 	sc_time delay = SC_ZERO_TIME;
 	tlm_generic_payload message;
@@ -324,8 +321,7 @@ bool configEngine::manualRemove(unsigned int funcAddr) {
 	if ( message.get_response_status() != TLM_OK_RESPONSE ) {
 		// Something wrong happened on the fabric...
 		tab=tmpTable;
-		THROW_EXCEPTION("ERROR: while removing from the device table!" << endl);
-		return false;
+		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: TLM response not valid while removing from the device table!" << endl);
 	}
 
 	// Everything OK, function removed, inserting a fix delay
@@ -347,10 +343,8 @@ bool configEngine::manualRemove(string funcName) {
 	cEAllocationTable tmpTable = tab;
 	unsigned int whatDelete, whereDelete;
 	whatDelete = tab.remove(funcName,&whereDelete);
-	if (whatDelete == 0) {
-		THROW_EXCEPTION("ERROR: while removing in the central table!" << endl);
-		return false;
-	}
+	if (whatDelete == 0)
+		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: while manual removing in the central table!" << endl);
 
 	sc_time delay = SC_ZERO_TIME;
 	tlm_generic_payload message;
@@ -370,8 +364,7 @@ bool configEngine::manualRemove(string funcName) {
 	if ( message.get_response_status() != TLM_OK_RESPONSE ) {
 		// Something wrong happened on the fabric...
 		tab=tmpTable;
-		THROW_EXCEPTION("ERROR: while removing from the device table!" << endl);
-		return false;
+		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: TLM response not valid while removing from the device table!" << endl);
 	}
 
 	// Everything OK, function removed, inserting a fix delay
@@ -422,9 +415,5 @@ void configEngine::setConfigDelay(sc_time new_time) {
 
 void configEngine::setRemoveDelay(sc_time new_time) {
 	removeDelay = new_time;
-}
-
-void configEngine::registerPythonCall(string funName, reconfCB<unsigned int> &callBack){
-	this->recEmu.register_call(funName, callBack);
 }
 

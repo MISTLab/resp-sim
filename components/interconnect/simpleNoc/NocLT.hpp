@@ -18,16 +18,10 @@
  *
  *   This file is part of ReSP.
  *
- *   TRAP is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Lesser General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
  *   This program is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Lesser General Public License for more details.
- *
  *
  *   The following code is derived, directly or indirectly, from the SystemC
  *   source code Copyright (c) 1996-2004 by all Contributors.
@@ -60,7 +54,7 @@
 #ifndef NOCLT_HPP
 #define NOCLT_HPP
 
-//needed to compile wtih boost graphs 1.42
+// Necessary to compile with BoostGraph 1.42
 #define BOOST_NO_0X_HDR_INITIALIZER_LIST
 
 #include "SwitchLT.hpp"
@@ -71,6 +65,7 @@
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 
 #include <vector>
+//#define DEBUGMODE
 
 using namespace boost;
 using namespace std;
@@ -119,14 +114,20 @@ private:
 		unsigned int nextTag = endSwitch+1;
 		unsigned int numEdges;
 		unsigned int extraSwitchCounter = 0;
-//		cerr << "Building a level of the tree between switch #" << startSwitch << " and switch #" << endSwitch << endl;
+		#ifdef DEBUGMODE
+		cerr << "Building a level of the tree between switch #" << startSwitch << " and switch #" << endSwitch << endl;
+		#endif
 		for (numEdges=startSwitch; numEdges <= endSwitch; numEdges+=2) {
-//			cerr << "Allocating switch #" << nextTag << endl;
+			#ifdef DEBUGMODE
+			cerr << "Allocating switch #" << nextTag << endl;
+			#endif
 			allocSwitch = new SwitchLT<BUSWIDTH>(nextTag,this->switchLatency,locking,maxSwitchQueue);
 			switches[nextTag] = allocSwitch;
 			extraSwitchCounter++;
 
-//			cerr << "Linking switch #" << numEdges << " to switch #" << nextTag << endl;
+			#ifdef DEBUGMODE
+			cerr << "Linking switch #" << numEdges << " to switch #" << nextTag << endl;
+			#endif
 			switches[numEdges]->initSocketBind(switches[nextTag]->targetSocket,nextTag);
 			switches[nextTag]->initSocketBind(switches[numEdges]->targetSocket,numEdges);
 			edges[*edgeCounter] = Edge_desc(numEdges,nextTag);
@@ -134,7 +135,9 @@ private:
 			(*edgeCounter)++;
 
 			if (numEdges+1 <= endSwitch) {
-//				cout << "Linking switch #" << numEdges+1 << " to switch #" << nextTag << endl;
+				#ifdef DEBUGMODE
+				cerr << "Linking switch #" << numEdges+1 << " to switch #" << nextTag << endl;
+				#endif
 				switches[numEdges+1]->initSocketBind(switches[nextTag]->targetSocket,nextTag);
 				switches[nextTag]->initSocketBind(switches[numEdges+1]->targetSocket,numEdges+1);
 				edges[*edgeCounter] = Edge_desc(numEdges+1,nextTag);
@@ -277,8 +280,10 @@ private:
 					// If the graph distance is 0, then we're processing the slave component itself
 					// In this case, the request should be forwarded to 0 (which is the outbound port)
 					switches[*vi]->addRoutingPath(outMap[slave].first, outMap[slave].second, 0);
-//				cerr << "Distance(" << *vi << ") = " << d[*vi] << ", ";
-//				cerr << "Parent(" << *vi << ") = " << p[*vi] << endl;
+				#ifdef DEBUGMODE
+				cerr << "Distance(" << *vi << ") = " << d[*vi] << ", ";
+				cerr << "Parent(" << *vi << ") = " << p[*vi] << endl;
+				#endif
 			}
 		}
 	}
@@ -328,7 +333,9 @@ public:
 	}
 
 	void b_t1(int tag, tlm_generic_payload& trans, sc_time& delay){
-//		cerr << "Request entering NOC" << endl;
+		#ifdef DEBUGMODE
+		cerr << "Request entering NOC" << endl;
+		#endif
 
 		unsigned int len = trans.get_data_length();
 		unsigned int words = len / sizeof(BUSWIDTH);
@@ -342,7 +349,9 @@ public:
 	void b_t2(int tag, tlm_generic_payload& trans, sc_time& delay){
 		initiatorSocket[tag]->b_transport(trans, delay);
 
-//		cerr << "Request exiting NOC" << endl;
+		#ifdef DEBUGMODE
+		cerr << "Request exiting NOC" << endl;
+		#endif
 	}
 
 	bool get_direct_mem_ptr(int tag, tlm_generic_payload& trans, tlm_dmi& dmi_data){
@@ -351,13 +360,17 @@ public:
 	}
 
 	unsigned int t_dbg1(int tag, tlm::tlm_generic_payload& trans) {
-//		cerr << "DBG Request entering NOC" << endl;
+		#ifdef DEBUGMODE
+		cerr << "DBG Request entering NOC" << endl;
+		#endif
 		return intInitSocket[tag]->transport_dbg(trans);
 	}
 
 	unsigned int t_dbg2(int tag, tlm::tlm_generic_payload& trans) {
 		unsigned int retVal = initiatorSocket[tag]->transport_dbg(trans);
-//		cerr << "DBG Request exiting NOC" << endl;
+		#ifdef DEBUGMODE
+		cerr << "DBG Request exiting NOC" << endl;
+		#endif
 		return retVal;
 	}
 
