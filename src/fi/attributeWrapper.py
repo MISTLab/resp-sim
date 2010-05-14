@@ -85,7 +85,7 @@ class variableWrapper(object, baseAttributeWrapper):
         """Constructor. It takes the reference of the component and the name of 
         the variable and the mask function used for corrupting the variable content.
         Finally, the index parameter is actualy ignored since it is a constant equal to 0"""
-        if faultModels.maskFunctions.count(maskFunction.__class__) == 0:
+        if maskFunctions.count(maskFunction.__class__) == 0:
             raise exceptions.Exception(str(maskFunction)+ " is not a valid mask function")
         self.__component = component
         self.__attribute = attribute
@@ -117,7 +117,7 @@ class saboteurAccess(object, baseAttributeWrapper): #TODO: to be updated
             import traceback
             traceback.print_exc()
             raise exceptions.Exception(str(index)+ " is not a valid index for saboteur wrapper")
-        if faultModels.maskFunctions.count(maskFunction.__class__) == 0:
+        if maskFunctions.count(maskFunction.__class__) == 0:
             raise exceptions.Exception(str(maskFunction)+ " is not a valid mask function")
         self.__component = component
         self.__attribute = attribute
@@ -125,7 +125,7 @@ class saboteurAccess(object, baseAttributeWrapper): #TODO: to be updated
         self.__index = saboteurIndex
     def applyMask(self, mask):
         """Corrupts the content with a mask passed as parameter"""
-        maskFunction = faultModels.getSaboteurMaskFunction(self.__maskFunction)
+        maskFunction = getSaboteurMaskFunction(self.__maskFunction)
         self.__component.setMask(maskFunction, mask, self.__index)
     def __getValue(self):
         """Returns the register value"""
