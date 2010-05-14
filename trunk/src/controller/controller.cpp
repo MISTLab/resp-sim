@@ -264,17 +264,22 @@ void sc_controller::stop_simulation(){
     if(this->error == true)
         std::cerr << std::endl << "ERROR: stop_simulation cannot be executed since an exception has been thrown..." << std::endl << std::endl;
     else{
-        sc_stop();
-        if(this->interactive){
-            // I simply have stop simulation calling sc_stop
-            if ( this->controllerMachine.state_cast< const Stopped_st * >() == 0){
-                this->controllerMachine.process_event( EvStop() );
-                // Wait for pause state to exit
-                Py_BEGIN_ALLOW_THREADS 
-                    boost::mutex::scoped_lock lk(this->controllerMachine.pause_mutex);
-                    this->controllerMachine.end_condition.wait(lk);
-                Py_END_ALLOW_THREADS
+        if(this->has_started()){
+            // I simply have to stop simulation calling sc_stop
+            sc_stop();        
+            if(this->interactive){
+                if ( this->controllerMachine.state_cast< const Stopped_st * >() == 0){
+                    this->controllerMachine.process_event( EvStop() );
+                    // Wait for pause state to exit
+                    Py_BEGIN_ALLOW_THREADS 
+                        boost::mutex::scoped_lock lk(this->controllerMachine.pause_mutex);
+                        this->controllerMachine.end_condition.wait(lk);
+                    Py_END_ALLOW_THREADS
+                }
             }
+        }
+        else{
+            std::cerr << "Simulation hasn't been started yet, it cannot be stopped" << std::endl;
         }
     }
 }

@@ -595,7 +595,8 @@ class RespKernel:
 
         if len(self.manager.getInstantiatedComponents()) > 0:
             print 'An architecture is instantiated. A reset is required for enabling the fault injection'
-
+            return
+        
         from fiCompManager import FaultInjectionComponentManager
         try:
             if value:

@@ -129,7 +129,6 @@ class RespRequestHandler(SocketServer.StreamRequestHandler):
         except SyntaxError:
             try:
                 exec arguments in resp_kernel.get_namespace()
-                print globals().keys()
                 self.wfile.write(encode_string('OK'))
             except Exception, e:
                 self.wfile.write(encode_string('EE' + str(e)))
@@ -461,5 +460,4 @@ def parse_message(message):
     for i in range(0, len(message)-1):
         if( i%2 ): continue
         buffer.append(chr(int(message[i]+message[i+1], 16)))
-    print "qui: " + str(''.join(buffer))
     return str(''.join(buffer))
