@@ -53,7 +53,7 @@
 
 # Prerequisite packages
 #   GCC 4.2
-sudo apt-get -y install g++-4.2 libsigc++-2.0-dev subversion gccxml binutils-dev
+sudo apt-get -y install libsigc++-2.0-dev subversion binutils-dev mpi-default-dev g++ g++-4.4 g++-4.1 gccxml libgfortran3 libibverbs-dev libibverbs1 libicu-dev libnuma1 libopenmpi-dev libopenmpi1.3 libstdc++6-4.4-dev openmpi-common python-dev python2.6-dev
 #   SVN
 #   gccxml
 #   binutils
