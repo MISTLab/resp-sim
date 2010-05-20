@@ -2,7 +2,9 @@
 
 import sys,os
 
-def build( bld ):
+def build(bld):
+    bld.add_subdirs('pthread nested')
+
     fastBenchs = [ 'test_reconfig', 'test_reconfig_scanf']
 
     files = os.listdir('test_code')
@@ -14,11 +16,21 @@ def build( bld ):
             if arch == 'default': continue
             if not obj:
                 obj = bld.new_task_gen('cc','program')
-                obj.env      = bld.env_of_name(arch).copy()
+                obj.env = bld.env_of_name(arch).copy()
                 obj.source = f
                 obj.env.append_unique('LINKFLAGS', '-lm')
                 obj.target = os.path.splitext(f)[0]
+#                obj.uselib_local = 'pthread_stub_'+arch
             else:
                 obj.clone(arch)
 
-    bld.add_subdirs('pthread nested')
+    for arch in bld.lst_variants:
+        if arch == 'default': continue
+
+        obj = bld.new_task_gen(features='cc cprogram')
+        obj.env = bld.env_of_name(arch).copy()
+        obj.source = """
+            test_reconfig_multi.c 
+        """
+        obj.target = 'test_reconfig_multi'
+        obj.uselib_local = 'pthread_stub_'+arch 

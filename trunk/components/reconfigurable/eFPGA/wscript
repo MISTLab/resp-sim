@@ -12,17 +12,18 @@ def build(bld):
         allocationFit.cpp
     '''
     obj.target = 'eFPGA'
-    obj.uselib='SYSTEMC_H TLM BOOST'
-    obj.uselib_local='systemc'
+    obj.uselib='SYSTEMC_H TLM BOOST TRAP'
+    obj.uselib_local='systemc binutils utils'
+    obj.includes = './bitstreamSink'
 
     obj = bld.new_task_gen('pypp')
     obj.source ='''
         eFPGA.hpp
     '''
     obj.target = 'eFPGA_wrapper'
-    obj.uselib = 'SYSTEMC_H TLM BOOST BOOST_PYTHON'
+    obj.uselib = 'SYSTEMC_H TLM BOOST BOOST_PYTHON TRAP'
     obj.uselib_local = 'systemc eFPGA'
-    obj.include = 'scwrapper tlmwrapper'
+    obj.include = 'scwrapper tlmwrapper trapwrapper'
     obj.start_decls = 'eFPGA'
     obj.custom_code = """
 mb.global_ns.class_('eFPGA').include()

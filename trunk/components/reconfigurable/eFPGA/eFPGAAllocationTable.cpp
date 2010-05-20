@@ -18,16 +18,10 @@
  *
  *   This file is part of ReSP.
  *
- *   TRAP is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Lesser General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
  *   This program is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Lesser General Public License for more details.
- *
  *
  *   The following code is derived, directly or indirectly, from the SystemC
  *   source code Copyright (c) 1996-2004 by all Contributors.
@@ -207,7 +201,7 @@ bool eFPGAAllocationTable::add(unsigned int key, sc_time latency, unsigned int w
 
 	freeSpace = merge(newFreeSpace);
 
-//	cout << name << ": added function " << key << " with parameter " << latTable[key] << endl;
+//	cerr << name << ": added function " << key << " with parameter " << latTable[key] << endl;
 	return true;
 }
 
@@ -238,7 +232,7 @@ bool eFPGAAllocationTable::execute(unsigned int key, sc_time* foundLatency) {
 		return false;
 	}
 //	cerr << name << ": function at address " << key << " executed!" << endl;
-	*foundLatency = exists->second;//sc_time(exists->second, SC_NS);
+	*foundLatency = exists->second;
 
 	return true;
 }

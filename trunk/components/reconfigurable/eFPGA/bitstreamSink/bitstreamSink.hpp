@@ -18,16 +18,10 @@
  *
  *   This file is part of ReSP.
  *
- *   TRAP is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Lesser General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
  *   This program is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Lesser General Public License for more details.
- *
  *
  *   The following code is derived, directly or indirectly, from the SystemC
  *   source code Copyright (c) 1996-2004 by all Contributors.
@@ -67,37 +61,38 @@
 
 #include <systemc.h>
 #include <tlm.h>
-#include <tlm_utils/multi_passthrough_target_socket.h>
+#include <tlm_utils/simple_target_socket.h>
 #include <boost/lexical_cast.hpp>
+#include <trap_utils.hpp>
 #include <string>
 
 #include <utils.hpp>
+#include "../../payloadData.hpp"
 
 using namespace std;
+using namespace trap;
 using namespace tlm;
 using namespace tlm_utils;
 
 template<typename BUSWIDTH> class bitstreamSink: public sc_module {
 private:
-	sc_event writeFree;
-	bool busy;
+	sc_time latency;
 
 public:
-	multi_passthrough_target_socket<bitstreamSink, sizeof(BUSWIDTH)*8> targetSocket;
+	simple_target_socket<bitstreamSink, sizeof(BUSWIDTH)*8> targetSocket;
 
-	bitstreamSink(sc_module_name module_name) : sc_module(module_name),
+	bitstreamSink(sc_module_name module_name, sc_time latency = SC_ZERO_TIME) : sc_module(module_name), latency(latency),
 			targetSocket((boost::lexical_cast<std::string>(module_name) + "_targSock").c_str()) {
 		this->targetSocket.register_b_transport(this, &bitstreamSink::b_transport);
 //		this->targetSocket.register_get_direct_mem_ptr(this, &bitstreamSink::get_direct_mem_ptr);
 //		this->targetSocket.register_transport_dbg(this, &bitstreamSink::transport_dbg);
 
-		this->busy = false;
 		end_module();
 	}
 
 	~bitstreamSink(){}
 
-	void b_transport(int tag, tlm_generic_payload& trans, sc_time& delay){
+	void b_transport(tlm_generic_payload& trans, sc_time& delay){
 		tlm_command cmd = trans.get_command();
 		sc_dt::uint64    adr = trans.get_address();
 		unsigned char*   ptr = trans.get_data_ptr();
@@ -108,22 +103,16 @@ public:
 		unsigned int block_size = len / sizeof(BUSWIDTH);
 		if (len%sizeof(BUSWIDTH) != 0) block_size++;
 
-		while( this->busy) {
-			wait( this->writeFree );
-		}
-		this->busy = true;
-
 		if (trans.is_write()){
-//			cerr << "Sink: Received " << block_size << " words!" << endl;
+			#ifdef DEBUGMODE
+			cerr << sc_time_stamp() << ": " << name() << " - Received " << block_size << " words; configuration latency is " << this->latency*block_size << endl;
+			#endif
+			wait(this->latency*block_size);
 			trans.set_response_status(TLM_OK_RESPONSE);
 		}
 		else {
-			cerr << "Sink: Unknown request type!" << endl;
-			trans.set_response_status(TLM_COMMAND_ERROR_RESPONSE);
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - " << name() << ": Unknown request type" << endl);
 		}
-
-		this->busy = false;
-		this->writeFree.notify();
 	}
 
 };

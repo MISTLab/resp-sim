@@ -86,7 +86,11 @@ public:
 		processorInstance.preCall();
 		std::vector< issueWidth > callArgs = processorInstance.readArgs();
 
-		(this->cE)->confexec("printValue", this->latency, this->width, this->height, false);
+		(this->cE)->executeForce("printValue", this->latency, this->width, this->height, false);
+//		unsigned int address = (this->cE)->configure("printValue", this->latency, this->width, this->height, true);
+//		(this->cE)->manualRemove("printValue");
+//		(this->cE)->execute(address);
+
 		(this->cE)->printSystemStatus();
 
 		unsigned int param1 = callArgs[0];
@@ -110,7 +114,7 @@ public:
 		processorInstance.preCall();
 		std::vector< issueWidth > callArgs = processorInstance.readArgs();
 
-		(this->cE)->confexec("sum", this->latency, this->width, this->height, false);
+		(this->cE)->executeForce("sum", this->latency, this->width, this->height, false);
 		(this->cE)->printSystemStatus();
 
 		cout << "(CppCall) Summing values..." << endl;
@@ -136,7 +140,7 @@ public:
 		processorInstance.preCall();
 		std::vector< issueWidth > callArgs = processorInstance.readArgs();
 
-		(this->cE)->confexec("generate", this->latency, this->width, this->height, false);
+		(this->cE)->executeForce("generate", this->latency, this->width, this->height, false);
 		(this->cE)->printSystemStatus();
 
 		cout << "(CppCall) Generating value..." << endl;

@@ -65,7 +65,6 @@
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 
 #include <vector>
-//#define DEBUGMODE
 
 using namespace boost;
 using namespace std;
@@ -94,6 +93,7 @@ private:
 	property_map<Graph_t, edge_weight_t>::type graphWeightMap;
 
 	// A map associating a set of addresses to a switch (which should be directly connected to a slave)
+	map<unsigned int, string > nameMap;
 	map<unsigned int, addressSet > outMap;
 
 	TopologyType topo;
@@ -374,7 +374,7 @@ public:
 		return retVal;
 	}
 
-	void addBinding(sc_dt::uint64 startAddress, sc_dt::uint64 endAddress) {
+	void addBinding(string name, sc_dt::uint64 startAddress, sc_dt::uint64 endAddress) {
 		if (startAddress > endAddress || (nextSlaveToBind-numMasters) > numSlaves) {cout << "Error!" << endl; return;}
 		this->outMap[this->nextSlaveToBind].first = startAddress;
 		this->outMap[this->nextSlaveToBind].second = endAddress;

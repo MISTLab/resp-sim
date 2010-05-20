@@ -18,16 +18,10 @@
  *
  *   This file is part of ReSP.
  *
- *   TRAP is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Lesser General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
  *   This program is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Lesser General Public License for more details.
- *
  *
  *   The following code is derived, directly or indirectly, from the SystemC
  *   source code Copyright (c) 1996-2004 by all Contributors.
@@ -67,6 +61,7 @@
 
 #include "../payloadData.hpp"
 #include "eFPGAAllocationTable.hpp"
+#include "bitstreamSink.hpp"
 
 #include <systemc.h>
 #include <tlm.h>
@@ -84,10 +79,6 @@ private:
 	float wordarea, cellarea;
 	sc_time latword;
 
-	//Component name
-	string name;
-
-
 public:
 
 	//The local allocation table
@@ -95,6 +86,9 @@ public:
 
 	//This is the port receiving the communication
 	simple_target_socket < eFPGA, 32 > targetSocket;
+
+	//This is the component where the incoming bitstreams should be directed
+	bitstreamSink<unsigned int> bS;
 
 	//Constructor
 	eFPGA(sc_module_name name, unsigned int w, unsigned int h, sc_time lw = SC_ZERO_TIME, float wa = 1, float ca = 1);

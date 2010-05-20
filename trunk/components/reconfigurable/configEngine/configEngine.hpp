@@ -65,6 +65,8 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <queue>
+#include <list>
 
 #include "../payloadData.hpp"
 #include "cEAllocationTable.hpp"
@@ -93,9 +95,27 @@ private:
 	// The centralized map of the configured functions
 	cEAllocationTable tab;
 
-	// Dealing with multiple configuration accesses
-	sc_event configFree;
-	bool busy;
+	// Dealing with multiple parallel configuration accesses
+	unsigned int curConfigEvent;
+	map<unsigned int,sc_event *> wakeConfigEvents;
+	queue<unsigned int> nextConfigWake;
+	bool configBusy;
+	void configLock();
+	void configUnlock();
+
+	// Dealing with multiple parallel module executions
+	unsigned int curExecEvent;
+	map<unsigned int,sc_event *> wakeExecEvents;
+	map<unsigned int, queue<unsigned int> > nextExecWake;
+	list<unsigned int> executing;
+	void execLock(unsigned int address);
+	void execUnlock(unsigned int address);
+
+	// Internal utility function for module configuration. No configuration locks are taken inside this routine
+	unsigned int config(string funcName, sc_time latency, unsigned int width, unsigned int height, bool reUse);
+
+	// Internal utility function for module execution. No execution locks are taken inside this routine
+	bool exec(unsigned int funcAddr);
 
 //	int status;
 
@@ -106,11 +126,15 @@ public:
 	// This is the port communicating with the devices
 	multi_passthrough_initiator_socket< configEngine, 32 > initiatorSocket;
 
-	// This is the port attached to the system main bus
-	simple_initiator_socket < configEngine, 32 > busSocket;
+	// This is the port attached to the system bitstream RAM (which can be attached to an interconnection such as a bus)
+	simple_initiator_socket < configEngine, 32 > ramSocket;
+
+	// This is the port attached to bitstream sinks of the devices (which can be attached to an interconnection such as a bus)
+	multi_passthrough_initiator_socket< configEngine, 32 > destSocket;
 
 	/*
 	 * Constructor:
+	 * - 'bitstreamSource' specifies the source address for the bitstreams.
 	 * - 'delAlg' specifies the type of deletion algorithm to be used if a
 	 * configuration is required and there is no more space on the fabrics.
 	 / 
@@ -119,7 +143,7 @@ public:
 
 	/*
 	 * Binds an address to a new device. This function is incremental, it starts from device 1 and each time automatically
-	 * refers to a new eFPGA. It returns the ID number of the device bound to the given address
+	 * refers to a new eFPGA. It returns the ID number of the device bound to the given address.
 	 */
 	unsigned int bindFPGA(sc_dt::uint64 dest_addr);
 
@@ -129,29 +153,43 @@ public:
 	 * Returns the address at which the function is mapped. If some error happens, reserved address 0 is returned.
 	 * If 'reUse' is activated, the address of a previously allocated function with the same name (if exists) is
 	 * returned and no new functions are configured.
+	 * This function is thread-safe, and can be accessed only by one thread at a time.
 	 */
 	unsigned int configure(string funcName, sc_time latency, unsigned int width, unsigned int height, bool reUse = true);
 
 	/*
-	 * Executes the function at the given 'address' on the fabric and waits for the appropriate latency.
-	 * Returns FALSE if the address is empty or some error happens. TRUE elsewhere.
+	 * Executes the function at the address 'funcAddr' on the fabric and waits for the appropriate latency. Returns FALSE if
+	 * the address is empty or some error happens. TRUE elsewhere.
+	 * This function is thread-safe, and the function at a given address can be executed only by one thread at a time.
 	 */
 	bool execute(unsigned int funcAddr);
 
-	/* 
-	 * Configures and executes function 'funcName', which has the given 'latency' and occupies 'width' X 'height' logic cells;
-	 * furthermore, latency and bus occupation required by the (eventual) configuration are managed by this method.
-	 * Returns FALSE if some error happens. TRUE elsewhere.
-	 * If 'reUse' is activated, a previously allocated function with the same name (if exists) is executed
-	 * and no new functions are configured.
+	/*
+	 * Executes the first free function with name 'funcName' on the fabric and waits for the appropriate latency. Returns FALSE
+	 * if the required function doesn't exists or some error happens. TRUE elsewhere.
+	 * This function is thread-safe, and every instance of the required function can be executed only by one thread at a time.
 	 */
-	bool confexec(string funcName, sc_time latency, unsigned int width, unsigned int height, bool reUse = true);
+	bool execute(string funcName);
 
 	/*
-	 * Removes the function at the address 'funcAddr' (with the given 'funcName') on the fabric.
-	 * Returns FALSE if the address (name) is empty or some error happens. TRUE elsewhere.
+	 * Configures and executes function 'funcName', which has the given 'latency' and occupies 'width' X 'height' logic cells;
+	 * furthermore, latency and bus occupation required by the (eventual) configuration are managed by this method.
+	 * If 'reUse' is activated, a previously allocated function with the same name (if exists) is executed and no new functions
+	 * are configured.
+	 * This function is thread-safe, and can be accessed only by one thread at a time. Furthermore, it is guaranteed that the
+	 * (potentially) configured function is executed at least one time before it is removed from the fabric.
+	 */
+	void executeForce(string funcName, sc_time latency, unsigned int width, unsigned int height, bool reUse = true);
+
+	/*
+	 * Removes the function at the address 'funcAddr' from the fabric. Returns FALSE if the address is empty or some error
+	 * happens. TRUE elsewhere. This function is thread-safe: the function is not removed until its execution is terminated.
 	 */
 	bool manualRemove(unsigned int funcAddr);
+	/*
+	 * Removes a function with name 'funcName' from the fabric. Returns FALSE if the name doesn't exists is empty or some error
+	 * happens. TRUE elsewhere. This function is thread-safe: a function is not removed until its execution is terminated.
+	 */
 	bool manualRemove(string funcName);
 
 	/*

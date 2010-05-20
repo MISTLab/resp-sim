@@ -42,7 +42,7 @@
 ##############################################################################
 
 ###### GENERAL PARAMETERS #####
-PROCESSOR_FREQUENCY = 100         # MHz
+PROCESSOR_FREQUENCY = 1000        # MHz
 PROCESSOR_NUMBER  = 1             #
 try:
     PROCESSOR_NAMESPACE
@@ -52,7 +52,8 @@ except:
 # Memory/bus
 MEMORY_SIZE       = 32              # MBytes
 MEM_LATENCY       = 10.0            # ns
-BUS_LATENCY       = 0.001            # ns
+BUS_LATENCY       = 10.0            # ns
+CONFIGURE_THROUGH_ITC = False
 
 # Software
 try:
@@ -70,8 +71,14 @@ OS_EMULATION = True     # True or False
 
 # Modified stats auto-printer
 def statsPrinter():
+    print '\x1b[34m\x1b[1mReal Elapsed Time (seconds):\x1b[0m'
+    print '\x1b[31m' + str(controller.print_real_time()) + '\x1b[0m'
     print '\x1b[34m\x1b[1mSimulated Elapsed Time (nano-seconds):\x1b[0m'
     print '\x1b[31m' + str(controller.get_simulated_time()) + '\x1b[0m'
+    print '\x1b[34m\x1b[1mBus Accesses:\x1b[0m'
+    print '\x1b[31m' + str(bus.numAccesses) + '\x1b[0m'
+    print '\x1b[34m\x1b[1mBus Words:\x1b[0m'
+    print '\x1b[31m' + str(bus.numWords) + '\x1b[0m'
 
 ################################################
 ##### AUTO VARIABLE SETUP ######################
@@ -101,24 +108,25 @@ latencyMem = scwrapper.sc_time(MEM_LATENCY, scwrapper.SC_NS)
 mem = MemoryLT32.MemoryLT32('mem', memorySize, latencyMem)
 
 ##### RECONFIGURABLE COMPONENTS INSTANTIATION #####
-bS = bS_wrapper.bitstreamSink32('bS')
-cE = cE_wrapper.configEngine('cE',0x0,cE_wrapper.RANDOM)
-#cE.setRequestDelay(scwrapper.sc_time(100000, scwrapper.SC_NS))
-#cE.setExecDelay(scwrapper.sc_time(100000, scwrapper.SC_NS))
-#cE.setConfigDelay(scwrapper.sc_time(100000, scwrapper.SC_NS))
-#cE.setRemoveDelay(scwrapper.sc_time(100000, scwrapper.SC_NS))
+cE = cE_wrapper.configEngine('cE',0x0,cE_wrapper.LRU)
+cE.setRequestDelay(scwrapper.sc_time(1, scwrapper.SC_NS))
+cE.setExecDelay(scwrapper.sc_time(1, scwrapper.SC_NS))
+cE.setConfigDelay(scwrapper.sc_time(1, scwrapper.SC_NS))
+cE.setRemoveDelay(scwrapper.sc_time(1, scwrapper.SC_NS))
 eF = []
 eF.append(eFPGA_wrapper.eFPGA('eF1',50,100,scwrapper.sc_time(0.025, scwrapper.SC_NS),2,5) )
 eF.append(eFPGA_wrapper.eFPGA('eF2',60,200,scwrapper.sc_time(0.005, scwrapper.SC_NS),4,10) )
 EFPGA_NUMBER = eF.__len__()
 
-
 ################################################
 ##### INTERCONNECTIONS #########################
 ################################################
 
+additionalMasters = 1
+if CONFIGURE_THROUGH_ITC:
+    additionalMasters = additionalMasters + 1
 latencyBus = scwrapper.sc_time(BUS_LATENCY, scwrapper.SC_NS)
-bus  = BusLT32.BusLT32('bus',3,latencyBus)
+bus  = BusLT32.BusLT32('bus',2*PROCESSOR_NUMBER+additionalMasters,latencyBus)
 
 ##### BUS CONNECTIONS #####
 # Connecting the master components to the bus
@@ -132,14 +140,20 @@ connectPorts(bus, bus.initiatorSocket, mem, mem.targetSocket)
 bus.addBinding("mem",0x0,memorySize)
 
 ##### RECONFIGURABLE COMPONENTS CONNECTIONS #####
-connectPorts(cE, cE.busSocket, bus, bus.targetSocket)
-connectPorts(bus, bus.initiatorSocket, bS, bS.targetSocket)
-# Add bitstream sink binding
-bus.addBinding("bS", memorySize+1, memorySize+1)
+connectPorts(cE, cE.ramSocket, bus, bus.targetSocket)
+if CONFIGURE_THROUGH_ITC:
+   connectPorts(cE, cE.destSocket, bus, bus.targetSocket)
 
+bSPosition = 1
 for i in range(0, EFPGA_NUMBER):
-    cE.bindFPGA(memorySize+1)
     connectPorts(cE, cE.initiatorSocket, eF[i], eF[i].targetSocket)
+    if CONFIGURE_THROUGH_ITC:
+        connectPorts(bus, bus.initiatorSocket, eF[i].bS, eF[i].bS.targetSocket)
+        bus.addBinding("bS"+str(bSPosition), memorySize+bSPosition, memorySize+bSPosition)
+    else:
+        connectPorts(cE, cE.destSocket, eF[i].bS, eF[i].bS.targetSocket)
+    cE.bindFPGA(memorySize+bSPosition)
+    bSPosition = bSPosition+1
 
 ################################################
 ##### SYSTEM INIT ##############################
@@ -150,6 +164,7 @@ class printValueCall(recEmu_wrapper.reconfCB32):
      def __init__(self, latency, w, h):
         recEmu_wrapper.reconfCB32.__init__(self, latency, w , h)
      def __call__(self, processorInstance):
+
         processorInstance.preCall();
         callArgs = processorInstance.readArgs()
         param1 = callArgs.__getitem__(0)
@@ -157,9 +172,10 @@ class printValueCall(recEmu_wrapper.reconfCB32):
 #        addr = 0
 #        addr = cE.configure('printValue', self.latency, self.width, self.height, False)
 #        cE.execute(addr)
+#        cE.execute('printValue')
 #        print '(Python) printValue allocated at address ' + str(addr);
 
-        cE.confexec('printValue', self.latency, self.width, self.height, False)
+        cE.executeForce('printValue', self.latency, self.width, self.height, False)
 
         cE.printSystemStatus()
 #        cE.manualRemove('printValue')
@@ -213,7 +229,7 @@ for i in range(0, PROCESSOR_NUMBER):
     recEmu.registerPythonCall('printValue', printValueInstance);
     pytCalls.append(printValueInstance)
 
-#    recEmu.registerCppCall('printValue', scwrapper.sc_time(0.050, scwrapper.SC_NS),25,50)
+#    recEmu.registerCppCall('printValue', scwrapper.sc_time(0.100, scwrapper.SC_NS),50,100)
 #    recEmu.registerCppCall('printValue')
     recEmu.registerCppCall('generate', scwrapper.sc_time(1, scwrapper.SC_NS),1,1)
     recEmu.registerCppCall('sum');

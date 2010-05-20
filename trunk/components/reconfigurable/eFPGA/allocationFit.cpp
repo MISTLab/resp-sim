@@ -18,16 +18,10 @@
  *
  *   This file is part of ReSP.
  *
- *   TRAP is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Lesser General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
  *   This program is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Lesser General Public License for more details.
- *
  *
  *   The following code is derived, directly or indirectly, from the SystemC
  *   source code Copyright (c) 1996-2004 by all Contributors.
@@ -65,11 +59,11 @@ list<block> max_blocks(list<block> chopped) {
 	list<block> blended;
 	block newBlock;
 	bool check,recursive=false,oldrec;
-	//printf("in ");
+//	cerr << "in ";
 
 	while ( chopIt!=chopped.end() ) {
 		blended.insert(blended.end(),(*chopIt));
-		//printf("0 ");
+//		cerr << "0 ";
 		chopSubIt = blended.begin();
 		check = false;
 		while ( chopSubIt!=blended.end() ) {
@@ -82,7 +76,7 @@ list<block> max_blocks(list<block> chopped) {
 						newBlock.lowerRight.column=(*chopIt).lowerRight.column;
 						if ( (*chopSubIt).lowerRight.column < newBlock.lowerRight.column )
 							newBlock.lowerRight.column=(*chopSubIt).lowerRight.column;
-						//printf("1 ");
+//						cerr << "1 ";
 						check = true;
 				}
 				else if((*chopIt).upperLeft.column <= (*chopSubIt).lowerRight.column &&
@@ -91,7 +85,7 @@ list<block> max_blocks(list<block> chopped) {
 						newBlock.upperLeft.column=(*chopIt).upperLeft.column;
 						newBlock.lowerRight.row=(*chopIt).lowerRight.row;
 						newBlock.lowerRight.column=(*chopSubIt).lowerRight.column;
-						//printf("2 ");
+//						cerr << "2 ";
 						check = true;
 				}
 				else if((*chopIt).upperLeft.column > (*chopSubIt).upperLeft.column &&
@@ -100,7 +94,7 @@ list<block> max_blocks(list<block> chopped) {
 						newBlock.upperLeft.column=(*chopIt).upperLeft.column;
 						newBlock.lowerRight.row=(*chopIt).lowerRight.row;
 						newBlock.lowerRight.column=(*chopIt).lowerRight.column;
-						//printf("s ");
+//						cerr << "s ";
 						check = true;
 				}
 			}
@@ -113,7 +107,7 @@ list<block> max_blocks(list<block> chopped) {
 						if ( (*chopSubIt).lowerRight.row < newBlock.lowerRight.row )
 							newBlock.lowerRight.row=(*chopSubIt).lowerRight.row;
 						newBlock.lowerRight.column=(*chopIt).lowerRight.column;
-						//printf("3 ");
+//						cerr << "3 ";
 						check = true;
 				}
 				else if((*chopIt).upperLeft.row <= (*chopSubIt).lowerRight.row &&
@@ -122,7 +116,7 @@ list<block> max_blocks(list<block> chopped) {
 						newBlock.upperLeft.column=(*chopSubIt).upperLeft.column;
 						newBlock.lowerRight.row=(*chopSubIt).lowerRight.row;
 						newBlock.lowerRight.column=(*chopIt).lowerRight.column;
-						//printf("4 ");
+//						cerr << "4 ";
 						check = true;
 				}
 				else if((*chopIt).upperLeft.row > (*chopSubIt).upperLeft.row &&
@@ -131,7 +125,7 @@ list<block> max_blocks(list<block> chopped) {
 						newBlock.upperLeft.column=(*chopSubIt).upperLeft.column;
 						newBlock.lowerRight.row=(*chopIt).lowerRight.row;
 						newBlock.lowerRight.column=(*chopIt).lowerRight.column;
-						//printf("t ");
+//						cerr << "t ";
 						check = true;
 				}
 			}
@@ -144,7 +138,7 @@ list<block> max_blocks(list<block> chopped) {
 						newBlock.lowerRight.column=(*chopIt).lowerRight.column;
 						if ( (*chopSubIt).lowerRight.column < newBlock.lowerRight.column )
 							newBlock.lowerRight.column=(*chopSubIt).lowerRight.column;
-						//printf("5 ");
+//						cerr << "5 ";
 						check = true;
 				}
 				else if((*chopIt).upperLeft.column <= (*chopSubIt).lowerRight.column &&
@@ -153,7 +147,7 @@ list<block> max_blocks(list<block> chopped) {
 						newBlock.upperLeft.column=(*chopIt).upperLeft.column;
 						newBlock.lowerRight.row=(*chopSubIt).lowerRight.row;
 						newBlock.lowerRight.column=(*chopSubIt).lowerRight.column;
-						//printf("6 ");
+//						cerr << "6 ";
 						check = true;
 				}
 				else if((*chopIt).upperLeft.column > (*chopSubIt).upperLeft.column &&
@@ -162,7 +156,7 @@ list<block> max_blocks(list<block> chopped) {
 						newBlock.upperLeft.column=(*chopIt).upperLeft.column;
 						newBlock.lowerRight.row=(*chopSubIt).lowerRight.row;
 						newBlock.lowerRight.column=(*chopIt).lowerRight.column;
-						//printf("x ");
+//						cerr << "x ";
 						check = true;
 				}
 			}
@@ -175,7 +169,7 @@ list<block> max_blocks(list<block> chopped) {
 						if ( (*chopSubIt).lowerRight.row < newBlock.lowerRight.row )
 							newBlock.lowerRight.row=(*chopSubIt).lowerRight.row;
 						newBlock.lowerRight.column=(*chopSubIt).lowerRight.column;
-						//printf("7 ");
+//						cerr << "7 ";
 						check = true;
 				}
 				else if ((*chopIt).upperLeft.row <= (*chopSubIt).lowerRight.row &&
@@ -184,7 +178,7 @@ list<block> max_blocks(list<block> chopped) {
 						newBlock.upperLeft.column=(*chopIt).upperLeft.column;
 						newBlock.lowerRight.row=(*chopSubIt).lowerRight.row;
 						newBlock.lowerRight.column=(*chopSubIt).lowerRight.column;
-						//printf("8 ");
+//						cerr << "8 ";
 						check = true;
 				}
 				else if((*chopIt).upperLeft.row > (*chopSubIt).upperLeft.row &&
@@ -193,7 +187,7 @@ list<block> max_blocks(list<block> chopped) {
 						newBlock.upperLeft.column=(*chopIt).upperLeft.column;
 						newBlock.lowerRight.row=(*chopIt).lowerRight.row;
 						newBlock.lowerRight.column=(*chopSubIt).lowerRight.column;
-						//printf("y ");
+//						cerr << "y ";
 						check = true;
 				}
 			}
@@ -205,13 +199,13 @@ list<block> max_blocks(list<block> chopped) {
 						newBlock.upperLeft.column >=(*tmp).upperLeft.column &&
 						newBlock.lowerRight.row <= (*tmp).lowerRight.row &&
 						newBlock.lowerRight.column <= (*tmp).lowerRight.column )
-							{recursive = oldrec; }//printf("h ");}
+							{recursive = oldrec; }//cerr << "h ";}
 				for (tmp = chopped.begin(); tmp != chopped.end(); tmp++)
 					if (	newBlock.upperLeft.row >= (*tmp).upperLeft.row &&
 						newBlock.upperLeft.column >=(*tmp).upperLeft.column &&
 						newBlock.lowerRight.row <= (*tmp).lowerRight.row &&
 						newBlock.lowerRight.column <= (*tmp).lowerRight.column )
-							{recursive = oldrec; }//printf("j ");}
+							{recursive = oldrec; }//cerr << "j ";}
 				blended.insert(blended.end(),newBlock);
 				check = false;
 			}
@@ -230,7 +224,7 @@ list<block> max_blocks(list<block> chopped) {
 				(*chopIt).lowerRight.row <= (*chopSubIt).lowerRight.row &&
 				(*chopIt).lowerRight.column <= (*chopSubIt).lowerRight.column )
 					isMax = false;
-			// Blocchi uguali contenuti l'uno nell'altro!!!
+			// Same blocks reciprocally contained!!
 		if (isMax) chopIt++;
 		else {
 			tmp = chopIt;

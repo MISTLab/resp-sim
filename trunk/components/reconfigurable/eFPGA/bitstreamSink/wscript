@@ -2,14 +2,15 @@
 # -*- coding: iso-8859-1 -*-
 
 def build(bld):
+
     obj = bld.new_task_gen('pypp')
     obj.source ='''
         bitstreamSink.hpp
     '''
     obj.target='bS_wrapper';
-    obj.uselib='BOOST BOOST_PYTHON TLM SYSTEMC_H'
+    obj.uselib='BOOST BOOST_PYTHON TLM SYSTEMC_H TRAP'
     obj.uselib_local='systemc utils'
-    obj.include = 'scwrapper tlmwrapper'
+    obj.include = 'scwrapper tlmwrapper trapwrapper'
     obj.start_decls = 'bitstreamSink'
     obj.templates = ['bitstreamSink<unsigned int>']
     obj.custom_code = """

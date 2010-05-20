@@ -54,15 +54,19 @@
 #include "configEngine.hpp"
 
 configEngine::configEngine(sc_module_name name, sc_dt::uint64 bitstreamSource, deletionAlgorithm delAlg):
-				initiatorSocket((boost::lexical_cast<std::string>(name) + "_initSock").c_str()),
-				busSocket((boost::lexical_cast<std::string>(name) + "_busSock").c_str()),
-				bitstream_source_address(bitstreamSource), sc_module(name), tab(delAlg) {
+				sc_module(name), initiatorSocket((boost::lexical_cast<std::string>(name) + "_initSock").c_str()),
+				ramSocket((boost::lexical_cast<std::string>(name) + "_ramSock").c_str()),
+				destSocket((boost::lexical_cast<std::string>(name) + "_destSock").c_str()),
+				bitstream_source_address(bitstreamSource), tab(delAlg) {
 	requestDelay = SC_ZERO_TIME;
 	execDelay = SC_ZERO_TIME;
 	configDelay = SC_ZERO_TIME;
 	removeDelay = SC_ZERO_TIME;
-	busy=false;
 	lastBinding=0;
+
+	configBusy=false;
+	curConfigEvent=0;
+	curExecEvent=0;
 
 	end_module();
 
@@ -70,6 +74,77 @@ configEngine::configEngine(sc_module_name name, sc_dt::uint64 bitstreamSource, d
 	#ifdef DEBUGMODE
 	cerr << "Configuration Engine created with name " << name << endl;
 	#endif
+}
+
+void configEngine::configLock() {
+	if( this->configBusy ) {
+		unsigned int myEvent = curConfigEvent++;
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << ": " << name() << " - Queuing config request on " << myEvent << endl;
+		#endif
+		nextConfigWake.push(myEvent);
+		wakeConfigEvents[myEvent] = new sc_event;
+		wait(*(this->wakeConfigEvents[myEvent]));
+		delete wakeConfigEvents[myEvent];
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << ": " << name() << " - Starting config request " << myEvent << endl;
+		#endif
+	}
+	this->configBusy = true;
+}
+
+void configEngine::configUnlock() {
+	this->configBusy = false;
+	if( !nextConfigWake.empty() ) {
+		unsigned int nextEvent = this->nextConfigWake.front();
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << ": " << name() << " - Waking up queued config request " << nextEvent << endl;
+		#endif
+		this->nextConfigWake.pop();
+		(this->wakeConfigEvents[nextEvent])->notify();
+		this->configBusy = true;
+	}
+}
+
+void configEngine::execLock(unsigned int address) {
+	list<unsigned int>::iterator execIter = executing.begin();
+	bool execBusy = false;
+	while (execIter!=executing.end()) {
+		if(*execIter==address) execBusy = true;
+		execIter++;
+	}
+	if ( execBusy ) {
+		unsigned int myEvent = curExecEvent++;
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << ": " << name() << " - Queuing exe request on " << myEvent << " for address " << address << endl;
+		#endif
+		nextExecWake[address].push(myEvent);
+		wakeExecEvents[myEvent] = new sc_event;
+		wait(*(this->wakeExecEvents[myEvent]));
+		delete wakeExecEvents[myEvent];
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << ": " << name() << " - Starting exe request " << myEvent << " for address " << address << endl;
+		#endif
+	}
+	else {this->executing.push_back(address);}
+}
+
+void configEngine::execUnlock(unsigned int address) {
+	list<unsigned int>::iterator execIter = executing.begin();
+	while (execIter!=executing.end()) {
+		if(*execIter==address) break;
+		execIter++;
+	}
+	executing.erase(execIter);
+	if( !nextExecWake[address].empty() ) {
+		unsigned int nextEvent = this->nextExecWake[address].front();
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << ": " << name() << " - Waking up queued exe request " << nextEvent << " for address " << address << endl;
+		#endif
+		this->nextExecWake[address].pop();
+		(this->wakeExecEvents[nextEvent])->notify();
+		this->executing.push_back(address);
+	}
 }
 
 unsigned int configEngine::bindFPGA(sc_dt::uint64 dest_addr) {
@@ -80,7 +155,7 @@ unsigned int configEngine::bindFPGA(sc_dt::uint64 dest_addr) {
 	return lastBinding;
 }
 
-unsigned int configEngine::configure(string funcName, sc_time latency, unsigned int width, unsigned int height, bool reUse) {
+unsigned int configEngine::config(string funcName, sc_time latency, unsigned int width, unsigned int height, bool reUse) {
 
 	sc_time delay = SC_ZERO_TIME;
 	tlm_generic_payload message;
@@ -89,25 +164,20 @@ unsigned int configEngine::configure(string funcName, sc_time latency, unsigned 
 	unsigned char* payload_buffer = (unsigned char*) &messageData;
 	unsigned int payload_length = sizeof(payloadData);
 
-	unsigned int i, responseValue, min, address, whatDelete, whereDelete;
+	unsigned int i, responseValue, min, address;
 	int hasMin=-1;
+
+	// Inserting a fix delay in the simulated communication Processing Element -> Configuration Engine
+	wait(requestDelay);
 
 	// If reUse is activated and the function is already mapped, the old address is returned
 	address=tab.getAddress(funcName);
 	if (reUse && address!=0) {
 		#ifdef DEBUGMODE
-		cerr << "Reusing previous function " << address << endl;
+		cerr << sc_time_stamp() << ": " << name() << " - Reusing previous function " << address << endl;
 		#endif
 		return address;
 	}
-
-	while( busy ) {
-		wait( configFree );
-	}
-	busy = true;
-
-	// Inserting a fix delay in the simulated communication Processing Element -> Configuration Engine
-	wait(requestDelay);
 
 	// Searches for the device with the best (minimum) euristic value
 	messageData.address = 0;
@@ -126,21 +196,55 @@ unsigned int configEngine::configure(string funcName, sc_time latency, unsigned 
 		if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: TLM response not valid during search among devices!" << endl);
 		else {
 			responseValue = messageData.answer;
-			if (hasMin==-1 || (responseValue < min) ) {min=responseValue; hasMin=i;}
+			if ( (int)responseValue!=-1 && (hasMin==-1 || ((int)responseValue < (int)min) ) ) {min=responseValue; hasMin=i;}
 		}
 	}
 
 	while (hasMin == -1) {
 		// Every device answered -1...no space on any device!
-		cEAllocationTable tmpTable = tab;
-		whatDelete = tab.remove(&whereDelete);
-		if (whatDelete == 0) {
+		unsigned int whatDelete,whereDelete,check;
+		bool executed;
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << ": " << name() << " - Not enough space, searching for module to delete" << endl;
+		#endif
+		list<unsigned int> deleteList = tab.removeList();
+		list<unsigned int>::iterator deleteIter = deleteList.begin();
+		if ( deleteIter == deleteList.end() ) {
 			ostringstream stream;
-			stream << " - ERROR: while removing from the central allocation table; probably it is already empty and the function you're trying to map is too big!" << endl;
+			stream << " - ERROR: while removing from the central allocation table; no functions are currently mapped;";
+			stream << " probably the function you're trying to map is too big!" << endl;
 			THROW_EXCEPTION(__PRETTY_FUNCTION__ << stream.str());
 		}
+		list<unsigned int>::iterator execIter;
+		do {
+			whatDelete = *deleteIter;
+			executed = false;
+			for (execIter = executing.begin(); execIter!=executing.end(); execIter++) {
+				if (whatDelete == *execIter) executed = true;
+			}
+			#ifdef DEBUGMODE
+			if (executed)
+				cerr << sc_time_stamp() << ": " << name() << " - " << whatDelete << " is being executed, thus it cannot be removed" << endl;
+			#endif
+			deleteIter++;
+		} while(executed && deleteIter!=deleteList.end());
+		// cEAllocationTable tmpTable = tab;							Table Backup: currently unuseful
+		if (executed && deleteIter==deleteList.end()) {
+			whatDelete = deleteList.front();
+			#ifdef DEBUGMODE
+			cerr << sc_time_stamp() << ": " << name() << " - All the modules are being executed: waiting for module " << whatDelete << " to be freed" << endl;
+			#endif
+			this->execLock(whatDelete);
+			check = tab.remove(whatDelete,&whereDelete);
+			this->execUnlock(whatDelete);
+		}
+		else check = tab.remove(whatDelete,&whereDelete);
+
+		if (check != whatDelete)
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR - Unexpected error while removing " << whatDelete << " from central table" << endl);
+
 		#ifdef DEBUGMODE
-		cerr << "Not enough space, removing at address " << whatDelete << "..." << endl;
+		cerr << sc_time_stamp() << ": " << name() << " -  removing at address " << whatDelete << "..." << endl;
 		#endif
 
 		// Sends the removing command to device whereDelete-1
@@ -154,11 +258,9 @@ unsigned int configEngine::configure(string funcName, sc_time latency, unsigned 
 		message.set_response_status(TLM_INCOMPLETE_RESPONSE);
 		delay = SC_ZERO_TIME;
 		this->initiatorSocket[whereDelete-1]->b_transport(message,delay);
-		if (message.get_response_status() != TLM_OK_RESPONSE) {
+		if (message.get_response_status() != TLM_OK_RESPONSE)
 			// Something wrong happened on the fabric...
-			tab=tmpTable;
 			THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: TLM response not valid while removing from the device table!" << endl);
-		}
 
 		// Everything OK, function removed, inserting a fix delay
 		wait(removeDelay);
@@ -180,19 +282,26 @@ unsigned int configEngine::configure(string funcName, sc_time latency, unsigned 
 			if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: TLM response not valid during search among devices!" << endl);
 			else {
 				responseValue = messageData.answer;
-				if (hasMin==-1 || (responseValue < min) ) {min=responseValue; hasMin=i;}
+				if ( (int)responseValue!=-1 && (hasMin==-1 || ((int)responseValue < (int)min) ) ) {min=responseValue; hasMin=i;}
 			}
 		}
 	}
 
 	#ifdef DEBUGMODE
-	cerr << "Best choice is # " << hasMin+1 << " with " << (int)min << endl;
+	cerr << sc_time_stamp() << ": " << name() << " - Best choice is # " << hasMin+1 << " with " << (int)min << endl;
 	#endif
 
 	// Inserts the new function data in the general table
 	address = tab.add(funcName,hasMin+1);
-	if (address == 0)
-		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: while inserting in the central table!" << endl);
+	if (address == 0) {
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << ": " << name() << " - ERROR: while inserting in the central table!" << endl;
+		#endif
+		return 0;
+	}
+
+	// Trick to prevent the execution of a function not fully configured
+	this->execLock(address);
 
 	// Inserts the new function data in the selected device table
 	messageData.address = address;
@@ -224,7 +333,7 @@ unsigned int configEngine::configure(string funcName, sc_time latency, unsigned 
 	message.set_data_ptr((unsigned char*)bitstream);
 	message.set_response_status(TLM_INCOMPLETE_RESPONSE);
 	delay = SC_ZERO_TIME;
-	this->busSocket->b_transport(message,delay);
+	this->ramSocket->b_transport(message,delay);
 
 	// 'WRITEs' the bitstream on the selected device
 	message.set_write();
@@ -232,33 +341,43 @@ unsigned int configEngine::configure(string funcName, sc_time latency, unsigned 
 	if (dest_address == bitstream_dest_address.end()) THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: device " << hasMin+1 << " is not bound to any address!" << endl);
 	message.set_address(dest_address->second);
 	delay = SC_ZERO_TIME;
-	this->busSocket->b_transport(message,delay);		// We send the 'write' message to the bitstream sink
+	if (this->destSocket.size() == 1) {
+		this->destSocket->b_transport(message,delay);		// We send the 'write' message to the unique bitstream sink
+	}
+	else if (this->destSocket.size() > 1) {
+		if (this->destSocket[hasMin] == NULL) THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: bitstream sink for device " << hasMin+1 << " is not connected!" << endl);
+		this->destSocket[hasMin]->b_transport(message,delay);	// We send the 'write' message to the correct bitstream sink
+	}
 
 	#ifdef DEBUGMODE
-	cerr << tab.getName(address) << " configured at address " << address << " on device # " << tab.getDevice(address) << ";";
-	cerr << " configuration required " << responseValue << " words." << endl;
+	cerr << sc_time_stamp() << ": " << name() << " - " << tab.getName(address) << " configured at address " << address;
+	cerr << " on device # " << tab.getDevice(address) << ";" << " configuration required " << responseValue << " words." << endl;
 	cerr << " --> it uses " << width << " X " << height << " cells and its execution will take " << latency << endl;
 	cerr << " --> the reuse option is " << reUse << endl;
 	#endif
 
-	busy = false;
-	configFree.notify();
+	// Now the fully configured function can be executed
+	this->execUnlock(address);
 
 	return address;
 }
 
-bool configEngine::execute(unsigned int funcAddr) {
+bool configEngine::exec(unsigned int funcAddr) {
 
-	string name = tab.getName(funcAddr);
-	unsigned int device = tab.getDevice(funcAddr);
-	if ( device == 0 || name.length()==0)
-		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: " << funcAddr << " not in the Configuration Engine table" << endl);
+	string name = this->tab.getName(funcAddr);
+	unsigned int device = this->tab.getDevice(funcAddr);
+	if ( device == 0 || name.length()==0) {
+//		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: " << funcAddr << " not in the Configuration Engine table" << endl);
+		cerr << sc_time_stamp() << ": " << this->name() << " - ERROR: Module #" << funcAddr << " not found on any device: configuration should be re-issued..." << endl;
+		return false;
+	}
 
-	#ifdef DEBUGMODE
-	cerr << "Launching " << name << " on device " << device << endl;
-	#endif
 	// Inserting a fix delay in the simulated communication Processing Element -> eFPGA
 	wait(execDelay);
+
+	#ifdef DEBUGMODE
+	cerr << sc_time_stamp() << ": " << this->name() << " - Launching " << name << " #" << funcAddr << " on device " << device << endl;
+	#endif
 
 	sc_time delay = SC_ZERO_TIME;
 	tlm_generic_payload message;
@@ -280,28 +399,118 @@ bool configEngine::execute(unsigned int funcAddr) {
 		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: TLM response not valid while executing from the device!" << endl);
 	else if (!tab.exec(funcAddr))
 		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: This shouldn't be happening...the function existed at the beginning of the execution..." << endl);
-	else return true;
+	else {
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << ": " << this->name() << " - Function at #" << funcAddr << " executed on device " << device << endl;
+		#endif
+		return true;
+	}
 }
 
-bool configEngine::confexec(string funcName, sc_time latency, unsigned int width, unsigned int height, bool reUse) {
-	unsigned int addr = configure(funcName, latency, width, height, reUse);
-	if (addr == 0) return false;
-	if (!execute(addr)) return false;
-	return true;
+unsigned int configEngine::configure(string funcName, sc_time latency, unsigned int width, unsigned int height, bool reUse) {
+	this->configLock();
+	unsigned int retVal = this->config(funcName,latency,width,height,reUse);
+	this->configUnlock();
+	return retVal;
+}
+
+bool configEngine::execute(unsigned int funcAddr) {
+	this->execLock(funcAddr);
+	bool retVal = this->exec(funcAddr);
+	this->execUnlock(funcAddr);
+	return retVal;
+}
+
+bool configEngine::execute(string funcName) {
+	list<unsigned int> addresses = tab.getAddressList(funcName);
+	list<unsigned int>::iterator toExecIter = addresses.begin();
+	unsigned int address;
+	if ( toExecIter == addresses.end() ) {
+		cerr << sc_time_stamp() << ": " << this->name() << " - ERROR: Module " << funcName << " not found on any device: it cannot be executed..." << endl;
+		return false;
+	}
+	list<unsigned int>::iterator execIter;
+	bool executed;
+	do {
+		address = *toExecIter;
+		executed = false;
+		for (execIter = executing.begin(); execIter!=executing.end(); execIter++) {
+			if (address == *execIter) executed = true;
+		}
+		#ifdef DEBUGMODE
+		if (executed)
+			cerr << sc_time_stamp() << ": " << name() << " - function at #" << address << " is already being executed..." << endl;
+		#endif
+		toExecIter++;
+	} while(executed && toExecIter!=addresses.end());
+
+	if (executed && toExecIter==addresses.end()) {
+		address = addresses.front();
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << ": " << name() << " - All the modules are being executed: waiting for module " << address << " to be released" << endl;
+		#endif
+	}
+	this->execLock(address);
+	#ifdef DEBUGMODE
+	cerr << sc_time_stamp() << ": " << name() << " - Found function " << funcName << " at " << address << endl;
+	#endif
+	bool retVal = this->exec(address);
+	this->execUnlock(address);
+	return retVal;
+}
+
+void configEngine::executeForce(string funcName, sc_time latency, unsigned int width, unsigned int height, bool reUse) {
+	this->configLock();
+	unsigned int retVal;
+	do {retVal=this->config(funcName,latency,width,height,reUse);} while(retVal==0);
+	bool executed;
+	do {
+		this->execLock(retVal);
+		executed = this->exec(retVal);
+		this->execUnlock(retVal);
+		if (!executed) do {retVal=this->config(funcName,latency,width,height,reUse);} while(retVal==0);
+	} while (!executed);
+	this->configUnlock();
 }
 
 bool configEngine::manualRemove(unsigned int funcAddr) {
 
-	while( busy ) {
-		wait( configFree );
+	list<unsigned int> deleteList = tab.removeList();
+	list<unsigned int>::iterator deleteIter = deleteList.begin();
+	if ( deleteIter == deleteList.end() ) {
+		ostringstream stream;
+		stream << " - ERROR: while removing from the central allocation table; no functions are currently mapped;";
+		stream << " probably the function you're trying to map is too big!" << endl;
+		THROW_EXCEPTION(__PRETTY_FUNCTION__ << stream.str());
 	}
-	busy = true;
+	bool existing = false;
+	for (deleteIter = deleteList.begin(); deleteIter!=deleteList.end(); deleteIter++) {
+		if (funcAddr == *deleteIter) existing = true;
+	}
+	if (!existing)  {
+//		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: while manual removing in the central table!" << endl);
+		cerr << sc_time_stamp() << ": " << this->name() << " - ERROR: Module #" << funcAddr << " not found on any device: it cannot be removed..." << endl;
+		return false;
+	}
+	bool executed = false;
+	list<unsigned int>::iterator execIter;
+	for (execIter = executing.begin(); execIter!=executing.end(); execIter++) {
+		if (funcAddr == *execIter) executed = true;
+	}
 
-	cEAllocationTable tmpTable = tab;
+	// cEAllocationTable tmpTable = tab;							Table Backup: currently unuseful
 	unsigned int whatDelete, whereDelete;
-	whatDelete = tab.remove(funcAddr,&whereDelete);
-	if (whatDelete == 0)
-		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: while manual removing in the central table!" << endl);
+	if (executed) {
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << ": " << name() << " - " << funcAddr << " is being executed, thus it cannot be removed. Waiting for its termination" << endl;
+		#endif
+		this->execLock(funcAddr);
+		whatDelete = tab.remove(funcAddr,&whereDelete);	
+		this->execUnlock(whatDelete);
+	}
+	else whatDelete = tab.remove(funcAddr,&whereDelete);		
+	if (whatDelete != funcAddr)
+		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR - Unexpected error while removing " << funcAddr << " from central table" << endl);
 
 	sc_time delay = SC_ZERO_TIME;
 	tlm_generic_payload message;
@@ -318,33 +527,66 @@ bool configEngine::manualRemove(unsigned int funcAddr) {
 	message.set_address(1);
 	message.set_response_status(TLM_INCOMPLETE_RESPONSE);
 	this->initiatorSocket[whereDelete-1]->b_transport(message,delay);
-	if ( message.get_response_status() != TLM_OK_RESPONSE ) {
+	if ( message.get_response_status() != TLM_OK_RESPONSE )
 		// Something wrong happened on the fabric...
-		tab=tmpTable;
 		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: TLM response not valid while removing from the device table!" << endl);
-	}
 
 	// Everything OK, function removed, inserting a fix delay
 	wait(removeDelay);
 
-	busy = false;
-	configFree.notify();
+	#ifdef DEBUGMODE
+	cerr << sc_time_stamp() << ": " << name() << " - Function at address " << whatDelete << " manually removed" << endl;
+	#endif
 
 	return true;
 }
 
 bool configEngine::manualRemove(string funcName) {
 
-	while( busy ) {
-		wait( configFree );
+	unsigned int whatDelete,whereDelete,check;
+	bool executed;
+	list<unsigned int> deleteList = tab.getAddressList(funcName);
+	list<unsigned int>::iterator deleteIter = deleteList.begin();
+	if ( deleteIter == deleteList.end() ) {
+		cerr << sc_time_stamp() << ": " << this->name() << " - ERROR: Module " << funcName << " not found on any device: it cannot be removed..." << endl;
+		return false;
 	}
-	busy = true;
+	list<unsigned int>::iterator execIter;
+	do {
+		whatDelete = *deleteIter;
+		executed = false;
+		for (execIter = executing.begin(); execIter!=executing.end(); execIter++) {
+			if (whatDelete == *execIter) executed = true;
+		}
+		#ifdef DEBUGMODE
+		if (executed)
+			cerr << sc_time_stamp() << ": " << name() << " - " << whatDelete << " is being executed, thus it cannot be removed" << endl;
+		#endif
+		deleteIter++;
+	} while(executed && deleteIter!=deleteList.end());
 
-	cEAllocationTable tmpTable = tab;
-	unsigned int whatDelete, whereDelete;
-	whatDelete = tab.remove(funcName,&whereDelete);
-	if (whatDelete == 0)
-		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: while manual removing in the central table!" << endl);
+	// cEAllocationTable tmpTable = tab;							Table Backup: currently unuseful
+	if (executed && deleteIter==deleteList.end()) {
+		whatDelete = deleteList.front();
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << ": " << name() << " - All the modules are being executed: waiting for module " << whatDelete << " to be freed" << endl;
+		#endif
+		this->execLock(whatDelete);
+		check = tab.remove(whatDelete,&whereDelete);
+		this->execUnlock(whatDelete);
+		if (check == 0) {
+			cerr << sc_time_stamp() << ": " << this->name() << " - ERROR: Module " << funcName << " has already been removed while waiting for access..." << endl;
+			return false;
+		}
+	}
+	else check = tab.remove(whatDelete,&whereDelete);
+
+	if (check != whatDelete)
+		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR - Unexpected error while removing " << whatDelete << " from central table" << endl);
+
+	#ifdef DEBUGMODE
+	cerr << sc_time_stamp() << ": " << name() << " - Manually removing at address " << whatDelete << "..." << endl;
+	#endif
 
 	sc_time delay = SC_ZERO_TIME;
 	tlm_generic_payload message;
@@ -361,17 +603,16 @@ bool configEngine::manualRemove(string funcName) {
 	message.set_address(1);
 	message.set_response_status(TLM_INCOMPLETE_RESPONSE);
 	this->initiatorSocket[whereDelete-1]->b_transport(message,delay);
-	if ( message.get_response_status() != TLM_OK_RESPONSE ) {
+	if ( message.get_response_status() != TLM_OK_RESPONSE )
 		// Something wrong happened on the fabric...
-		tab=tmpTable;
 		THROW_EXCEPTION(__PRETTY_FUNCTION__ << " - ERROR: TLM response not valid while removing from the device table!" << endl);
-	}
 
 	// Everything OK, function removed, inserting a fix delay
 	wait(removeDelay);
 
-	busy = false;
-	configFree.notify();
+	#ifdef DEBUGMODE
+	cerr << sc_time_stamp() << ": " << name() << " - Function at address " << whatDelete << " manually removed" << endl;
+	#endif
 
 	return true;
 }

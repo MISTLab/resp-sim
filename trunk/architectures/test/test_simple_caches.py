@@ -42,7 +42,7 @@
 ##############################################################################
 
 ###### GENERAL PARAMETERS #####
-PROCESSOR_FREQUENCY = 100         # MHz
+PROCESSOR_FREQUENCY = 1000        # MHz
 PROCESSOR_NUMBER  = 1             #
 try:
     PROCESSOR_NAMESPACE
@@ -61,11 +61,11 @@ CACHE_BLOCK_SIZE   = 32              # words
 CACHE_WAYS         = 8
 CACHE_REM_POLICY   = CacheLT32.LRU
 CACHE_WR_POLICY    = CacheLT32.THROUGH
-CACHE_READ_LAT     = 0.0             # ns
-CACHE_WRITE_LAT    = 0.0             # ns
-CACHE_LOAD_LAT     = 0.0             # ns
-CACHE_STORE_LAT    = 0.0             # ns
-CACHE_REMOVE_LAT   = 0.0             # ns
+CACHE_READ_LAT     = 1.0             # ns
+CACHE_WRITE_LAT    = 1.0             # ns
+CACHE_LOAD_LAT     = 1.0             # ns
+CACHE_STORE_LAT    = 1.0             # ns
+CACHE_REMOVE_LAT   = 1.0             # ns
 
 # Software
 try:
@@ -83,6 +83,8 @@ OS_EMULATION = True     # True or False
 
 # Modified stats auto-printer
 def statsPrinter():
+    print '\x1b[34m\x1b[1mReal Elapsed Time (seconds):\x1b[0m'
+    print '\x1b[31m' + str(controller.print_real_time()) + '\x1b[0m'
     print '\x1b[34m\x1b[1mSimulated Elapsed Time (nano-seconds):\x1b[0m'
     print '\x1b[31m' + str(controller.get_simulated_time()) + '\x1b[0m'
     if BUS_ACTIVE:
@@ -120,7 +122,7 @@ for i in range(0, PROCESSOR_NUMBER):
 ##### MEMORY INSTANTIATION #####
 memorySize = 1024*1024*MEMORY_SIZE
 latencyMem = scwrapper.sc_time(MEM_LATENCY, scwrapper.SC_NS)
-mem = MemoryLT32.MemoryLT32( 'mem', memorySize, latencyMem)
+mem = MemoryLT32.MemoryLT32('mem', memorySize, latencyMem)
 
 ################################################
 ##### INTERCONNECTIONS #########################
@@ -128,10 +130,12 @@ mem = MemoryLT32.MemoryLT32( 'mem', memorySize, latencyMem)
 
 if BUS_ACTIVE:
     latencyBus = scwrapper.sc_time(BUS_LATENCY, scwrapper.SC_NS)
-    bus  = BusLT32.BusLT32('bus',2,latencyBus)
+    bus = BusLT32.BusLT32('bus',2*PROCESSOR_NUMER,latencyBus)
     connectPorts(bus, bus.initiatorSocket, mem, mem.targetSocket)
     # Add memory mapping
     bus.addBinding("mem",0x0,memorySize)
+else:
+   raise Exception('Sorry, memory currently supports only a single connection (data or instruction). Please activate an interconnection layer between processors and memory')
 
 ##### CACHE, BUS, AND MEMORY CONNECTIONS #####
 if DATA_CACHE_ACTIVE:

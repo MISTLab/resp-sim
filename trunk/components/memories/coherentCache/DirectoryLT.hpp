@@ -131,7 +131,6 @@ public:
 	}
 
 	void b_transport(int tag, tlm_generic_payload& trans, sc_time& delay) {
-
 		sc_dt::uint64 adr = trans.get_address();
 		tlm_command cmd = trans.get_command();
 		tlm_generic_payload message;
