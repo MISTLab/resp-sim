@@ -59,6 +59,7 @@
 #include <string>
 
 #include <systemc.h>
+#include "Python.h"
 
 #ifdef __GNUC__
 #ifdef __GNUC_MINOR__
@@ -180,7 +181,9 @@ public:
 		//callback.
 		typename template_map<issueWidth, reconfCB<issueWidth>* >::const_iterator foundSysc = this->syscCallbacks.find(curPC);
 		if(foundSysc != this->syscCallbacksEnd){
+//			PyGILState_STATE gstate = PyGILState_Ensure();
 			return (*(foundSysc->second))(this->processorInstance);
+//			PyGILState_Release(gstate);
 		}
 		return false;
 	}

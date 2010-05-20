@@ -294,7 +294,7 @@ public:
 
 		sc_dt::uint64 addr = trans.get_address();
 		#ifdef DEBUGMODE
-		cerr << "Incoming address was " << addr << " from " << tag;
+		cerr << sc_time_stamp() << " - Incoming address was " << addr << " from " << tag;
 		#endif
 		unsigned int portId = decode(addr,this->locking);
 		if ( portId >= initiatorSocket.size() ) {
@@ -305,7 +305,7 @@ public:
 			THROW_EXCEPTION(__PRETTY_FUNCTION__ << stream.str());
 		}
 		#ifdef DEBUGMODE
-		cerr << ": requested " << addr << " on device # " << portId << endl;
+		cerr << ": requested a " << trans.is_write() << " on address " << addr << " of device # " << portId << endl;
 		#endif
 		trans.set_address(addr);
 
@@ -343,7 +343,7 @@ public:
 
 		sc_dt::uint64 addr = trans.get_address();
 		#ifdef DEBUGMODE
-		cerr << "DBG - Incoming address was " << addr << " from " << tag;
+		cerr << sc_time_stamp() << " - DBG - Incoming address was " << addr << " from " << tag;
 		#endif
 /*		if(addr == PROC_NUM_ADDR){
 			//I want to read the number of processors present in the system
@@ -360,7 +360,7 @@ public:
 			THROW_EXCEPTION(__PRETTY_FUNCTION__ << stream.str());
 		}
 		#ifdef DEBUGMODE
-		cerr << ": requested " << addr << " on device # " << portId << endl;
+		cerr << ": requested a " << trans.is_write() << " on address " << addr << " of device # " << portId << endl;
 		#endif
 		trans.set_address(addr);
 

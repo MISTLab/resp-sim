@@ -51,5 +51,12 @@ instSlave = testSlave_wrapper.testSlave('slave')
 #Connection of the ports: first we specify the source component and its ports; then the target component and its port.
 connectPorts(instMaster, instMaster.initSocket, instSlave, instSlave.targetSocket)
 
+# Modified stats auto-printer
+def statsPrinter():
+    print '\x1b[34m\x1b[1mReal Elapsed Time (seconds):\x1b[0m'
+    print '\x1b[31m' + str(controller.print_real_time()) + '\x1b[0m'
+    print '\x1b[34m\x1b[1mSimulated Elapsed Time (nano-seconds):\x1b[0m'
+    print '\x1b[31m' + str(controller.get_simulated_time()) + '\x1b[0m'
+
 #finally we start the simulation for 10 NS
 #run_simulation(10)

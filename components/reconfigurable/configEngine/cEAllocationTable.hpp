@@ -118,32 +118,53 @@ public:
 	bool exec(unsigned int address);
 
 	/*
-	 * Removes a function according to the choosen deletion algorithm (or the given 'address'/'name').
-	 * Returns the address of the function which is removed, and puts its device number at address 'devnum'.
-	 * If no functions are mapped, or some other error happens, reserved address 0 is returned.
+	 * Removes a function according to the chosen deletion algorithm. Returns the address of the function which
+	 * is removed, and puts its device number at address 'devnum'. If no functions are mapped, or some other
+	 * error happens, reserved address 0 is returned.
 	 */
 	unsigned int remove(unsigned int *devnum);
+	/*
+	 * Returns a list of the addresses of the next functions which should be removed, according to the chosen
+	 * deletion algorithm.
+	 */
+	list<unsigned int> removeList();
+	/*
+	 * Removes a function according to the given 'address'. Returns the address of the function which is removed,
+	 * and puts its device number at address 'devnum'. If no functions are mapped, the address doesn't exists, or
+	 * some other error happens, reserved address 0 is returned.
+	 */
 	unsigned int remove(unsigned int address, unsigned int *devnum);
+	/*
+	 * Removes a function according to the given 'name'. Returns the address of the function which is removed,
+	 * and puts its device number at address 'devnum'. If no functions are mapped, the name doesn't exists, or
+	 * some other error happens, reserved address 0 is returned.
+	 */
 	unsigned int remove(string name, unsigned int *devnum);
 
 	/*
-	 * Returns the name of the function mapped at 'address'.
-	 * If the address has no mapping, an empty string is returned.
+	 * Returns the name of the function mapped at 'address'. If the address has no mapping, an empty string is
+	 * returned.
 	 */
 	string getName(unsigned int address);
 
 	/*
-	 * Returns the number of the device implementing the function mapped at 'address'.
-	 * If the address has no mapping, reserved device 0 is returned.
+	 * Returns the number of the device implementing the function mapped at 'address'. If the address has no
+	 * mapping, reserved device 0 is returned.
 	 */
 	unsigned int getDevice(unsigned int address);
 
 	/*
-	 * Returns the address of the function named 'name' (if various instances are
-	 * configured, the one with the lower ranking in deletion algorithm is returned).
-	 * If the name has no mapping, reserved address 0 is returned.
+	 * Returns the address of the function named 'name' (if various instances are configured, the one with
+	 * the lower ranking in deletion algorithm is returned). If the name has no mapping, reserved address 0
+	 * is returned.
 	 */
 	unsigned int getAddress(string name);
+
+	/*
+	 * Returns a list of addresses of all the functions named 'name' (ordered according to the deletion algorithm,
+	 * starting form the one with the lower ranking). If the name has no mapping, en empty list is returned.
+	 */
+	list<unsigned int> getAddressList(string name);
 
 	/*
 	 * Prints on the standard output the internal status of the general table.

@@ -133,7 +133,7 @@ private:
 	map< sc_dt::uint64, deque<CacheBlock*> > cache;
 
 	CacheBlock* loadCacheBlock(sc_dt::uint64 address) {
-		CacheBlock *nB = (CacheBlock*) malloc (sizeof(CacheBlock));
+		CacheBlock *nB = new CacheBlock();
 		tlm_generic_payload message;
 		sc_time memLatency = SC_ZERO_TIME;
 		nB->base_address = address - address % blockSize;
@@ -613,7 +613,7 @@ public:
 				#endif			
 
 				// We load the block from memory...
-				curBlock = (CacheBlock *) malloc(sizeof(CacheBlock));
+				curBlock = new CacheBlock();
 				curBlock->block = (unsigned char*) malloc (blockSize*sizeof(unsigned char));
 				curBlock->base_address = curBaseAddress;
 
@@ -649,6 +649,7 @@ public:
 				if (message.get_response_status() != TLM_OK_RESPONSE) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while reading from main memory");
 			}
 			else THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Undefined TLM command");
+			if (!hit) delete curBlock;
 			// And we update the pointer to the required data for eventual subsequent reads
 			remLen -= partLen;
 			dataPointer += partLen;

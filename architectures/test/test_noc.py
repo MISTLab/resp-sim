@@ -42,7 +42,7 @@
 ##############################################################################
 
 ###### GENERAL PARAMETERS #####
-PROCESSOR_FREQUENCY = 100         # MHz
+PROCESSOR_FREQUENCY = 1000        # MHz
 PROCESSOR_NUMBER  = 1             #
 try:
     PROCESSOR_NAMESPACE
@@ -54,6 +54,7 @@ MEMORY_SIZE       = 32              # MBytes
 MEM_LATENCY       = 10.0            # ns
 NOC_ACTIVE        = True
 NOC_LATENCY       = 10.0            # ns
+NOC_TOPOLOGY      = NocLT32.RING
 
 # Software
 try:
@@ -68,6 +69,18 @@ if SOFTWARE:
         ARGS = []
 
 OS_EMULATION = True     # True or False
+
+# Modified stats auto-printer
+def statsPrinter():
+    print '\x1b[34m\x1b[1mReal Elapsed Time (seconds):\x1b[0m'
+    print '\x1b[31m' + str(controller.print_real_time()) + '\x1b[0m'
+    print '\x1b[34m\x1b[1mSimulated Elapsed Time (nano-seconds):\x1b[0m'
+    print '\x1b[31m' + str(controller.get_simulated_time()) + '\x1b[0m'
+    if NOC_ACTIVE:
+        print '\x1b[34m\x1b[1mNOC Accesses:\x1b[0m'
+        print '\x1b[31m' + str(noc.numAccesses) + '\x1b[0m'
+        print '\x1b[34m\x1b[1mNOC Words:\x1b[0m'
+        print '\x1b[31m' + str(noc.numWords) + '\x1b[0m'
 
 ################################################
 ##### AUTO VARIABLE SETUP ######################
@@ -94,7 +107,7 @@ for i in range(0, PROCESSOR_NUMBER):
 ##### MEMORY INSTANTIATION #####
 memorySize = 1024*1024*MEMORY_SIZE
 latencyMem = scwrapper.sc_time(MEM_LATENCY, scwrapper.SC_NS)
-mem = MemoryLT32.MemoryLT32( 'mem', memorySize, latencyMem)
+mem = MemoryLT32.MemoryLT32('mem', memorySize, latencyMem)
 
 ################################################
 ##### INTERCONNECTIONS #########################
@@ -102,13 +115,12 @@ mem = MemoryLT32.MemoryLT32( 'mem', memorySize, latencyMem)
 
 if NOC_ACTIVE:
     latencyNoc = scwrapper.sc_time(NOC_LATENCY, scwrapper.SC_NS)
-    noc = NocLT32.NocLT32('noc',2,1,NocLT32.RING,latencyNoc)
+    noc = NocLT32.NocLT32('noc',2*PROCESSOR_NUMBER,1,NOC_TOPOLOGY,latencyNoc)
 
     ##### NOC CONNECTIONS #####
     # Connecting the master components to the NOC
     for i in range(0, PROCESSOR_NUMBER):
-#        connectPorts(processors[i], processors[i].instrMem.initSocket, noc, noc.targetSocket)
-	processors[i].instrMem.initSocket.bind(noc.targetSocket)
+        connectPorts(processors[i], processors[i].instrMem.initSocket, noc, noc.targetSocket)
         connectPorts(processors[i], processors[i].dataMem.initSocket, noc, noc.targetSocket)
 
     connectPorts(noc, noc.initiatorSocket, mem, mem.targetSocket)
@@ -122,8 +134,9 @@ else:
     else:
         ##### MEMORY CONNECTIONS #####
         # Connecting the master component to the memory
-        connectPorts(processors[0], processors[0].instrMem.initSocket, mem, mem.targetSocket)
-        connectPorts(processors[0], processors[0].dataMem.initSocket, mem, mem.targetSocket)
+        raise Exception('Sorry, memory currently supports only a single connection (data or instruction). Please activate an interconnection layer between processors and memory')
+        #connectPorts(processors[0], processors[0].instrMem.initSocket, mem, mem.targetSocket)
+        #connectPorts(processors[0], processors[0].dataMem.initSocket, mem, mem.targetSocket)
 
 ################################################
 ##### SYSTEM INIT ##############################

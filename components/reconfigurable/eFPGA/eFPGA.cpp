@@ -18,16 +18,10 @@
  *
  *   This file is part of ReSP.
  *
- *   TRAP is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Lesser General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
  *   This program is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Lesser General Public License for more details.
- *
  *
  *   The following code is derived, directly or indirectly, from the SystemC
  *   source code Copyright (c) 1996-2004 by all Contributors.
@@ -60,18 +54,21 @@
 #include "eFPGA.hpp"
 
 eFPGA::eFPGA(sc_module_name name, unsigned int w, unsigned int h, sc_time lw, float wa, float ca) :
-				sc_module(name), name(name), latword(lw), wordarea(wa), cellarea(ca), tab(string(name),w,h),
+				sc_module(name), latword(lw), wordarea(wa), cellarea(ca), tab(string(name),w,h),
+				bS((boost::lexical_cast<std::string>(name) + "_bS").c_str(),lw),
 				targetSocket((boost::lexical_cast<std::string>(name) + "_targSock").c_str()) {
 
 	//I bind the port to the class (this) which contains the transport methods
 	this->targetSocket.register_b_transport(this, &eFPGA::b_transport);
 	end_module();
 
-	//cerr << "eFPGA created with name " << name << ";"  << endl;
-	//cerr << " - " << name << " has " << w << " X " << h << " cells of dimension;" << endl;
-	//cerr << " - " << name << " has " << latword << " ns of latency per word; " << endl;
-	//cerr << " - " << name << " has " << wordarea << " words per square mm;" << endl;
-	//cerr << " - " << name << " has " << cellarea << " cells per square mm." << endl;
+	#ifdef DEBUGMODE
+	cerr << "eFPGA created with name " << this->name() << ";"  << endl;
+	cerr << " - " << this->name() << " has " << w << " X " << h << " cells of dimension;" << endl;
+	cerr << " - " << this->name() << " has " << latword << " ns of latency per word; " << endl;
+	cerr << " - " << this->name() << " has " << wordarea << " words per square mm;" << endl;
+	cerr << " - " << this->name() << " has " << cellarea << " cells per square mm." << endl;
+	#endif
 }
 
 void eFPGA::printStatus() {tab.printStatus();}
@@ -96,7 +93,9 @@ void eFPGA::b_transport(tlm_generic_payload& message, sc_time& delay) {
 	unsigned int numWords, heur;
 	sc_time howMuch;
 
-	//cerr << name << " received: " << address << "\t" << latency << "\t" << funWidth << "\t" << funHeight << endl;
+	#ifdef DEBUGMODE
+	cerr << sc_time_stamp() << ": " << name() << " - Received " << address << "\t" << latency << "\t" << funWidth << "\t" << funHeight << endl;
+	#endif
 	message.set_response_status(TLM_COMMAND_ERROR_RESPONSE);
 
 	/* Command W0	Allocates funcAddr, waiting for the appropriate latency, and sets the response with:
@@ -107,11 +106,11 @@ void eFPGA::b_transport(tlm_generic_payload& message, sc_time& delay) {
 		if ( !tab.add(address, latency, funWidth, funHeight) ) message.set_response_status(TLM_GENERIC_ERROR_RESPONSE);
 		else {
 			numWords = (unsigned int) funWidth*funHeight * wordarea / cellarea;
-			howMuch = latword * numWords;
-			//cerr << name << ": using " << numWords << " words; configuration latency is " << howMuch << endl;
+			#ifdef DEBUGMODE
+			cerr << sc_time_stamp() << ": " << name() << " - Configuring " << address << " using " << numWords << " words" << endl;
+			#endif
 			messageData->answer = numWords;
 			message.set_response_status(TLM_OK_RESPONSE);
-			wait(howMuch);
 		}
 	}
 
@@ -142,7 +141,9 @@ void eFPGA::b_transport(tlm_generic_payload& message, sc_time& delay) {
 	 */
 	if ( message.get_command() == TLM_READ_COMMAND	&&	message.get_address() == 1 ) {
 		heur = tab.searchForSpace(funWidth,funHeight);
-		//cerr << name << ": the heuristic is: " << (int)heur << endl;
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << ": " << name() << " - The heuristic is: " << (int)heur << endl;
+		#endif
 		messageData->answer = heur;
 		message.set_response_status(TLM_OK_RESPONSE);
 	}

@@ -66,6 +66,8 @@
 
 #include "utils.hpp"
 
+//#define DEBUGMODE
+
 using namespace std;
 using namespace tlm;
 using namespace tlm_utils;
@@ -74,7 +76,7 @@ typedef pair<sc_dt::uint64,sc_dt::uint64> addressSet;
 typedef map<addressSet, unsigned int> forwardMap_t;
 typedef map<unsigned int, unsigned int> targetToPortMap_t;
 
-enum TopologyType {RING, STAR, MESHFC, TREE};
+enum TopologyType {RING, EXPSTAR, FULL, TREE};
 
 template<typename BUSWIDTH> class SwitchLT: public sc_module {
 private:
@@ -106,7 +108,9 @@ private:
 		// when it becomes free it goes on (and sets the bus to busy): at the end of its requests, it notifies the
 		// next element in queue.
 		if( this->busy ) {
-//			cerr << sc_time_stamp() << " - noc-switch" << this->myId << ": Queuing request #" << tag << endl;
+			#ifdef DEBUGMODE
+			cerr << sc_time_stamp() << " - noc-switch" << this->myId << ": Queuing request #" << tag << endl;
+			#endif
 			this->requests.push(tag);
 			wait(*(this->events[tag]));
 		}
@@ -119,7 +123,9 @@ private:
 		this->busy = false;
 		if( !requests.empty() ) {
 			unsigned int front = this->requests.front();
-//			cerr << sc_time_stamp() << " - noc-switch" << this->myId << ": Waking up queued request #" << front << endl;
+			#ifdef DEBUGMODE
+			cerr << sc_time_stamp() << " - noc-switch" << this->myId << ": Waking up queued request #" << front << endl;
+			#endif
 			this->requests.pop();
 			(this->events[front])->notify();
 			if (locking)
@@ -192,7 +198,9 @@ public:
 		}
 		if (destination == -1) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Destination port for address " << adr << " is not listed in the routing maps");
 
-//		cerr << sc_time_stamp() << " - noc-switch" << this->myId << ": Received " << cmd << " request for address " << adr << endl;
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << " - noc-switch" << this->myId << ": Received " << cmd << " request for address " << adr << endl;
+		#endif
 		if (cmd == TLM_READ_COMMAND) {
 			// Here we only forward the packet containing the requested address (we assume this packet is only 1 word)
 			wait(this->latency);
@@ -206,7 +214,9 @@ public:
 		this->numWords+=words;
 		this->unlock();
 
-//		cerr << sc_time_stamp() << " - noc-switch" << this->myId << ": Routing request to " << destination << " on port " << destinationPort << endl;
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << " - noc-switch" << this->myId << ": Routing request to " << destination << " on port " << destinationPort << endl;
+		#endif
 		this->initSocket[destinationPort]->b_transport(trans, delay);
 
 		if (cmd == TLM_READ_COMMAND) {
@@ -215,7 +225,9 @@ public:
 			this->lock(ticketOld);
 
 			// Finally, we route back the packet containing the data READ from memory
-//			cerr << sc_time_stamp() << " - noc-switch" << this->myId << ": Receiving back the response packet" << endl;
+			#ifdef DEBUGMODE
+			cerr << sc_time_stamp() << " - noc-switch" << this->myId << ": Receiving back the response packet" << endl;
+			#endif
 			wait(words*this->latency);
 
 			this->unlock();
@@ -245,11 +257,15 @@ public:
 		}
 		if (destination == -1) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Destination port for address " << adr << " is not listed in the routing maps");
 
-//		cerr << sc_time_stamp() << " - DBG noc-switch" << this->myId << ": Received " << cmd << " request for address " << adr << endl;
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << " - DBG noc-switch" << this->myId << ": Received " << cmd << " request for address " << adr << endl;
+		#endif
 
 		this->unlock();
 
-//		cerr << sc_time_stamp() << " - DBG noc-switch" << this->myId << ": Routing request to " << destination << " on port " << destinationPort << endl;
+		#ifdef DEBUGMODE
+		cerr << sc_time_stamp() << " - DBG noc-switch" << this->myId << ": Routing request to " << destination << " on port " << destinationPort << endl;
+		#endif
 		this->initSocket[destinationPort]->transport_dbg(trans);
 
 		if (cmd == TLM_READ_COMMAND) {
@@ -258,23 +274,25 @@ public:
 			this->lock(ticketOld);
 
 			// Finally, we route back the packet containing the data READ from memory
-//			cerr << sc_time_stamp() << " - DBG noc-switch" << this->myId << ": Receiving back the response packet" << endl;
+			#ifdef DEBUGMODE
+			cerr << sc_time_stamp() << " - DBG noc-switch" << this->myId << ": Receiving back the response packet" << endl;
+			#endif
 
 			this->unlock();
 		}
 	}
 
 	void printTables() {
-		cerr << sc_time_stamp() << " - noc-switch" << this->myId << " - My edge table is: " << endl;
+		cout << sc_time_stamp() << " - noc-switch" << this->myId << " - My edge table is: " << endl;
 		for (targetToPortMap_t::iterator oEiter = outgoingEdges.begin(); oEiter != outgoingEdges.end(); oEiter++) {
-			cerr << "\t" << oEiter->first << "->" << oEiter->second << endl;
+			cout << "\t" << oEiter->first << "->" << oEiter->second << endl;
 		}
-		cerr << sc_time_stamp() << " - noc-switch" << this->myId << " - My routing table is: " << endl;
+		cout << sc_time_stamp() << " - noc-switch" << this->myId << " - My routing table is: " << endl;
 		for (forwardMap_t::iterator fMiter = forwardMap.begin(); fMiter != forwardMap.end(); fMiter++) {
-			cerr << "\t" << (fMiter->first).first << "-" << (fMiter->first).second << "\t";
-			cerr << "routed to switch " << fMiter->second << " on port " << outgoingEdges[fMiter->second] << endl;
+			cout << "\t" << (fMiter->first).first << "-" << (fMiter->first).second << "\t";
+			cout << "routed to switch " << fMiter->second << " on port " << outgoingEdges[fMiter->second] << endl;
 		}
-		cerr << endl;
+		cout << endl;
 	}
 
 	void printAccesses() {

@@ -161,51 +161,49 @@ bool cEAllocationTable::exec(unsigned int address) {
 }
 
 unsigned int cEAllocationTable::remove(unsigned int *devnum) {
-	if ( delType == FIFO || delType == LRU) {
-		unsigned int min, whereMin;
-		map<unsigned int, unsigned int>::iterator delIt;
-		delIt = deletionData.begin();
-		// No functions mapped!!
-		if (delIt == deletionData.end() ) {
-			(*devnum) = 0;
-			return 0;
-		}
+	unsigned int whereMin = this->removeList().front();
+	if (whereMin == 0) {(*devnum) = 0; return 0;}
+	nameTable.erase(whereMin);
+	(*devnum)=deviceTable[whereMin];
+	deviceTable.erase(whereMin);
+	deletionData.erase(whereMin);
+	return whereMin;
+}
 
-		whereMin = delIt->first;
-		min = delIt->second;
+list<unsigned int> cEAllocationTable::removeList() {
+	list<unsigned int> remList;
+	list<unsigned int>::iterator remIter,insertHere;
+	map<unsigned int, unsigned int>::iterator delIt;
+	if ( delType == FIFO || delType == LRU) {
+		delIt = deletionData.begin();
 		while (delIt != deletionData.end()) {
-			if (delIt->second < min) {
-				whereMin = delIt->first;
-				min = delIt->second;
+			insertHere=remList.begin();
+			for (remIter=remList.begin(); remIter!=remList.end(); remIter++) {
+				if( deletionData[*remIter] > delIt->second ) {insertHere = remIter; break;}
 			}
+			remList.insert(remIter,delIt->first);
 			delIt++;
 		}
-		nameTable.erase(whereMin);
-		(*devnum)=deviceTable[whereMin];
-		deviceTable.erase(whereMin);
-		deletionData.erase(whereMin);
-		return whereMin;
 	}
 	if ( delType == RANDOM ) {
-		unsigned int whereMin,i;
-		map<unsigned int, unsigned int>::iterator delIt;
 		delIt = deletionData.begin();
 		// No functions mapped!!
 		if (delIt == deletionData.end() ) {
-			(*devnum) = 0;
-			return 0;
+			return remList;
 		}
-		whereMin = rand() % nameTable.size();
-		for (i = 0; i < whereMin; i++ ) {
+		unsigned int start = rand() % nameTable.size();
+		for (int i = 0; i < start; i++ ) delIt++;
+		do {
+			remList.push_back(delIt->first);
+			delIt++;
+		} while (delIt != deletionData.end());
+		delIt = deletionData.begin();
+		for (int i = 0; i < start; i++ ) {
+			remList.push_back(delIt->first);
 			delIt++;
 		}
-		whereMin = delIt->first;
-		nameTable.erase(whereMin);
-		(*devnum)=deviceTable[whereMin];
-		deviceTable.erase(whereMin);
-		deletionData.erase(whereMin);
-		return whereMin;
-	}		
+	}
+	return remList;
 }
 
 unsigned int cEAllocationTable::remove(unsigned int address, unsigned int *devnum) {
@@ -249,42 +247,48 @@ unsigned int cEAllocationTable::getDevice(unsigned int address) {
 }
 
 unsigned int cEAllocationTable::getAddress(string name) {
-	map<unsigned int, string>::iterator exists = nameTable.begin();
-	map<unsigned int, unsigned int>::iterator dataIt;
-	unsigned int myKey, min=0, whereMin=0;
+	list<unsigned int> addressList = this->getAddressList(name);
 
-	while (exists != nameTable.end()) {
-		if ( name.compare(exists->second) == 0 ) {
-			myKey = exists->first;
-			dataIt = deletionData.find(myKey);
-			if (dataIt == deletionData.end()) {
-				cerr << "Something wrong happened!" << endl;
-				return 0;
+	if (addressList.empty()) return 0;
+	
+	return addressList.front();
+}
+
+list<unsigned int> cEAllocationTable::getAddressList(string name) {
+	list<unsigned int> addList;
+	list<unsigned int>::iterator addIter,insertHere;
+	if ( delType == FIFO || delType == LRU) {
+		map<unsigned int, unsigned int>::iterator delIt = deletionData.begin();
+		while (delIt != deletionData.end()) {
+			if ( name.compare(nameTable[delIt->first]) == 0 ) {
+				insertHere=addList.begin();
+				for (addIter=addList.begin(); addIter!=addList.end(); addIter++) {
+					if( deletionData[*addIter] > delIt->second ) {insertHere = addIter; break;}
+				}
+				addList.insert(addIter,delIt->first);
 			}
-			min = dataIt->second;
-			whereMin=myKey;
-			break;
+			delIt++;
 		}
-		exists++;
 	}
-
-	while (exists != nameTable.end()) {
-		if ( name.compare(exists->second) == 0 ) {
-			myKey = exists->first;
-			dataIt = deletionData.find(myKey);
-			if (dataIt == deletionData.end()) {
-				cerr << "Something wrong happened!" << endl;
-				return 0;
-			}
-			if (dataIt->second < min) {
-				min = dataIt->second;
-				whereMin=myKey;
-			}
+	if ( delType == RANDOM ) {
+		map<unsigned int, string>::iterator nameIt = nameTable.begin();
+		// No functions mapped!!
+		if (nameIt == nameTable.end() ) {
+			return addList;
 		}
-		exists++;
+		unsigned int start = rand() % nameTable.size();
+		for (int i = 0; i < start; i++ ) nameIt++;
+		do {
+			if ( name.compare(nameIt->second) == 0 ) addList.push_back(nameIt->first);
+			nameIt++;
+		} while (nameIt != nameTable.end());
+		nameIt = nameTable.begin();
+		for (int i = 0; i < start; i++ ) {
+			if ( name.compare(nameIt->second) == 0 ) addList.push_back(nameIt->first);
+			nameIt++;
+		}
 	}
-
-	return whereMin;
+	return addList;
 }
 
 void cEAllocationTable::printStatus() {

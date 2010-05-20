@@ -13,8 +13,7 @@ def build(bld):
             pt_test.c
         """
         obj.target = 'pt_test'
-        if not arch.startswith('ecos'):
-            obj.uselib_local = 'pthread_stub_'+arch
+        obj.uselib_local = 'pthread_stub_'+arch
 
         obj = bld.new_task_gen('cc','program')
         obj.env  = bld.env_of_name(arch).copy()
@@ -22,6 +21,5 @@ def build(bld):
             pt_test2.c
         """
         obj.target = 'pt_test2'
-        if not arch.startswith('ecos'):
-            obj.uselib_local = 'pthread_stub_'+arch
+        obj.uselib_local = 'pthread_stub_'+arch
 
