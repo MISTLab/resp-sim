@@ -79,6 +79,7 @@ namespace reconfEmu {
 template <typename issueWidth> class printValueCall : public reconfCB <issueWidth>{
 private:
 	configEngine* cE;
+	map<unsigned int, bool> configured;
 public:
 	printValueCall(configEngine* mycE, sc_time latency = SC_ZERO_TIME, unsigned int width = 1, unsigned int height = 1):
 		reconfCB<issueWidth>(latency, width, height), cE(mycE)	{}
@@ -86,7 +87,8 @@ public:
 		processorInstance.preCall();
 		std::vector< issueWidth > callArgs = processorInstance.readArgs();
 
-		(this->cE)->executeForce("printValue", this->latency, this->width, this->height, false);
+		(this->cE)->executeForce("printValue", this->latency, this->width, this->height, configured[processorInstance.getProcessorID()]);
+		configured[processorInstance.getProcessorID()] = true;
 //		unsigned int address = (this->cE)->configure("printValue", this->latency, this->width, this->height, true);
 //		(this->cE)->manualRemove("printValue");
 //		(this->cE)->execute(address);

@@ -40,10 +40,11 @@
 ##############################################################################
 
 ./startSim.sh -a architectures/test/test_arch.py --silent
+./startSim.sh -a architectures/test/test_leon3.py --silent
 ./startSim.sh -a architectures/test/test_arm7.py --silent
 ./startSim.sh -a architectures/test/test_arm9.py --silent
-./startSim.sh -a architectures/test/test_leon3.py --silent
 ./startSim.sh -a architectures/test/test_noc.py --silent
-./startSim.sh -a architectures/test/test_reconfig.py --silent
 ./startSim.sh -a architectures/test/test_simple_caches.py --silent
 ./startSim.sh -a architectures/test/test_coherent_caches.py --silent
+./startSim.sh -a architectures/test/test_reconfig.py --silent
+./startSim.sh -a architectures/test/test_reconfig_multi.py --silent

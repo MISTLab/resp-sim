@@ -114,7 +114,7 @@ mem = MemoryLT32.MemoryLT32('mem', memorySize, latencyMem)
 
 if BUS_ACTIVE:
     latencyBus = scwrapper.sc_time(BUS_LATENCY, scwrapper.SC_NS)
-    bus  = BusLT32.BusLT32('bus',2*PROCESSOR_NUMER,latencyBus)
+    bus = BusLT32.BusLT32('bus',2*PROCESSOR_NUMBER,latencyBus)
 
     ##### BUS CONNECTIONS #####
     # Connecting the master components to the bus

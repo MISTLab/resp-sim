@@ -118,7 +118,7 @@ public:
 		// Checking consistency of the request
 		if(adr > this->size || adr + len > this->size) {
 			trans.set_response_status(TLM_ADDRESS_ERROR_RESPONSE);
-			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error requesting address " << showbase << hex << adr << dec << endl);
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error requesting address " << /*showbase << hex <<*/ adr << /*dec <<*/ " on " << name() << endl);
 			return;
 		}
 

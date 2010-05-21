@@ -233,6 +233,7 @@ for i in range(0, PROCESSOR_NUMBER):
 #    recEmu.registerCppCall('printValue')
     recEmu.registerCppCall('generate', scwrapper.sc_time(1, scwrapper.SC_NS),1,1)
     recEmu.registerCppCall('sum');
+    print 'Registered routine calls for processor ' + str(i) + ': '
     recEmu.printRegisteredFunctions()
 
 # Printing some useful statistics before the simulation begins

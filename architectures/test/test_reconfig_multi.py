@@ -52,11 +52,12 @@ except:
 # Memory/bus
 MEMORY_SIZE        = 32              # MBytes
 MEM_LATENCY        = 10.0            # ns
-BUS_ACTIVE         = False
+BUS_ACTIVE         = True
 BUS_LATENCY        = 10.0            # ns
-NOC_ACTIVE         = True
+NOC_ACTIVE         = False
 NOC_LATENCY        = 10.0            # ns
-CONFIGURE_THROUGH_ITC = True
+NOC_TOPOLOGY       = NocLT32.FULL
+CONFIGURE_THROUGH_ITC = False
 DATA_CACHE_ACTIVE  = True
 INSTR_CACHE_ACTIVE = True
 CACHE_SIZE         = 8               # MBytes
@@ -81,16 +82,6 @@ if SOFTWARE:
         ARGS
     except:
         ARGS = []
-        ARGS.append('ffmpeg')
-        ARGS.append('-i')
-        ARGS.append('sheep.mpg')
-#        ARGS.append('software/apps/ffmpeg/minimal.mpg')
-        ARGS.append('-b')
-        ARGS.append('64000')
-        ARGS.append('-threads')
-        ARGS.append(str(PROCESSOR_NUMBER))
-        ARGS.append('sheep2.mpg')
-#        ARGS.append('software/apps/ffmpeg/minimal2.mpg')
 
 OS_EMULATION = True     # True or False
 
@@ -165,10 +156,13 @@ if BUS_ACTIVE:
     bus.addBinding("mem",0x0,memorySize)
 elif NOC_ACTIVE:
     latencyNoc = scwrapper.sc_time(NOC_LATENCY, scwrapper.SC_NS)
-    noc = NocLT32.NocLT32('noc',2*PROCESSOR_NUMBER+additionalMasters,1,NocLT32.TREE,latencyNoc)
+    if CONFIGURE_THROUGH_ITC:
+        noc = NocLT32.NocLT32('noc',2*PROCESSOR_NUMBER+additionalMasters,1+EFPGA_NUMBER,NOC_TOPOLOGY,latencyNoc)
+    else:
+        noc = NocLT32.NocLT32('noc',2*PROCESSOR_NUMBER+additionalMasters,1,NOC_TOPOLOGY,latencyNoc)
     connectPorts(noc, noc.initiatorSocket, mem, mem.targetSocket)
     # Add memory mapping
-    noc.addBinding(0x0,memorySize)
+    noc.addBinding("mem",0x0,memorySize)
 else:
     raise Exception('At least an interconnection layer should be introduced in this architecture')
 
@@ -248,7 +242,7 @@ for i in range(0, EFPGA_NUMBER):
             bus.addBinding("bS"+str(bSPosition), memorySize+bSPosition, memorySize+bSPosition)
         else:
             connectPorts(noc, noc.initiatorSocket, eF[i].bS, eF[i].bS.targetSocket)
-            noc.addBinding(memorySize+bSPosition, memorySize+bSPosition)
+            noc.addBinding("bS"+str(bSPosition), memorySize+bSPosition, memorySize+bSPosition)
     else:
         connectPorts(cE, cE.destSocket, eF[i].bS, eF[i].bS.targetSocket)
     cE.bindFPGA(memorySize+bSPosition)
@@ -338,10 +332,10 @@ for i in range(0, PROCESSOR_NUMBER):
 
     # Registration of the callbacks
     printValueInstance = printValueCall(scwrapper.sc_time(0.100, scwrapper.SC_MS),50,100)			# REMEMBER: PYTHON USES ONLY NS!!
-#    recEmu.registerPythonCall('printValue', printValueInstance);
+    recEmu.registerPythonCall('printValue', printValueInstance);
     pytCalls.append(printValueInstance)
 
-    recEmu.registerCppCall('printValue', scwrapper.sc_time(0.100, scwrapper.SC_NS),50,100)
+#    recEmu.registerCppCall('printValue', scwrapper.sc_time(0.100, scwrapper.SC_NS),50,100)
 #    recEmu.registerCppCall('printValue')
     recEmu.registerCppCall('generate', scwrapper.sc_time(0.010, scwrapper.SC_NS),1,1)
     recEmu.registerCppCall('sum');
@@ -351,6 +345,8 @@ for i in range(0, PROCESSOR_NUMBER):
 # Printing some useful statistics before the simulation begins
 if BUS_ACTIVE:
     bus.printBindings()
+else:
+    noc.printBindings()
 cE.printSystemStatus()
 
 # We can finally run the simulation
