@@ -92,8 +92,9 @@ private:
 	Graph_t networkGraph;
 	property_map<Graph_t, edge_weight_t>::type graphWeightMap;
 
-	// A map associating a set of addresses to a switch (which should be directly connected to a slave)
+	// A map associating an output name to a switch (which should be directly connected to a slave)
 	map<unsigned int, string > nameMap;
+	// A map associating a set of addresses to a switch (which should be directly connected to a slave)
 	map<unsigned int, addressSet > outMap;
 
 	TopologyType topo;
@@ -195,7 +196,7 @@ private:
 			weights[numEdges-1] = 1;
 			numEdges++;
 			break;
-		case STAR:
+		case EXPSTAR:
 			allocSwitch = new SwitchLT<BUSWIDTH>(centralTag,this->switchLatency,locking,maxSwitchQueue);
 			switches[centralTag] = allocSwitch;
 
@@ -214,7 +215,7 @@ private:
 			}
 			extraSwitches++;
 			break;
-		case MESHFC:
+		case FULL:
 			numEdges = 0;
 			for (unsigned int i=1; i<numMasters+numSlaves; i++) numEdges+=i;
 			edges = (Edge_desc*) malloc( numEdges * sizeof(Edge_desc) );
@@ -263,8 +264,11 @@ private:
 		Vertex_t s;
 
 		// First, we check if the requested slave is bound to a set of addresses
-		if (outMap.count(slave) == 0) {}
-//			cerr << "No binding for output port attached to " << slave << endl;
+		if (outMap.count(slave) == 0) {
+			#ifdef DEBUGMODE
+			cerr << "No binding for output port attached to " << slave << endl;
+			#endif
+		}
 		else {
 			// Then, if it is, we calculate for each switch the shortest path to the slave
 			s = vertex(slave, networkGraph);
@@ -302,7 +306,7 @@ private:
 	}
 
 public:
-	// These ports are the external boudnary ports, on which the devices are connected
+	// These ports are the external boundary ports, on which the devices are connected
 	// All of their transactions are forwarded to the internal ports, which are going
 	// to furtherly forward the requests according to the routing algorithm
 	multi_passthrough_target_socket<NocLT, sizeof(BUSWIDTH)*8> targetSocket;
@@ -339,6 +343,7 @@ public:
 
 		unsigned int len = trans.get_data_length();
 		unsigned int words = len / sizeof(BUSWIDTH);
+		if (len%sizeof(BUSWIDTH) != 0) words++;
 		this->numAccesses++;
 		this->numWords+=words;
 
@@ -347,8 +352,16 @@ public:
 	}
 
 	void b_t2(int tag, tlm_generic_payload& trans, sc_time& delay){
+		sc_dt::uint64 addr = trans.get_address();
+		map<unsigned int, addressSet>::iterator addrIter;
+		for(addrIter=outMap.begin(); addrIter!=outMap.end(); addrIter++) {
+			if (addrIter->second.first <= addr && addr <= addrIter->second.second) {
+				addr = addr - addrIter->second.first;
+				break;
+			}
+		}
+		trans.set_address(addr);
 		initiatorSocket[tag]->b_transport(trans, delay);
-
 		#ifdef DEBUGMODE
 		cerr << "Request exiting NOC" << endl;
 		#endif
@@ -360,6 +373,15 @@ public:
 	}
 
 	unsigned int t_dbg1(int tag, tlm::tlm_generic_payload& trans) {
+		sc_dt::uint64 addr = trans.get_address();
+		map<unsigned int, addressSet>::iterator addrIter;
+		for(addrIter=outMap.begin(); addrIter!=outMap.end(); addrIter++) {
+			if (addrIter->second.first <= addr && addr <= addrIter->second.second) {
+				addr = addr - addrIter->second.first;
+				break;
+			}
+		}
+		trans.set_address(addr);
 		#ifdef DEBUGMODE
 		cerr << "DBG Request entering NOC" << endl;
 		#endif
@@ -378,11 +400,26 @@ public:
 		if (startAddress > endAddress || (nextSlaveToBind-numMasters) > numSlaves) {cout << "Error!" << endl; return;}
 		this->outMap[this->nextSlaveToBind].first = startAddress;
 		this->outMap[this->nextSlaveToBind].second = endAddress;
+		this->nameMap[this->nextSlaveToBind] = name;
 		this->updateMaps(this->nextSlaveToBind);
 //		this->resetMaps();
 		this->nextSlaveToBind++;
 	}
 
+	/*-------------------------------------
+	 * Prints out the current NOC bindings
+	 *-------------------------------------*/
+	void printBindings() {
+		map<unsigned int, string>::iterator bindIter;
+		for(bindIter=this->nameMap.begin(); bindIter!=this->nameMap.end(); bindIter++) {
+			cout << bindIter->second << " on slave port (switch#) " << bindIter->first << " bound to addresses from ";
+			cout << this->outMap[bindIter->first].first << " to " << this->outMap[bindIter->first].second << endl;
+		}
+	}
+
+	/*---------------------------------------
+	 * Prints out the number of NOC accesses
+	 *---------------------------------------*/
 	void printAccesses() {
 		cout << "The entire NOC had " << numAccesses << " accesses, for a total amount of " << numWords << " words" << endl;
 		switchIdMap_iter swIter;
@@ -391,6 +428,15 @@ public:
 		}
 	}
 
+	unsigned int getAccessesForSwitch(unsigned int pos) {
+		if (pos<1 || pos>switches.size()) return 0;
+		return switches[pos]->numAccesses;
+	}
+
+	unsigned int getWordsForSwitch(unsigned int pos) {
+		if (pos<1 || pos>switches.size()) return 0;
+		return switches[pos]->numWords;
+	}
 };
 
 #endif

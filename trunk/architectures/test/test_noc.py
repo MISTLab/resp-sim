@@ -126,7 +126,7 @@ if NOC_ACTIVE:
     connectPorts(noc, noc.initiatorSocket, mem, mem.targetSocket)
 
     # Add memory mapping
-    noc.addBinding(0x0,memorySize)
+    noc.addBinding("mem",0x0,memorySize)
 
 else:
     if PROCESSOR_NUMBER > 1:

@@ -134,7 +134,7 @@ mem = MemoryLT32.MemoryLT32('mem', memorySize, latencyMem)
 
 if BUS_ACTIVE:
     latencyBus = scwrapper.sc_time(BUS_LATENCY, scwrapper.SC_NS)
-    bus  = BusLT32.BusLT32('bus',2*PROCESSOR_NUMBER,latencyBus)
+    bus = BusLT32.BusLT32('bus',2*PROCESSOR_NUMBER,latencyBus)
     connectPorts(bus, bus.initiatorSocket, mem, mem.targetSocket)
     # Add memory mapping
     bus.addBinding("mem",0x0,memorySize)

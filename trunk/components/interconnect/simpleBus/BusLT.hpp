@@ -185,8 +185,9 @@ private:
 public:
 	sc_time latency;
 	unsigned int numAccesses;
-	unsigned int numWords;
 	unsigned int *accessCounter;
+	unsigned int numWords;
+	unsigned int *wordsCounter;
 	unsigned int numMasters;
 	target_socket_type targetSocket;
 	initiator_socket_type initiatorSocket;
@@ -197,11 +198,14 @@ public:
 			sc_module(module_name), latency(latency), numMasters(numMasters) {
 		this->numAccesses = 0;
 		this->numWords = 0;
-		this->accessCounter = (unsigned int*) malloc(2*numMasters*sizeof(unsigned int));
+		this->accessCounter = (unsigned int*) malloc(numMasters*sizeof(unsigned int));
+		this->wordsCounter = (unsigned int*) malloc(numMasters*sizeof(unsigned int));
 		for(int i = 0; i < numMasters; i++){
 			events[i] = new sc_event;
-			accessCounter[2*i]=0;
-			accessCounter[2*i+1]=0;
+			accessCounter[i]=0;
+			wordsCounter[i]=0;
+//			accessCounter[2*i]=0;
+//			accessCounter[2*i+1]=0;
 		}
 		this->targetSocket.register_b_transport(this, &BusLT::b_transport);
 		this->targetSocket.register_get_direct_mem_ptr(this, &BusLT::get_direct_mem_ptr);
@@ -217,6 +221,7 @@ public:
 			if ((*map)) delete (*map);
 		}
 		free(accessCounter);
+		free(wordsCounter);
 	}
 
 	/*---------------------------------------------------------
@@ -265,10 +270,10 @@ public:
 	 * Prints out the current bus bindings
 	 *-------------------------------------*/
 	void printBindings() {
-		for(typename std::vector<address_map_type *>::iterator map = m_address_map_list.begin();
+		for(typename vector<address_map_type *>::iterator map = m_address_map_list.begin();
 				map != m_address_map_list.end(); map++) {
-			cout << (*map)->get_entry_port_name() << " " << (*map)->get_target_port_rank() << " ";
-			cout << (*map)->get_start_address() << " " << (*map)->get_end_address() << endl;
+			cout << (*map)->get_entry_port_name() << " on slave port " << (*map)->get_target_port_rank() << " bound to addresses from ";
+			cout << (*map)->get_start_address() << " to " << (*map)->get_end_address() << endl;
 		}
 	}
 
@@ -277,14 +282,19 @@ public:
 	 *---------------------------------------*/
 	void printAccesses() {
 		for (unsigned int i = 0; i < numMasters; i++) {
-			cout << "Accesses with tag " << i << ":\t" << accessCounter[i] << endl;
+			cout << "Accesses with tag " << i << ":\t" << accessCounter[i] << " for a total of " << wordsCounter[i] << " words " << endl;
 		}
-		cout << "Total Accesses:\t\t" << numAccesses << endl;
+		cout << "Total Accesses:\t\t" << numAccesses << " for a total of " << numWords << " words " << endl;
 	}
 
 	unsigned int getAccesses(unsigned int pos) {
 		if (pos>=numMasters) return 0;
 		return accessCounter[pos];
+	}
+
+	unsigned int getWords(unsigned int pos) {
+		if (pos>=numMasters) return 0;
+		return wordsCounter[pos];
 	}
 
 	/*-----------------------------------
@@ -320,9 +330,10 @@ public:
 		//	delay += words*this->latency;
 
 		wait(words*this->latency);
-		this->accessCounter[tag]++;
 		this->numAccesses++;
+		this->accessCounter[tag]++;
 		this->numWords+=words;
+		this->wordsCounter[tag]+=words;
 		trans.set_dmi_allowed(false);			// Disables DMI in order to insert the bus latency for each transaction
 
 		//resp::sc_controller::getController().get_simulated_time()
