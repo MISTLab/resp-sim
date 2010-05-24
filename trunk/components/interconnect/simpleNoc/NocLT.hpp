@@ -373,6 +373,13 @@ public:
 	}
 
 	unsigned int t_dbg1(int tag, tlm::tlm_generic_payload& trans) {
+		#ifdef DEBUGMODE
+		cerr << "DBG Request entering NOC" << endl;
+		#endif
+		return intInitSocket[tag]->transport_dbg(trans);
+	}
+
+	unsigned int t_dbg2(int tag, tlm::tlm_generic_payload& trans) {
 		sc_dt::uint64 addr = trans.get_address();
 		map<unsigned int, addressSet>::iterator addrIter;
 		for(addrIter=outMap.begin(); addrIter!=outMap.end(); addrIter++) {
@@ -382,13 +389,6 @@ public:
 			}
 		}
 		trans.set_address(addr);
-		#ifdef DEBUGMODE
-		cerr << "DBG Request entering NOC" << endl;
-		#endif
-		return intInitSocket[tag]->transport_dbg(trans);
-	}
-
-	unsigned int t_dbg2(int tag, tlm::tlm_generic_payload& trans) {
 		unsigned int retVal = initiatorSocket[tag]->transport_dbg(trans);
 		#ifdef DEBUGMODE
 		cerr << "DBG Request exiting NOC" << endl;

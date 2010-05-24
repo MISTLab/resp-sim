@@ -50,7 +50,7 @@ except:
     PROCESSOR_NAMESPACE = arm9tdmi_funcLT_wrapper.Processor_arm9tdmi_funclt
 
 # Memory/bus
-MEM1_SIZE          = 128             # KBytes
+MEM1_SIZE          = 256             # KBytes
 MEM1_FREQUENCY     = 166             # MHz
 MEM2_SIZE          = 32              # MBytes
 MEM2_FREQUENCY     = 50              # MHz
@@ -62,8 +62,8 @@ NOC_ACTIVE         = True
 NOC_FREQUENCY      = 166             # MHz
 NOC_TOPOLOGY       = NocLT32.FULL
 CONFIGURE_THROUGH_ITC = False
-DATA_CACHE_ACTIVE  = True
-INSTR_CACHE_ACTIVE = True
+DATA_CACHE_ACTIVE  = False
+INSTR_CACHE_ACTIVE = False
 CACHE_SIZE         = 16              # KBytes
 CACHE_BLOCK_SIZE   = 8               # words
 CACHE_WAYS         = 8
@@ -187,20 +187,20 @@ if NOC_ACTIVE and BUS_ACTIVE:
     connectPorts(noc, noc.initiatorSocket, mem2, mem2.targetSocket)
     connectPorts(noc, noc.initiatorSocket, bus, bus.targetSocket)
     # Add memory mapping
-    noc.addBinding("mem1",0x0,memorySize1)
-    noc.addBinding("mem2",memorySize1+1,memorySize1+memorySize2)
+    noc.addBinding("mem1",0x0,memorySize1-1)
+    noc.addBinding("mem2",memorySize1,memorySize1+memorySize2-1)
 #    noc.addBinding("bus",memorySize1+memorySize2+1,memorySize1+memorySize2+1)
     bSmem = MemoryLT32.MemoryLT32('bSRAM', memorySize1, latencyMem1)
     connectPorts(bus, bus.initiatorSocket, bSmem, bSmem.targetSocket)
-    bus.addBinding("bSRAM",0x0,memorySize1)
+    bus.addBinding("bSRAM",0x0,memorySize1-1)
 elif BUS_ACTIVE:
     latencyBus = scwrapper.sc_time(float(1000)/float(BUS_FREQUENCY), scwrapper.SC_NS)
     bus = BusLT32.BusLT32('bus',2*PROCESSOR_NUMBER+additionalMasters,latencyBus)
     connectPorts(bus, bus.initiatorSocket, mem1, mem1.targetSocket)
     connectPorts(bus, bus.initiatorSocket, mem2, mem2.targetSocket)
    # Add memory mapping
-    bus.addBinding("mem1",0x0,memorySize1)
-    bus.addBinding("mem2",memorySize1+1,memorySize1+memorySize2)
+    bus.addBinding("mem1",0x0,memorySize1-1)
+    bus.addBinding("mem2",memorySize1,memorySize1+memorySize2-1)
 elif NOC_ACTIVE:
     latencyNoc = scwrapper.sc_time(float(1000)/float(NOC_FREQUENCY), scwrapper.SC_NS)
     if CONFIGURE_THROUGH_ITC:
@@ -210,8 +210,8 @@ elif NOC_ACTIVE:
     connectPorts(noc, noc.initiatorSocket, mem1, mem1.targetSocket)
     connectPorts(noc, noc.initiatorSocket, mem2, mem2.targetSocket)
     # Add memory mapping
-    noc.addBinding("mem1",0x0,memorySize1)
-    noc.addBinding("mem2",memorySize1+1,memorySize1+memorySize2)
+    noc.addBinding("mem1",0x0,memorySize1-1)
+    noc.addBinding("mem2",memorySize1,memorySize1+memorySize2-1)
 else:
     raise Exception('At least an interconnection layer should be introduced in this architecture')
 
@@ -294,33 +294,6 @@ for i in range(0, EFPGA_NUMBER):
 ################################################
 
 # Declare Python callbacks
-class printValueCall(recEmu_wrapper.reconfCB32):
-     def __init__(self, latency, w, h):
-        recEmu_wrapper.reconfCB32.__init__(self, latency, w , h)
-     def __call__(self, processorInstance):
-
-        processorInstance.preCall();
-        callArgs = processorInstance.readArgs()
-        param1 = callArgs.__getitem__(0)
-
-#        addr = 0
-#        addr = cE.configure('printValue', self.latency, self.width, self.height, False)
-#        cE.execute(addr)
-#        cE.execute('printValue')
-#        print '(Python) printValue allocated at address ' + str(addr);
-
-        cE.executeForce('printValue', self.latency, self.width, self.height, False)
-
-        cE.printSystemStatus()
-#        cE.manualRemove('printValue')
-
-        print '(Python) Value: ' + str(param1)
-#        print 'Width: ' + str(self.width) + '\tHeight: ' + str(self.height) + '\tLatency: ' + str(self.latency.to_string())
-
-        processorInstance.setRetVal(param1 + 1);
-        processorInstance.returnFromCall();
-        processorInstance.postCall();
-        return True
 
 ##### LOAD SOFTWARE #####
 
@@ -372,14 +345,7 @@ for i in range(0, PROCESSOR_NUMBER):
     tools.append(recEmu)
 
     # Registration of the callbacks
-    printValueInstance = printValueCall(scwrapper.sc_time(0.100, scwrapper.SC_MS),10,10)			# REMEMBER: PYTHON USES ONLY NS!!
-#    recEmu.registerPythonCall('printValue', printValueInstance);
-    pytCalls.append(printValueInstance)
-
-#    recEmu.registerCppCall('printValue', scwrapper.sc_time(0.100, scwrapper.SC_NS),10,10)
-#    recEmu.registerCppCall('printValue')
-#    recEmu.registerCppCall('generate', scwrapper.sc_time(0.010, scwrapper.SC_NS),1,1)
-#    recEmu.registerCppCall('sum');
+#    recEmu.registerCppCall('read_bitmap', scwrapper.sc_time(0.100, scwrapper.SC_NS),1,1)
     print 'Registered routine calls for processor ' + str(i) + ': '
     recEmu.printRegisteredFunctions()
 
