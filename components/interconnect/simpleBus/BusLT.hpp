@@ -70,6 +70,7 @@
 #include "utils.hpp"
 
 //#define DEBUGMODE
+//#define FILEOUTPUT
 //#define PROC_NUM_ADDR 0xF0000004
 
 using namespace std;
@@ -302,6 +303,12 @@ public:
 	 *-----------------------------------*/
 	void b_transport(int tag, tlm_generic_payload& trans, sc_time& delay) {
 
+		#ifdef FILEOUTPUT
+		ofstream out;
+		out.open ("out.txt",ios::app);
+		streambuf* orig = cerr.rdbuf(out.rdbuf());
+		#endif
+
 		sc_dt::uint64 addr = trans.get_address();
 		#ifdef DEBUGMODE
 		cerr << sc_time_stamp() << " - Incoming address was " << addr << " from " << tag;
@@ -310,8 +317,8 @@ public:
 		if ( portId >= initiatorSocket.size() ) {
 			trans.set_response_status(TLM_ADDRESS_ERROR_RESPONSE);
 			ostringstream stream;
-			stream << " " << name() << showbase << hex << ": No target at this address: "
-				<< addr << " Requesting Master: " << dec << tag << " Decoded device: " << portId;
+			stream << " " << name() << /*showbase << hex << */": No target at this address: "
+				<< addr << " Requesting Master: " << /*dec <<*/ tag << " Decoded device: " << portId;
 			THROW_EXCEPTION(__PRETTY_FUNCTION__ << stream.str());
 		}
 		#ifdef DEBUGMODE
@@ -343,6 +350,9 @@ public:
 //		else outFile << endl;
 
 		this->unlock();
+		#ifdef FILEOUTPUT
+		cerr.rdbuf(orig);
+		#endif
 	}
 
 	bool get_direct_mem_ptr(int tag, tlm_generic_payload& trans, tlm_dmi& dmi_data){
@@ -351,6 +361,12 @@ public:
 	}
 
 	unsigned int transport_dbg(int tag, tlm::tlm_generic_payload& trans) {
+
+		#ifdef FILEOUTPUT
+		ofstream out;
+		out.open ("out.txt",ios::app);
+		streambuf* orig = cerr.rdbuf(out.rdbuf());
+		#endif
 
 		sc_dt::uint64 addr = trans.get_address();
 		#ifdef DEBUGMODE
@@ -366,8 +382,8 @@ public:
 		if ( portId >= initiatorSocket.size() ) {
 			trans.set_response_status(TLM_ADDRESS_ERROR_RESPONSE);
 			ostringstream stream;
-			stream << " " << name() << showbase << hex << ": No target at this address: "
-				<< addr << " Requesting Master: " << dec << tag << " Decoded device: " << portId;
+			stream << " " << name() << /*showbase << hex << */": No target at this address: "
+				<< addr << " Requesting Master: " << /*dec <<*/ tag << " Decoded device: " << portId;
 			THROW_EXCEPTION(__PRETTY_FUNCTION__ << stream.str());
 		}
 		#ifdef DEBUGMODE
@@ -385,6 +401,9 @@ public:
 //		else outFile << endl;
 
 		this->unlock();
+		#ifdef FILEOUTPUT
+		cerr.rdbuf(orig);
+		#endif
 
 		return retVal;
 	}

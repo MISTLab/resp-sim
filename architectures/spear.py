@@ -69,17 +69,17 @@ CACHE_BLOCK_SIZE   = 8               # words
 CACHE_WAYS         = 8
 CACHE_REM_POLICY   = CacheLT32.LRU
 CACHE_WR_POLICY    = CacheLT32.THROUGH
-CACHE_READ_LAT     = 10.0            # ns
-CACHE_WRITE_LAT    = 10.0            # ns
-CACHE_LOAD_LAT     = 10.0            # ns
-CACHE_STORE_LAT    = 10.0            # ns
-CACHE_REMOVE_LAT   = 10.0            # ns
+CACHE_READ_LAT     = 3.0            # ns
+CACHE_WRITE_LAT    = 3.0            # ns
+CACHE_LOAD_LAT     = 3.0            # ns
+CACHE_STORE_LAT    = 3.0            # ns
+CACHE_REMOVE_LAT   = 3.0            # ns
 
 # Software
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'c_pi'
+    SOFTWARE = 'scalopes'
 
 if SOFTWARE:
     try:
@@ -102,6 +102,8 @@ OS_EMULATION = True     # True or False
 # Modified stats auto-printer
 FILE_OUTPUT = False
 def statsPrinter():
+    print '\x1b[34m\x1b[1mReal Elapsed Time (seconds):\x1b[0m'
+    print '\x1b[31m' + str(controller.print_real_time()) + '\x1b[0m'
     print '\x1b[34m\x1b[1mSimulated Elapsed Time (nano-seconds):\x1b[0m'
     print '\x1b[31m' + str(controller.get_simulated_time()) + '\x1b[0m'
     if NOC_ACTIVE:
@@ -160,10 +162,10 @@ mem2 = MemoryLT32.MemoryLT32('mem2', memorySize2, latencyMem2)
 
 ##### RECONFIGURABLE COMPONENTS INSTANTIATION #####
 cE = cE_wrapper.configEngine('cE',0x0,cE_wrapper.LRU)
-cE.setRequestDelay(scwrapper.sc_time(10, scwrapper.SC_NS))
-cE.setExecDelay(scwrapper.sc_time(10, scwrapper.SC_NS))
-cE.setConfigDelay(scwrapper.sc_time(10, scwrapper.SC_NS))
-cE.setRemoveDelay(scwrapper.sc_time(10, scwrapper.SC_NS))
+cE.setRequestDelay(scwrapper.sc_time(3, scwrapper.SC_NS))
+cE.setExecDelay(scwrapper.sc_time(3, scwrapper.SC_NS))
+cE.setConfigDelay(scwrapper.sc_time(3, scwrapper.SC_NS))
+cE.setRemoveDelay(scwrapper.sc_time(3, scwrapper.SC_NS))
 #eFPGAs
 eF = []
 eF.append(eFPGA_wrapper.eFPGA('eF1',100,100,scwrapper.sc_time(58, scwrapper.SC_NS),11,1))
@@ -389,4 +391,4 @@ if BUS_ACTIVE:
 cE.printSystemStatus()
 
 # We can finally run the simulation
-#run_simulation()
+run_simulation()

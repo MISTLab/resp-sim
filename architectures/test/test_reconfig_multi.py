@@ -87,6 +87,8 @@ OS_EMULATION = True     # True or False
 
 # Modified stats auto-printer
 def statsPrinter():
+    print '\x1b[34m\x1b[1mReal Elapsed Time (seconds):\x1b[0m'
+    print '\x1b[31m' + str(controller.print_real_time()) + '\x1b[0m'
     print '\x1b[34m\x1b[1mSimulated Elapsed Time (nano-seconds):\x1b[0m'
     print '\x1b[31m' + str(controller.get_simulated_time()) + '\x1b[0m'
     if BUS_ACTIVE:
