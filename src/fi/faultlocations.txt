@@ -1,1 +1,3 @@
 testMaster_wrapper.testMaster,count,variableWrapper,1,4
+MemoryLT32.MemoryLT32,,memoryWrapper,getNumOfWords,32
+arm7tdmi_funcLT_wrapper.Processor_arm7tdmi_funclt,RB,trapRegisterBankWrapper,30,32
