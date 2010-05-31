@@ -148,6 +148,7 @@ class trapRegisterBankWrapper(object, baseAttributeWrapper):
         self.__component = component
         self.__attribute = attribute
         self.__maskFunction = maskFunction
+        self.__index = index
         self.__getFunction = 'readNewValue'
         self.__setFunction = 'immediateWrite'
     def applyMask(self, mask):
@@ -158,7 +159,7 @@ class trapRegisterBankWrapper(object, baseAttributeWrapper):
         return getattr(getattr(self.__component, self.__attribute).__getitem__(self.__index),self.__getFunction)()
     def __setValue(self, value):
         """Sets a specified value to the memory word"""
-        getattr(getattr(self.__component, self.__attribute).__getitem__(self.__index),self.__getFunction)(value)
+        getattr(getattr(self.__component, self.__attribute).__getitem__(self.__index),self.__setFunction)(value)
     value = property(__getValue, __setValue) #define a property
 
 class trapRegisterWrapper(object, baseAttributeWrapper):
@@ -182,7 +183,7 @@ class trapRegisterWrapper(object, baseAttributeWrapper):
         return getattr(getattr(self.__component, self.__attribute),self.__getFunction)()
     def __setValue(self, value):
         """Sets a specified value to the memory word"""
-        getattr(getattr(self.__component, self.__attribute),self.__getFunction)(value)
+        getattr(getattr(self.__component, self.__attribute),self.__setFunction)(value)
     value = property(__getValue, __setValue) #define a property
 
 
@@ -197,6 +198,7 @@ class memoryWrapper(object, baseAttributeWrapper):
             raise exceptions.Exception(str(maskFunction)+ " is not a valid mask function")
         self.__component = component
         self.__maskFunction = maskFunction
+        self.__index = index
         self.__getFunction = 'read_word_dbg'
         self.__setFunction = 'write_word_dbg'
     def applyMask(self, mask):
@@ -207,7 +209,7 @@ class memoryWrapper(object, baseAttributeWrapper):
         return getattr(self.__component, self.__getFunction).__call__(self.__index)
     def __setValue(self, value):
         """Sets a specified value to the memory word"""
-        getattr(self.__component, self.__setFunction).__call__(self.__index,self.value)
+        getattr(self.__component, self.__setFunction).__call__(self.__index,value)
     value = property(__getValue, __setValue) #define a property
 
 ########################################################################################

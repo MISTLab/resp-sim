@@ -238,8 +238,7 @@ public:
 			    }
 			
 			    imageLength = bitmap_width * bitmap_height * bitmap_depth;
-			    std::cout << "image: " << bitmap_width << " * " << bitmap_height << " * " << bitmap_depth << std::endl;
-		        bitmap_values = (unsigned char*) malloc(imageLength*sizeof(unsigned char));
+	        bitmap_values = (unsigned char*) malloc(imageLength*sizeof(unsigned char));
 		  	
 			    /*---Find row-bytes filler (in a bitmap the number of bytes per row is a multiple of 4)---*/
 			    row_bytes_filler = ((long int)((bitmap_width * bitmap_depth)%(4))); // row_filler = 0, 1, 2 or 3;
