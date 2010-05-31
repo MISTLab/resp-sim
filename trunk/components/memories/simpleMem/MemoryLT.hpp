@@ -82,7 +82,7 @@ private:
 public:
 	simple_target_socket<MemoryLT, sizeof(BUSWIDTH)*8> targetSocket;
 	unsigned int numAccesses;
-	unsigned int numWords;
+	unsigned int numAccessedWords;
 
 	MemoryLT(sc_module_name module_name, sc_dt::uint64 size, sc_time latency = SC_ZERO_TIME) :
 			sc_module(module_name), size(size), latency(latency),
@@ -92,7 +92,7 @@ public:
 		this->targetSocket.register_transport_dbg(this, &MemoryLT::transport_dbg);
 
 		this->numAccesses = 0;
-		this->numWords = 0;
+		this->numAccessedWords = 0;
 
 		// Reset memory
 		this->mem = new unsigned char[this->size];
@@ -102,6 +102,18 @@ public:
 
 	~MemoryLT(){
 		delete this->mem;
+	}
+	
+	sc_dt::uint64 getSize(){
+	  return this->size;
+	}
+
+	sc_dt::uint64 getNumOfWords(){
+	  return this->size/sizeof(BUSWIDTH);
+	}
+	
+	sc_dt::uint64 getWordSize(){
+	  return sizeof(BUSWIDTH);
 	}
 
 	void b_transport(tlm_generic_payload& trans, sc_time& delay){
@@ -137,7 +149,7 @@ public:
 
 		wait(words*this->latency);
 		this->numAccesses++;
-		this->numWords+=words;
+		this->numAccessedWords+=words;
 
 		trans.set_dmi_allowed(true);
 		trans.set_response_status(TLM_OK_RESPONSE);

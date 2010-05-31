@@ -81,8 +81,8 @@ class baseAttributeWrapper:
         
 class variableWrapper(object, baseAttributeWrapper):
     """The wrapper for attributes of built-in type"""
-    def __init__(self, component, attribute, maskFunction, index):
-        """Constructor. It takes the reference of the component and the name of 
+    def __init__(self, component, attribute, maskFunction, index=None):
+        """Constructor. It takes the reference of the component, the name of 
         the variable and the mask function used for corrupting the variable content.
         Finally, the index parameter is actualy ignored since it is a constant equal to 0"""
         if maskFunctions.count(maskFunction.__class__) == 0:
@@ -135,6 +135,80 @@ class saboteurAccess(object, baseAttributeWrapper): #TODO: to be updated
         raise exceptions.Exception('__setValue method cannot be called on saboteurWrapper')
     value = property(__getValue, __setValue) #define a property
 
+
+class trapRegisterBankWrapper(object, baseAttributeWrapper):
+    """The wrapper for the register bank attribute of a trap processor model. The register bank is modeled 
+    as an array of N registers, each one with a fixed lenght"""
+    def __init__(self, component, attribute, maskFunction, index):
+        """Constructor. It takes the reference of the component, the name of the register bank, the mask function used for 
+        corrupting the register bank content and the index of the register bank word to be corrupted.
+        """
+        if maskFunctions.count(maskFunction.__class__) == 0:
+            raise exceptions.Exception(str(maskFunction)+ " is not a valid mask function")
+        self.__component = component
+        self.__attribute = attribute
+        self.__maskFunction = maskFunction
+        self.__getFunction = 'readNewValue'
+        self.__setFunction = 'immediateWrite'
+    def applyMask(self, mask):
+        """Corrupts the content with a mask passed as parameter"""
+        self.value = self.__maskFunction(self.value, mask)
+    def __getValue(self):
+        """Returns the value of the specified memory word"""
+        return getattr(getattr(self.__component, self.__attribute).__getitem__(self.__index),self.__getFunction)()
+    def __setValue(self, value):
+        """Sets a specified value to the memory word"""
+        getattr(getattr(self.__component, self.__attribute).__getitem__(self.__index),self.__getFunction)(value)
+    value = property(__getValue, __setValue) #define a property
+
+class trapRegisterWrapper(object, baseAttributeWrapper):
+    """The wrapper for the register  attribute of a trap processor model"""
+    def __init__(self, component, attribute, maskFunction, index):
+        """Constructor. It takes the reference of the component, the name of the register, the mask function used for 
+        corrupting the register content. Since there is only a register the index is actually ignored.
+        """
+        if maskFunctions.count(maskFunction.__class__) == 0:
+            raise exceptions.Exception(str(maskFunction)+ " is not a valid mask function")
+        self.__component = component
+        self.__attribute = attribute
+        self.__maskFunction = maskFunction
+        self.__getFunction = 'readNewValue'
+        self.__setFunction = 'immediateWrite'
+    def applyMask(self, mask):
+        """Corrupts the content with a mask passed as parameter"""
+        self.value = self.__maskFunction(self.value, mask)
+    def __getValue(self):
+        """Returns the value of the specified memory word"""
+        return getattr(getattr(self.__component, self.__attribute),self.__getFunction)()
+    def __setValue(self, value):
+        """Sets a specified value to the memory word"""
+        getattr(getattr(self.__component, self.__attribute),self.__getFunction)(value)
+    value = property(__getValue, __setValue) #define a property
+
+
+class memoryWrapper(object, baseAttributeWrapper):
+    """The wrapper for the MemoryLT32.MemoryLT32 object. The memory is modeled as an array of N words
+    with a specified lenght"""
+    def __init__(self, component, attribute, maskFunction, index):
+        """Constructor. It takes the reference of the component, the mask function used for 
+        corrupting the memory content and the index of the memory word to be corrupted.
+        Finally, the attribute parameter is actualy ignored"""
+        if maskFunctions.count(maskFunction.__class__) == 0:
+            raise exceptions.Exception(str(maskFunction)+ " is not a valid mask function")
+        self.__component = component
+        self.__maskFunction = maskFunction
+        self.__getFunction = 'read_word_dbg'
+        self.__setFunction = 'write_word_dbg'
+    def applyMask(self, mask):
+        """Corrupts the content with a mask passed as parameter"""
+        self.value = self.__maskFunction(self.value, mask)
+    def __getValue(self):
+        """Returns the value of the specified memory word"""
+        return getattr(self.__component, self.__getFunction).__call__(self.__index)
+    def __setValue(self, value):
+        """Sets a specified value to the memory word"""
+        getattr(self.__component, self.__setFunction).__call__(self.__index,self.value)
+    value = property(__getValue, __setValue) #define a property
 
 ########################################################################################
 ## Class representing the descriptor of single location where a fault can be injected ##
