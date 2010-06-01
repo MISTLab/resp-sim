@@ -103,21 +103,20 @@ cd trap-gen
 sudo ./waf install
 cd ..
 
-# Configure resp
-./waf configure --with-systemc=External_tools/systemc-2.2.0 --with-tlm=External_tools/TLM2 --with-momh-header=/usr/local/include/libmomh
-./waf
-
 # Cross-Compilers
 #     download
 wget home.dei.polimi.it/miele/cross-compilers.tar.bz2
 tar xvjf cross-compilers.tar.bz2
 cd ..
 
-# configure software
+# Configure software
 cd software
 ./waf configure --arm-compiler=../External_tools/cross-compilers/arm --sparc-compiler=../External_tools/cross-compilers/sparc
 ./waf
-
 cd ..
+
+# Configure resp
+./waf configure --with-systemc=External_tools/systemc-2.2.0 --with-tlm=External_tools/TLM2 --with-momh-header=/usr/local/include/libmomh
+./waf
 
 ./waf -C
