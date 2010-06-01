@@ -345,7 +345,8 @@ for i in range(0, PROCESSOR_NUMBER):
     tools.append(recEmu)
 
     # Registration of the callbacks
-#    recEmu.registerCppCall('read_bitmap', scwrapper.sc_time(0.100, scwrapper.SC_NS),1,1)
+    recEmu.registerCppCall('read_bitmap', scwrapper.sc_time(1000000, scwrapper.SC_NS),1,1)
+    recEmu.registerCppCall('write_bitmap', scwrapper.sc_time(1000000, scwrapper.SC_NS),1,1)
     print 'Registered routine calls for processor ' + str(i) + ': '
     recEmu.printRegisteredFunctions()
 
