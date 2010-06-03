@@ -154,6 +154,8 @@ class BFDWrapper{
     bool isRoutineEntry(unsigned int address) const;
     ///Specifies whether the address is the last one of a routine
     bool isRoutineExit(unsigned int address) const;
+    //Specifies the function the address belongs to
+    std::string functionAt(unsigned int address) const throw();
     ///Given an address, it sets fileName to the name of the source file
     ///which contains the code and line to the line in that file. Returns
     ///false if the address is not valid
