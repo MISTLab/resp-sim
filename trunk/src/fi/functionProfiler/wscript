@@ -1,0 +1,25 @@
+#! /usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+
+def build(bld):
+
+    obj = bld.new_task_gen('pypp')
+    obj.source ='''
+        functionProfiler.hpp
+    '''
+    obj.target = 'functionProfiler'
+    obj.uselib = 'SYSTEMC_H TLM BOOST BOOST_PYTHON TRAP'
+    obj.uselib_local = 'systemc BFDWrapper'
+    obj.include = 'scwrapper tlmwrapper trapwrapper'
+    obj.start_decls = 'functionProfiler'
+    obj.custom_code = """
+cb = mb.global_ns.classes(lambda decl: decl.name.startswith('functionProfiler<'), allow_empty=True)
+for i in cb:
+    i.include()
+    if i.name == 'functionProfiler<unsigned int>':
+        i.alias = 'functionProfiler32'
+"""
+    obj.templates = [
+        'functionProfiler<unsigned int>'
+    ]
+

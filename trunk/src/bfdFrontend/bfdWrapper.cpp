@@ -74,7 +74,7 @@ extern "C" {
 #include <vector>
 #include <list>
 #include <iostream>
-
+#include <set>
 #include "utils.hpp"
 
 #include <boost/regex.hpp>
@@ -157,7 +157,7 @@ BFDWrapper::BFDWrapper(std::string binaryName) : execImage(NULL){
         flagword flags = bfd_get_section_flags(this->execImage, p);
 
         #ifndef NDEBUG
-        std::cerr << "Section " << p->name << " Start Address " << std::hex << vma << " Size " << std::hex << datasize << " End Address " << std::hex << datasize + vma << " flags " << std::hex << std::showbase << flags << std::dec << std::endl;
+        std::cerr << "Section " << p->name << " Start Address " << std::hex << bfd_get_section_vma(this->execImage, p) << " Size " << std::hex << bfd_section_size(this->execImage, p) << " End Address " << std::hex << bfd_get_section_vma(this->execImage, p) + bfd_section_size(this->execImage, p) << " flags " << std::hex << std::showbase << flags << std::dec << std::endl;
         #endif
 
         if((flags & SEC_ALLOC) != 0 && (flags & SEC_DEBUGGING) == 0 && (flags & SEC_THREAD_LOCAL) == 0){
@@ -271,6 +271,17 @@ std::string BFDWrapper::symbolAt(unsigned int address) const throw(){
     return symMap1->second.front();
 }
 
+//Specifies the function the address belongs to
+    std::string BFDWrapper::functionAt(unsigned int address) const throw(){
+    template_map<unsigned int, std::string>::const_iterator symMap2 = this->addrToFunction.find(address);
+    if(symMap2 != this->addrToFunction.end()){
+        return symMap2->second;
+    }
+    else{
+        return "";
+    }
+}
+    
 ///Given the name of a symbol it returns its value
 ///(which usually is its address);
 ///valid is set to false if no symbol with the specified
@@ -334,6 +345,9 @@ unsigned int BFDWrapper::getSymAddr(const std::string &symbol, bool &valid) cons
 ///the source code
 void BFDWrapper::readSrc(){
     std::vector<Section>::iterator sectionsIter, sectionsEnd;
+    std::set<std::string> functionNames;
+    std::map<std::string,unsigned int> startRoutine, endRoutine;
+    
     for(sectionsIter = this->secList.begin(), sectionsEnd = this->secList.end(); sectionsIter != sectionsEnd; sectionsIter++){
         if( (sectionsIter->type & SEC_DATA) == 0 ) {
             for(bfd_vma i = 0; i < sectionsIter->datasize; i += this->wordsize){
@@ -360,6 +374,12 @@ void BFDWrapper::readSrc(){
                     #endif
                     if(name == NULL)
                         name = (char *)functionname;
+                    std::string strname =std::string(name); 
+                    functionNames.insert(strname);
+                    if(startRoutine.count(strname)==0 || startRoutine[strname]> i + sectionsIter->startAddr)
+                        startRoutine[strname] = i + sectionsIter->startAddr;
+                    if(endRoutine.count(strname)==0 || endRoutine[strname]< i + sectionsIter->startAddr)
+                        endRoutine[strname] = i + sectionsIter->startAddr;
                     this->addrToFunction[i + sectionsIter->startAddr] = name;
                 }
                 //if (line > 0 && this->addrToSrc.find(i + sectionsIter->startAddr) == this->addrToSrc.end())
