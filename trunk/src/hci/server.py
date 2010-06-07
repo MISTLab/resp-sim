@@ -293,6 +293,8 @@ class RespCommandServer:
 
             import atexit
             atexit.register(self.stop)
+        else:
+            globalServer.serve_forever()
 
     def stop(self):
         """Stop the server and kill all connections"""

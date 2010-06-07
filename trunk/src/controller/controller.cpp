@@ -130,6 +130,8 @@ void my_terminate_handler(){
           termCond.wait(lk);
       }
       catch(...){;}
+    } else {
+        exit(1); //stupid trick to avoid boring console messages about the crash
     }
 }
 
@@ -172,8 +174,8 @@ sc_controller::sc_controller(bool interactive) : interactive(interactive),
 
     if(this->interactive){
         PyEval_InitThreads();
-        this->se = new simulation_engine("sim_engine", controllerMachine);
     }
+    this->se = new simulation_engine("sim_engine", controllerMachine, interactive);
     
     delta_callback = &resp::notifyDeltaCallback;
 
@@ -211,16 +213,18 @@ void sc_controller::run_simulation(sc_time simTime){
             }
         }
         else{
-            controllerThread_ninteractive c;
-            if(simTime > SC_ZERO_TIME)
-                c.timeSlice = simTime;
-            else
-                c.timeSlice = SC_ZERO_TIME;
-            //finally I start the thread and wait for its end
-            this->timeTracker.restart();
-            boost::thread thrd (c);
-            thrd.join();
-            this->accumulatedTime += this->timeTracker.elapsed();
+            if(!this->is_ended()){
+                controllerThread_ninteractive c;
+                if(simTime > SC_ZERO_TIME)
+                    c.timeSlice = simTime;
+                else
+                    c.timeSlice = SC_ZERO_TIME;
+                //finally I start the thread and wait for its end
+                this->timeTracker.restart();
+                boost::thread thrd (c);
+                thrd.join();
+                this->accumulatedTime += this->timeTracker.elapsed();
+            }
         }
     }
 }
@@ -264,7 +268,7 @@ void sc_controller::stop_simulation(){
     if(this->error == true)
         std::cerr << std::endl << "ERROR: stop_simulation cannot be executed since an exception has been thrown..." << std::endl << std::endl;
     else{
-        if(this->has_started()){
+        if(this->has_started() && !this->is_ended()){ //TODO this last condition may cause a deadlock. in case remove it. it causes only a warning print
             // I simply have to stop simulation calling sc_stop
             sc_stop();        
             if(this->interactive){

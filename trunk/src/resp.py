@@ -58,8 +58,6 @@ def checkOptions(options, parser):
     """Checks that the options passed to the script are consistent with each other"""
     if options.batch and not options.archFile:
         parser.error("If batch execution is required, the input architectural file must be specified")
-    if options.batch and options.command:
-        parser.error("If you execute a batch simulation, the command will be automatically computed, so it shouldn't be specified on the command line")
     #TODO: is any option check missing??
 
 
@@ -91,7 +89,7 @@ if __name__ == '__main__':
     parser.add_option("--silent", dest="silent", default=False, action="store_true",
                   help="Starts the simulation in silent mode: this means that no interactive console is fired-up; this mode is usually used in combination with the batch option")
     parser.add_option("-d", "--additional-command", type="string", dest="command",
-                  help="Additional python code which is executed in the global name space after the loading of the architecture (in case the -a option is used); also a file can be used and in that case all the python commands contained in that file are executed", metavar="COMMAND")
+                  help="Additional python code which is executed in the global name space before the loading of the architecture (in case the -a option is used); it may be useful for specifying custom parameters", metavar="COMMAND")
 
     #parse specified options...
     try:
@@ -106,20 +104,6 @@ if __name__ == '__main__':
 
     if options.verbose:
         print 'Command line options --> ' + ' '.join(sys.argv)
-
-    # First of all I check if I have to start a fault injection campaign
-    # Now let's check if I have to simply start some batch simulations
-    # and the parameters for each simulation
-    if options.batch:
-        options.silent = True
-        try:
-            if os.path.exists(options.batch):
-                exec open(options.batch) in globals()
-            else:
-                exec options.batch in globals()
-        except Exception, e:
-            print 'Error in the execution of the batch script --> ' + str(e)
-        sys.exit(0)
 
     # Create a new HCI
     if (sys.platform=='win32') or ('NOCOLOR' in os.environ) \
@@ -147,12 +131,6 @@ if __name__ == '__main__':
             else:
                 print console.banner + console.command_str
 
-    #Check if a predefined architecture have to be loaded
-    if options.archFile:
-        if not resp_kernel.load_architecture(options.archFile, True):
-            print 'Error during loading of file ' + options.archFile
-            sys.exit(0)
-
     # Now, if necessary, I execute the specified command
     if options.command:
         if options.verbose:
@@ -162,6 +140,26 @@ if __name__ == '__main__':
         else :
             exec options.command in resp_kernel.get_namespace()
 
+    #Check if a predefined architecture have to be loaded
+    if options.archFile:
+        if not resp_kernel.load_architecture(options.archFile, True):
+            print 'Error during loading of file ' + options.archFile
+            sys.exit(0)
+
+    # Executes the batch script
+    if options.batch:
+        options.silent = True
+        try:
+            if os.path.exists(options.batch):
+                exec open(options.batch) in resp_kernel.get_namespace()
+            else:
+                exec options.batch in resp_kernel.get_namespace()
+        except Exception, e:
+            import traceback
+            traceback.print_exc()
+            print 'Error in the execution of the batch script --> ' + str(e)
+        sys.exit(0)
+
     # Start the command server if requested
     try:
         if options.server:
@@ -169,13 +167,6 @@ if __name__ == '__main__':
             srv = server.RespCommandServer(resp_kernel, options.server, not options.silent)
             if options.verbose:
                 print 'Server correctly started on port ' + str(options.server)
-    except Exception, e:
-        print '\nErrror during the start of the ReSP server ' + str(e)
-        sys.exit(0)
-    except:
-        sys.exit(0)
-    try:
-        if options.server:
             if options.silent:
                srv.tcpserver.serve_forever()
     except Exception, e:

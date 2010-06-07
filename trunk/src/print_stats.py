@@ -66,3 +66,30 @@ class print_stats_cb(sc_controller_wrapper.EOScallback):
             print str(self.controller.get_simulated_time()) + '\n'
         except Exception,  e:
             print 'Error in the print of the statistics --> ' + str(e)
+            
+
+class error_print_stats_cb(sc_controller_wrapper.ErrorCallback):
+    def __init__(self, controller):
+        sc_controller_wrapper.ErrorCallback.__init__(self)
+        self.controller = controller
+    def __call__(self):
+        """Prints statistics about the simulation; in case the variable statsPrinter is defined
+        in the global namespace (a function must be assigned to it) then that function
+        is called passing the globals namespace to it. Otherwise simply the real and simulated
+        times are printed; note that before printing statistics, I wait for simulation termination
+        (if not otherwise specified)"""
+        try:
+            from respkernel import statsPrinter
+        except Exception:
+            pass
+        try:
+            # Call a custom statsprinter if registered
+            statsPrinter()
+        except NameError:
+            # Print
+            print 'Real Elapsed Time (seconds):'
+            print self.controller.print_real_time()
+            print 'Simulated Elapsed Time (nano-seconds):'
+            print str(self.controller.get_simulated_time()) + '\n'
+        except Exception,  e:
+            print 'Error in the print of the statistics --> ' + str(e)
