@@ -312,6 +312,10 @@ class RespKernel:
         global eosCb
         eosCb = print_stats_cb(self.controller)
         sc_controller_wrapper.registerEosCallback(eosCb)
+        from print_stats import error_print_stats_cb
+        global errorCb
+        errorCb = error_print_stats_cb(self.controller)
+        sc_controller_wrapper.registerErrorCallback(errorCb)
         
     def setup_scripting_commands(self):
         """Creates some convenience functions, used to run scripts without the need to refer to RespKernel, controller or manager objects"""
@@ -392,6 +396,7 @@ class RespKernel:
         """Loads the architecture specified in fileName; currently it must be a python script. If returnCheck
         parameter is enabled, the function returns True in case of success or False if any problem occurred during
         architecture loading"""
+        self.fileName = fileName #it is set before since it may be used during the architecture loading
         if fileName.endswith('.py'):
             # I have to find the path for the module, then add it to the
             # system path and finally import the module: all the instructions
@@ -421,7 +426,6 @@ class RespKernel:
             else:
                 return
         
-        self.fileName = fileName
         if returnCheck:
             return True
         else:
@@ -448,19 +452,9 @@ class RespKernel:
         #if simulation commands are not specified in the architecture file, execute the whole simulation
         if not controller.has_started():
             run_simulation(duration)
-        
-        #force print stats. it is necessary since in batch simulation the simulation engine is not instantiated.                
-        try:
-            # Call a custom statsprinter if registered
-            statsPrinter()
-        except NameError:
-            # Print
-            print 'Real Elapsed Time (seconds):'
-            print self.controller.print_real_time()
-            print 'Simulated Elapsed Time (nano-seconds):'
-            print str(self.controller.get_simulated_time()) + '\n'
-        except Exception,  e:
-            print 'Error in the print of the statistics --> ' + str(e)
+        #if the simulation is not ended, force the end of the simulation    
+        if not controller.is_ended():
+            stop_simulation()
 
     def start_debugger(self):
         '''Starts the GBD debugger'''
@@ -528,6 +522,7 @@ class RespKernel:
         if ((self.controller.has_started() and not self.controller.is_ended()) and not self.controller.error):
             if self.verbose:
                 print 'killing the simulation'
+            print self.controller.is_ended()
             self.controller.stop_simulation()
        
         # kill the debugger process if the simulation is in debugging mode

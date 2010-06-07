@@ -55,6 +55,7 @@
 namespace resp{
 
 class simulation_engine : public sc_module{
+    bool interactive;
   public:
     /// State machine implementing the controller. It is
     /// inside the simulation engine to trigger the pause and
@@ -63,7 +64,7 @@ class simulation_engine : public sc_module{
 
     SC_HAS_PROCESS(simulation_engine);
     /// Simulation engine constructor
-    simulation_engine(sc_module_name name, ControllerMachine &controllerMachine);
+    simulation_engine(sc_module_name name, ControllerMachine &controllerMachine, bool interactive);
     ///Overloading of the end_of_simulation method; it can be used to execute methods
     ///at the end of the simulation
     void end_of_simulation();

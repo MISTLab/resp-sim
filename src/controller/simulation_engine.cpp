@@ -60,6 +60,7 @@ void simulation_engine::end_of_simulation(){
     // is very fast and the state machine transition is very slow).
     // in order to prevent this I use the reset mutex: it is acquired while
     // are are in the reset status, and freed immediately after we go out:
+    if(interactive)
     {
         boost::mutex::scoped_lock lk(this->controllerMachine.reset_mutex);
         this->controllerMachine.process_event( EvStop() );
@@ -68,13 +69,14 @@ void simulation_engine::end_of_simulation(){
     notifyEosCallback();
     
     // Notify any waiting threads
-    this->controllerMachine.end_condition.notify_all();
+    if(interactive)
+        this->controllerMachine.end_condition.notify_all();
     
 }
 
 /// Simulation engine constructor
-simulation_engine::simulation_engine(sc_module_name name, ControllerMachine &controllerMachine) :
-                                            sc_module(name), controllerMachine(controllerMachine){
+simulation_engine::simulation_engine(sc_module_name name, ControllerMachine &controllerMachine, bool interactive) :
+                                            sc_module(name), controllerMachine(controllerMachine), interactive(interactive){
     SC_METHOD(pause);
     sensitive << this->controllerMachine.pauseEvent;
     dont_initialize();
@@ -86,20 +88,21 @@ void simulation_engine::pause(){
     // in order to prevent very fast paused events (i.e. simulation is paused soon
     // after it is started), so fast the the machine hasn't moved to the running state
     // yet, I use this mutex 
- 
-    boost::mutex::scoped_lock lk_reset(this->controllerMachine.reset_mutex);
-    // First of all I perform the transition to pause the state machine
-    this->controllerMachine.process_event( EvPause() );
+    if(interactive){
+        boost::mutex::scoped_lock lk_reset(this->controllerMachine.reset_mutex);
+        // First of all I perform the transition to pause the state machine
+        this->controllerMachine.process_event( EvPause() );
 
-    std::cerr << std::endl << "Simulation paused!" << std::endl << std::endl;
+        std::cerr << std::endl << "Simulation paused!" << std::endl << std::endl;
 
- 
-    // I signal to all who registered that simulation
-    // is being paused
-    notifyPauseCallback();
-    // finally I pause by waiting on the condition 
-    {
-    boost::mutex::scoped_lock lk(this->controllerMachine.pause_mutex);
-    this->controllerMachine.pause_condition.wait(lk);
-    }
+     
+        // I signal to all who registered that simulation
+        // is being paused
+        notifyPauseCallback();
+        // finally I pause by waiting on the condition 
+        {
+        boost::mutex::scoped_lock lk(this->controllerMachine.pause_mutex);
+        this->controllerMachine.pause_condition.wait(lk);
+        }
+   }
 }

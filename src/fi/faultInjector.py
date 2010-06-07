@@ -42,7 +42,7 @@ class faultInjector:
             #insert a dummy entry for executing the last time interval
             currSim[times[t+1]] = {}
             self.__currentFaultList.append(currSim)
-     
+    
     def printFaultList(self):
         """Prints on the screen the current fault list """
         for s in range(0,len(self.__currentFaultList)):
@@ -103,83 +103,69 @@ class faultInjector:
         fp.close()
         self.__currentFaultList = server.decode_compound(filecontent)        
     
+    def numberOfExperiments(self):
+        """Returns the number of experiments in the fault list"""
+        return len(self.__currentFaultList)
+    
     def executeCampaign(self):
         """Executes a fault injection campaign with the current fault list"""
-
-        #save fault list. It will be loaded by the server...
-        self.saveFaultList('__temp_list')
         
+        #save fault list. It will be loaded by the subprocess executing the campaign...
+        self.saveFaultList('__temp_list')
         #import necessary modules     
-        from hci import server_api
-        from server_api import RespClient 
         import os
-        import server
         import subprocess
         import sys
         import respkernel
         import resp
                             
         #set-up control stuff
-        server_on = False #is the server on or not?
-        rc = None #resp client reference
         subproc = None #server subprocess reference
-        num_of_errors = 0 #number of server instances that has crashed
+        num_of_errors = 0 #number of subprocesses that have crashed
 
         #execute the fault campaign        
+        currExperiment = 0
         try:
-            for sim in range(0,len(self.__currentFaultList)):
-                print "-------------------------------------------------------------------------------------------------------" 
-                print "Simulation # " + str(sim)
-                #start server if it not on
-                if not server_on:
-                    archFile = os.path.abspath(respkernel.get_architecture_filename())
-                    respFile = os.path.abspath(sys.modules['resp'].__file__)
-                    subproc = subprocess.Popen( ['python', respFile, '-s', '2200', '-a', archFile, '--silent', '--no-banner'], stdin=subprocess.PIPE, stdout=sys.stdout )
-                    server_on = True
-                    ok = False
-                    rc = None
-                    while not ok:
-                        try:
-                            rc = RespClient( 'localhost', 2200 )
-                            ok = True
-                        except:
-                            pass
-                    rc.execute('fim = manager.getFaultInjector()')
-                    rc.execute('fim.loadFaultList(\'__temp_list\')')
-                rc.execute('fim.executeSingleFault(' + str(sim) +')')
-                error = server.decode_compound(rc.execute('controller.error'))
-                #stop server when necessary
-                if error == True or sim == (len(self.__currentFaultList)-1):
-                    if error == True:
-                        num_of_errors = num_of_errors +1
-                    if sim == (len(self.__currentFaultList)-1):
-                        os.remove('__temp_list')
-                    rc.send('QUIT')
-                    server_on = False
-                    subproc.wait()
-                else:
-                    rc.execute('reset()')
-                    rc.execute('reload_architecture()')  
+            while currExperiment < self.numberOfExperiments():
+                archFile = os.path.abspath(respkernel.get_architecture_filename())
+                respFile = os.path.abspath(sys.modules['resp'].__file__)
+                batchFile = os.path.abspath(sys.modules['fi'].__path__[0]) + '/executeCampaign.py'
+                parameters = 'FAULT_INJECTION_CAMPAIGN=True;FAULTLIST=\'__temp_list\';FIRST_EXPERIMENT='+str(currExperiment)
+                subproc = subprocess.Popen( ['python', respFile, '-a', archFile, '--silent', '--no-banner', '--batch', batchFile, '-d',parameters]) #, stdin=subprocess.PIPE, stdout=sys.stdout )
+                subproc.wait()
+                num_of_errors = num_of_errors + 1
+                f = open('__currsim', 'r')
+                executed = long(f.readline())
+                f.close()
+                currExperiment = executed + 1
+            if os.path.isfile('__temp_list'):
+                os.remove('__temp_list')
+            if os.path.isfile('__currsim'):
+                os.remove('__currsim')
+            num_of_errors = num_of_errors - 1
         except Exception, e:
             import traceback
             traceback.print_exc()
-
-            os.remove('__temp_list')
-            if not (subproc == None):    
-                import signal
-                os.kill(subproc.pid, signal.SIGKILL)
+            if os.path.isfile('__temp_list'):
+                os.remove('__temp_list')
+            if os.path.isfile('__currsim'):
+                os.remove('__currsim')
             raise e
         
-        try:
-            # Call a custom statsprinter if registered
-            resp_ns['campaignReportPrinter']()  #TODO FIX-IT!
-        except:
-            print "\n\n-------------------------------------------------------------------------------------------------------" 
-            print "Statistics:"
-            print "Number of simulations: " + str(len(self.__currentFaultList))
-            print "Number of simulation terminated with an error: " + str(num_of_errors)
-            print "-------------------------------------------------------------------------------------------------------" 
-
+        if self.numberOfExperiments() > 0:
+            try:
+                # Call a custom statsprinter if registered
+                import respkernel
+                respkernel.campaignReportPrinter()
+            except:
+                print "\n\n-------------------------------------------------------------------------------------------------------" 
+                print "Statistics:"
+                print "Number of simulations: " + str(len(self.__currentFaultList))
+                print "Number of simulation terminated with an error: " + str(num_of_errors)
+                print "-------------------------------------------------------------------------------------------------------" 
+        else:
+            print 'No experiment has been executed; fault list is empty'
+            
     def executeSingleFault(self, num):
         """Executes a fault simulation"""
         import respkernel
@@ -208,12 +194,11 @@ class faultInjector:
         delta[times[0]] = times[0]
         for i in range(1,len(times)):
             delta[times[i]] = times[i] - times[i-1]
-        print times
+        #print times
         for t in times: #execute all delta and inject
             #run for a delta time            
             controller.run_simulation(delta[t])                        
-            print controller.get_simulated_time()
-            
+            #print controller.get_simulated_time()
             #inject fault
             if not t == times[len(times)-1]: #after the last delta time no injection is performed
                 injections = command[t]
@@ -241,9 +226,8 @@ class faultInjector:
                     wrapper.applyMask(fault['mask'])                    
 
             #check if simulation is finished
-            if controller.is_finished() or controller.error == True: 
+            if controller.is_finished(): 
                 break
         if not controller.is_finished():
             controller.stop_simulation()
-            
-    
+       
