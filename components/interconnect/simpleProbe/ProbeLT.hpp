@@ -61,6 +61,7 @@
 #include <string>
 #include <queue>
 #include <iostream>
+#include <fstream>
 
 #include <systemc.h>
 #include <tlm.h>
@@ -79,33 +80,76 @@ using namespace tlm;
  * the last transmitted payload both in the forward transmission and in 
  * backward one
  *------------------------------------------------------------------------*/
-template<typename BUSDATATYPE> class ProbeLT: public sc_module {
+class ProbeLT: public sc_module {
 
-  //they are necessary since the payload contains only a pointer. Thus, it is necessary to
-  //assign to the pointer an actual position where to save transmitted data
-  BUSDATATYPE* last_request_data;
-  BUSDATATYPE* last_response_data;
+  long int transactionId;
+  static std::ofstream logfile;
+  static std::string filename;
+  static bool logEnable;
+  
+  //log the current transaction
+  static void logCurrentTransaction(const char* probeName, tlm_generic_payload& pl, long int transactionId, bool isRequest){
+    if(logEnable){
+        if(!logfile.is_open()){
+          logfile.open(filename.c_str());
+          logfile << "time\tprobeName\ttransactionId\tdirection\ttype\tdataSize" << std::endl;
+        }
+        
+        std::string direction;
+        if(isRequest)
+          direction = "request";
+        else
+          direction = "response";
+
+        std::string type;
+        if(pl.is_read())
+          type = "read";
+        else if(pl.is_write())
+          type = "write";
+        else
+          type = "other";
+          
+        //TODO add other data; e.g. the address
+        
+        logfile << ((long)sc_time_stamp().to_default_time_units()) << "\t" << probeName << "\t" << transactionId << "\t" << direction << "\t" << type << "\t" << pl. get_data_length() << std::endl;
+    }
+  }
+  
 
 public:
-  tlm_utils::simple_target_socket<ProbeLT, sizeof(BUSDATATYPE)*8>  targetSocket;
-  tlm_utils::simple_initiator_socket<ProbeLT, sizeof(BUSDATATYPE)*8> initiatorSocket;
 
-  tlm_generic_payload last_request;
-  tlm_generic_payload last_response;
+  //at the end of the simulation the log file is closed
+  void end_of_simulation(){
+    if(ProbeLT::logEnable){
+      if(ProbeLT::logfile.is_open())
+        ProbeLT::logfile.close();
+    }
+  }
+
+  //set the log file name
+  static void setLogFileName(std::string name){
+    if(ProbeLT::logfile.is_open())
+      std::cerr << "It is not possible to set the log file name during the simulation" << std::endl;
+    else
+      ProbeLT::filename = name;
+  }
+  
+  static void setLogEnable(bool enable){
+    logEnable = enable;
+  }
+
+  tlm_utils::simple_target_socket<ProbeLT, 32>  targetSocket;
+  tlm_utils::simple_initiator_socket<ProbeLT, 32> initiatorSocket;
 
   ProbeLT(sc_module_name module_name) : 
             initiatorSocket((boost::lexical_cast<std::string>(module_name) + "_initSocket").c_str()),
             targetSocket((boost::lexical_cast<std::string>(module_name) + "_targSocket").c_str()){
     this->targetSocket.register_b_transport(this, &ProbeLT::b_transport);
     this->targetSocket.register_transport_dbg(this, &ProbeLT::transport_dbg);
-    
-    last_request_data = NULL;
-    this->last_request.set_data_length(0);
-    this->last_request.set_data_ptr(reinterpret_cast<unsigned char*>(last_request_data));
-    last_response_data = NULL;
-    this->last_request.set_data_length(0);
-    this->last_response.set_data_ptr(reinterpret_cast<unsigned char*>(last_response_data));
-    
+
+    this->transactionId = 0;
+
+        
     end_module();
   }
 
@@ -115,27 +159,10 @@ public:
    * b_transport method implementation
    *-----------------------------------*/
   void b_transport(tlm_generic_payload& trans, sc_time& delay) {
-    if(trans.get_data_length() != this->last_request.get_data_length()){
-      delete[] last_request_data;
-      if(trans.get_data_length()>0){
-        last_request_data = new BUSDATATYPE[trans.get_data_length()];
-      } else {
-        last_request_data = NULL;
-      }
-      this->last_request.set_data_ptr(reinterpret_cast<unsigned char*>(last_request_data));      
-    }
-    this->last_request.deep_copy_from(trans);
+    logCurrentTransaction(this->name(), trans, this->transactionId, true);
     initiatorSocket->b_transport(trans, delay);
-    if(trans.get_data_length() != this->last_response.get_data_length()){
-      delete[] last_response_data;
-      if(trans.get_data_length()>0){
-        last_response_data = new BUSDATATYPE[trans.get_data_length()];
-      } else {
-        last_response_data = NULL;
-      }
-      this->last_response.set_data_ptr(reinterpret_cast<unsigned char*>(last_response_data));      
-    }
-    this->last_response.deep_copy_from(trans);
+    logCurrentTransaction(this->name(), trans, this->transactionId, false);
+    this->transactionId ++;
   }
 
   /*-----------------------------------
@@ -143,27 +170,10 @@ public:
    *-----------------------------------*/
   unsigned int transport_dbg(tlm::tlm_generic_payload& trans) {
     unsigned int result;
-    if(trans.get_data_length() != this->last_request.get_data_length()){
-      delete[] last_request_data;
-      if(trans.get_data_length()>0){
-        last_request_data = new BUSDATATYPE[trans.get_data_length()];
-      } else {
-        last_request_data = NULL;
-      }
-      this->last_request.set_data_ptr(reinterpret_cast<unsigned char*>(last_request_data));      
-    }
-    this->last_request.deep_copy_from(trans);
+    logCurrentTransaction(this->name(), trans, this->transactionId, true);
     result = initiatorSocket->transport_dbg(trans);
-    if(trans.get_data_length() != this->last_response.get_data_length()){
-      delete[] last_response_data;
-      if(trans.get_data_length()>0){
-        last_response_data = new BUSDATATYPE[trans.get_data_length()];
-      } else {
-        last_response_data = NULL;
-      }
-      this->last_response.set_data_ptr(reinterpret_cast<unsigned char*>(last_response_data));      
-    }
-    this->last_response.deep_copy_from(trans);
+    logCurrentTransaction(this->name(), trans, this->transactionId, false);
+    this->transactionId ++;
     return result;
   }
 };
