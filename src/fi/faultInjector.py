@@ -1,4 +1,6 @@
 """This module contains the fault injection manager. Its tasks are to generate and execute fault simulations"""
+
+import exceptions
                        
 class faultInjector:
     """ This class support the definition and execution a fault injection campaign """
