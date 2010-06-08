@@ -38,7 +38,7 @@ def run_campaign():
         #execute the experiment
         fi.executeSingleFault(i)
         #reset
-        reset()
+        #reset()
         reload_architecture()
 
 #run the script

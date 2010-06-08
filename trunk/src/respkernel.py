@@ -169,6 +169,7 @@ class RespKernel:
         self.scripting_commands = []
         self.components = [] # The list of all available components
         self.fileName = None # The name of the loaded architecture
+        self.custom_parameters = None # The custom parameters specified by means of the -p command line option
         self.interactive = True # States id the simulation mode is interactive or not
         self.verbose = False # States if the execution is verbose or not
         self.debugger = None # This is a reference to the process running the debugger
@@ -431,14 +432,19 @@ class RespKernel:
         else:
             return
         
-    def reload_architecture(self):
-        """Reloads the current architecture after resetting the simulator"""
+    def reload_architecture(self, reload_custom_parameters = True):
+        """Reloads the current architecture after resetting the simulator. If specified reload also the the specified custom parameters"""
         if self.fileName == None:
             print 'No architecture to reload'
             return
         self.reset()
+        if reload_custom_parameters:
+            if os.path.exists(self.custom_parameters):
+                exec open(self.custom_parameters) in globals()
+            else :
+                exec self.custom_parameters in globals()
         self.load_architecture(self.fileName)
-
+       
     def get_architecture_filename(self):
         '''Return the name of the file containing the loaded architecture'''
         return self.fileName
@@ -522,7 +528,6 @@ class RespKernel:
         if ((self.controller.has_started() and not self.controller.is_ended()) and not self.controller.error):
             if self.verbose:
                 print 'killing the simulation'
-            print self.controller.is_ended()
             self.controller.stop_simulation()
        
         # kill the debugger process if the simulation is in debugging mode
