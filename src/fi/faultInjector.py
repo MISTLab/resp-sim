@@ -133,7 +133,7 @@ class faultInjector:
                 respFile = os.path.abspath(sys.modules['resp'].__file__)
                 batchFile = os.path.abspath(sys.modules['fi'].__path__[0]) + '/executeCampaign.py'
                 parameters = 'FAULT_INJECTION_CAMPAIGN=True;FAULTLIST=\'__temp_list\';FIRST_EXPERIMENT='+str(currExperiment)
-                subproc = subprocess.Popen( ['python', respFile, '-a', archFile, '--silent', '--no-banner', '--batch', batchFile, '-d',parameters]) #, stdin=subprocess.PIPE, stdout=sys.stdout )
+                subproc = subprocess.Popen( ['python', respFile, '-a', archFile, '--silent', '--no-banner', '--batch', batchFile, '-d',parameters], stdin=subprocess.PIPE, stdout=sys.stdout )
                 subproc.wait()
                 num_of_errors = num_of_errors + 1
                 f = open('__currsim', 'r')

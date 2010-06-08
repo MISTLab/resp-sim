@@ -57,7 +57,13 @@ from optparse import OptionParser
 def checkOptions(options, parser):
     """Checks that the options passed to the script are consistent with each other"""
     if options.batch and not options.archFile:
-        parser.error("If batch execution is required, the input architectural file must be specified")
+        parser.error("If silent execution is required, the input architectural file must be specified")
+    if options.silent and not options.archFile:
+        parser.error("If silent execution is required, the input architectural file must be specified")
+    if options.debug and options.silent:
+        parser.error("If debug mode is required, the simulation cannot be silent")
+    if options.server and not options.silent:
+        parser.error("If server mode is required, the simulation must be silent")
     #TODO: is any option check missing??
 
 
@@ -72,8 +78,8 @@ if __name__ == '__main__':
     parser.description = 'Reflective Simulation Platform; version ' + respkernel.__version__ + '. Released under the GPL license'
     parser.add_option("-a", "--arch", type="string", dest="archFile", metavar="FILE",
                   help="file containing the architecture which must be loaded. This file must be a python script")
-    parser.add_option("-o", "--output", type="string", dest="outFile",
-                  help="file used to save the output of the simulation.", metavar="FILE")
+    #parser.add_option("-o", "--output", type="string", dest="outFile",
+    #              help="file used to save the output of the simulation.", metavar="FILE")
     parser.add_option("-v", "--verbose", dest="verbose", default=False, action="store_true",
                   help="specifies whether verbose information will be printed during non-interactive simulation: [default: %default]")
     parser.add_option("--no-color", dest="color", default=True, action="store_false",
@@ -88,7 +94,7 @@ if __name__ == '__main__':
                   help="Starts the simulation in batch mode: a python script containing the main loop of the batch simulation has to be passed to this option",  metavar="FILE")
     parser.add_option("--silent", dest="silent", default=False, action="store_true",
                   help="Starts the simulation in silent mode: this means that no interactive console is fired-up; this mode is usually used in combination with the batch option")
-    parser.add_option("-d", "--additional-command", type="string", dest="command",
+    parser.add_option("-p", "--custom-parameters", type="string", dest="command",
                   help="Additional python code which is executed in the global name space before the loading of the architecture (in case the -a option is used); it may be useful for specifying custom parameters", metavar="COMMAND")
 
     #parse specified options...
@@ -139,6 +145,7 @@ if __name__ == '__main__':
             exec open(options.command) in resp_kernel.get_namespace()
         else :
             exec options.command in resp_kernel.get_namespace()
+        resp_kernel.custom_parameters = options.command
 
     #Check if a predefined architecture have to be loaded
     if options.archFile:
