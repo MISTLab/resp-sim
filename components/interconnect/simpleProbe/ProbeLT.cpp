@@ -60,6 +60,7 @@
 
 using namespace tlm;
 
+bool ProbeLT::logEnable;
 
 std::string ProbeLT::filename = "transactionsLog.txt";
 std::ofstream ProbeLT::logfile;
