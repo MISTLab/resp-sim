@@ -181,7 +181,7 @@ private:
 
 public:
 
-  //add a mask to the list of masks used for the injection during the next transaction
+  //add a mask to the list of masks used for the injection during the next transaction (not debug ones)
   void setMask(maskFunctionType maskFunction, BUSDATATYPE mask, lineType line)
   {
   	if(maskFunction!=BIT_FLIP && maskFunction!=BIT_FLIP0 && maskFunction!=BIT_FLIP1 && maskFunction!=VALUE_CHANGE)

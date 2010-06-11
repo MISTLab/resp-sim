@@ -45,11 +45,22 @@
 #Creation of the master and slave components; note how what we do is actually calling the constructor of the classes. The
 #call here is performed in python, and this in turn calls the C++ constructor. These python constructors indeed have
 #the same signature of the c++ ones
-instMaster = testMaster_wrapper.testMaster('master')
-instSlave = testSlave_wrapper.testSlave('slave')
 
+
+instMaster = testMaster_wrapper.testMaster('master')
+instProbe = ProbeLT32.ProbeLT32('probe')
+instSlave = testSlave_wrapper.testSlave('slave')
 #Connection of the ports: first we specify the source component and its ports; then the target component and its port.
-connectPorts(instMaster, instMaster.initSocket, instSlave, instSlave.targetSocket)
+connectPorts(instMaster, instMaster.initSocket, instProbe, instProbe.targetSocket)
+connectPorts(instProbe, instProbe.initiatorSocket, instSlave, instSlave.targetSocket)
+
+instMaster1 = testMaster_wrapper.testMaster('master1')
+instProbe1 = ProbeLT32.ProbeLT32('probe1')
+instSlave1 = testSlave_wrapper.testSlave('slave1')
+#Connection of the ports: first we specify the source component and its ports; then the target component and its port.
+connectPorts(instMaster1, instMaster1.initSocket, instProbe1, instProbe1.targetSocket)
+connectPorts(instProbe1, instProbe1.initiatorSocket, instSlave1, instSlave1.targetSocket)
+
 
 # Modified stats auto-printer
 def statsPrinter():

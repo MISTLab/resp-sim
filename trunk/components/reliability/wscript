@@ -44,5 +44,5 @@
 # Build
 
 def build(bld):
-    bld.add_subdirs('processors memories interconnect reconfigurable testComponents reliability')
+    bld.add_subdirs('dummyBuffer simpleProbe simpleSaboteur')
 
