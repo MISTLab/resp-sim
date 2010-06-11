@@ -67,13 +67,13 @@ void testMaster::sendChars(){
         trans.set_byte_enable_ptr(0);
         trans.set_dmi_allowed(false);
         trans.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
+        count ++;
         this->initSocket->b_transport(trans, delay);
 
         if(trans.is_response_error()){
             std::cerr << "testMaster: Error response from the TLM port" << std::endl;
         }
         
-        count ++;
         if(count == 10) sc_stop();
         wait(10, SC_NS);
     }

@@ -1,0 +1,15 @@
+#!/usr/bin/env python
+
+def build(bld):
+
+    for arch in bld.lst_variants:
+        if arch == 'default': continue
+
+        obj = bld.new_task_gen(features='cc cprogram')
+        obj.env = bld.env_of_name(arch).copy()
+        obj.source = """
+            edgeDetector.c ReadWriteBitmaps.c 
+        """
+        obj.target = 'edgeDetector'
+        obj.env.append_unique('LINKFLAGS', '-lm')
+        

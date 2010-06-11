@@ -82,6 +82,7 @@ class FaultInjectionComponentManager(ComponentManager):
         #probes connected to the current architecture
         # the key is a tuple containing the names of the involved source and target ports. The value is a ProbleConnectionNode object
         self.__probes = {}
+        self.__fi = None
     
     def reset(self):
         """Reset the fault injection component manager"""
@@ -297,8 +298,10 @@ class FaultInjectionComponentManager(ComponentManager):
         raise exceptions.Exception('getConnectionSignal method is not supported in the fiComponentManager')      
   
     def getFaultInjector(self):
-        import faultInjector
-        import faultDistribution
-        time = faultDistribution.uniformTimeDistribution()
-        locations = faultDistribution.uniformLocationsDistribution(self.__architectureFaultLocations)
-        return faultInjector.faultInjector(locations, time)
+        if self.__fi == None:
+            import faultInjector
+            import faultDistribution
+            time = faultDistribution.uniformTimeDistribution()
+            locations = faultDistribution.uniformLocationsDistribution(self.__architectureFaultLocations)
+            self.__fi = faultInjector.faultInjector(locations, time)
+        return self.__fi

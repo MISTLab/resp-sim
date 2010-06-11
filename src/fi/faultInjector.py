@@ -85,25 +85,7 @@ class faultInjector:
                 print '\t' + str(t) 
                 for f in self.__currentFaultList[s][t]:
                     for i in f.keys():
-                        print '\t\t' + str(i) + '\t' + str(f[i])       
-            
-    def saveFaultList(self, filename):
-        """"Saves in a file the current fault list"""
-        import server
-        fp=open(filename,'w')
-        fp.write(server.encode_compound(self.__currentFaultList))
-        fp.close()
-            
-    def loadFaultList(self, filename):
-        """Loads a fault list from a file"""
-        import server
-        fp=open(filename,'r')
-        filecontent = ''
-        self.__currentFaultList = []
-        for l in fp:
-            filecontent = filecontent + l
-        fp.close()
-        self.__currentFaultList = server.decode_compound(filecontent)        
+                        print '\t\t' + str(i) + '\t' + str(f[i])               
     
     def numberOfExperiments(self):
         """Returns the number of experiments in the fault list"""
@@ -171,8 +153,12 @@ class faultInjector:
     def executeSingleFault(self, num):
         """Executes a fault simulation"""
         import respkernel
-        resp_ns = respkernel.get_namespace()
-        controller = resp_ns['controller']
+        try:
+            resp_ns = respkernel.get_namespace()
+            controller = resp_ns['controller']
+        except:
+            import respkernel
+            controller = respkernel.controller
 
         #import of required modules
         import attributeWrapper
