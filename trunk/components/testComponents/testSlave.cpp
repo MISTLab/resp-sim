@@ -67,5 +67,7 @@ void testSlave::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay){
         std::cout << "testSlave: received character --> " << *ptr << std::endl;
     }
 
+    wait(10, SC_NS);
+
     trans.set_response_status(tlm::TLM_OK_RESPONSE);
 }
