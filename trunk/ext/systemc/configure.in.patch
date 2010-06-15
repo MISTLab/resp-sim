@@ -1,7 +1,7 @@
-*** systemc-2.2.0/configure.in	Fri Dec 15 21:31:28 2006
---- configure.in	Fri Jun  5 14:55:05 2009
+*** systemc-2.2.0/configure.in	2006-12-15 21:31:28.000000000 +0100
+--- configure.in	2010-06-15 15:52:10.281605333 +0200
 ***************
-*** 64,80 ****
+*** 64,108 ****
                   DEBUG_CXXFLAGS="-g"
                   OPT_CXXFLAGS="-O3"
                   TARGET_ARCH="macosx"
@@ -19,27 +19,11 @@
                   ;;
               *)
                   { { echo "$as_me:2730: error: \"sorry...compiler not supported\"" >&5
---- 64,80 ----
-                  DEBUG_CXXFLAGS="-g"
-                  OPT_CXXFLAGS="-O3"
-                  TARGET_ARCH="macosx"
-!                 AR_TOOL="$CXX -xar -o"
-!                 CC="$CXX"
-!                 CFLAGS="$EXTRA_CXXFLAGS $OPT_CXXFLAGS"
-                  ;;
-              c++ | g++)
-                  EXTRA_CXXFLAGS="-Wall"
-                  DEBUG_CXXFLAGS="-g"
-                  OPT_CXXFLAGS="-O3"
-                  TARGET_ARCH="macosx"
-!                 CC="$CXX"
-!                 CFLAGS="$EXTRA_CXXFLAGS $OPT_CXXFLAGS"
-                  ;;
-              *)
-                  { { echo "$as_me:2730: error: \"sorry...compiler not supported\"" >&5
-***************
-*** 85,108 ****
-  	AS=as
+  echo "$as_me: error: \"sorry...compiler not supported\"" >&2;}
+     { (exit 1); exit 1; }; }
+! 		;;
+          esac
+! 	AS=as
           QT_ARCH="powerpc-apple-macosx"
           ;;
 !     sparc-sun-solaris*) 
@@ -63,8 +47,29 @@
                   ;;
               *)
                   AC_MSG_ERROR("sorry...compiler not supported")
---- 85,136 ----
-  	AS=as
+--- 64,164 ----
+                  DEBUG_CXXFLAGS="-g"
+                  OPT_CXXFLAGS="-O3"
+                  TARGET_ARCH="macosx"
+!                 AR_TOOL="$CXX -xar -o"
+!                 CC="$CXX"
+!                 CFLAGS="$EXTRA_CXXFLAGS $OPT_CXXFLAGS"
+                  ;;
+              c++ | g++)
+                  EXTRA_CXXFLAGS="-Wall"
+                  DEBUG_CXXFLAGS="-g"
+                  OPT_CXXFLAGS="-O3"
+                  TARGET_ARCH="macosx"
+!                 CC="$CXX"
+!                 CFLAGS="$EXTRA_CXXFLAGS $OPT_CXXFLAGS"
+                  ;;
+              *)
+                  { { echo "$as_me:2730: error: \"sorry...compiler not supported\"" >&5
+  echo "$as_me: error: \"sorry...compiler not supported\"" >&2;}
+     { (exit 1); exit 1; }; }
+!         ;;
+          esac
+!         AS=as
           QT_ARCH="powerpc-apple-macosx"
           ;;
 !     i686-apple-macosx)
@@ -94,6 +99,34 @@
 !         esac
 !         AS=as
 !         QT_ARCH="iX86"
+!         ;;
+!     x86_64-apple-macosx)
+!         case "$CXX_COMP" in
+!             CC)
+!                 EXTRA_CXXFLAGS=""
+!                 DEBUG_CXXFLAGS="-g"
+!                 OPT_CXXFLAGS="-O3"
+!                 TARGET_ARCH="macosx"
+!                 AR_TOOL="$CXX -xar -o"
+!                 CC="$CXX"
+!                 CFLAGS="$EXTRA_CXXFLAGS $OPT_CXXFLAGS"
+!                 ;;
+!             c++ | g++)
+!                 EXTRA_CXXFLAGS="-Wall -fPIC -DPIC"
+!                 DEBUG_CXXFLAGS="-g"
+!                 OPT_CXXFLAGS="-O3"
+!                 TARGET_ARCH="macosx"
+!                 CC="$CXX"
+!                 CFLAGS="$EXTRA_CXXFLAGS $OPT_CXXFLAGS"
+!                 ;;
+!             *)
+!                 { { echo "$as_me:2730: error: \"sorry...compiler not supported\"" >&5
+! echo "$as_me: error: \"sorry...compiler not supported\"" >&2;}
+!    { (exit 1); exit 1; }; }
+!         ;;
+!         esac
+!         AS=as
+!         QT_ARCH="x86_64"
 !         ;;
 !     sparc-sun-solaris*)
           case "$CXX_COMP" in
@@ -131,7 +164,7 @@
                   ;;
               *)
                   AC_MSG_ERROR("sorry...compiler not supported")
---- 141,153 ----
+--- 169,181 ----
           ;;
       x86_64*linux*)
           case "$CXX_COMP" in
@@ -160,7 +193,7 @@
                   ;;
               *)
                   AC_MSG_ERROR("sorry...compiler not supported")
---- 158,170 ----
+--- 186,198 ----
           ;;
       *linux*)
           case "$CXX_COMP" in
@@ -189,7 +222,7 @@
                   ;;
               *)
                   AC_MSG_ERROR("sorry...compiler not supported")
---- 175,187 ----
+--- 203,215 ----
           ;;
       *cygwin*)
           case "$CXX_COMP" in
@@ -221,7 +254,7 @@
                   ;;
               *)
                   AC_MSG_ERROR("sorry...compiler not supported")
---- 197,212 ----
+--- 225,240 ----
                   DEBUG_CXXFLAGS="-g"
                   OPT_CXXFLAGS="+O1"
                   TARGET_ARCH="hpux11"
@@ -293,7 +326,7 @@
   )
   
   dnl Taf!
---- 251,303 ----
+--- 279,331 ----
   dnl
   
   AC_OUTPUT(

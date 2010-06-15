@@ -5,14 +5,16 @@ This patch solves the following issues:
 
 -- Adds the -fPIC flags to all targets so that shared libraries can be created out of the compiled object files
 (actually this is necessary only for 64 bits targets)
--- Adds a i686-apple-macosx target, so that is compiles on intel apple machines.
+-- Adds a i686-apple-macosx target, so that is compiles on 32 bit intel apple machines.
+-- Adds a x86_64-apple-macosx target, so that is compiles on 64 bit intel apple machines.
 -- enables the compilation for compilers called g++... (e.g. g++-4.2) and not just for plain g++
 
 After patching, execute, in sequence, the following commands: aclocal, automake --add-missing --copy, autoconf.
 You should then be able to succesfully compile SystemC.
 
 On Mac-OSX targets you also need to specify the build type since the system is not able to determine it automatically:
-pass the --build=i686-apple-macosx option to the configure command. You also need to patch file 
+pass the --build=i686-apple-macosx option (or --build=x86_64-apple-macosx if you are running on a 64 bit host)
+to the configure command. You also need to patch file
 src/sysc/kernel/sc_cor_qt.h by adding the instruction typedef char* caddr_t; at line 85.
 
 One final note: current version of SystemC does not compile with g++ version 4.3 and greater. In order to correct this
