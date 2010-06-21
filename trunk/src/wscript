@@ -44,5 +44,5 @@
 # Build
 
 def build(bld):
-    bld.add_subdirs('sc_wrapper tlm_wrapper trap_wrapper controller bfdFrontend utils loader power cm fi')
+    bld.add_subdirs('sc_wrapper tlm_wrapper trap_wrapper controller bfdFrontend utils loader power cm')
 
