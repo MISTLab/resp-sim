@@ -65,6 +65,8 @@ void simulation_engine::end_of_simulation(){
         boost::mutex::scoped_lock lk(this->controllerMachine.reset_mutex);
         this->controllerMachine.process_event( EvStop() );
     }
+    else
+      this->controllerMachine.accumulatedTime += this->controllerMachine.timeTracker.elapsed();
     // Finally I signal to everyone that simulation has ended
     notifyEosCallback();
     
