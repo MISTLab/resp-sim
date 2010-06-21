@@ -1,0 +1,25 @@
+#! /usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+
+def build(bld):
+
+    obj = bld.new_task_gen('pypp')
+    obj.source ='''
+        checkerTool.hpp
+    '''
+    obj.target = 'checkerTool'
+    obj.uselib = 'SYSTEMC_H TLM BOOST BOOST_PYTHON TRAP'
+    obj.uselib_local = 'systemc BFDWrapper'
+    obj.include = 'scwrapper tlmwrapper trapwrapper'
+    obj.start_decls = 'checkerTool'
+    obj.custom_code = """
+cb = mb.global_ns.classes(lambda decl: decl.name.startswith('checkerTool<'), allow_empty=True)
+for i in cb:
+    i.include()
+    if i.name == 'checkerTool<unsigned int>':
+        i.alias = 'checkerTool32'
+"""
+    obj.templates = [
+        'checkerTool<unsigned int>'
+    ]
+

@@ -69,8 +69,6 @@
 #include <boost/lexical_cast.hpp>
 #include "utils.hpp"
 
-#include <cxxabi.h>
-
 using namespace tlm;
 
 
@@ -80,177 +78,138 @@ using namespace tlm;
  * master and forwards them to the connected slave; when activated, it 
  * mutates the transmitted payload according to the specified corruption. 
  *------------------------------------------------------------------------*/
-template<typename BUSDATATYPE> class SaboteurLT: public sc_module {
-
-  //they are necessary since the payload contains only a pointer. Thus, it is necessary to
-  //assign to the pointer an actual position where to save transmitted data
-  BUSDATATYPE* last_request_data;
-  BUSDATATYPE* last_response_data;
-
+template<typename BUSWIDTH> class SaboteurLT: public sc_module {
+  
 public:
 
-	enum lineType {DATA, ADDRESS };
-	enum maskFunctionType {VALUE_CHANGE, BIT_FLIP, BIT_FLIP0, BIT_FLIP1};
+  //enumerative types
+  enum lineType {DATA, ADDRESS};
+  enum maskFunctionType {VALUE_CHANGE, BIT_FLIP, BIT_FLIP0, BIT_FLIP1};
 
-  tlm_utils::simple_target_socket<SaboteurLT, sizeof(BUSDATATYPE)*8>  targetSocket;
-  tlm_utils::simple_initiator_socket<SaboteurLT, sizeof(BUSDATATYPE)*8> initiatorSocket;
+  //ports
+  tlm_utils::simple_target_socket<SaboteurLT, sizeof(BUSWIDTH)*8>  targetSocket;
+  tlm_utils::simple_initiator_socket<SaboteurLT, sizeof(BUSWIDTH)*8> initiatorSocket;
 
-  tlm_generic_payload last_request;
-  tlm_generic_payload last_response;
-
+  //constructor
   SaboteurLT(sc_module_name module_name) : 
             initiatorSocket((boost::lexical_cast<std::string>(module_name) + "_initSocket").c_str()),
             targetSocket((boost::lexical_cast<std::string>(module_name) + "_targSocket").c_str()){
     this->targetSocket.register_b_transport(this, &SaboteurLT::b_transport);
     
-  	this->checkDataType(); //check if the template data type is supported
-
-    last_request_data = NULL;
-    this->last_request.set_data_length(0);
-    this->last_request.set_data_ptr(reinterpret_cast<unsigned char*>(last_request_data));
-    last_response_data = NULL;
-    this->last_request.set_data_length(0);
-    this->last_response.set_data_ptr(reinterpret_cast<unsigned char*>(last_response_data));
-
     end_module();
   }
 
+  //destructor
   ~SaboteurLT(){}
 
 private:
-	//it represents a mask for the injection
-	struct corruption_type{
-		maskFunctionType faultMask;
-		BUSDATATYPE mask;
-		lineType line;
-		corruption_type (maskFunctionType faultMask, BUSDATATYPE mask, lineType line)
-		{
-			this->faultMask = faultMask;
-			this->mask = mask;
-			this->line = line;
-		}		
-	};
+
+  //this type represents a descriptor for a single injection
+  struct corruption_type{
+    maskFunctionType maskFunction; //type of mask function
+    unsigned int mask; //mask value
+    unsigned int line; //line to be corrupted
+    lineType linetype; //type of line (DATA or ADDRESS)
+    
+    //constructor
+    corruption_type (maskFunctionType maskFunction, unsigned int mask, unsigned int line, lineType linetype)
+    {
+      this->maskFunction = maskFunction;
+      this->mask = mask;
+      this->line = line;
+      this->linetype = linetype;
+    }    
+  };
 
   //used for storing all the masks used for injecting the fault at the next transaction
   std::vector<corruption_type> corruptions;
 
-  //used for checking if the actual type of the template is compatible with the injection features
-  void checkDataType()
+
+  //returns a corrupted value given a mask function and a mask value
+  unsigned int corrupt(unsigned int value, unsigned int mask, maskFunctionType maskFunction)
   {
-		const std::type_info & dataType_t = typeid(BUSDATATYPE);
-		const std::type_info & int_t = typeid(int);
- 		const std::type_info & uint_t = typeid(unsigned int);
-		const std::type_info & lint_t = typeid(long int);
-		const std::type_info & sint_t = typeid(short int);
-		const std::type_info & usint_t = typeid(unsigned short int);
-		const std::type_info & ulint_t = typeid(unsigned long int);
-		const std::type_info & char_t = typeid(char);
-     	
-   	if (! (strcmp(dataType_t.name(),int_t.name())==0 ||
-   		strcmp(dataType_t.name(),uint_t.name())==0 ||
-   		strcmp(dataType_t.name(),lint_t.name())==0 ||
-   		strcmp(dataType_t.name(),sint_t.name())==0 ||
-   		strcmp(dataType_t.name(),usint_t.name())==0 ||
-   		strcmp(dataType_t.name(),ulint_t.name())==0 ||
-   		strcmp(dataType_t.name(),char_t.name())==0 )) 
- 		{
-     	int status;
-     	const char * realname = abi::__cxa_demangle(dataType_t.name(), 0, 0, &status);
-     	THROW_EXCEPTION("Sabouters do not support injection in " << realname << " datatype");
-		}
-  }
-         
-  //returns a corrupted value given a mask
-  BUSDATATYPE corrupt(BUSDATATYPE value, BUSDATATYPE mask, maskFunctionType maskFunction)
-  {
-  	BUSDATATYPE result;
-  	this->checkDataType();
-	
-  	if(maskFunction == BIT_FLIP)
-		result = value^mask;
-  	else if (maskFunction == BIT_FLIP0)
-		result = ((value & ~mask)|(mask & 0));
-  	else if (maskFunction == BIT_FLIP1)
-  		result = ((value & ~mask)|(mask & 1));
-	  else if (maskFunction == VALUE_CHANGE)
-  		result = mask;
-  	else
-  		THROW_EXCEPTION("Sabouter received an unknown mask function ID");
-	  return result;     	
+    unsigned int result;
+    if(maskFunction == BIT_FLIP)
+    result = value^mask;
+    else if (maskFunction == BIT_FLIP0)
+    result = ((value & ~mask)|(mask & 0));
+    else if (maskFunction == BIT_FLIP1)
+      result = ((value & ~mask)|(mask & 1));
+    else if (maskFunction == VALUE_CHANGE)
+      result = mask;
+    else
+      THROW_EXCEPTION("Sabouter received an unknown mask function ID");
+    return result;       
   }
 
 public:
 
   //add a mask to the list of masks used for the injection during the next transaction (not debug ones)
-  void setMask(maskFunctionType maskFunction, BUSDATATYPE mask, lineType line)
+  void setMask(maskFunctionType maskFunction, unsigned int mask, unsigned int line, lineType linetype)
   {
-  	if(maskFunction!=BIT_FLIP && maskFunction!=BIT_FLIP0 && maskFunction!=BIT_FLIP1 && maskFunction!=VALUE_CHANGE)
-  		THROW_EXCEPTION("Sabouter received an unknown mask function ID");
-  	if(line != ADDRESS && line != DATA)
-  		THROW_EXCEPTION("Sabouters received an invalid line for the injection");
-  	
-  	this->corruptions.push_back(corruption_type(maskFunction, mask, line));
+    if(maskFunction!=BIT_FLIP && maskFunction!=BIT_FLIP0 && maskFunction!=BIT_FLIP1 && maskFunction!=VALUE_CHANGE)
+      THROW_EXCEPTION("Sabouter received an unknown mask function ID");
+    if(line != ADDRESS && line != DATA)
+      THROW_EXCEPTION("Sabouters received an invalid line for the injection");
+    
+    this->corruptions.push_back(corruption_type(maskFunction, mask, line, linetype));
   }
-
 
   /*-----------------------------------
    * b_transport method implementation
    *-----------------------------------*/
   void b_transport(tlm_generic_payload& trans, sc_time& delay) {
-    if(trans.get_data_length() != this->last_request.get_data_length()){
-      delete[] last_request_data;
-      if(trans.get_data_length()>0){
-        last_request_data = new BUSDATATYPE[trans.get_data_length()];
-      } else {
-        last_request_data = NULL;
+    for(int i = 0; i < corruptions.size(); i++){
+      if(corruptions[i].linetype == ADDRESS){ //corrupt the address
+        //corruptions are supported only in the first 32 bits. 
+        trans.set_address(this->corrupt(trans.get_address(), this->corruptions[i].mask, this->corruptions[i].maskFunction));
+      } else if(corruptions[i].linetype == DATA && trans.is_write() == true){
+        //corrupt the data. do note: we corrupt the data pointed by the payload. thus, we modify also the master data. 
+        //indeed we assume that the master has copied the data in a temporary location referenced by the payload
+        unsigned int numWords = trans.get_data_length()/sizeof(unsigned int);
+        unsigned char* dataPtr = trans.get_data_ptr();
+        if(numWords < corruptions[i].line){
+          unsigned int datum;
+          unsigned int currDatumLenght = 0;
+          currDatumLenght = sizeof(unsigned int);
+          memcpy(&datum, &dataPtr[corruptions[i].line * sizeof(unsigned int)], currDatumLenght);
+          datum = this->corrupt(datum, this->corruptions[i].mask, this->corruptions[i].maskFunction);
+          memcpy(&dataPtr[corruptions[i].line * sizeof(unsigned int)], &datum, currDatumLenght);
+        }else if(numWords == corruptions[i].line) {
+          unsigned int currDatumLenght = 0;
+          currDatumLenght = trans.get_data_length() - numWords * sizeof(unsigned int);
+          if(currDatumLenght == 1){
+            unsigned char datum;
+            memcpy(&datum, &dataPtr[corruptions[i].line * sizeof(unsigned int)], currDatumLenght);
+            datum = this->corrupt(datum, this->corruptions[i].mask, this->corruptions[i].maskFunction);
+            memcpy(&dataPtr[corruptions[i].line * sizeof(unsigned int)], &datum, currDatumLenght);          
+          } else if(currDatumLenght == 2){
+            unsigned short int datum;
+            memcpy(&datum, &dataPtr[corruptions[i].line * sizeof(unsigned int)], currDatumLenght);
+            datum = this->corrupt(datum, this->corruptions[i].mask, this->corruptions[i].maskFunction);
+            memcpy(&dataPtr[corruptions[i].line * sizeof(unsigned int)], &datum, currDatumLenght);          
+          }
+        } else THROW_EXCEPTION("The index of line to be corrupted is not valid");
       }
-      this->last_request.set_data_ptr(reinterpret_cast<unsigned char*>(last_request_data));      
-    }
-    this->last_request.deep_copy_from(trans);
+    } 
     initiatorSocket->b_transport(trans, delay);
-    if(trans.get_data_length() != this->last_response.get_data_length()){
-      delete[] last_response_data;
-      if(trans.get_data_length()>0){
-        last_response_data = new BUSDATATYPE[trans.get_data_length()];
-      } else {
-        last_response_data = NULL;
+
+    for(int i = 0; i < corruptions.size(); i++){
+      if(corruptions[i].linetype == DATA && trans.is_write() == true){
+      
       }
-      this->last_response.set_data_ptr(reinterpret_cast<unsigned char*>(last_response_data));      
-    }
-    this->last_response.deep_copy_from(trans);
+    } 
   }
   
   /*-----------------------------------
    * transport_dbg method implementation
    *-----------------------------------*/
   unsigned int transport_dbg(tlm::tlm_generic_payload& trans) {
-    //simply forward the request/response and log the payload before 
-    //transmitting to the target and returning to the initiator
+    //simply forward the request/response
     unsigned int result;
-    if(trans.get_data_length() != this->last_request.get_data_length()){
-      delete[] last_request_data;
-      if(trans.get_data_length()>0){
-        last_request_data = new BUSDATATYPE[trans.get_data_length()];
-      } else {
-        last_request_data = NULL;
-      }
-      this->last_request.set_data_ptr(reinterpret_cast<unsigned char*>(last_request_data));      
-    }
-    this->last_request.deep_copy_from(trans);
     result = initiatorSocket->transport_dbg(trans);
-    if(trans.get_data_length() != this->last_response.get_data_length()){
-      delete[] last_response_data;
-      if(trans.get_data_length()>0){
-        last_response_data = new BUSDATATYPE[trans.get_data_length()];
-      } else {
-        last_response_data = NULL;
-      }
-      this->last_response.set_data_ptr(reinterpret_cast<unsigned char*>(last_response_data));      
-    }
-    this->last_response.deep_copy_from(trans);
     return result;
   }
-
 };
 
 #endif /* SIMPLESABOTEUR_HPP */

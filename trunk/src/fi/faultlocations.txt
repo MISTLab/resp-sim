@@ -2,3 +2,5 @@ testMaster_wrapper.testMaster,count,variableWrapper,1,4
 MemoryLT32.MemoryLT32,,memoryWrapper,getNumOfWords,32
 arm7tdmi_funcLT_wrapper.Processor_arm7tdmi_funclt,RB,trapRegisterBankWrapper,RB.__len__,32
 arm9tdmi_funcLT_wrapper.Processor_arm9tdmi_funclt,RB,trapRegisterBankWrapper,RB.__len__,32
+SaboteurLT32.SaboteurLT32,ADDRESS,saboteurAccess,1,32
+SaboteurLT32.SaboteurLT32,DATA,saboteurAccess,1,32

@@ -27,10 +27,14 @@ def run_campaign():
     fi.loadFaultList(FAULTLIST)
 
     #start the fault campaign. this loop ends when all the experiments are carried out or if an experiment makes ReSP to crash
+    firstIter = True
     for i in range(FIRST_EXPERIMENT, fi.numberOfExperiments()):
         print "---------------------------------------------------------------------------------"
         print "-- Experiment N° " + str(i)
         print "---------------------------------------------------------------------------------"
+        if not firstIter:
+          reload_architecture()        
+        firstIter = False
         #log the number of the current experiment
         f = open('__currsim', 'w')
         f.write(str(i))
@@ -39,7 +43,7 @@ def run_campaign():
         fi.executeSingleFault(i)
         #reset
         #reset()
-        reload_architecture()
+        #reload_architecture()
 
 #run the script
 run_campaign()
