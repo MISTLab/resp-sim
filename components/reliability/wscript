@@ -44,5 +44,5 @@
 # Build
 
 def build(bld):
-    bld.add_subdirs('dummyBuffer simpleProbe simpleSaboteur')
+    bld.add_subdirs('dummyBuffer simpleProbe simpleSaboteur checkerTool functionProfilerTool')
 

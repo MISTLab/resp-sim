@@ -42,20 +42,6 @@ class bit_flip1:
 maskFunctions = [value_change, bit_flip, bit_flip0, bit_flip1]
 
 
-def getSaboteurMaskFunction(function):
-    """given a mask function, it returns the correspondent function for the saboteur"""
-    import SaboteurLT32
-    if isinstance(function, value_change):
-        return SaboteurLT32.SaboteurLT32.VALUE_CHANGE
-    elif isinstance(function, bit_flip):
-        return SaboteurLT32.SaboteurLT32.BIT_FLIP
-    elif isinstance(function, bit_flip1):
-        return SaboteurLT32.SaboteurLT32.BIT_FLIP1
-    elif isinstance(function, bit_flip0):
-        return SaboteurLT32.SaboteurLT32.BIT_FLIP0
-    else:
-        raise exceptions.Exception(str(function) + " is not a valid mask function")
-
 ################################################################################################
 ## Classes implementing wrappers for provinding an uniform access to every internal attribute ##
 ################################################################################################
@@ -101,6 +87,30 @@ class variableWrapper(object, baseAttributeWrapper):
         setattr(self.__component, self.__attribute, value)
     value = property(__getValue, __setValue) #define a property
 
+
+def getSaboteurMaskFunction(function):
+    """given a mask function, it returns the correspondent function for the saboteur"""
+    import SaboteurLT32
+    if isinstance(function, value_change):
+        return SaboteurLT32.SaboteurLT32.VALUE_CHANGE
+    elif isinstance(function, bit_flip):
+        return SaboteurLT32.SaboteurLT32.BIT_FLIP
+    elif isinstance(function, bit_flip1):
+        return SaboteurLT32.SaboteurLT32.BIT_FLIP1
+    elif isinstance(function, bit_flip0):
+        return SaboteurLT32.SaboteurLT32.BIT_FLIP0
+    else:
+        raise exceptions.Exception(str(function) + " is not a valid mask function")
+
+def getSaboteurLineType(lineType):
+    """Given the name of the lineType, it returns the id of the lineType"""
+    import SaboteurLT32
+    if lineType == 'DATA':
+        return SaboteurLT32.SaboteurLT32.DATA
+    elif lineType == 'ADDRESS':
+        return SaboteurLT32.SaboteurLT32.ADDRESS
+    else:
+        raise exceptions.Exception(str(function) + " is not a valid mask function")
     
 class saboteurAccess(object, baseAttributeWrapper): #TODO: to be updated
     """The wrapper for saboteurs"""
@@ -120,13 +130,12 @@ class saboteurAccess(object, baseAttributeWrapper): #TODO: to be updated
         if maskFunctions.count(maskFunction.__class__) == 0:
             raise exceptions.Exception(str(maskFunction)+ " is not a valid mask function")
         self.__component = component
-        self.__attribute = attribute
-        self.__maskFunction = maskFunction
+        self.__attribute = getSaboteurLineType(attribute)
+        self.__maskFunction = getSaboteurMaskFunction(maskFunction)
         self.__index = saboteurIndex
     def applyMask(self, mask):
         """Corrupts the content with a mask passed as parameter"""
-        maskFunction = getSaboteurMaskFunction(self.__maskFunction)
-        self.__component.setMask(maskFunction, mask, self.__index)
+        self.__component.setMask(self.__maskFunction, mask, self.__index, self.__attribute)
     def __getValue(self):
         """Returns the register value"""
         raise exceptions.Exception('__getValue method cannot be called on saboteurWrapper')

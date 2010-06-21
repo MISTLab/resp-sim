@@ -64,13 +64,12 @@ def register_breakpoint(object, attribute, checker):
     gb = GenericBreakpoint( object, attribute, checker )
     breaks.append(gb)
     sc_controller_wrapper.registerDeltaCallback( gb )
-    return gb
 
 def reset():
-    #for i in breaks;
-    #    del
+    for i in breaks:
+        del i
     global breaks
-    breaks =[]
+    breaks = []
 
 #TODO support it into the simulation controller
 #def unregister_breakpoint(bp):

@@ -86,7 +86,24 @@ class faultInjector:
                 for f in self.__currentFaultList[s][t]:
                     for i in f.keys():
                         print '\t\t' + str(i) + '\t' + str(f[i])               
+
+    def addExperiment(self, experiment, index = None):
+        #TODO check experiment
+        if index == None:
+            index = len(self.__currentFaultList)
+        if type(index) != long and type(index) != int:
+            raise exceptions.Exception("the index must be a number")
+        if index >= 0 and index <= len(self.__currentFaultList):
+            raise exceptions.Exception("the index must be included in the range [0;" + str(len(self.__currentFaultList)) + ")")
+        self.__currentFaultList.insert(experiment, index)
     
+    def deleteExperiment(self, index):
+        if type(index) != long and type(index) != int:
+            raise exceptions.Exception("the index must be a number")
+        if index >= 0 and index < len(self.__currentFaultList):
+            raise exceptions.Exception("the index must be included in the range [0;" + str(len(self.__currentFaultList)) + ")")
+        self.__currentFaultList.pop(index)
+        
     def numberOfExperiments(self):
         """Returns the number of experiments in the fault list"""
         return len(self.__currentFaultList)
@@ -115,7 +132,7 @@ class faultInjector:
                 respFile = os.path.abspath(sys.modules['resp'].__file__)
                 batchFile = os.path.abspath(sys.modules['fi'].__path__[0]) + '/executeCampaign.py'
                 parameters = 'FAULT_INJECTION_CAMPAIGN=True;FAULTLIST=\'__temp_list\';FIRST_EXPERIMENT='+str(currExperiment)
-                subproc = subprocess.Popen( ['python', respFile, '-a', archFile, '--silent', '--no-banner', '--batch', batchFile, '-d',parameters], stdin=subprocess.PIPE, stdout=sys.stdout )
+                subproc = subprocess.Popen( ['python', respFile, '-a', archFile, '--silent', '--no-banner', '--batch', batchFile, '-p',parameters], stdin=subprocess.PIPE, stdout=sys.stdout )
                 subproc.wait()
                 num_of_errors = num_of_errors + 1
                 f = open('__currsim', 'r')
