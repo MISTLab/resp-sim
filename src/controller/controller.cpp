@@ -223,7 +223,6 @@ void sc_controller::run_simulation(sc_time simTime){
                 this->timeTracker.restart();
                 boost::thread thrd (c);
                 thrd.join();
-                this->accumulatedTime += this->timeTracker.elapsed();
             }
         }
     }

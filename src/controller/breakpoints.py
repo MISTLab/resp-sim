@@ -66,9 +66,9 @@ def register_breakpoint(object, attribute, checker):
     sc_controller_wrapper.registerDeltaCallback( gb )
 
 def reset():
+    global breaks
     for i in breaks:
         del i
-    global breaks
     breaks = []
 
 #TODO support it into the simulation controller
