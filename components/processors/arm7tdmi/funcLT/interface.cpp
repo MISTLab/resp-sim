@@ -96,21 +96,15 @@ bool arm7tdmi_funclt_trap::ARM7TDMI_ABIIf::isRoutineEntry( const InstructionBase
 
 bool arm7tdmi_funclt_trap::ARM7TDMI_ABIIf::isRoutineExit( const InstructionBase * \
     instr ) throw(){
-    std::vector<std::string> nextNames = this->routineExitSequence[this->routineExitState];
-    std::vector<std::string>::const_iterator namesIter, namesEnd;
-    std::string curName = instr->getInstructionName();
-    for(namesIter = nextNames.begin(), namesEnd = nextNames.end(); namesIter != namesEnd; \
-        namesIter++){
-        if(curName == *namesIter || *namesIter == ""){
-            if(this->routineExitState == -1){
-                this->routineExitState = 0;
-                return true;
-            }
-            this->routineExitState++;
-            return false;
-        }
-    }
-    this->routineExitState = 0;
+    //PATCHED. the routine exit is not identified on the basis of a sequence of instruction but on the basis of
+    //a particular execution of a single instruction: instruction LDM set the content of the PC    
+    
+    if(instr->getInstructionName()=="LDM" ){
+      unsigned int bitString = this->readMem(this->readPC());
+      unsigned int reg_list = (bitString & 0xffff);
+      if((reg_list & 0x00008000) != 0) //is LDM setting the content of the PC?
+        return true;
+    }    
     return false;
 }
 

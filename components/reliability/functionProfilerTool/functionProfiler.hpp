@@ -165,13 +165,12 @@ public:
 	      this->currFunc = this->bfdFE->functionAt(curPC);
   	    std::string lastElem = "???";
 	      if(callTrace.size()>0) lastElem = callTrace[callTrace.size()-1];
-	      std::cout << "test " << this->currFunc << " " << lastElem << std::endl;
         if(this->currFunc == ".NOSPSET" && lastElem == "re-enter:main") 
             enableTrace = false;  
 	      if(enableTrace)
 	          callTrace.push_back(MAKE_STRING("re-enter:"<<this->currFunc));
   	    log.push_back(MAKE_STRING("time: " << (((long)sc_time_stamp().to_default_time_units())) <<" - address: " << std::hex << curPC << std::dec << " - Re-enter: " << currFunc << " - Processor: " << this->processorInstance.getProcessorID()));
-  	}else if(this->bfdFE->isRoutineExit(curPC)){
+  	}else if(processorInstance.isRoutineExit(curInstr)){
   	    log.push_back(MAKE_STRING("time: " << (((long)sc_time_stamp().to_default_time_units())) << " - address: " << std::hex << curPC << std::dec << " - Exit: " << currFunc << " - Processor: " << this->processorInstance.getProcessorID()));
    	    if(enableTrace) 
 	        callTrace.push_back(MAKE_STRING("exit:"<<this->currFunc));
@@ -179,7 +178,6 @@ public:
   	    for(int i=0; i < currPars.size(); i++){
   	      if(currPars[i].type==0){
   	        std::string filename = MAKE_STRING(this->currFunc << "_" << currPars[i].id << "_" << currPars[i].num_saved_files << ".dat");
-  	        std::cout << "salva " << filename << " indirizzo: " << std::hex << currPars[i].value << std::dec << std::endl;
    	        ofstream logFile;
   	        logFile.open (filename.c_str());
   	        for(int j = 0; j < currPars[i].size; j++){
