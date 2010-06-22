@@ -73,6 +73,7 @@ using namespace trap;
 /*This trap tool is devoted to the profiling of the function calls during the execution of a program on a multi-processor architecture.
 */
 template<typename issueWidth> class functionProfiler: public ToolsIf<issueWidth> {
+
 private:
   
   enum param_type {VALUE, ADDRESS_RETURN, ADDRESS_CALL};
@@ -208,7 +209,7 @@ public:
 	           << this->processorInstance.getProcessorID()));
 
   	}else if(processorInstance.isRoutineExit(curInstr)){ //routine exit
-  	  this->currFunc = this->bfdFE->functionAt(curPC);
+  	  //this->currFunc = this->bfdFE->functionAt(curPC);
 	    log.push_back(MAKE_STRING((((long)sc_time_stamp().to_default_time_units())) << "\t" 
 	           << std::hex << curPC << std::dec << "\tExit\t" << currFunc << "\t" 
 	           << this->processorInstance.getProcessorID()));

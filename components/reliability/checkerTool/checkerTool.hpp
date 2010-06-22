@@ -74,11 +74,13 @@ template<typename issueWidth> class checkerTool: public ToolsIf<issueWidth> {
 
 private:
   
+  enum param_type {VALUE, ADDRESS_RETURN, ADDRESS_CALL};
+  
   //structure representing a parameter of a function
   struct param_t{
     int id;
-    int type;
-    issueWidth value; //it stores the last value of the parameter
+    param_type type;
+    issueWidth value;
     int size;
     int num_saved_files;
   };
@@ -97,8 +99,6 @@ private:
 	std::string currFunc;
 	BFDWrapper* bfdFE;
 	
-	
-	std::vector<std::string> log; //contains the log of the profiling
 	std::map<std::string, std::vector<param_t> > functionsToLog; //
 
   //stores the checkpoints
@@ -111,16 +111,18 @@ private:
   std::vector<std::string> calltrace;
 	bool enableTrace;
 	int currTraceElement;
+
+	std::string dataFolderName;
+
   
 public:
 	checkerTool(ABIIf<issueWidth> &processorInstance, std::string exec, std::string functionDescriptor, 
-	        std::string checkpointsDescriptor, std::string callTraceFileName) : 
-	        processorInstance(processorInstance), execName(exec) {
-		this->log.clear();
+	        std::string checkpointsDescriptor, std::string callTraceFileName, std::string dataFolderName = "") : 
+	        processorInstance(processorInstance), execName(exec), dataFolderName(dataFolderName) {
 		this->currFunc = "";
 		bfdFE = &(BFDWrapper::getInstance(this->execName));
 		
-		//load the descriptor of the function calls
+		//load functions descriptor
 		std::ifstream descriptorFile;
     descriptorFile.open(functionDescriptor.c_str());
     int currNumParams;
@@ -136,11 +138,15 @@ public:
           curr_par.num_saved_files = 0;
           descriptorFile >> currParamType;
           if(currParamType == "address"){
-            curr_par.type = 0;
+            descriptorFile >> currParamType;
+            if(currParamType == "call")
+              curr_par.type = ADDRESS_CALL;
+            else
+              curr_par.type = ADDRESS_RETURN;
             descriptorFile >> currSize;
             curr_par.size = currSize;
           }else{
-            curr_par.type = 1;
+            curr_par.type = VALUE;
             curr_par.size = 0;
           }
           this->functionsToLog[currFunction].push_back(curr_par);
@@ -164,9 +170,10 @@ public:
         currCheck.name = currCheckpoint;
         currCheck.size = currCpSize;
         currCheck.data = new unsigned int[currCpSize];
-        std::ifstream currCheckpointFile(currCheckpoint.c_str(), ios::in);
+        std::string currCheckpointFilename = MAKE_STRING(this->dataFolderName << "/" <<currCheckpoint);
+        std::ifstream currCheckpointFile(currCheckpointFilename.c_str(), ios::in);
         if(!currCheckpointFile.is_open())
-          THROW_EXCEPTION(currCheckpointFile<<" file not found!");
+          THROW_EXCEPTION(currCheckpointFilename<<" file not found!");
         for(int i=0; i<currCheck.size; i++){
           currCheckpointFile >> currDatum;
           currCheck.data[i] = currDatum;
@@ -201,7 +208,7 @@ public:
 	}
 
 	~checkerTool(){
-	  //TODO
+	  //TODO free memory
 	}
 
 
@@ -217,13 +224,14 @@ public:
 	    if(enableTrace){
 	      std::string currElem = MAKE_STRING("enter:"<<this->currFunc);
 	      if(calltrace[currTraceElement] != currElem){
-	          controlFlowError = MAKE_STRING("Line " << currTraceElement << " Expected: " << calltrace[currTraceElement] << " Obtained: " << currElem);
+	          controlFlowError = MAKE_STRING("Line " << currTraceElement << " Expected: " 
+	              << calltrace[currTraceElement] << " Obtained: " << currElem);
 	          sc_stop();
 	      }
 	      currTraceElement++;
 	    }
 	    
-//	    log.push_back(MAKE_STRING("time: " << (((long)sc_time_stamp().to_default_time_units())) << " - address: " << std::hex << curPC << std::dec << " - Enter: " << currFunc << " - Processor: " << this->processorInstance.getProcessorID()));
+	    //it is necessary to save parameters of the function call to be able to check pointed data on the return
 	    if(this->functionsToLog.count(this->currFunc) != 0){
   	    int numOfParams = this->functionsToLog[this->currFunc].size();
   	    std::vector< issueWidth > callArgs = processorInstance.readArgs();
@@ -235,17 +243,12 @@ public:
 	        } else{
 	          currValue = processorInstance.readMem(processorInstance.readSP()+sizeof(issueWidth)*(i-4));
 	        }
-          log.push_back(MAKE_STRING(" " << i << ": " << currValue << "\t" << std::hex << currValue << std::dec));
 	        this->functionsToLog[this->currFunc][i].value = currValue;
 	      }		      
 	    }
+	    
   	}else if(this->currFunc != this->bfdFE->functionAt(curPC)){ //function re-enter if the address belongs to another function
   	    this->currFunc = this->bfdFE->functionAt(curPC);
-  	    std::string lastElem = "???";
-	      if(calltrace.size()>0) 
-	        lastElem = calltrace[calltrace.size()-1];
-        if(this->currFunc == ".NOSPSET" && lastElem == "re-enter:main") 
-  	      enableTrace = false;
   	      	    
   	    //trace check
   	    if(enableTrace){
@@ -257,18 +260,14 @@ public:
 	        currTraceElement++;
 	      }
 	      
-  	    
-  	    /*log.push_back(MAKE_STRING("time: " << (((long)sc_time_stamp().to_default_time_units())) <<" - address: " << std::hex << curPC << std::dec << " - Re-enter: " << currFunc << " - Processor: " << this->processorInstance.getProcessorID()));*/
-  	
-  	}else if(this->bfdFE->isRoutineExit(curPC)){ //function exit
-  	    /*log.push_back(MAKE_STRING("time: " << (((long)sc_time_stamp().to_default_time_units())) << " - address: " << std::hex << curPC << std::dec << " - Exit: " << currFunc << " - Processor: " << this->processorInstance.getProcessorID()));*/
-  	    
- 	    
+  	}else if(processorInstance.isRoutineExit(curInstr)){ //routine exit
+  	    this->currFunc = this->bfdFE->functionAt(curPC);
   	    //check produced data
   	    std::vector<param_t> currPars = this->functionsToLog[this->currFunc];
   	    for(int i=0; i < currPars.size(); i++){
-  	      if(currPars[i].type==0){
-  	        std::string checkpointName = MAKE_STRING(this->currFunc << "_" << currPars[i].id << "_" << currPars[i].num_saved_files << ".dat");
+  	      if(currPars[i].type==ADDRESS_RETURN){
+  	        std::string checkpointName = MAKE_STRING(this->currFunc << "_" << currPars[i].id << "_" 
+  	                    << currPars[i].num_saved_files << "_exit.dat");
   	        int currErrors=0;
             if(checkpoints.count(checkpointName)==0){
               std::cout << "checkpoint not found " << checkpointName << std::endl;
@@ -293,6 +292,11 @@ public:
 	        }
 	        currTraceElement++;
 	      }
+	      
+        //disable trace
+        if(this->currFunc == "main") 
+          enableTrace = false;  
+
   	}
   	
 		return false;
@@ -307,7 +311,6 @@ public:
 
 	///Resets the whole concurrency emulator, reinitializing it and preparing it for a new simulation
 	void reset(){
-		this->log.clear();
 		this->currFunc="";
 		this->bfdFE = &BFDWrapper::getInstance(this->execName);
 	}
@@ -324,7 +327,6 @@ public:
     return log;
 	}
 
-	
 };
 
 #endif // CHEKERTOOL_HPP
