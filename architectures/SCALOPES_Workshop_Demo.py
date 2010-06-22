@@ -62,8 +62,8 @@ NOC_ACTIVE         = True
 NOC_FREQUENCY      = 166             # MHz
 NOC_TOPOLOGY       = NocLT32.FULL
 CONFIGURE_THROUGH_ITC = False
-DATA_CACHE_ACTIVE  = False
-INSTR_CACHE_ACTIVE = False
+DATA_CACHE_ACTIVE  = True
+INSTR_CACHE_ACTIVE = True
 CACHE_SIZE         = 16              # KBytes
 CACHE_BLOCK_SIZE   = 8               # words
 CACHE_WAYS         = 8
@@ -321,6 +321,7 @@ for i in range(0, PROCESSOR_NUMBER):
 
 # Now I initialize the OS emulator
 print "Setting up OS Emulation"
+cm_wrapper.ConcurrencyManager.threadStackSize = 1024*40
 tools = list()
 if OS_EMULATION:
     trapwrapper.OSEmulatorBase.set_program_args(ARGS)
