@@ -89,7 +89,8 @@ public:
   //constructor
   SaboteurLT(sc_module_name module_name) : 
             initiatorSocket((boost::lexical_cast<std::string>(module_name) + "_initSocket").c_str()),
-            targetSocket((boost::lexical_cast<std::string>(module_name) + "_targSocket").c_str()){
+            targetSocket((boost::lexical_cast<std::string>(module_name) + "_targSocket").c_str())
+  {
     this->targetSocket.register_b_transport(this, &SaboteurLT::b_transport);
     
     end_module();
@@ -119,7 +120,6 @@ private:
 
   //used for storing all the masks used for injecting the fault at the next transaction
   std::vector<corruption_type> corruptions;
-
 
   //returns a corrupted value given a mask function and a mask value
   unsigned int corrupt(unsigned int value, unsigned int mask, maskFunctionType maskFunction)
@@ -191,10 +191,37 @@ public:
     initiatorSocket->b_transport(trans, delay);
 
     for(int i = 0; i < corruptions.size(); i++){
-      if(corruptions[i].linetype == DATA && trans.is_write() == true){
-      
+      if(corruptions[i].linetype == DATA && trans.is_read() == true){
+        //corrupt the data. do note: we corrupt the data pointed by the payload. thus, we modify also the master data. 
+        //indeed we assume that the master has copied the data in a temporary location referenced by the payload
+        unsigned int numWords = trans.get_data_length()/sizeof(unsigned int);
+        unsigned char* dataPtr = trans.get_data_ptr();
+        if(numWords < corruptions[i].line){
+          unsigned int datum;
+          unsigned int currDatumLenght = 0;
+          currDatumLenght = sizeof(unsigned int);
+          memcpy(&datum, &dataPtr[corruptions[i].line * sizeof(unsigned int)], currDatumLenght);
+          datum = this->corrupt(datum, this->corruptions[i].mask, this->corruptions[i].maskFunction);
+          memcpy(&dataPtr[corruptions[i].line * sizeof(unsigned int)], &datum, currDatumLenght);
+        }else if(numWords == corruptions[i].line) {
+          unsigned int currDatumLenght = 0;
+          currDatumLenght = trans.get_data_length() - numWords * sizeof(unsigned int);
+          if(currDatumLenght == 1){
+            unsigned char datum;
+            memcpy(&datum, &dataPtr[corruptions[i].line * sizeof(unsigned int)], currDatumLenght);
+            datum = this->corrupt(datum, this->corruptions[i].mask, this->corruptions[i].maskFunction);
+            memcpy(&dataPtr[corruptions[i].line * sizeof(unsigned int)], &datum, currDatumLenght);          
+          } else if(currDatumLenght == 2){
+            unsigned short int datum;
+            memcpy(&datum, &dataPtr[corruptions[i].line * sizeof(unsigned int)], currDatumLenght);
+            datum = this->corrupt(datum, this->corruptions[i].mask, this->corruptions[i].maskFunction);
+            memcpy(&dataPtr[corruptions[i].line * sizeof(unsigned int)], &datum, currDatumLenght);          
+          }
+        }
       }
-    } 
+    }
+    
+    this->corruptions.clear();
   }
   
   /*-----------------------------------
