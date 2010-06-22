@@ -397,6 +397,7 @@ class RespKernel:
         """Loads the architecture specified in fileName; currently it must be a python script. If returnCheck
         parameter is enabled, the function returns True in case of success or False if any problem occurred during
         architecture loading"""
+        fileName = fileName.strip()
         self.fileName = fileName #it is set before since it may be used during the architecture loading
         if fileName.endswith('.py'):
             # I have to find the path for the module, then add it to the

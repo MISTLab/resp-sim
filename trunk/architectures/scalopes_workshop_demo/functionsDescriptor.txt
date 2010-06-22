@@ -1,0 +1,29 @@
+read_bitmap 2
+value
+value
+write_bitmap 6
+value
+value
+value
+value
+value
+value
+edgeDetection 5
+value
+address return 5760
+value
+value
+value
+rgb2grey 5
+value
+address return 5760
+value
+value
+value
+edgeOverlapping 6
+value
+value
+address return 17280
+value
+value
+value

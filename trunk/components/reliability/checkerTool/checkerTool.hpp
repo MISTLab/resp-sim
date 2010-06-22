@@ -272,14 +272,20 @@ public:
             if(checkpoints.count(checkpointName)==0){
               std::cout << "checkpoint not found " << checkpointName << std::endl;
             }else{
-    	        for(int j = 0; j < currPars[i].size; j++){
+    	        std::string diffFileName = MAKE_STRING(this->dataFolderName << "/" <<this->currFunc << "_" << currPars[i].id << "_" 
+  	                    << currPars[i].num_saved_files << "_exit_diff.dat");
+  	          std::ofstream diffFile(diffFileName.c_str());
+  	          for(int j = 0; j < currPars[i].size; j++){
     	          if((unsigned int)processorInstance.readCharMem(currPars[i].value + j) != (unsigned int)checkpoints[checkpointName].data[j]){
     	            currErrors++;
+    	            diffFile << "1" << std::endl;
     	          }
+    	          else
+    	           diffFile << "0" << std::endl;
     	        }
     	        errors[checkpointName] = currErrors;
+    	        diffFile.close();
             }
-
   	      }
   	    }
   	    
@@ -317,12 +323,12 @@ public:
 	
 	std::string getLog(){
     std::string log = "";
-
-    log = MAKE_STRING("Controlflow error:" << std::endl << this->controlFlowError << std::endl << std::endl);
     
-	  log = MAKE_STRING(log << "Errors per checkpoints:" << std::endl);
+    log = MAKE_STRING("Controlflow error:\n- " << (this->controlFlowError==""?"No controlflow error":this->controlFlowError) << std::endl << std::endl);
+    
+	  log = MAKE_STRING(log << "# Data errors per checkpoints:" << std::endl);
 	  for(std::map<std::string, int>::iterator it = errors.begin(); it != errors.end(); it++){
-	      log = MAKE_STRING(log << it->first << " " << it->second << std::endl);
+	      log = MAKE_STRING(log << "- " << it->first << ": " << it->second << std::endl);
 	  }
     return log;
 	}

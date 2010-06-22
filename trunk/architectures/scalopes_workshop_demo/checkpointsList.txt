@@ -1,0 +1,3 @@
+edgeOverlapping_2_0_exit.dat 17280
+rgb2grey_1_0_exit.dat 5760
+edgeDetection_1_0_exit.dat 5760
