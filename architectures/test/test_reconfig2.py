@@ -220,9 +220,6 @@ if OS_EMULATION:
 pytCalls = list()
 # Now I initialize the reconfiguration emulator
 for i in range(0, PROCESSOR_NUMBER):
-    funcProf = functionProfiler.functionProfiler32(processors[i].getInterface(), SOFTWARE)
-    processors[i].toolManager.addTool(funcProf)
-    tools.append(funcProf)
     recEmu = recEmu_wrapper.reconfEmulator32(processors[i].getInterface(),cE,SOFTWARE)
     processors[i].toolManager.addTool(recEmu)
     tools.append(recEmu)
