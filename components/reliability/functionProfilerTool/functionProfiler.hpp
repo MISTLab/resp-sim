@@ -71,16 +71,15 @@
 using namespace trap;
 
 /*This trap tool is devoted to the profiling of the function calls during the execution of a program on a multi-processor architecture.
-The result is the trace of the function calls and returns; each entry of the trace contains the name of the function, the time instant and the 
-id of the processor running that function. DO NOTE: the profiling is based on the data provided by the BDF frontend; some parts of the trace related 
-to the entry routines and exit routines of the program may contain some inaccuracy
 */
 template<typename issueWidth> class functionProfiler: public ToolsIf<issueWidth> {
 private:
   
+  enum param_type {VALUE, ADDRESS_RETURN, ADDRESS_CALL};
+  
   struct param_t{
     int id;
-    int type;
+    param_type type;
     issueWidth value;
     int size;
     int num_saved_files;
@@ -94,14 +93,16 @@ private:
 	std::map<std::string, std::vector<param_t> > functionsToLog;
 	std::vector<std::string> callTrace;
 	bool enableTrace;
+	std::string dataFolderName;
 
 public:
-	functionProfiler(ABIIf<issueWidth> &processorInstance, std::string exec, std::string functionDescriptor) : 
-	        processorInstance(processorInstance), execName(exec) {
+	functionProfiler(ABIIf<issueWidth> &processorInstance, std::string exec, std::string functionDescriptor, std::string dataFolderName = "") : 
+	        processorInstance(processorInstance), execName(exec), dataFolderName(dataFolderName) {
 		this->log.clear();
 		this->currFunc = "";
 		bfdFE = &(BFDWrapper::getInstance(this->execName));
 		
+		//load functions descriptor
 		std::ifstream descriptorFile;
     descriptorFile.open(functionDescriptor.c_str());
     int currNumParams;
@@ -117,12 +118,15 @@ public:
           curr_par.num_saved_files = 0;
           descriptorFile >> currParamType;
           if(currParamType == "address"){
-            curr_par.type = 0;
+            descriptorFile >> currParamType;
+            if(currParamType == "call")
+              curr_par.type = ADDRESS_CALL;
+            else
+              curr_par.type = ADDRESS_RETURN;
             descriptorFile >> currSize;
             curr_par.size = currSize;
-            std::cout << currFunction << " " << j << " " << curr_par.size << std::endl;
           }else{
-            curr_par.type = 1;
+            curr_par.type = VALUE;
             curr_par.size = 0;
           }
           this->functionsToLog[currFunction].push_back(curr_par);
@@ -133,19 +137,31 @@ public:
     else
       THROW_EXCEPTION(functionDescriptor<<" file not found!");
     
-    enableTrace = false;
+    enableTrace = false;    
 	}
 
 	///Method called at every instruction issue, it returns true in case the instruction
 	///has to be skipped, false otherwise
 	bool newIssue(const issueWidth &curPC, const InstructionBase *curInstr) throw(){
+    //analyze current instruction to identify: routine entry, routine exit and routine re-entering
+  	
+  	//routine entry
   	if(this->currFunc != this->bfdFE->functionAt(curPC) && this->bfdFE->isRoutineEntry(curPC)){
+	    //save current function name
 	    this->currFunc = this->bfdFE->functionAt(curPC);
-	    log.push_back(MAKE_STRING("time: " << (((long)sc_time_stamp().to_default_time_units())) << " - address: " << std::hex << curPC << std::dec << " - Enter: " << currFunc << " - Processor: " << this->processorInstance.getProcessorID()));
 	    
-	    if(this->currFunc == "main") enableTrace = true;
-	    if(enableTrace)
+	    //log event
+	    std::string curr_log_item = MAKE_STRING((((long)sc_time_stamp().to_default_time_units())) << "\t" 
+	           << std::hex << curPC << std::dec << "\tEnter\t" << currFunc << "\t" 
+	           << this->processorInstance.getProcessorID());
+	    
+	    if(this->currFunc == "main") //enable tracing when entering the main function
+	      enableTrace = true;
+	    
+	    if(enableTrace) //save trace
 	      callTrace.push_back(MAKE_STRING("enter:"<<this->currFunc));
+	    
+	    //log parameter values
 	    if(this->functionsToLog.count(this->currFunc) != 0){
   	    int numOfParams = this->functionsToLog[this->currFunc].size();
   	    std::vector< issueWidth > callArgs = processorInstance.readArgs();
@@ -157,35 +173,67 @@ public:
 	        } else{
 	          currValue = processorInstance.readMem(processorInstance.readSP()+sizeof(issueWidth)*(i-4));
 	        }
-          log.push_back(MAKE_STRING(" " << i << ": " << currValue << "\t" << std::hex << currValue << std::dec));
+          curr_log_item = MAKE_STRING(curr_log_item <<"\t" << currValue);
 	        this->functionsToLog[this->currFunc][i].value = currValue;
 	      }		      
 	    }
-  	}else if(this->currFunc != this->bfdFE->functionAt(curPC)){
-	      this->currFunc = this->bfdFE->functionAt(curPC);
-  	    std::string lastElem = "???";
-	      if(callTrace.size()>0) lastElem = callTrace[callTrace.size()-1];
-        if(this->currFunc == ".NOSPSET" && lastElem == "re-enter:main") 
-            enableTrace = false;  
-	      if(enableTrace)
-	          callTrace.push_back(MAKE_STRING("re-enter:"<<this->currFunc));
-  	    log.push_back(MAKE_STRING("time: " << (((long)sc_time_stamp().to_default_time_units())) <<" - address: " << std::hex << curPC << std::dec << " - Re-enter: " << currFunc << " - Processor: " << this->processorInstance.getProcessorID()));
-  	}else if(processorInstance.isRoutineExit(curInstr)){
-  	    log.push_back(MAKE_STRING("time: " << (((long)sc_time_stamp().to_default_time_units())) << " - address: " << std::hex << curPC << std::dec << " - Exit: " << currFunc << " - Processor: " << this->processorInstance.getProcessorID()));
-   	    if(enableTrace) 
-	        callTrace.push_back(MAKE_STRING("exit:"<<this->currFunc));
-        std::vector<param_t> currPars = this->functionsToLog[this->currFunc];
-  	    for(int i=0; i < currPars.size(); i++){
-  	      if(currPars[i].type==0){
-  	        std::string filename = MAKE_STRING(this->currFunc << "_" << currPars[i].id << "_" << currPars[i].num_saved_files << ".dat");
-   	        ofstream logFile;
-  	        logFile.open (filename.c_str());
-  	        for(int j = 0; j < currPars[i].size; j++){
-  	          logFile << (unsigned int )processorInstance.readCharMem(currPars[i].value + j) << std::endl;
-  	        } 
-  	        logFile.close();
-  	      }
-  	    }
+
+	    log.push_back(curr_log_item);
+
+      //save memory content
+      std::vector<param_t> currPars = this->functionsToLog[this->currFunc];
+	    for(int i=0; i < currPars.size(); i++){
+	      if(currPars[i].type==ADDRESS_CALL){
+	        std::string filename = MAKE_STRING(this->currFunc << "_" << currPars[i].id << "_" << currPars[i].num_saved_files << "_call.dat");
+ 	        ofstream logFile;
+	        logFile.open (filename.c_str());
+	        for(int j = 0; j < currPars[i].size; j++){
+	          logFile << (unsigned int )processorInstance.readCharMem(currPars[i].value + j) << std::endl;
+	        } 
+	        logFile.close();
+	      }
+	    }
+
+  	}else if(this->currFunc != this->bfdFE->functionAt(curPC)){ //routine re-entering	      
+      //save current function name
+      this->currFunc = this->bfdFE->functionAt(curPC);
+	    
+      //save trace
+      if(enableTrace)
+          callTrace.push_back(MAKE_STRING("re-enter:"<<this->currFunc));
+	    
+	    //log event
+	    log.push_back(MAKE_STRING((((long)sc_time_stamp().to_default_time_units())) << "\t" 
+	           << std::hex << curPC << std::dec << "\tRe-enter\t" << currFunc << "\t" 
+	           << this->processorInstance.getProcessorID()));
+
+  	}else if(processorInstance.isRoutineExit(curInstr)){ //routine exit
+  	  this->currFunc = this->bfdFE->functionAt(curPC);
+	    log.push_back(MAKE_STRING((((long)sc_time_stamp().to_default_time_units())) << "\t" 
+	           << std::hex << curPC << std::dec << "\tExit\t" << currFunc << "\t" 
+	           << this->processorInstance.getProcessorID()));
+   	    
+ 	    //save trace
+ 	    if(enableTrace) 
+        callTrace.push_back(MAKE_STRING("exit:"<<this->currFunc));
+      
+      //disable trace
+      if(this->currFunc == "main") 
+        enableTrace = false;  
+    
+      //save memory content
+      std::vector<param_t> currPars = this->functionsToLog[this->currFunc];
+	    for(int i=0; i < currPars.size(); i++){
+	      if(currPars[i].type==ADDRESS_RETURN){
+	        std::string filename = MAKE_STRING(dataFolderName << "/" << this->currFunc << "_" << currPars[i].id << "_" << currPars[i].num_saved_files << "_exit.dat");
+ 	        ofstream logFile;
+	        logFile.open (filename.c_str());
+	        for(int j = 0; j < currPars[i].size; j++){
+	          logFile << (unsigned int )processorInstance.readCharMem(currPars[i].value + j) << std::endl;
+	        } 
+	        logFile.close();
+	      }
+	    }
   	}
 		return false;
 	}
@@ -204,29 +252,21 @@ public:
 		this->bfdFE = &BFDWrapper::getInstance(this->execName);
 	}
 	
-	void printLog(){
-	  std::cout << "Function trace:" << std::endl;
-	  for(int i = 0; i < this->log.size(); i++){
-	      std::cout << this->log.at(i) << std::endl;
-	  }
-	}
-
-	void saveLog(std::string filename){
+	void saveLog(){
     ofstream outfile;
-    outfile.open (filename.c_str());
-	  outfile << "Function trace:" << std::endl;
+    outfile.open (MAKE_STRING(this->dataFolderName << "/trace.txt").c_str());
+	  outfile << "Time\tAddress\tEvent\tFunction\tProcessorId\tParameters" << std::endl;
 	  for(int i = 0; i < this->log.size(); i++){
 	      outfile << this->log.at(i) << std::endl;
 	  }
     outfile.close();
     
     ofstream tracefile;
-    tracefile.open("trace.txt");
+    tracefile.open (MAKE_STRING(this->dataFolderName << "/short_trace.txt").c_str());
     for(int i=0; i < callTrace.size(); i++)
       tracefile << callTrace[i] << std::endl;
     tracefile.close();
 	}
-
 
 	~functionProfiler(){}
 };
