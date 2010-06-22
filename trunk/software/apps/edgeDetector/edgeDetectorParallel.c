@@ -5,7 +5,7 @@
 #include "ReadWriteBitmaps.h"
 
 #define WIDTH 80
-#define HEIGHT 72
+#define HEIGHT 70
 #define DEPTH 3
 #define INPUT_FILE "./software/apps/edgeDetector/input.bmp"
 #define OUTPUT_FILE "output.bmp"
@@ -56,13 +56,13 @@ void edgeDetectionSinglePixel(unsigned char* inputImage, unsigned char* outputIm
   }
   if(SUM>255) SUM=255;
   if(SUM<0) SUM=0;
-  outputImage[X + Y *width] = 255 - (unsigned char)(SUM);
+  outputImage[X + Y *width] = (unsigned char)(255 - SUM);
 }
 
 void edgeDetection(unsigned char* inputImage, unsigned char* outputImage, unsigned short int width, unsigned short int height, unsigned short int depth){
   int X, Y;
 
-  #pragma omp parallel for default(shared) private(Y,X)
+  #pragma omp parallel for default(shared) private(X,Y)
   for(Y=0; Y<=(height-1); Y++) {
     for(X=0; X<=(width-1); X++) {
       edgeDetectionSinglePixel(inputImage,outputImage,X,Y,width,height,depth);
@@ -102,6 +102,6 @@ int main(){
   edgeDetection(greyImage, edgeImage,bitmap_width,bitmap_height,bitmap_depth);
   edgeOverlapping(inputImage, edgeImage, outputImage,bitmap_width,bitmap_height,bitmap_depth);
   write_bitmap(output_file_name, bitmap_type, bitmap_width, bitmap_height, outputImage, bitmap_palette);
-  
+
   return 0;
 }

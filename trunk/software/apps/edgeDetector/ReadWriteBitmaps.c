@@ -225,7 +225,6 @@ char write_bitmap(
 	)
 {
 	/*---DECLARATIONS---*/
-  output_file_name = "output.bmp";
 	// file pointer
 	FILE 			* fp;
 
