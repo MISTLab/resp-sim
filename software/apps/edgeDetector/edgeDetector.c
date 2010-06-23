@@ -92,11 +92,15 @@ int main(){
   unsigned short int bitmap_height = HEIGHT;
   unsigned short int bitmap_depth = DEPTH;
 
+  printf("Starting Elaboration...\n");
+
   read_bitmap(input_file_name, inputImage);
   rgb2grey(inputImage, greyImage,bitmap_width,bitmap_height,bitmap_depth);
   edgeDetection(greyImage, edgeImage,bitmap_width,bitmap_height,bitmap_depth);
   edgeOverlapping(inputImage, edgeImage, outputImage,bitmap_width,bitmap_height,bitmap_depth);
   write_bitmap(output_file_name, bitmap_type, bitmap_width, bitmap_height, outputImage, bitmap_palette);
-  
+
+  printf("Ending Elaboration...\n");
+
   return 0;
 }
