@@ -1,0 +1,16 @@
+- Introduction (blabla)
+- Download from http://code.google.com/p/resp-sim/ and compile (find instructions, don't do anything since it takes at least half an hour)
+
+Simple Introduction
+- ./startSim.sh
+- instMaster = testMaster_wrapper.testMaster('master')
+- instSlave = testSlave_wrapper.testSlave('slave')
+- connectPorts(instMaster, instMaster.initSocket, instSlave, instSlave.targetSocket)
+- run_simulation(80)
+- instSlave.receivedChars
+- run_simulation()
+- instSlave.receivedChars
+- reset()
+- load_architecture('architectures/test/test_arch.py')
+
+- ./startSim.sh -a architectures/scalopes_workshop_demo/1-SCALOPES_Workshop_Demo_plain_arm9.py

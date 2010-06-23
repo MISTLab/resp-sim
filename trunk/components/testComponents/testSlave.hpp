@@ -52,7 +52,9 @@
 #include <string>
 
 class testSlave: public sc_module{
-    public:
+public:
+    unsigned int receivedChars;
+
     tlm_utils::simple_target_socket< testSlave, 32 > targetSocket;
 
     testSlave(sc_module_name name);

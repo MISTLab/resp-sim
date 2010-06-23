@@ -49,6 +49,7 @@
 
 testSlave::testSlave(sc_module_name name) : sc_module(name), targetSocket((boost::lexical_cast<std::string>(name) + "_port").c_str()){
     this->targetSocket.register_b_transport(this, &testSlave::b_transport);
+    receivedChars = 0;
     end_module();
 }
 
@@ -67,6 +68,7 @@ void testSlave::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay){
         std::cout << "testSlave: received character --> " << *ptr << std::endl;
     }
 
+    receivedChars++;
     wait(10, SC_NS);
 
     trans.set_response_status(tlm::TLM_OK_RESPONSE);
