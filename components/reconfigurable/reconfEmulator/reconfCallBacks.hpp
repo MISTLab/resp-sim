@@ -707,11 +707,9 @@ public:
 		unsigned short int size = width*height;
 		unsigned short int rgbSize = size*depth;
 		unsigned char* inputImage = (unsigned char*) malloc(size*sizeof(unsigned char));
-		unsigned char* outputImage = (unsigned char*) malloc(size*sizeof(unsigned char));
 		int k;
 		for (k=0; k<size; k++) {
 			inputImage[k] = processorInstance.readCharMem(callArgs[0]+k);
-			outputImage[k] = processorInstance.readCharMem(callArgs[1]+k);
 		}
 
 		long sumX = 0;
@@ -751,11 +749,7 @@ public:
 		}
 		if(SUM>255) SUM=255;
 		if(SUM<0) SUM=0;
-		outputImage[X + Y *width] = 255 - (unsigned char)(SUM);
-
-		for (k=0; k<size; k++) {
-			processorInstance.writeCharMem(callArgs[1]+k,*(outputImage+k));
-		}
+		processorInstance.writeCharMem(callArgs[1]+X+Y*width,255 - (unsigned char)(SUM));
 
 		processorInstance.returnFromCall();
 		processorInstance.postCall();
