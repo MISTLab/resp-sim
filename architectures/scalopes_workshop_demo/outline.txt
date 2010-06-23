@@ -13,4 +13,18 @@ Simple Introduction
 - reset()
 - load_architecture('architectures/test/test_arch.py')
 
-- ./startSim.sh -a architectures/scalopes_workshop_demo/1-SCALOPES_Workshop_Demo_plain_arm9.py
+Compile Example (edgeDetector)
+- In architectures/scalopes_workshop_demo launch 'make host' to compile the example for the host system
+- Launch ./edgeDetector and show output.bmp
+- In architectures/scalopes_workshop_demo launch 'make cross' to compile the example for the ARM
+- Back to main folder, executable with name ./edgeDetectorARM, show that cannot be launched by the host system
+
+- Briefly describe architectures/scalopes_workshop_demo/1-SCALOPES_Workshop_Demo_plain_arm9.py
+- ./startSim.sh -a architectures/scalopes_workshop_demo/1-SCALOPES_Workshop_Demo_plain_arm9.py --silent
+- The example is executed on the architecture (approx. 25 seconds). Show output.bmp
+
+- Briefly describe architectures/scalopes_workshop_demo/2-SCALOPES_Workshop_Demo_plain_cache.py
+- ./startSim.sh -a architectures/scalopes_workshop_demo/2-SCALOPES_Workshop_Demo_plain_cache.py --silent
+- The example is executed on the architecture (approx. 25 seconds). Show output.bmp and stats about cache memories
+
+

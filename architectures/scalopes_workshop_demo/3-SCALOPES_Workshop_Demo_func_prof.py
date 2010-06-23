@@ -161,8 +161,11 @@ for i in range(0, PROCESSOR_NUMBER):
     tools.append(recEmu)
 
     # Registration of the callbacks
+    recEmu.registerCppCall('puts', scwrapper.sc_time(1000, scwrapper.SC_NS),1,1)
     recEmu.registerCppCall('read_bitmap', scwrapper.sc_time(1000, scwrapper.SC_NS),1,1)
     recEmu.registerCppCall('write_bitmap', scwrapper.sc_time(1000, scwrapper.SC_NS),1,1)
+    recEmu.printRegisteredFunctions()
+
 
 # We can finally run the simulation
 #run_simulation()

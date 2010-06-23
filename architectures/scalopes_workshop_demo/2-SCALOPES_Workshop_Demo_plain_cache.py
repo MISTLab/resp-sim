@@ -11,12 +11,24 @@ MEMORY_SIZE       = 32              # MBytes
 MEM_FREQUENCY     = 50              # MHz
 BUS_ACTIVE        = True
 BUS_FREQUENCY     = 50              # MHz
+DATA_CACHE_ACTIVE  = True
+INSTR_CACHE_ACTIVE = True
+CACHE_SIZE         = 16             # KBytes
+CACHE_BLOCK_SIZE   = 8              # words
+CACHE_WAYS         = 8
+CACHE_REM_POLICY   = CacheLT32.LRU
+CACHE_WR_POLICY    = CacheLT32.THROUGH
+CACHE_READ_LAT     = 3.0            # ns
+CACHE_WRITE_LAT    = 3.0            # ns
+CACHE_LOAD_LAT     = 3.0            # ns
+CACHE_STORE_LAT    = 3.0            # ns
+CACHE_REMOVE_LAT   = 3.0            # ns
 
 # Software
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'edgeDetector'
+    SOFTWARE = 'edgeDetectorARM'
 
 if SOFTWARE:
     try:
@@ -38,6 +50,18 @@ def statsPrinter():
         print '\x1b[31m' + str(bus.numAccesses) + '\x1b[0m'
         print '\x1b[34m\x1b[1mBus Words:\x1b[0m'
         print '\x1b[31m' + str(bus.numWords) + '\x1b[0m'
+    if DATA_CACHE_ACTIVE:
+        print '\x1b[34m\x1b[1mData Cache Stats:\x1b[0m'
+        print '\x1b[32m\x1b[1mRead Hits          \x1b[0m\x1b[31m' + str(dataCache.numReadHit) + '\x1b[0m'
+        print '\x1b[32m\x1b[1mRead Miss          \x1b[0m\x1b[31m' + str(dataCache.numReadMiss) + '\x1b[0m'
+        print '\x1b[32m\x1b[1mWrite Hits         \x1b[0m\x1b[31m' + str(dataCache.numWriteHit) + '\x1b[0m'
+        print '\x1b[32m\x1b[1mWrite Miss         \x1b[0m\x1b[31m' + str(dataCache.numWriteMiss) + '\x1b[0m'
+    if INSTR_CACHE_ACTIVE:
+        print '\x1b[34m\x1b[1mInstruction Cache Stats:\x1b[0m'
+        print '\x1b[32m\x1b[1mRead Hits          \x1b[0m\x1b[31m' + str(instrCache.numReadHit) + '\x1b[0m'
+        print '\x1b[32m\x1b[1mRead Miss          \x1b[0m\x1b[31m' + str(instrCache.numReadMiss) + '\x1b[0m'
+        print '\x1b[32m\x1b[1mWrite Hits         \x1b[0m\x1b[31m' + str(instrCache.numWriteHit) + '\x1b[0m'
+        print '\x1b[32m\x1b[1mWrite Miss         \x1b[0m\x1b[31m' + str(instrCache.numWriteMiss) + '\x1b[0m'
 
 ################################################
 ##### AUTO VARIABLE SETUP ######################
@@ -73,15 +97,7 @@ mem = MemoryLT32.MemoryLT32('mem', memorySize, latencyMem)
 if BUS_ACTIVE:
     latencyBus = scwrapper.sc_time(float(1000)/float(BUS_FREQUENCY), scwrapper.SC_NS)
     bus = BusLT32.BusLT32('bus',2*PROCESSOR_NUMBER,latencyBus)
-
-    ##### BUS CONNECTIONS #####
-    # Connecting the master components to the bus
-    for i in range(0, PROCESSOR_NUMBER):
-        connectPorts(processors[i], processors[i].instrMem.initSocket, bus, bus.targetSocket)
-        connectPorts(processors[i], processors[i].dataMem.initSocket, bus, bus.targetSocket)
-
     connectPorts(bus, bus.initiatorSocket, mem, mem.targetSocket)
-
     # Add memory mapping
     bus.addBinding("mem",0x0,memorySize)
 else:
@@ -93,6 +109,45 @@ else:
         raise Exception('Sorry, memory currently supports only a single connection (data or instruction). Please activate an interconnection layer between processors and memory')
         #connectPorts(processors[0], processors[0].instrMem.initSocket, mem, mem.targetSocket)
         #connectPorts(processors[0], processors[0].dataMem.initSocket, mem, mem.targetSocket)
+
+##### CACHE, BUS, AND MEMORY CONNECTIONS #####
+if DATA_CACHE_ACTIVE:
+    dataCache = CacheLT32.CacheLT32('dataCache', CACHE_SIZE*1024*1024, memorySize, CACHE_WAYS, CACHE_BLOCK_SIZE, CACHE_REM_POLICY, CACHE_WR_POLICY)
+    dataCache.setReadLatency(scwrapper.sc_time(CACHE_READ_LAT,scwrapper.SC_NS))
+    dataCache.setWriteLatency(scwrapper.sc_time(CACHE_WRITE_LAT,scwrapper.SC_NS))
+    dataCache.setLoadLatency(scwrapper.sc_time(CACHE_LOAD_LAT,scwrapper.SC_NS))
+    dataCache.setStoreLatency(scwrapper.sc_time(CACHE_STORE_LAT,scwrapper.SC_NS))
+    dataCache.setRemoveLatency(scwrapper.sc_time(CACHE_REMOVE_LAT,scwrapper.SC_NS))
+    #dataCache.setScratchpad(4194304,1048576,scwrapper.sc_time(0.001,scwrapper.SC_NS))
+    connectPorts(processors[0], processors[0].dataMem.initSocket, dataCache, dataCache.targetSocket)
+    if BUS_ACTIVE:
+        connectPorts(dataCache, dataCache.initSocket, bus, bus.targetSocket)
+    else:
+        connectPorts(dataCache, dataCache.initSocket, mem, mem.targetSocket)
+else:
+    if BUS_ACTIVE:
+        connectPorts(processors[0], processors[0].dataMem.initSocket, bus, bus.targetSocket)
+    else:
+        connectPorts(processors[0], processors[0].dataMem.initSocket, mem, mem.targetSocket)
+
+if INSTR_CACHE_ACTIVE:
+    instrCache = CacheLT32.CacheLT32('instrCache', CACHE_SIZE*1024*1024, memorySize, CACHE_WAYS, CACHE_BLOCK_SIZE, CACHE_REM_POLICY, CACHE_WR_POLICY)
+    instrCache.setReadLatency(scwrapper.sc_time(CACHE_READ_LAT,scwrapper.SC_NS))
+    instrCache.setWriteLatency(scwrapper.sc_time(CACHE_WRITE_LAT,scwrapper.SC_NS))
+    instrCache.setLoadLatency(scwrapper.sc_time(CACHE_LOAD_LAT,scwrapper.SC_NS))
+    instrCache.setStoreLatency(scwrapper.sc_time(CACHE_STORE_LAT,scwrapper.SC_NS))
+    instrCache.setRemoveLatency(scwrapper.sc_time(CACHE_REMOVE_LAT,scwrapper.SC_NS))
+    #instrCache.setScratchpad(4194304,1048576,scwrapper.sc_time(0.001,scwrapper.SC_NS))
+    connectPorts(processors[0], processors[0].instrMem.initSocket, instrCache, instrCache.targetSocket)
+    if BUS_ACTIVE:
+        connectPorts(instrCache, instrCache.initSocket, bus, bus.targetSocket)
+    else:
+        connectPorts(instrCache, instrCache.initSocket, mem, mem.targetSocket)
+else:
+    if BUS_ACTIVE:
+        connectPorts(processors[0], processors[0].instrMem.initSocket, bus, bus.targetSocket)
+    else:
+        connectPorts(processors[0], processors[0].instrMem.initSocket, mem, mem.targetSocket)
 
 ################################################
 ##### SYSTEM INIT ##############################
