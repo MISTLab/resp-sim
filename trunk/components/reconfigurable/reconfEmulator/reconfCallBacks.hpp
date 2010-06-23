@@ -547,6 +547,31 @@ public:
 	}
 };
 
+template<typename issueWidth> class putsCall : public reconfCB<issueWidth>{
+private:
+	configEngine* cE;
+public:
+	putsCall(configEngine* mycE, sc_time latency = SC_ZERO_TIME, unsigned int width = 1, unsigned int height = 1):
+		reconfCB<issueWidth>(latency, width, height), cE(mycE)	{}
+	bool operator()(ABIIf<issueWidth> &processorInstance){
+		processorInstance.preCall();
+		std::vector< issueWidth > callArgs = processorInstance.readArgs();
+
+		unsigned char* inputText = (unsigned char*) malloc(512*sizeof(unsigned char));
+		int k;
+		for (k=0; k<512; k++) {
+			inputText[k] = processorInstance.readCharMem(callArgs[0]+k);
+		}
+
+		cout << inputText << endl;
+
+		processorInstance.setRetVal(0);
+		processorInstance.returnFromCall();
+		processorInstance.postCall();
+		return true;
+	}
+};
+
 template <typename issueWidth> class rgb2greyCall : public reconfCB <issueWidth>{
 private:
 	configEngine* cE;
@@ -770,6 +795,11 @@ template<typename issueWidth> void reconfEmulator<issueWidth>::registerCppCall(s
 	if (funName=="write_bitmap") {
 		write_bitmapCall<issueWidth> *rcb = NULL;
 		rcb = new write_bitmapCall<issueWidth>(cE,latency,w,h);
+		if (!(this->register_call(funName, *rcb))) delete rcb;
+	}
+	if (funName=="puts") {
+		putsCall<issueWidth> *rcb = NULL;
+		rcb = new putsCall<issueWidth>(cE,latency,w,h);
 		if (!(this->register_call(funName, *rcb))) delete rcb;
 	}
 	if (funName=="rgb2grey") {

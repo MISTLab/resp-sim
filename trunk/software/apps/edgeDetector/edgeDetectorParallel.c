@@ -7,7 +7,11 @@
 #define WIDTH 80
 #define HEIGHT 70
 #define DEPTH 3
+#ifdef SAME_INPUT_FOLDER
+#define INPUT_FILE "input.bmp"
+#else
 #define INPUT_FILE "./software/apps/edgeDetector/input.bmp"
+#endif
 #define OUTPUT_FILE "output.bmp"
 
 void rgb2grey(unsigned char* inputImage, unsigned char* outputImage, unsigned short int width, unsigned short int height, unsigned short int depth){
