@@ -36,14 +36,18 @@ def statsPrinter():
     print ''
     for tool in tools:
         if isinstance(tool,checkerTool.checkerTool32):
-            print tool.getLog()
+            log = ""
+            if controller.error == True:
+              log = "Exception thrown\n"
+            else:
+              log = tool.getLog()
+            print log
+            fp=open("classification_results.txt",'a')
+            fp.write(log)
+            fp.write("------------------------------------------------------------------------\n")
+            fp.close()
             break
-    try:
-      import os
-      os.system("python architectures/scalopes_workshop_demo/rebuild_images.py")
-    except e:
-      print e
-
+            
 ################################################
 ##### AUTO VARIABLE SETUP ######################
 ################################################
@@ -57,6 +61,8 @@ if not SOFTWARE or not os.path.isfile(SOFTWARE):
 ################################################
 ##### COMPONENT CREATION #######################
 ################################################
+
+enable_fault_injection()
 
 ###### PROCESSOR INSTANTIATION #####
 #Processor instantiation; decomment the following line to add a second processor and eventually add similar lines
@@ -172,3 +178,11 @@ for i in range(0, PROCESSOR_NUMBER):
     recEmu.registerCppCall('puts', scwrapper.sc_time(1000, scwrapper.SC_NS),1,1)
     recEmu.registerCppCall('read_bitmap', scwrapper.sc_time(1000, scwrapper.SC_NS),1,1)
     recEmu.registerCppCall('write_bitmap', scwrapper.sc_time(1000, scwrapper.SC_NS),1,1)
+
+
+manager.registerComponent(processors[0])
+#fi.loadFaultList('tmpList.txt')
+#fi.executeCampaign()
+
+# We can finally run the simulation
+#run_simulation()
