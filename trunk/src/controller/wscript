@@ -52,7 +52,7 @@ def build(bld):
 
     obj.target = 'sc_controller'
     obj.uselib = 'SYSTEMC_H BOOST BOOST_THREAD'
-    obj.uselib_local = 'systemc'
+    obj.uselib_local = 'systemc utils'
 
     # Generation of the controller wrapper extension
     obj = bld.new_task_gen('pypp')

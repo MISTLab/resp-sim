@@ -59,6 +59,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 #include <systemc.h>
 
@@ -67,6 +68,7 @@
 #include "instructionBase.hpp"
 #include "bfdWrapper.hpp"
 #include "utils.hpp"
+#include <iomanip>
 
 using namespace trap;
 
@@ -91,6 +93,7 @@ private:
 	std::string currFunc;
 	BFDWrapper* bfdFE;
 	std::vector<std::string> log;
+	std::vector<std::string> printLog;
 	std::map<std::string, std::vector<param_t> > functionsToLog;
 	std::vector<std::string> callTrace;
 	bool enableTrace;
@@ -155,6 +158,7 @@ public:
 	    std::string curr_log_item = MAKE_STRING((((long)sc_time_stamp().to_default_time_units())) << "\t" 
 	           << std::hex << curPC << std::dec << "\tEnter\t" << currFunc << "\t" 
 	           << this->processorInstance.getProcessorID());
+	    printLog.push_back(formatLogOutput((long)sc_time_stamp().to_default_time_units(), curPC, "Enter", currFunc, this->processorInstance.getProcessorID()));
 	    
 	    if(this->currFunc == "main") //enable tracing when entering the main function
 	      enableTrace = true;
@@ -207,12 +211,14 @@ public:
 	    log.push_back(MAKE_STRING((((long)sc_time_stamp().to_default_time_units())) << "\t" 
 	           << std::hex << curPC << std::dec << "\tRe-enter\t" << currFunc << "\t" 
 	           << this->processorInstance.getProcessorID()));
+	    printLog.push_back(formatLogOutput((long)sc_time_stamp().to_default_time_units(), curPC, "Re-enter", currFunc, this->processorInstance.getProcessorID()));
 
   	}else if(processorInstance.isRoutineExit(curInstr)){ //routine exit
   	  //this->currFunc = this->bfdFE->functionAt(curPC);
 	    log.push_back(MAKE_STRING((((long)sc_time_stamp().to_default_time_units())) << "\t" 
 	           << std::hex << curPC << std::dec << "\tExit\t" << currFunc << "\t" 
 	           << this->processorInstance.getProcessorID()));
+	    printLog.push_back(formatLogOutput((long)sc_time_stamp().to_default_time_units(), curPC, "Exit", currFunc, this->processorInstance.getProcessorID()));
    	    
  	    //save trace
  	    if(enableTrace) 
@@ -253,6 +259,14 @@ public:
 		this->bfdFE = &BFDWrapper::getInstance(this->execName);
 	}
 	
+  void showLog(){
+    std::cout << "FUNCTION CALL TRACE:" << std::endl;
+    for(int i = 0; i < this->printLog.size(); i++){
+	      std::cout << this->printLog.at(i) << std::endl;
+	  }
+	  std::cout << std::endl;
+  }
+
 	void saveLog(){
     ofstream outfile;
     outfile.open (MAKE_STRING(this->dataFolderName << "/trace.txt").c_str());
@@ -270,6 +284,52 @@ public:
 	}
 
 	~functionProfiler(){}
+	
+private:
+  std::string formatLogOutput(long long int time, long int address, std::string event, std::string function, int processor){
+    std::string timeString = "";
+    
+    int timeLenght = this->numberLenght(time);
+    for(int i = 0; i < 10-timeLenght; i++){
+      timeString =  timeString + " ";
+    }
+    timeString = MAKE_STRING(timeString << time);
+
+    std::string addressString = "";
+    int addressLenght = this->hexNumberLenght(address);
+    for(int i = 0; i < 6-addressLenght; i++){
+      addressString =  addressString + " ";
+    }
+    addressString = MAKE_STRING(addressString << std::hex << address << std::dec);
+    
+    std::string eventString ="";
+    eventString = eventString + event;
+    for(int i = 0; i < 10-event.size(); i++){
+      eventString =  eventString + " ";
+    }
+
+    std::string functionString = "";
+    functionString = functionString + function;
+    for(int i = 0; i < 20-function.size(); i++){
+      functionString =  functionString + " ";
+    }
+    
+    return MAKE_STRING("TIME: " << timeString << " -> ADDRESS:" << addressString << " " << eventString << " " << functionString << " on Processor " << processor);    
+  }
+
+	int numberLenght(long long int datum){	  
+    std::ostringstream o;
+    o << datum;
+    return o.str().size();
+	}
+
+	int hexNumberLenght(long long int datum){	  
+    std::ostringstream o;
+    o << std::hex << datum << std::dec;
+    return o.str().size();
+	}
+
+
 };
 
 #endif // FUNCTIONPROFILER_HPP

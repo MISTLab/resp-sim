@@ -75,6 +75,9 @@ void killAll(std::string errorMsg);
 #define THROW_EXCEPTION( msg ) ( resp::killAll(MAKE_STRING( "At: function " << __PRETTY_FUNCTION__ << " file: " << __FILE__ << ":" << __LINE__ << " --> " << msg )) )
 #else
 namespace resp{
+
+bool stackTraceEnabled = false;
+
 void RaiseTraceException(std::string message);
 }
 #define THROW_EXCEPTION( msg ) ( resp::RaiseTraceException(MAKE_STRING( "At: function " << __PRETTY_FUNCTION__ << " file: " << __FILE__ << ":" << __LINE__ << " --> " << msg )) )

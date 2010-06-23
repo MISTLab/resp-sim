@@ -165,6 +165,11 @@ void sc_controller::reset_controller(){
     }
 }
 
+void sc_controller::enableExceptionStackTracePrint(bool enable){
+    resp::stackTraceEnabled = enable;
+}
+
+
 /// Constructor for the controller; it is private since the static method
 /// createController should be
 /// the only way of creating a new controller instance

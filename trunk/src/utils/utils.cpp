@@ -57,19 +57,21 @@ void resp::killAll(std::string errorMsg){
 #include <execinfo.h>
 #include <signal.h>
 void resp::RaiseTraceException(std::string message){
-    void * array[25];
-    int nSize = backtrace(array, 25);
-    char ** symbols = backtrace_symbols(array, nSize);
     std::ostringstream traceMex;
+    if(stackTraceEnabled){
+        void * array[25];
+        int nSize = backtrace(array, 25);
+        char ** symbols = backtrace_symbols(array, nSize);
 
-    for (int i = 0; i < nSize; i++){
-        traceMex << symbols[i] << std::endl;
+        for (int i = 0; i < nSize; i++){
+            traceMex << symbols[i] << std::endl;
+        }
+        traceMex << std::endl;
+        free(symbols);
     }
-    traceMex << std::endl;
+
     traceMex << message;
 
     throw std::runtime_error(traceMex.str());
-
-    free(symbols);
 }
 #endif

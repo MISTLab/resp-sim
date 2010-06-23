@@ -55,6 +55,7 @@
 #include "callback.hpp"
 #include "simulation_engine.hpp"
 #include "sc_state_machine.hpp"
+#include "utils.hpp"
 
 
 /**
@@ -154,6 +155,9 @@ public:
 
     /// Gets elapsed cpu time in seconds
     double get_real_time();
+    
+    /// specifies if the exception stack trace has to be print during exception handling
+    static void enableExceptionStackTracePrint(bool enable);
 };
 
 }

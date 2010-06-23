@@ -35,10 +35,10 @@ def statsPrinter():
     print '\x1b[31m' + str(controller.get_simulated_time()) + '\x1b[0m'
     print ''
     for tool in tools:
-        if isinstance(tool,functionProfiler.functionProfiler32):
-            tool.saveLog()
-            tool.showLog()
+        if isinstance(tool,checkerTool.checkerTool32):
+            print tool.getLog()
             break
+
 
 ################################################
 ##### AUTO VARIABLE SETUP ######################
@@ -145,12 +145,14 @@ print "Setting up OS Emulation"
 if OS_EMULATION:
     trapwrapper.OSEmulatorBase.set_program_args(ARGS)
     for i in range(0, PROCESSOR_NUMBER):
-        ## FUNCTION PROFILER ##
+        ## CHECKER ##
         FUNC_DESC = "architectures/scalopes_workshop_demo/functionsDescriptor.txt"
         PROFILER_OUTPUT_DIR = "architectures/scalopes_workshop_demo"
-        funcProf = functionProfiler.functionProfiler32(processors[i].getInterface(), SOFTWARE, FUNC_DESC, PROFILER_OUTPUT_DIR)
-        processors[i].toolManager.addTool(funcProf)
-        tools.append(funcProf)
+        CHECKPOINTS_LIST = "architectures/scalopes_workshop_demo/checkpointsList.txt"
+        GOLDEN_TRACE = "architectures/scalopes_workshop_demo/short_trace.txt"
+        checker = checkerTool.checkerTool32(processors[i].getInterface(), SOFTWARE, FUNC_DESC, CHECKPOINTS_LIST, GOLDEN_TRACE, PROFILER_OUTPUT_DIR)
+        processors[i].toolManager.addTool(checker)
+        tools.append(checker)
 
         curEmu = trapwrapper.OSEmulator32(processors[i].getInterface())
         curEmu.initSysCalls(SOFTWARE)
