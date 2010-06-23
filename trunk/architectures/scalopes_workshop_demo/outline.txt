@@ -24,6 +24,7 @@ Compile Example (edgeDetector)
 Standard Architectures
 - Briefly describe architectures/scalopes_workshop_demo/1-SCALOPES_Workshop_Demo_plain_arm9.py
 - ./startSim.sh -a architectures/scalopes_workshop_demo/1-SCALOPES_Workshop_Demo_plain_arm9.py --silent
+- Silent automatically runs the execution without the possibility to interact (we'll se how to do this)
 - The example is executed on the architecture (approx. 25 seconds). Show output.bmp
 
 - Briefly describe architectures/scalopes_workshop_demo/2-SCALOPES_Workshop_Demo_plain_cache.py
@@ -48,7 +49,7 @@ Fault Injection
 
 - Briefly describe architectures/scalopes_workshop_demo/5-SCALOPES_Workshop_Demo_auto_fault_injection.py
 - It is an automatic fault injector for the application. Starts a campaign of injected errors to check how the application reacts
-- ./startSim.sh -a architectures/scalopes_workshop_demo/4-SCALOPES_Workshop_Demo_auto_fault_injection.py --silent
+- ./startSim.sh -a architectures/scalopes_workshop_demo/5-SCALOPES_Workshop_Demo_auto_fault_injection.py --silent
 
 OpenMP
 - Show code in software/apps/edgeDetector/edgeDetectorParallel.c
@@ -69,6 +70,6 @@ Reconfigurable Components
 Reconfigurable Parallel Components
 - Briefly describe architectures/scalopes_workshop_demo/8-SCALOPES_Workshop_Demo_multi_reconfig.py
 - ./startSim.sh -a architectures/scalopes_workshop_demo/8-SCALOPES_Workshop_Demo_multi_reconfig.py --silent
-- The example is executed on the architecture (approx. 260 seconds). Show output.bmp (yellow, cause it uses a callback)
+- The example is executed on the architecture (approx. 80 seconds). Show output.bmp (yellow, cause it uses a callback)
 - Comment on configuration tables (4 different parallel modules, all removed for the last one) and slower execution
-- Why slower? Because we introduce an arbitration scheme for parallel accesses to the hardware componentes (and we have a lot of parallelism in our application)
+- Why slower? Because we introduce an arbitration scheme for parallel accesses to the hardware components, and we issue a lot of callbacks to perform a simple task
