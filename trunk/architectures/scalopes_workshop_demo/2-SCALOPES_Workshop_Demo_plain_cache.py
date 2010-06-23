@@ -28,7 +28,7 @@ CACHE_REMOVE_LAT   = 3.0            # ns
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'edgeDetectorARM'
+    SOFTWARE = 'edgeDetector'
 
 if SOFTWARE:
     try:
@@ -47,9 +47,7 @@ def statsPrinter():
     print '\x1b[31m' + str(controller.get_simulated_time()) + '\x1b[0m'
     if BUS_ACTIVE:
         print '\x1b[34m\x1b[1mBus Accesses:\x1b[0m'
-        print '\x1b[31m' + str(bus.numAccesses) + '\x1b[0m'
-        print '\x1b[34m\x1b[1mBus Words:\x1b[0m'
-        print '\x1b[31m' + str(bus.numWords) + '\x1b[0m'
+        bus.printAccesses()
     if DATA_CACHE_ACTIVE:
         print '\x1b[34m\x1b[1mData Cache Stats:\x1b[0m'
         print '\x1b[32m\x1b[1mRead Hits          \x1b[0m\x1b[31m' + str(dataCache.numReadHit) + '\x1b[0m'
@@ -120,15 +118,9 @@ if DATA_CACHE_ACTIVE:
     dataCache.setRemoveLatency(scwrapper.sc_time(CACHE_REMOVE_LAT,scwrapper.SC_NS))
     #dataCache.setScratchpad(4194304,1048576,scwrapper.sc_time(0.001,scwrapper.SC_NS))
     connectPorts(processors[0], processors[0].dataMem.initSocket, dataCache, dataCache.targetSocket)
-    if BUS_ACTIVE:
-        connectPorts(dataCache, dataCache.initSocket, bus, bus.targetSocket)
-    else:
-        connectPorts(dataCache, dataCache.initSocket, mem, mem.targetSocket)
+    connectPorts(dataCache, dataCache.initSocket, bus, bus.targetSocket)
 else:
-    if BUS_ACTIVE:
-        connectPorts(processors[0], processors[0].dataMem.initSocket, bus, bus.targetSocket)
-    else:
-        connectPorts(processors[0], processors[0].dataMem.initSocket, mem, mem.targetSocket)
+    connectPorts(processors[0], processors[0].dataMem.initSocket, bus, bus.targetSocket)
 
 if INSTR_CACHE_ACTIVE:
     instrCache = CacheLT32.CacheLT32('instrCache', CACHE_SIZE*1024*1024, memorySize, CACHE_WAYS, CACHE_BLOCK_SIZE, CACHE_REM_POLICY, CACHE_WR_POLICY)
@@ -139,15 +131,9 @@ if INSTR_CACHE_ACTIVE:
     instrCache.setRemoveLatency(scwrapper.sc_time(CACHE_REMOVE_LAT,scwrapper.SC_NS))
     #instrCache.setScratchpad(4194304,1048576,scwrapper.sc_time(0.001,scwrapper.SC_NS))
     connectPorts(processors[0], processors[0].instrMem.initSocket, instrCache, instrCache.targetSocket)
-    if BUS_ACTIVE:
-        connectPorts(instrCache, instrCache.initSocket, bus, bus.targetSocket)
-    else:
-        connectPorts(instrCache, instrCache.initSocket, mem, mem.targetSocket)
+    connectPorts(instrCache, instrCache.initSocket, bus, bus.targetSocket)
 else:
-    if BUS_ACTIVE:
-        connectPorts(processors[0], processors[0].instrMem.initSocket, bus, bus.targetSocket)
-    else:
-        connectPorts(processors[0], processors[0].instrMem.initSocket, mem, mem.targetSocket)
+    connectPorts(processors[0], processors[0].instrMem.initSocket, bus, bus.targetSocket)
 
 ################################################
 ##### SYSTEM INIT ##############################
@@ -179,6 +165,3 @@ if OS_EMULATION:
         curEmu = trapwrapper.OSEmulator32(processors[i].getInterface())
         curEmu.initSysCalls(SOFTWARE)
         processors[i].toolManager.addTool(curEmu)
-
-# We can finally run the simulation
-#run_simulation()

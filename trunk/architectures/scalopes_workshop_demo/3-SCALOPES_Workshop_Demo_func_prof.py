@@ -166,7 +166,3 @@ for i in range(0, PROCESSOR_NUMBER):
     recEmu.registerCppCall('puts', scwrapper.sc_time(1000, scwrapper.SC_NS),1,1)
     recEmu.registerCppCall('read_bitmap', scwrapper.sc_time(1000, scwrapper.SC_NS),1,1)
     recEmu.registerCppCall('write_bitmap', scwrapper.sc_time(1000, scwrapper.SC_NS),1,1)
-
-
-# We can finally run the simulation
-#run_simulation()

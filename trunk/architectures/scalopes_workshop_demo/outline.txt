@@ -19,12 +19,56 @@ Compile Example (edgeDetector)
 - In architectures/scalopes_workshop_demo launch 'make cross' to compile the example for the ARM
 - Back to main folder, executable with name ./edgeDetectorARM, show that cannot be launched by the host system
 
+* CONVERTIRE TUTTI I py INSERENDO COME ESEGUIBILE edgeDetectorARM!!!!
+
+Standard Architectures
 - Briefly describe architectures/scalopes_workshop_demo/1-SCALOPES_Workshop_Demo_plain_arm9.py
 - ./startSim.sh -a architectures/scalopes_workshop_demo/1-SCALOPES_Workshop_Demo_plain_arm9.py --silent
 - The example is executed on the architecture (approx. 25 seconds). Show output.bmp
 
 - Briefly describe architectures/scalopes_workshop_demo/2-SCALOPES_Workshop_Demo_plain_cache.py
-- ./startSim.sh -a architectures/scalopes_workshop_demo/2-SCALOPES_Workshop_Demo_plain_cache.py --silent
+- ./startSim.sh -a architectures/scalopes_workshop_demo/2-SCALOPES_Workshop_Demo_plain_cache.py
+- showArchitecture()
+- run_simulation()
 - The example is executed on the architecture (approx. 25 seconds). Show output.bmp and stats about cache memories
 
+Fault Injection
+- Briefly describe architectures/scalopes_workshop_demo/3-SCALOPES_Workshop_Demo_func_prof.py
+- It is a profiler for the application using some text files as input. Read and write are emulated, we'll see later how and why
+- ./startSim.sh -a architectures/scalopes_workshop_demo/3-SCALOPES_Workshop_Demo_func_prof.py --silent
+- The example is executed on the architecture (approx. 15 seconds). Show trace files and checkpoints in architectures/scalopes_workshop_demo
 
+- Briefly describe architectures/scalopes_workshop_demo/4-SCALOPES_Workshop_Demo_fault_injection.py
+- It is a fault injector for the application. Using the checkpoints, it is checked if the program flow follows the golden one, and if the output images are damaged by the fault
+- ./startSim.sh -a architectures/scalopes_workshop_demo/4-SCALOPES_Workshop_Demo_fault_injection.py
+- Flow fault is injected with the following commands:
+- ... (Antonio deve calcolare i tempi)
+- Image errors are injected with the following commands:
+- ... (Antonio deve calcolare i tempi)
+
+- Briefly describe architectures/scalopes_workshop_demo/5-SCALOPES_Workshop_Demo_auto_fault_injection.py
+- It is an automatic fault injector for the application. Starts a campaign of injected errors to check how the application reacts
+- ./startSim.sh -a architectures/scalopes_workshop_demo/4-SCALOPES_Workshop_Demo_auto_fault_injection.py --silent
+
+OpenMP
+- Show code in software/apps/edgeDetector/edgeDetectorParallel.c
+- In architectures/scalopes_workshop_demo launch 'make crossomp' to compile the multithreaded example for the ARM
+- Back to main folder, executable with name ./edgeDetectorARMParallel, show that cannot be launched by the host system
+- Briefly describe architectures/scalopes_workshop_demo/6-SCALOPES_Workshop_Demo_multi.py
+- ./startSim.sh -a architectures/scalopes_workshop_demo/6-SCALOPES_Workshop_Demo_multi.py --silent
+- The example is executed on the architecture (approx. 40 seconds). Show output.bmp and stats about the multi-processor system
+- Why slower? Because we introduce an arbitration scheme based on a Directory component to ensure Cache coherency
+
+Reconfigurable Components
+- Briefly describe architectures/scalopes_workshop_demo/7-SCALOPES_Workshop_Demo_reconfig.py
+- ./startSim.sh -a architectures/scalopes_workshop_demo/7-SCALOPES_Workshop_Demo_reconfig.py --silent
+- The example is executed on the architecture (approx. 35 seconds). Show output.bmp (yellow, cause it uses a callbakc)
+- Comment on configuration tables and quicker execution than plain OpenMP (this explains read and write for fault injection)
+- Why faster? Because callbacks are executed on host machine: quicker than simulator
+
+Reconfigurable Parallel Components
+- Briefly describe architectures/scalopes_workshop_demo/8-SCALOPES_Workshop_Demo_multi_reconfig.py
+- ./startSim.sh -a architectures/scalopes_workshop_demo/8-SCALOPES_Workshop_Demo_multi_reconfig.py --silent
+- The example is executed on the architecture (approx. 260 seconds). Show output.bmp (yellow, cause it uses a callback)
+- Comment on configuration tables (4 different parallel modules, all removed for the last one) and slower execution
+- Why slower? Because we introduce an arbitration scheme for parallel accesses to the hardware componentes (and we have a lot of parallelism in our application)

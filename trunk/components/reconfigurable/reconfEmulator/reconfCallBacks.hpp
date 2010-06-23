@@ -586,8 +586,8 @@ public:
 		callArgs.push_back(processorInstance.readMem(processorInstance.readSP()));
 
 		(this->cE)->executeForce("rgb2grey", this->latency, this->width, this->height, configured[processorInstance.getProcessorID()]);
+		if ( !configured[processorInstance.getProcessorID()] ) { (this->cE)->printSystemStatus(); cout << endl << endl;}
 		configured[processorInstance.getProcessorID()] = true;
-		(this->cE)->printSystemStatus();
 
 		unsigned short int width = callArgs[2];
 		unsigned short int height = callArgs[3];
@@ -635,8 +635,8 @@ public:
 		callArgs.push_back(processorInstance.readMem(processorInstance.readSP() + sizeof(issueWidth)));
 
 		(this->cE)->executeForce("edgeOverlapping", this->latency, this->width, this->height, configured[processorInstance.getProcessorID()]);
+		if ( !configured[processorInstance.getProcessorID()] ) { (this->cE)->printSystemStatus(); cout << endl << endl;}
 		configured[processorInstance.getProcessorID()] = true;
-		(this->cE)->printSystemStatus();
 
 		unsigned short int width = callArgs[3];
 		unsigned short int height = callArgs[4];
@@ -696,8 +696,8 @@ public:
 		callArgs.push_back(processorInstance.readMem(processorInstance.readSP() + 4*sizeof(issueWidth)));
 
 		(this->cE)->executeForce("edgeDetectionSinglePixel", this->latency, this->width, this->height, configured[processorInstance.getProcessorID()]);
+		if ( !configured[processorInstance.getProcessorID()] ) { (this->cE)->printSystemStatus(); cout << endl << endl;}
 		configured[processorInstance.getProcessorID()] = true;
-//		(this->cE)->printSystemStatus();
 
 		int X = callArgs[2];
 		int Y = callArgs[3];
