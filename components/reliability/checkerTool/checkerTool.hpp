@@ -328,7 +328,10 @@ public:
     
 	  log = MAKE_STRING(log << "# Data errors per checkpoints:" << std::endl);
 	  for(std::map<std::string, int>::iterator it = errors.begin(); it != errors.end(); it++){
-	      log = MAKE_STRING(log << "- " << it->first << ": " << it->second << std::endl);
+	      log = log + "- " + it->first + " :";
+	      for(int i = 0; i < 35 - it->first.size(); i++)
+	        log = log + " ";
+	      log = MAKE_STRING(log << it->second << std::endl);
 	  }
     return log;
 	}
