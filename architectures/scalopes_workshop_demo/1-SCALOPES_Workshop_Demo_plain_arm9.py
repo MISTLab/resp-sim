@@ -35,9 +35,7 @@ def statsPrinter():
     print '\x1b[31m' + str(controller.get_simulated_time()) + '\x1b[0m'
     if BUS_ACTIVE:
         print '\x1b[34m\x1b[1mBus Accesses:\x1b[0m'
-        print '\x1b[31m' + str(bus.numAccesses) + '\x1b[0m'
-        print '\x1b[34m\x1b[1mBus Words:\x1b[0m'
-        print '\x1b[31m' + str(bus.numWords) + '\x1b[0m'
+        bus.printAccesses()
 
 ################################################
 ##### AUTO VARIABLE SETUP ######################
@@ -124,6 +122,3 @@ if OS_EMULATION:
         curEmu = trapwrapper.OSEmulator32(processors[i].getInterface())
         curEmu.initSysCalls(SOFTWARE)
         processors[i].toolManager.addTool(curEmu)
-
-# We can finally run the simulation
-#run_simulation()
