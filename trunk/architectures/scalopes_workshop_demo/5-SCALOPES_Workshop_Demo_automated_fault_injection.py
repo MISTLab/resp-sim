@@ -113,7 +113,7 @@ if BUS_ACTIVE:
     bSPosition = 1
     for i in range(0, EFPGA_NUMBER):
         connectPorts(cE, cE.initiatorSocket, eF[i], eF[i].targetSocket)
-        connectPorts(cE, cE.destSocket, eF[i].bS, eF[i].bS.targetSocket)
+        connectPorts(cE, cE.destSocket, eF[i], eF[i].bS.targetSocket)
         cE.bindFPGA(memorySize+bSPosition)
         bSPosition = bSPosition+1
 

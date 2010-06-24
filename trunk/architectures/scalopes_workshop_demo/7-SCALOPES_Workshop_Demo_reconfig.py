@@ -176,25 +176,16 @@ for i in range(0, PROCESSOR_NUMBER):
         connectPorts(processors[i], processors[i].instrMem.initSocket, bus, bus.targetSocket)
 
 ##### RECONFIGURABLE COMPONENTS CONNECTIONS #####
-if BUS_ACTIVE:
-    connectPorts(cE, cE.ramSocket, bus, bus.targetSocket)
-    if CONFIGURE_THROUGH_ITC:
-        connectPorts(cE, cE.destSocket, bus, bus.targetSocket)
-else:
-    connectPorts(cE, cE.ramSocket, noc, noc.targetSocket)
-    if CONFIGURE_THROUGH_ITC:
-        connectPorts(cE, cE.destSocket, noc, noc.targetSocket)
+connectPorts(cE, cE.ramSocket, bus, bus.targetSocket)
+if CONFIGURE_THROUGH_ITC:
+    connectPorts(cE, cE.destSocket, bus, bus.targetSocket)
 
 bSPosition = 1
 for i in range(0, EFPGA_NUMBER):
     connectPorts(cE, cE.initiatorSocket, eF[i], eF[i].targetSocket)
     if CONFIGURE_THROUGH_ITC:
-        if BUS_ACTIVE:
-            connectPorts(bus, bus.initiatorSocket, eF[i].bS, eF[i].bS.targetSocket)
-            bus.addBinding("bS"+str(bSPosition), memorySize+bSPosition, memorySize+bSPosition)
-        else:
-            connectPorts(noc, noc.initiatorSocket, eF[i].bS, eF[i].bS.targetSocket)
-            noc.addBinding("bS"+str(bSPosition), memorySize+bSPosition, memorySize+bSPosition)
+        connectPorts(bus, bus.initiatorSocket, eF[i].bS, eF[i].bS.targetSocket)
+        bus.addBinding("bS"+str(bSPosition), memorySize+bSPosition, memorySize+bSPosition)
     else:
         connectPorts(cE, cE.destSocket, eF[i].bS, eF[i].bS.targetSocket)
     cE.bindFPGA(memorySize+bSPosition)
