@@ -19,8 +19,6 @@ Compile Example (edgeDetector)
 - In architectures/scalopes_workshop_demo launch 'make cross' to compile the example for the ARM
 - Back to main folder, executable with name ./edgeDetectorARM, show that cannot be launched by the host system
 
-* CONVERTIRE TUTTI I py INSERENDO COME ESEGUIBILE edgeDetectorARM!!!!
-
 Standard Architectures
 - Briefly describe architectures/scalopes_workshop_demo/1-SCALOPES_Workshop_Demo_plain_arm9.py
 - ./startSim.sh -a architectures/scalopes_workshop_demo/1-SCALOPES_Workshop_Demo_plain_arm9.py --silent

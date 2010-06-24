@@ -28,7 +28,7 @@ CACHE_REMOVE_LAT   = 3.0            # ns
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'edgeDetector'
+    SOFTWARE = 'edgeDetectorARM'
 
 if SOFTWARE:
     try:

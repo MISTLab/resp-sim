@@ -56,6 +56,9 @@ void resp::killAll(std::string errorMsg){
 #include <stdexcept>
 #include <execinfo.h>
 #include <signal.h>
+
+bool resp::stackTraceEnabled = false;
+
 void resp::RaiseTraceException(std::string message){
     std::ostringstream traceMex;
     if(stackTraceEnabled){
