@@ -594,24 +594,11 @@ public:
 		unsigned short int depth = callArgs[4];
 		unsigned short int size = width*height;
 		unsigned short int rgbSize = size*depth;
-		unsigned char* inputImage = (unsigned char*) malloc(rgbSize*sizeof(unsigned char));
-		unsigned char* outputImage = (unsigned char*) malloc(size*sizeof(unsigned char));
-		int k;
-		for (k=0; k<rgbSize; k++) {
-			inputImage[k] = processorInstance.readCharMem(callArgs[0]+k);
-		}
-		for (k=0; k<size; k++) {
-			outputImage[k] = processorInstance.readCharMem(callArgs[1]+k);
-		}
 
 		int  i = 0;
 		for(i = 0; i < width*height; i++){
-			outputImage[i] = inputImage[i*3];
-			outputImage[i] = 255 - outputImage[i];
-		}
-
-		for (k=0; k<size; k++) {
-			processorInstance.writeCharMem(callArgs[1]+k,*(outputImage+k));
+			processorInstance.writeCharMem(callArgs[1] + i, processorInstance.readCharMem(callArgs[0]+ i*3));
+			processorInstance.writeCharMem(callArgs[1] + i, 255 - processorInstance.readCharMem(callArgs[1] + i));
 		}
 
 		processorInstance.returnFromCall();
@@ -647,28 +634,17 @@ public:
 		unsigned char* edgeImage = (unsigned char*) malloc(size*sizeof(unsigned char));
 		unsigned char* outputImage = (unsigned char*) malloc(rgbSize*sizeof(unsigned char));
 		int k;
-		for (k=0; k<rgbSize; k++) {
-			inputImage[k] = processorInstance.readCharMem(callArgs[0]+k);
-			outputImage[k] = processorInstance.readCharMem(callArgs[2]+k);
-		}
-		for (k=0; k<size; k++) {
-			edgeImage[k] = processorInstance.readCharMem(callArgs[1]+k);
-		}
 
 		int i = 0;
 		for(i = 0; i < width*height; i++){
-		  if(edgeImage[i] < 100) {
-		    outputImage[i*3] = 255;
-		    outputImage[i*3+1] = 255;
-		    outputImage[i*3+2] = edgeImage[i];
+		  if(processorInstance.readCharMem(callArgs[1] + i) < 100) {
+		    processorInstance.writeCharMem(callArgs[2] + i*3, 255);
+		    processorInstance.writeCharMem(callArgs[2] + i*3 + 1, 255);
+		    processorInstance.writeCharMem(callArgs[2] + i*3 + 2, processorInstance.readCharMem(callArgs[1] + i));
 		  }
 		  else
 		    for(k = 0; k <3; k++)
-		      outputImage[i*3+k] = inputImage[i*3+k];
-		}
-
-		for (k=0; k<rgbSize; k++) {
-			processorInstance.writeCharMem(callArgs[2]+k,*(outputImage+k));
+		      processorInstance.writeCharMem(callArgs[2] + i*3 +k, processorInstance.readCharMem(callArgs[0] + i*3+k));
 		}
 
 		processorInstance.returnFromCall();
@@ -706,11 +682,6 @@ public:
 		unsigned short int depth = callArgs[6];
 		unsigned short int size = width*height;
 		unsigned short int rgbSize = size*depth;
-		unsigned char* inputImage = (unsigned char*) malloc(size*sizeof(unsigned char));
-		int k;
-		for (k=0; k<size; k++) {
-			inputImage[k] = processorInstance.readCharMem(callArgs[0]+k);
-		}
 
 		long sumX = 0;
 		long sumY = 0;
@@ -737,19 +708,19 @@ public:
 		else {
 			for(I=-1; I<=1; I++)  {
 				for(J=-1; J<=1; J++)  {
-					sumX = sumX + (int) inputImage[X+I + (Y+J) * width]*GX[I+1][J+1];
+					sumX = sumX + (int) (processorInstance.readCharMem(callArgs[0]+ X+I + (Y+J)*width)) * GX[I+1][J+1];
 				}
 			}
 			for(I=-1; I<=1; I++)  {
 				for(J=-1; J<=1; J++)  {
-					sumY = sumY + (int) inputImage[X+I + (Y+J) * width]*GY[I+1][J+1];
+					sumY = sumY + (int) (processorInstance.readCharMem(callArgs[0]+ X+I + (Y+J)*width)) * GY[I+1][J+1];
 				}
 			}
 			SUM = abs(sumX) + abs(sumY);
 		}
 		if(SUM>255) SUM=255;
 		if(SUM<0) SUM=0;
-		processorInstance.writeCharMem(callArgs[1]+X+Y*width,255 - (unsigned char)(SUM));
+		processorInstance.writeCharMem(callArgs[1] + X + Y*width, 255 - (unsigned char)(SUM));
 
 		processorInstance.returnFromCall();
 		processorInstance.postCall();

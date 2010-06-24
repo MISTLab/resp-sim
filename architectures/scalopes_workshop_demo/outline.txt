@@ -31,13 +31,13 @@ Standard Architectures
 - ./startSim.sh -a architectures/scalopes_workshop_demo/2-SCALOPES_Workshop_Demo_plain_cache.py
 - showArchitecture()
 - run_simulation()
-- The example is executed on the architecture (approx. 25 seconds). Show output.bmp and stats about cache memories
+- The example is executed on the architecture (approx. 25 seconds). Show output.bmp, stats about cache memories and reduced execution time
 
 Fault Injection
 - Briefly describe architectures/scalopes_workshop_demo/3-SCALOPES_Workshop_Demo_func_prof.py
 - It is a profiler for the application using some text files as input. Read and write are emulated, we'll see later how and why
 - ./startSim.sh -a architectures/scalopes_workshop_demo/3-SCALOPES_Workshop_Demo_func_prof.py --silent
-- The example is executed on the architecture (approx. 15 seconds). Show trace files and checkpoints in architectures/scalopes_workshop_demo
+- The example is executed on the architecture (approx. 20 seconds). Show trace files and checkpoints in architectures/scalopes_workshop_demo
 
 - Briefly describe architectures/scalopes_workshop_demo/4-SCALOPES_Workshop_Demo_fault_injection.py
 - It is a fault injector for the application. Using the checkpoints, it is checked if the program flow follows the golden one, and if the output images are damaged by the fault
@@ -46,10 +46,12 @@ Fault Injection
 - ... (Antonio deve calcolare i tempi)
 - Image errors are injected with the following commands:
 - ... (Antonio deve calcolare i tempi)
+- Each simulation is executed on the architecture (approx. 20 seconds). Show console output and checkpoint differences in architectures/scalopes_workshop_demo
 
-- Briefly describe architectures/scalopes_workshop_demo/5-SCALOPES_Workshop_Demo_auto_fault_injection.py
+- Briefly describe architectures/scalopes_workshop_demo/5-SCALOPES_Workshop_Demo_automated_fault_injection.py
 - It is an automatic fault injector for the application. Starts a campaign of injected errors to check how the application reacts
-- ./startSim.sh -a architectures/scalopes_workshop_demo/5-SCALOPES_Workshop_Demo_auto_fault_injection.py --silent
+- ./startSim.sh -a architectures/scalopes_workshop_demo/5-SCALOPES_Workshop_Demo_automated_fault_injection.py --silent
+- The 10 automatic simulations are executed on the architecture (approx. 20 seconds * 10). Show console output.
 
 OpenMP
 - Show code in software/apps/edgeDetector/edgeDetectorParallel.c
@@ -63,13 +65,12 @@ OpenMP
 Reconfigurable Components
 - Briefly describe architectures/scalopes_workshop_demo/7-SCALOPES_Workshop_Demo_reconfig.py
 - ./startSim.sh -a architectures/scalopes_workshop_demo/7-SCALOPES_Workshop_Demo_reconfig.py --silent
-- The example is executed on the architecture (approx. 35 seconds). Show output.bmp (yellow, cause it uses a callbakc)
+- The example is executed on the architecture (approx. 35 seconds). Show output.bmp (yellow, cause it uses a callback)
 - Comment on configuration tables and quicker execution than plain OpenMP (this explains read and write for fault injection)
 - Why faster? Because callbacks are executed on host machine: quicker than simulator
 
 Reconfigurable Parallel Components
 - Briefly describe architectures/scalopes_workshop_demo/8-SCALOPES_Workshop_Demo_multi_reconfig.py
 - ./startSim.sh -a architectures/scalopes_workshop_demo/8-SCALOPES_Workshop_Demo_multi_reconfig.py --silent
-- The example is executed on the architecture (approx. 80 seconds). Show output.bmp (yellow, cause it uses a callback)
-- Comment on configuration tables (4 different parallel modules, all removed for the last one) and slower execution
-- Why slower? Because we introduce an arbitration scheme for parallel accesses to the hardware components, and we issue a lot of callbacks to perform a simple task
+- The example is executed on the architecture (approx. 15 seconds). Show output.bmp (yellow, cause it uses a callback)
+- Comment on configuration tables (4 different parallel modules, all removed for the last one) and even faster execution
