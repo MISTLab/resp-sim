@@ -79,9 +79,9 @@ def write_image(filename, pixels, check):
 	  for i in range(0,pixels.__len__()/3/80):
 	    for j in range(0,80):
 	      if check[i*80*3 + (79-j)*3] == 0 and check[i*80*3 + (79-j)*3+1] == 0 and check[i*80*3 + (79-j)*3+2] == 0:	      
-	        f_out.write(chr(pixels[i*80*3 + (79-j)*3]))
-	        f_out.write(chr(pixels[i*80*3 + (79-j)*3+1]))
 	        f_out.write(chr(pixels[i*80*3 + (79-j)*3+2]))
+	        f_out.write(chr(pixels[i*80*3 + (79-j)*3+1]))
+	        f_out.write(chr(pixels[i*80*3 + (79-j)*3]))
 	      else:
 	        f_out.write(chr(0))
 	        f_out.write(chr(255))
