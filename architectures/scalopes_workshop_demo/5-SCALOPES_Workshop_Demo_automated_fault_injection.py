@@ -29,11 +29,7 @@ OS_EMULATION = True     # True or False
 
 # Modified stats auto-printer
 def statsPrinter():
-    print '\x1b[34m\x1b[1mReal Elapsed Time (seconds):\x1b[0m'
-    print '\x1b[31m' + str(controller.print_real_time()) + '\x1b[0m'
-    print '\x1b[34m\x1b[1mSimulated Elapsed Time (nano-seconds):\x1b[0m'
-    print '\x1b[31m' + str(controller.get_simulated_time()) + '\x1b[0m'
-    print ''
+    print '\n\x1b[34m\x1b[1mRESULTS:\x1b[0m'
     for tool in tools:
         if isinstance(tool,checkerTool.checkerTool32):
             log = ""
@@ -42,9 +38,12 @@ def statsPrinter():
             else:
               log = tool.getLog()
             print log
-            fp=open("classification_results.txt",'a')
-            fp.write(log)
+            fp=open("architectures/scalopes_workshop_demo/classification_results.txt",'a')
             fp.write("------------------------------------------------------------------------\n")
+            fp.write('Experiment ' + str(fi._faultInjector__currExpNum) + "\n")
+            fp.write("------------------------------------------------------------------------\n")
+            fp.write(log)
+            fp.write("\n")
             fp.close()
             break
             
@@ -181,6 +180,10 @@ for i in range(0, PROCESSOR_NUMBER):
 
 
 manager.registerComponent(processors[0])
+
+fi = manager.getFaultInjector()
+fi.generateFaultList(simulationDuration=330000000,numberOfSims=5,injectionTimeWindow=[12240000,303370000])
+
 #fi.loadFaultList('tmpList.txt')
 #fi.executeCampaign()
 

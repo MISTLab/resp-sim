@@ -11,8 +11,9 @@ class faultInjector:
         self.__currentFaultList = []
         self.__locationDistribution = locationDistribution
         self.__timeDistribution = timeDistribution
+        self.__currExpNum = 0
            
-    def generateFaultList(self, simulationDuration, numberOfSims, numberOfTimeIntervals =1):
+    def generateFaultList(self, simulationDuration, numberOfSims, numberOfTimeIntervals =1, injectionTimeWindow = None):
         """Generates a fault injection list"""
         if not (isinstance(simulationDuration,int) or isinstance(simulationDuration,long)):
             raise exceptions.Exception("simulationDuration must be a number")
@@ -26,11 +27,14 @@ class faultInjector:
             raise exceptions.Exception("numberOfTimeIntervals must be a number")
         if not (numberOfTimeIntervals > 0):
             raise exceptions.Exception("numberOfTimeIntervals must be a positive number")
+        if not injectionTimeWindow == None and not isinstance(injectionTimeWindow, list) and not len(injectionTimeWindow)==2:
+            raise exceptions.Exception("injectionTimeWindow must be a list of two numbers")
 
         #reset current fault list
         self.__currentFaultList = []
         self.__timeDistribution.setSimulationDuration(simulationDuration)
         self.__timeDistribution.setNumberOfTimeIntervals(numberOfTimeIntervals)
+        self.__timeDistribution.setInjectionTimeWindow(injectionTimeWindow[0],injectionTimeWindow[1])
         #generate numberOfSims simulations
         for s in range(0,numberOfSims):
             #get time instants
@@ -162,13 +166,14 @@ class faultInjector:
                 print "\n\n-------------------------------------------------------------------------------------------------------" 
                 print "Statistics:"
                 print "Number of simulations: " + str(len(self.__currentFaultList))
-                print "Number of simulation terminated with an error: " + str(num_of_errors)
+                print "Number of simulation terminated with an exception: " + str(num_of_errors)
                 print "-------------------------------------------------------------------------------------------------------" 
         else:
             print 'No experiment has been executed; fault list is empty'
             
     def executeSingleFault(self, num):
         """Executes a fault simulation"""
+        self.__currExpNum = num
         import respkernel
         try:
             resp_ns = respkernel.get_namespace()

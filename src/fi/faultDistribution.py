@@ -24,6 +24,8 @@ class uniformTimeDistribution:
             raise exceptions.Exception("numberOfTimeIntervals must be a not negative number")
         self.__simulationDuration = simulationDuration
         self.__numberOfTimeIntervals = numberOfTimeIntervals
+        self.__timeWindowBegin = 0
+        self.__timeWindowEnd = simulationDuration -1
         random.seed()
 
     def __call__(self):
@@ -31,13 +33,27 @@ class uniformTimeDistribution:
         return self.getTimes()
         
     def setSimulationDuration(self, simulationDuration):
+        """Sets the overall duration of the simulation"""
         if not (isinstance(simulationDuration,int) or isinstance(simulationDuration,long)):
             raise exceptions.Exception("simulationDuration must be a number")
         if not (simulationDuration > 0):
             raise exceptions.Exception("simulationDuration must be a positive number")
         self.__simulationDuration = simulationDuration
 
+    def setInjectionTimeWindow(self, timeWindowBegin, timeWindowEnd):
+        """Sets the time window for the injection"""
+        if (not isinstance(timeWindowBegin,int) and not isinstance(timeWindowBegin,long)) \
+          and (not isinstance(timeWindowEnd,int) and not isinstance(timeWindowEnd,long)):
+            raise exceptions.Exception("time window's begin and end must be numbers")
+        if not timeWindowBegin >= 0 and not timeWindowEnd > timeWindowBegin:
+            raise exceptions.Exception("time window's begin and end must be positive and the end must be greater than the begin")
+        if not timeWindowEnd <= self.__simulationDuration:
+            raise exceptions.Exception("time window's end must be smaller than the overal simulation duration")
+        self.__timeWindowBegin = timeWindowBegin
+        self.__timeWindowEnd = timeWindowEnd
+        
     def setNumberOfTimeIntervals(self, numberOfTimeIntervals):
+        """Sets the number of time intervals"""
         if not (isinstance(numberOfTimeIntervals,int) or isinstance(numberOfTimeIntervals,long)):
             raise exceptions.Exception("numberOfTimeIntervals must be a number")
         if not (numberOfTimeIntervals >= 0):
@@ -48,7 +64,7 @@ class uniformTimeDistribution:
         """Returns an ordered list of random number in the interal [0,simulationDuration]"""
         times = []
         for i in range(0,self.__numberOfTimeIntervals):
-            times.append(random.randint(0,self.__simulationDuration - 1))
+            times.append(random.randint(self.__timeWindowBegin, self.__timeWindowEnd))
         times.sort()
         times.append(self.__simulationDuration)
         return times
