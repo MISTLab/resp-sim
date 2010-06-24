@@ -670,15 +670,15 @@ class ComponentManager:
         print compString
 
     def showArchitecture(self):
-        """Shows the graph of the archtiecture using dotty"""
+        """Shows the graph of the architecture using dotty"""
         nodes = ""
         edges = ""
         for c in self.getInstantiatedComponents():
             nodes = nodes + "\t"+str(c)+"[shape=box]\n"
             nodes = nodes + "\n"
             for out in self.getTargets(c):
-                if self.getInstantiatedComponents().count(out) != 0:
-                    edges = edges + "\t" + str(c) + "->"+ str(out) +"\n"
+#                if self.getInstantiatedComponents().count(out) != 0:
+                edges = edges + "\t" + str(c) + "->"+ str(out) +"\n"
 
         code = "digraph simple_hierarchy {\n" + nodes + "\n" + edges + "\n}"
         f = open("__tmpGraph.dot",'w')
