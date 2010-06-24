@@ -16,7 +16,7 @@ BUS_FREQUENCY     = 50              # MHz
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'edgeDetector'
+    SOFTWARE = 'edgeDetectorARM'
 
 if SOFTWARE:
     try:

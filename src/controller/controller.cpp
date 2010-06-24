@@ -62,6 +62,8 @@
 using namespace resp;
 extern void (*delta_callback)(void);
 
+extern bool stackTraceEnabled;
+
 /**
  * Thread for running systemc in a separate thread: this allows
  * responsiveness of python, while still being able to

@@ -76,7 +76,7 @@ void killAll(std::string errorMsg);
 #else
 namespace resp{
 
-bool stackTraceEnabled = false;
+extern bool stackTraceEnabled;
 
 void RaiseTraceException(std::string message);
 }
