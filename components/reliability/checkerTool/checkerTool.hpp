@@ -113,7 +113,7 @@ private:
 	int currTraceElement;
 
 	std::string dataFolderName;
-
+  
   
 public:
 	checkerTool(ABIIf<issueWidth> &processorInstance, std::string exec, std::string functionDescriptor, 
@@ -278,10 +278,11 @@ public:
   	          for(int j = 0; j < currPars[i].size; j++){
     	          if((unsigned int)processorInstance.readCharMem(currPars[i].value + j) != (unsigned int)checkpoints[checkpointName].data[j]){
     	            currErrors++;
-    	            diffFile << "1" << std::endl;
+    	          //  diffFile << "1" << std::endl;
     	          }
-    	          else
-    	           diffFile << "0" << std::endl;
+    	          //else
+    	          //  diffFile << "0" << std::endl;
+    	          diffFile << (unsigned int)processorInstance.readCharMem(currPars[i].value + j) << std::endl;
     	        }
     	        errors[checkpointName] = currErrors;
     	        diffFile.close();
@@ -334,6 +335,23 @@ public:
 	      log = MAKE_STRING(log << it->second << std::endl);
 	  }
     return log;
+	}
+	
+	std::string getShortLog(){
+	  if(this->controlFlowError!="")
+	    return "controlflow";
+	  else{
+	    bool fewErrors = false;
+	    for(std::map<std::string, int>::iterator it = errors.begin(); it != errors.end(); it++)
+	      if(it->second > 50)
+	        return "corrupteddata";
+	      else if(it->second != 0)
+	        fewErrors = true;
+	    if (fewErrors)
+	      return "non-corrupteddata";
+	    else
+	      return "no-error";
+	  }
 	}
 
 };
