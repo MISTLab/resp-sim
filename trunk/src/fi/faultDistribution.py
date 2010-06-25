@@ -24,8 +24,8 @@ class uniformTimeDistribution:
             raise exceptions.Exception("numberOfTimeIntervals must be a not negative number")
         self.__simulationDuration = simulationDuration
         self.__numberOfTimeIntervals = numberOfTimeIntervals
-        self.__timeWindowBegin = 0
-        self.__timeWindowEnd = simulationDuration -1
+        self.__timeWindowBegin = -1
+        self.__timeWindowEnd = -1
         random.seed()
 
     def __call__(self):
@@ -62,6 +62,10 @@ class uniformTimeDistribution:
     
     def getTimes(self):
         """Returns an ordered list of random number in the interal [0,simulationDuration]"""
+        if self.__timeWindowBegin == -1:
+            self.__timeWindowBegin = 0
+        if self.__timeWindowEnd == -1:
+            self.__timeWindowEnd = self.__simulationDuration
         times = []
         for i in range(0,self.__numberOfTimeIntervals):
             times.append(random.randint(self.__timeWindowBegin, self.__timeWindowEnd))

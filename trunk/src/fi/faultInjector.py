@@ -12,6 +12,7 @@ class faultInjector:
         self.__locationDistribution = locationDistribution
         self.__timeDistribution = timeDistribution
         self.__currExpNum = 0
+        self.timeout = False
            
     def generateFaultList(self, simulationDuration, numberOfSims, numberOfTimeIntervals =1, injectionTimeWindow = None):
         """Generates a fault injection list"""
@@ -34,7 +35,8 @@ class faultInjector:
         self.__currentFaultList = []
         self.__timeDistribution.setSimulationDuration(simulationDuration)
         self.__timeDistribution.setNumberOfTimeIntervals(numberOfTimeIntervals)
-        self.__timeDistribution.setInjectionTimeWindow(injectionTimeWindow[0],injectionTimeWindow[1])
+        if injectionTimeWindow != None:
+            self.__timeDistribution.setInjectionTimeWindow(injectionTimeWindow[0],injectionTimeWindow[1])
         #generate numberOfSims simulations
         for s in range(0,numberOfSims):
             #get time instants
@@ -174,6 +176,7 @@ class faultInjector:
     def executeSingleFault(self, num):
         """Executes a fault simulation"""
         self.__currExpNum = num
+        self.timeout = False
         import respkernel
         try:
             resp_ns = respkernel.get_namespace()
@@ -206,7 +209,7 @@ class faultInjector:
             delta[times[i]] = times[i] - times[i-1]
         #print times
         for t in times: #execute all delta and inject
-            #run for a delta time            
+            #run for a delta time  
             controller.run_simulation(delta[t])                        
             #print controller.get_simulated_time()
             #inject fault
@@ -239,5 +242,6 @@ class faultInjector:
             if controller.is_finished(): 
                 break
         if not controller.is_finished():
+            self.timeout = True
             controller.stop_simulation()
        

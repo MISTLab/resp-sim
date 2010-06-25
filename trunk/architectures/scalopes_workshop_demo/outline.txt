@@ -31,24 +31,39 @@ Standard Architectures
 - run_simulation()
 - The example is executed on the architecture (approx. 25 seconds). Show output.bmp, stats about cache memories and reduced execution time
 
-Fault Injection
+Analysis Tools
 - Briefly describe architectures/scalopes_workshop_demo/3-SCALOPES_Workshop_Demo_func_prof.py
 - It is a profiler for the application using some text files as input. Read and write are emulated, we'll see later how and why
 - ./startSim.sh -a architectures/scalopes_workshop_demo/3-SCALOPES_Workshop_Demo_func_prof.py --silent
 - The example is executed on the architecture (approx. 20 seconds). Show trace files and checkpoints in architectures/scalopes_workshop_demo
+- Results are saved in two files: architectures/scalopes_workshop_demo/trace.txt architectures/scalopes_workshop_demo/short_trace.txt
+- This last one is used in the following example as golden trace for the execution flow check
 
+Fault Injection
 - Briefly describe architectures/scalopes_workshop_demo/4-SCALOPES_Workshop_Demo_fault_injection.py
 - It is a fault injector for the application. Using the checkpoints, it is checked if the program flow follows the golden one, and if the output images are damaged by the fault
 - ./startSim.sh -a architectures/scalopes_workshop_demo/4-SCALOPES_Workshop_Demo_fault_injection.py
 - Flow fault is injected with the following commands:
-- ... (Antonio deve calcolare i tempi)
-- Image errors are injected with the following commands:
-- ... (Antonio deve calcolare i tempi)
+run_simulation(323377768)
+p = processors[0]
+p.RB[15].immediateWrite(1312)
+run_simulation(323377768)
+- The fault affects the image processing and not the function call flow with the following commands:
+run_simulation(323377768)
+p = processors[0]
+p.RB[15].immediateWrite(2312)
+run_simulation(323377768)
 - Each simulation is executed on the architecture (approx. 20 seconds). Show console output and checkpoint differences in architectures/scalopes_workshop_demo
 
+Automated Fault Injection Campaign
 - Briefly describe architectures/scalopes_workshop_demo/5-SCALOPES_Workshop_Demo_automated_fault_injection.py
 - It is an automatic fault injector for the application. Starts a campaign of injected errors to check how the application reacts
-- ./startSim.sh -a architectures/scalopes_workshop_demo/5-SCALOPES_Workshop_Demo_automated_fault_injection.py --silent
+- ./startSim.sh -a architectures/scalopes_workshop_demo/5-SCALOPES_Workshop_Demo_automated_fault_injection.py
+- DO NOTE: the command to execute the campaign cannot be issued in batch!
+- fi.generateFaultList(simulationDuration=330000000,numberOfSims=5,injectionTimeWindow=[12240000,303370000]) to generate the fault list
+- fi.loadFaultList('architectures/scalopes_workshop_demo/fault_list.dat') to load the fault list
+- fi.printFaultList() to show the fault list
+- fi.executeCampaign() to execute the campaign
 - The 10 automatic simulations are executed on the architecture (approx. 20 seconds * 10). Show console output.
 
 OpenMP

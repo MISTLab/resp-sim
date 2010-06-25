@@ -28,24 +28,68 @@ OS_EMULATION = True     # True or False
 
 
 # Modified stats auto-printer
+
+SHORTLOG = "architectures/scalopes_workshop_demo/summary_classification_results.txt"
+LOG = "architectures/scalopes_workshop_demo/classification_results.txt"
+
 def statsPrinter():
     print '\n\x1b[34m\x1b[1mRESULTS:\x1b[0m'
     for tool in tools:
         if isinstance(tool,checkerTool.checkerTool32):
             log = ""
+            shortlog = ''
             if controller.error == True:
               log = "Exception thrown\n"
+              shortlog = 'exception\n'
+            elif manager.getFaultInjector().timeout:
+              log = "Simulation timeout\n"
+              shortlog = 'timeout\n'
             else:
               log = tool.getLog()
+              shortlog = tool.getShortLog() + '\n'
             print log
-            fp=open("architectures/scalopes_workshop_demo/classification_results.txt",'a')
+            fp=open(LOG,'a')
             fp.write("------------------------------------------------------------------------\n")
             fp.write('Experiment ' + str(fi._faultInjector__currExpNum) + "\n")
             fp.write("------------------------------------------------------------------------\n")
             fp.write(log)
             fp.write("\n")
             fp.close()
+
+            fp=open(SHORTLOG,'a')
+            fp.write(shortlog)
+            fp.close()
             break
+
+def campaignReportPrinter():
+  no = 0
+  to = 0
+  exc = 0
+  contr = 0
+  crit = 0
+  notcrit = 0
+  fp=open(SHORTLOG,'r')
+  for l in fp:
+    if l == 'exception\n':
+      exc = exc +1
+    elif l == 'timeout\n':
+      to = to +1
+    elif l == 'controlflow\n':
+      contr = contr +1
+    elif l == 'corrupteddata\n':
+      crit = crit +1
+    elif l == 'non-corrupteddata\n':
+      notcrit = notcrit +1
+    else:
+      no = no +1 
+  fp.close()
+  import os
+  os.system('rm ' + SHORTLOG)
+  print "\n\n-------------------------------------------------------------------------------------------------------" 
+  print "Statistics\nNo effect: " + str(no) + "\nControlflow error: " + str(contr) + "\nCorrupted Image: " + str(crit) \
+     + "\nNon-corrupted Image: " + str(notcrit) + "\nTimeout: " + str(to) + "\nException: " + str(exc)   
+  print "-------------------------------------------------------------------------------------------------------" 
+
             
 ################################################
 ##### AUTO VARIABLE SETUP ######################
@@ -182,7 +226,7 @@ for i in range(0, PROCESSOR_NUMBER):
 manager.registerComponent(processors[0])
 
 fi = manager.getFaultInjector()
-fi.generateFaultList(simulationDuration=330000000,numberOfSims=5,injectionTimeWindow=[12240000,303370000])
+fi.generateFaultList(simulationDuration=330000000,numberOfSims=5,numberOfTimeIntervals=1)#,injectionTimeWindow=[12224206,303376586])
 
 #fi.loadFaultList('tmpList.txt')
 #fi.executeCampaign()
