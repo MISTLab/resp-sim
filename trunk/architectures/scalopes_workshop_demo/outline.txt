@@ -1,48 +1,50 @@
 - Introduction (blabla)
 - Download from http://code.google.com/p/resp-sim/ and compile (find instructions, don't do anything since it takes at least half an hour)
 
-Simple Introduction
-- ./startSim.sh
-- instMaster = testMaster_wrapper.testMaster('master')
-- instSlave = testSlave_wrapper.testSlave('slave')
-- connectPorts(instMaster, instMaster.initSocket, instSlave, instSlave.targetSocket)
-- run_simulation(80)
-- instSlave.receivedChars
-- run_simulation()
-- instSlave.receivedChars
-- reset()
-- load_architecture('architectures/test/test_arch.py')
+	Simple Introduction
+./startSim.sh
+instMaster = testMaster_wrapper.testMaster('master')
+instSlave = testSlave_wrapper.testSlave('slave')
+connectPorts(instMaster, instMaster.initSocket, instSlave, instSlave.targetSocket)
+run_simulation(80)
+instSlave.receivedChars
+run_simulation()
+instSlave.receivedChars
+reset()
+load_architecture('architectures/test/test_arch.py')
 
-Compile Example (edgeDetector)
+	Compile Example (edgeDetector)
 - In architectures/scalopes_workshop_demo launch 'make host' to compile the example for the host system
 - Launch ./edgeDetector and show output.bmp
 - In architectures/scalopes_workshop_demo launch 'make cross' to compile the example for the ARM
 - Back to main folder, executable with name ./edgeDetectorARM, show that cannot be launched by the host system
 
-Standard Architectures
+	Standard Architectures
 - Briefly describe architectures/scalopes_workshop_demo/1-SCALOPES_Workshop_Demo_plain_arm9.py
-- ./startSim.sh -a architectures/scalopes_workshop_demo/1-SCALOPES_Workshop_Demo_plain_arm9.py --silent
+./startSim.sh -a architectures/scalopes_workshop_demo/1-SCALOPES_Workshop_Demo_plain_arm9.py
+showArchitecture()
+run_simulation()
 - Silent automatically runs the execution without the possibility to interact (we'll se how to do this)
 - The example is executed on the architecture (approx. 25 seconds). Show output.bmp
 
 - Briefly describe architectures/scalopes_workshop_demo/2-SCALOPES_Workshop_Demo_plain_cache.py
-- ./startSim.sh -a architectures/scalopes_workshop_demo/2-SCALOPES_Workshop_Demo_plain_cache.py
-- showArchitecture()
-- run_simulation()
+./startSim.sh -a architectures/scalopes_workshop_demo/2-SCALOPES_Workshop_Demo_plain_cache.py
+showArchitecture()
+run_simulation()
 - The example is executed on the architecture (approx. 25 seconds). Show output.bmp, stats about cache memories and reduced execution time
 
-Analysis Tools
+	Analysis Tools
 - Briefly describe architectures/scalopes_workshop_demo/3-SCALOPES_Workshop_Demo_func_prof.py
 - It is a profiler for the application using some text files as input. Read and write are emulated, we'll see later how and why
-- ./startSim.sh -a architectures/scalopes_workshop_demo/3-SCALOPES_Workshop_Demo_func_prof.py --silent
+./startSim.sh -a architectures/scalopes_workshop_demo/3-SCALOPES_Workshop_Demo_func_prof.py --silent
 - The example is executed on the architecture (approx. 20 seconds). Show trace files and checkpoints in architectures/scalopes_workshop_demo
 - Results are saved in two files: architectures/scalopes_workshop_demo/trace.txt architectures/scalopes_workshop_demo/short_trace.txt
 - This last one is used in the following example as golden trace for the execution flow check
 
-Fault Injection
+	Fault Injection
 - Briefly describe architectures/scalopes_workshop_demo/4-SCALOPES_Workshop_Demo_fault_injection.py
 - It is a fault injector for the application. Using the checkpoints, it is checked if the program flow follows the golden one, and if the output images are damaged by the fault
-- ./startSim.sh -a architectures/scalopes_workshop_demo/4-SCALOPES_Workshop_Demo_fault_injection.py
+./startSim.sh -a architectures/scalopes_workshop_demo/4-SCALOPES_Workshop_Demo_fault_injection.py
 - Flow fault is injected with the following commands:
 run_simulation(323377768)
 p = processors[0]
@@ -51,39 +53,43 @@ run_simulation()
 - The fault affects the image processing and not the function call flow with the following commands:
 run_simulation(323377768)
 p = processors[0]
-p.RB[15].immediateWrite(2308)
+p.RB[15].immediateWrite(2056)
 run_simulation()
 - Each simulation is executed on the architecture (approx. 20 seconds). Show console output and checkpoint differences in architectures/scalopes_workshop_demo
 
-Automated Fault Injection Campaign
+	Automated Fault Injection Campaign
 - Briefly describe architectures/scalopes_workshop_demo/5-SCALOPES_Workshop_Demo_automated_fault_injection.py
 - It is an automatic fault injector for the application. Starts a campaign of injected errors to check how the application reacts
-- ./startSim.sh -a architectures/scalopes_workshop_demo/5-SCALOPES_Workshop_Demo_automated_fault_injection.py
+./startSim.sh -a architectures/scalopes_workshop_demo/5-SCALOPES_Workshop_Demo_automated_fault_injection.py
 - DO NOTE: the command to execute the campaign cannot be issued in batch!
-- fi.generateFaultList(simulationDuration=330000000,numberOfSims=5,injectionTimeWindow=[12240000,303370000]) to generate the fault list
-- fi.loadFaultList('architectures/scalopes_workshop_demo/fault_list.dat') to load the fault list
-- fi.printFaultList() to show the fault list
-- fi.executeCampaign() to execute the campaign
-- The 10 automatic simulations are executed on the architecture (approx. 20 seconds * 10). Show console output.
+- The following lines generate and show a random list of faults:
+fi.generateFaultList(simulationDuration=330000000,numberOfSims=5,injectionTimeWindow=[12240000,303370000])
+fi.printFaultList()
+- While the following are loading a predetermined fault list:
+fi.loadFaultList('architectures/scalopes_workshop_demo/fault_list.dat')
+fi.printFaultList()
+- Finally we can execute the campaign
+fi.executeCampaign()
+- The 5 automatic simulations are executed on the architecture (approx. 20 seconds * 5). Show console output.
 
 OpenMP
 - Show code in software/apps/edgeDetector/edgeDetectorParallel.c
 - In architectures/scalopes_workshop_demo launch 'make crossomp' to compile the multithreaded example for the ARM
 - Back to main folder, executable with name ./edgeDetectorARMParallel, show that cannot be launched by the host system
 - Briefly describe architectures/scalopes_workshop_demo/6-SCALOPES_Workshop_Demo_multi.py
-- ./startSim.sh -a architectures/scalopes_workshop_demo/6-SCALOPES_Workshop_Demo_multi.py --silent
+./startSim.sh -a architectures/scalopes_workshop_demo/6-SCALOPES_Workshop_Demo_multi.py
 - The example is executed on the architecture (approx. 40 seconds). Show output.bmp and stats about the multi-processor system
 - Why slower? Because we introduce an arbitration scheme based on a Directory component to ensure Cache coherency
 
 Reconfigurable Components
 - Briefly describe architectures/scalopes_workshop_demo/7-SCALOPES_Workshop_Demo_reconfig.py
-- ./startSim.sh -a architectures/scalopes_workshop_demo/7-SCALOPES_Workshop_Demo_reconfig.py --silent
+./startSim.sh -a architectures/scalopes_workshop_demo/7-SCALOPES_Workshop_Demo_reconfig.py
 - The example is executed on the architecture (approx. 35 seconds). Show output.bmp (yellow, cause it uses a callback)
 - Comment on configuration tables and quicker execution than plain OpenMP (this explains read and write for fault injection)
 - Why faster? Because callbacks are executed on host machine: quicker than simulator
 
 Reconfigurable Parallel Components
 - Briefly describe architectures/scalopes_workshop_demo/8-SCALOPES_Workshop_Demo_multi_reconfig.py
-- ./startSim.sh -a architectures/scalopes_workshop_demo/8-SCALOPES_Workshop_Demo_multi_reconfig.py --silent
+./startSim.sh -a architectures/scalopes_workshop_demo/8-SCALOPES_Workshop_Demo_multi_reconfig.py --silent
 - The example is executed on the architecture (approx. 15 seconds). Show output.bmp (yellow, cause it uses a callback)
 - Comment on configuration tables (4 different parallel modules, all removed for the last one) and even faster execution
