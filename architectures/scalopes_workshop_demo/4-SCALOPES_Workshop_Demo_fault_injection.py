@@ -34,6 +34,7 @@ def statsPrinter():
     print '\x1b[34m\x1b[1mSimulated Elapsed Time (nano-seconds):\x1b[0m'
     print '\x1b[31m' + str(controller.get_simulated_time()) + '\x1b[0m'
     print ''
+    import os
     os.system('rm -f architectures/scalopes_workshop_demo/*_diff.bmp')
     os.system('rm -f architectures/scalopes_workshop_demo/*_golden.bmp')
     os.system('rm -f architectures/scalopes_workshop_demo/*exit.bmp')
@@ -42,7 +43,6 @@ def statsPrinter():
             print tool.getLog()
             break
     try:
-      import os
       os.system("python architectures/scalopes_workshop_demo/rebuild_images.py")
       os.system('rm -f architectures/scalopes_workshop_demo/*_diff.dat')
     except e:
