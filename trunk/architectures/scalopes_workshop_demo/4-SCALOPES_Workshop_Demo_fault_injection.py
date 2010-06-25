@@ -34,6 +34,9 @@ def statsPrinter():
     print '\x1b[34m\x1b[1mSimulated Elapsed Time (nano-seconds):\x1b[0m'
     print '\x1b[31m' + str(controller.get_simulated_time()) + '\x1b[0m'
     print ''
+    os.system('rm -f architectures/scalopes_workshop_demo/*_diff.bmp')
+    os.system('rm -f architectures/scalopes_workshop_demo/*_golden.bmp')
+    os.system('rm -f architectures/scalopes_workshop_demo/*exit.bmp')
     for tool in tools:
         if isinstance(tool,checkerTool.checkerTool32):
             print tool.getLog()
@@ -41,6 +44,7 @@ def statsPrinter():
     try:
       import os
       os.system("python architectures/scalopes_workshop_demo/rebuild_images.py")
+      os.system('rm -f architectures/scalopes_workshop_demo/*_diff.dat')
     except e:
       print e
 

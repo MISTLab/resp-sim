@@ -226,10 +226,6 @@ for i in range(0, PROCESSOR_NUMBER):
 manager.registerComponent(processors[0])
 
 fi = manager.getFaultInjector()
-fi.generateFaultList(simulationDuration=330000000,numberOfSims=5,numberOfTimeIntervals=1)#,injectionTimeWindow=[12224206,303376586])
+#fi.generateFaultList(simulationDuration=330000000,numberOfSims=5,numberOfTimeIntervals=1,injectionTimeWindow=[12224206,303376586])
 
-#fi.loadFaultList('tmpList.txt')
-#fi.executeCampaign()
 
-# We can finally run the simulation
-#run_simulation()

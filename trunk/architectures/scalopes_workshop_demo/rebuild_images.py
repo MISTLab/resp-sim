@@ -208,7 +208,9 @@ def build_images(checkpointsListFilename, workingDirectory = ''):
         currDiffFile.close()
         filename = currCp[0:len(currCp)-4] + ".bmp"
         difffilename = currCp[0:len(currCp)-4] + "_diff.bmp"
+        goldenfilename = currCp[0:len(currCp)-4] + "_golden.bmp"
         write_image(filename,check)
+        write_image(goldenfilename,pixels)
         write_diff_image(difffilename,pixels,check)
         print "ok"
       except Exception, e:

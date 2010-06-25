@@ -47,12 +47,12 @@ Fault Injection
 run_simulation(323377768)
 p = processors[0]
 p.RB[15].immediateWrite(1312)
-run_simulation(323377768)
+run_simulation()
 - The fault affects the image processing and not the function call flow with the following commands:
 run_simulation(323377768)
 p = processors[0]
-p.RB[15].immediateWrite(2312)
-run_simulation(323377768)
+p.RB[15].immediateWrite(2308)
+run_simulation()
 - Each simulation is executed on the architecture (approx. 20 seconds). Show console output and checkpoint differences in architectures/scalopes_workshop_demo
 
 Automated Fault Injection Campaign
