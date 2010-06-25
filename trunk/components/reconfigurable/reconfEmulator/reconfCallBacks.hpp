@@ -716,7 +716,7 @@ public:
 					sumY = sumY + (int) (processorInstance.readCharMem(callArgs[0]+ X+I + (Y+J)*width)) * GY[I+1][J+1];
 				}
 			}
-			SUM = abs(sumX) + abs(sumY);
+			SUM = abs(sumX) + abs(sumY) -150;
 		}
 		if(SUM>255) SUM=255;
 		if(SUM<0) SUM=0;
