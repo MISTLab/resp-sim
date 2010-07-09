@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<noc>
+	<mpe id="1">
+		<connect dst_id="7"/>
+	</mpe>
+	<mpe id="2">
+		<connect dst_id="7"/>
+	</mpe>
+	<mpe id="3">
+		<connect dst_id="8"/>
+	</mpe>
+	<mpe id="4">
+		<connect dst_id="8"/>
+	</mpe>
+	<spe id="5">
+		<connect dst_id="9"/>
+	</spe>
+	<spe id="6">
+		<connect dst_id="9"/>
+	</spe>
+	<switch id="7">
+		<connect dst_id="1"/>
+		<connect dst_id="2"/>
+		<connect dst_id="9"/>
+	</switch>
+	<switch id="8">
+		<connect dst_id="3"/>
+		<connect dst_id="4"/>
+		<connect dst_id="9"/>
+	</switch>
+	<switch id="9">
+		<connect dst_id="5"/>
+		<connect dst_id="6"/>
+		<connect dst_id="7"/>
+		<connect dst_id="8"/>
+	</switch>
+</noc>

@@ -1,0 +1,89 @@
+\paragraph\indent This chapter contains the instructions on how to download, configure and compile the simulation platform sources. Moreover, it provides some workarounds for the users that want to directly use the platform without spending too much time worrying about the installation. 
+
+\section{System Requirements}
+\label{install:requirements}
+\paragraph\indent ReSP works only on Linux systems. The simulator has been mainly developed using the Ubuntu distribution (for which some scripts for the automatic installation are provided, as discussed later in section~\ref{install:ubuntu}), and it has been tested also on several others Linux distributions such as OpenSuse 11 or on the Debian unstable release (\emph{sid}). Both the 32 and 64-bit architectures are supported; do note that SystemC experiences lower performance on 64-bit machines. This distribution of ReSP is supposed to work even on MacOSX systems, however this feature has not been tested yet, and it is not planned to test it in the future; the identification of the steps required is left to the user willing to use ReSP in such environment. Currently, it is excluded any support for Windows systems.\\
+\indent The compilation process of ReSP is the most demanding operation in terms of memory and computational resources; after the compilation, however, the execution of ReSP has less strict requirements. Any machine with the following specifications is able to run this tool:
+\begin{itemize}
+  \item Any x86 or x86-64 compatible processor (at least a Core2Duo @ 1.66 GHz or equivalent is highly recommended);
+  \item 512 MB of RAM (at least 1 GB is highly recommended);
+  \item 1 GB of free space on the hard drive;
+\end{itemize}
+
+\section{Downloading the source code}
+\label{install:download}
+\paragraph\indent ReSP project is hosted on Google Code at the address \url{http://code.google.com/p/resp-sim/}. The source code of the project is managed through the \texttt{subversion} system (\url{http://subversion.apache.org/}). Thus, once installed the \texttt{subversion} (or shortly \texttt{svn}) client, it is possible to download the source code in the desired directory \texttt{my-resp} by executing the following command in a console:
+\begin{verbatim}
+  svn checkout http://resp-sim.googlecode.com/svn/trunk/ my-resp
+\end{verbatim}
+
+\section{Building and Installation Instruction}
+\label{install:instr}
+\paragraph\indent ReSP uses \texttt{waf} (\url{http://code.google.com/p/waf}) as build system; from a user point of view it is similar to the usual autotools based project: first there is a configuration step, then the compilation and, finally, the installation. Before the configuration step, however, some pre-requisites should be installed on the system; they are listed in the following sections.
+
+\subsection{Required Libraries and Tools}
+\paragraph\indent The following list contains all the tools and libraries required by ReSP. Do note that they should be installed following the list order, since there are some dependencies among the tools/libraries.
+\begin{itemize}
+  \item \textbf{waf} - the build system used by ReSP; a version of the \texttt{waf} tool is already available in the ReSP main folder, however the user may prefer a system wide installation with the most recent version of \texttt{waf} released on (\url{http://code.google.com/p/waf}).
+  \item \textbf{GCC}, \textbf{G++} and \textbf{CPP} \textless= 4.2 - the older versions of the GNU compilers are required by the GCCXML tool. They are available in all Linux distributions.
+  \item \textbf{Python} - a quick and easy interpreted language. Versions ranging from 2.4 to 2.6 are currently supported, however Python 2.6 works only if the latest boost libraries are installed (\textgreater= 1.42). It is available in most of Linux distributions; do note that the development version of this package is needed. Otherwise, it can be downloaded from \url{http://www.python.org/}. 
+  \item \textbf{libboost} - widely used set of C++ libraries, downloadable from \url{http://www.boost.org}. Do note that they are available in most of Linux distributions. If downloaded from the official web site, installation instructions are present on that website. Actually not all the boost libraries are needed: Boost.Python, Boost.Threads, Boost.Graph, Boost.RegEx, Boost.Unit\_Test\_Framework, and Boost.Program\_Options should be enough; anyway we suggest to install the whole collection of Boost libraries. 
+  \item \textbf{GCCXML} - the purpose of the GCCXML extension is to generate an XML description of a C++ program from GCC's internal representation. For this project it is required to have at least version 0.9. Since there are different 0.9 releases, we suggest you go to website \url{http://www.gccxml.org/HTML/Download.html} and get the latest version from the CVS repository. Some Linux distributions (e.g.: Ubuntu) provide it in their package repository.
+  \item \textbf{pygccxml} and \textbf{py++} - tools required to navigate and expose C++ classes in a Python environment. At least version 1.5 is required. Such version has not been released yet as a separate download, but it is available on the development SVN repository (at least revision 1740 is required). Once downloaded, just run \texttt{python setup.py install} (with administrator rights) in both folders \texttt{pyplusplus\_dev} and \texttt{pygccxml\_dev}, containing the development version of the two tools.
+  \item \textbf{SystemC} - downloadable from \url{http://www.systemc.org}, it is the de-facto standard in the high abstraction level modeling and simulation of hardware modules. Instructions on how to install it are contained in the SystemC package itself. Note that on 64 bits architectures you might need to patch the sources; you may do this using the patch file and the instructions contained in \texttt{ext/systemc} sub-folder of the ReSP downloaded directory (you should see if you need to patch them if you get an error during the ReSP configuration process).
+  \item \textbf{TLM 2.0} - downloadable from \url{http://www.systemc.org}, it is used to model the hardware modules and, in particular, their interconnections with the Transaction Level Modeling (TLM) approach.
+  \item \textbf{BFD}~\cite{binary_binutils} - tool included in the \texttt{binutils} collection, it is used to read and parse the application software which is going to be executed on the processors. It is available in all Linux distributions; do note that the development version of this package is needed. On 64 bits architectures you might need to manually download binutils sources and patch them according to the instructions in \texttt{ext/binutils} sub-folder of the ReSP downloaded directory (you should see if you need to patch them if you get an error during the ReSP configuration process).
+  \item \textbf{TRAP}~\cite{fossati_trap} - a library for the description of Instruction Set Simulators, dowloadable from the SVN repository at \url{http://code.google.com/p/trap-gen/}. Do not use the archive in the downloads since it is usually not updated. The installation of these libraries is described on the Wiki page of the project (\url{http://code.google.com/p/trap-gen/wiki/Setup}) and is somewhat similar to the one of ReSP.
+\end{itemize}
+\indent There are also optional libraries which, if present, enhance ReSP's capabilities:
+\begin{itemize}
+  \item \textbf{graphviz} - necessary to show the architecture graph. It is available in most of Linux distributions or it can be downloaded from \url{http://www.graphviz.org/}.
+  \item \textbf{sigc++2.0} - available in the packet manager of your distribution (whichever you are using), it is necessary in case you also need to install the MOMH library.
+  \item \textbf{MOMH} - a library necessary to enable the framework for automatic design space exploration. Instructions on how to download it are available at \url{http://home.gna.org/momh/}.
+\end{itemize}
+
+\subsection{Configuration and Compilation}
+\paragraph\indent Once installed all required tools and libraries, it is possible to configure and compile the simulator; as already stressed, the \texttt{waf} compilation chain is used. The \texttt{./waf configure} command can be executed in the main ReSP directory for the configure step; all the configuration options which can be passed to the \texttt{./waf configure} command are hereby listed:
+\begin{itemize}
+  \item \textit{--with-systemc=SYSC\_FOLDER} specifies the location of the SystemC 2.2 library. It is mandatory to specify such option.
+  \item \textit{--with-tlm=TLM\_FOLDER} specifies the location of the TLM 2.0 library. It is mandatory to specify such option.
+  \item \textit{--with-trap=TRAP\_FOLDER} specifies the location of the TRAP runtime libraries and headers. It must be specified if TRAP was installed in a custom folder, otherwise the configuration is able to automatically detect the installation in the standard system path.
+  \item \textit{--boost-includes=BOOST\_HEAD\_FOLDER} specifies the location of the header files of the boost libraries. It has to be specified in case the includes are not installed in a standard system path.
+  \item \textit{--boost-libs=BOOST\_LIB\_FOLDER} specifies the location of the library files of the boost libraries. It has to be specified in case the libraries are not installed in a standard system path. Do note that if you manually installed the boost libraries, you probably need to update the environmental variable \texttt{LD\_LIBRARY\_PATH} specifying the path of the boost libraries, otherwise you will obtatin some runtime errors while loading the shared libraries.
+  \item \textit{--with-bfd=BFD\_FOLDER} specifies the location of the BFD library. It has to be specified in case \texttt{libbfd} is not installed in a standard system path.
+\end{itemize}
+
+\paragraph\indent After the configuration successfully ends, compilation can be started with the plain \texttt{./waf} command. Now, it is possible to start the simulator by means of the \texttt{./startSim.sh} script (simulation use will be explained in the next chapter).
+Further details on the configuration and compilation options can be obtained by issuing \texttt{./waf --help}.
+
+\subsection{Cross-compiled Software}
+\paragraph\indent In order to run pieces of software on the Instruction Set Simulators (ISS), it is required to compile them using the cross-compilers specific for the used ISS. Do note that in order to enable all the Trap ISS features, and in particular the OS emulation, the standard crosscompilers have been patched; the crosscompilers for the ISS currently included in ReSP can be downloaded from the project SFTP server (see references in Section~\ref{install:VM}). Once the compilers are decompressed, the applications can be properly cross-compiled using the \texttt{[arch]-elf-[gcc/g++]} tool in the bin directory of the desired architecture. For the proper compilation of the applications making calls to operating system routines, the \texttt{-specs=osemu.specs} command line option has to be passed to the compiler. ReSP also provides a full set of example and benchmarks programs that are stored in the \texttt{software} subdirectory: the compilation of these applications can be automatically performed using the \texttt{waf} tool inside the \texttt{software} subdirectory. The configuration options which can be passed to the \texttt{./waf configure} command are:
+\begin{itemize}
+  \item \textit{--arm-compiler=/PATH\_TO/cross-compilers/arm/} specifies the location of the ARM cross-compiler.
+  \item \textit{--sparc-compiler=/PATH\_TO/cross-compilers/sparc/} specifies the location of the SPARC cross-compiler for the LEON ISSs.
+\end{itemize}
+\indent After the configuration successfully ends, compilation can be started with the usual \texttt{./waf} command.
+
+\subsection{Platform Testing}
+\paragraph\indent To check the correct compilation of the entire platform, the command \texttt{./waf -C} can be issued in ReSP main directory. This command will launch the simulation of some architectures using some application contained into the software folder, thus even the software should be cross-compiled before launching the test.
+
+\section{Simplified installation for Ubuntu OS}
+\label{install:ubuntu}
+\paragraph\indent The latest two releases of Ubuntu (9.10 Karmic Koala and 10.04 Lucid Lynx) have all the proper versions of dependent software in their package repository. We provide a single script to automatically collect all the dependent software and perform its installation. Prerequisites:
+\begin{itemize}
+  \item You need to have administrator rights to perform the automatic installation. The script uses the standard \texttt{sudo} command, and will most likely require the input of your password only once.
+  \item You must have an active Internet connection to download the required packages.
+\end{itemize}
+\paragraph\indent The installation is started by simply running the script \texttt{lucid-install.sh} from the root of the ReSP tree: \texttt{sudo sh ./lucid-install.sh}. Choose the 32 or 64 bit installer according to the base architecture of your OS (you can obtain it by issuing the command \texttt{uname -m} in a teminal).
+
+\section{Virtual Machine}
+\label{install:VM}
+\paragraph\indent A Virtual Machine running with VirtualBox v3.0 is distributed on the project SFTP server with a version of ReSP already configured and compiled. The user can simply download it and directly start to use the tool. The project SFTP server is available at the following address:
+\begin{verbatim}
+  fossati.elet.polimi.it:22
+\end{verbatim}
+In order to download the contents, you'll have to access the machine with a specific user; its credentials are:
+\begin{verbatim}
+  Username:  donwloader
+  Password:  getVM
+\end{verbatim}

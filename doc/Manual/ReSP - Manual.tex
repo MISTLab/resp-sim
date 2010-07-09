@@ -1,0 +1,106 @@
+% ADD ./styles DIRECTORY TO TEXINPUTS AND BSTINPUTS!!!!
+
+\documentclass[a4paper,12pt,oneside]{book}
+\usepackage[american]{babel}			% American hyphenation
+\usepackage[latin1]{inputenc}			% Recognizes special characters (accented letters, etc.)
+\usepackage[pdftex]{graphicx}			% Allows the use of images through \includegraphics
+\DeclareGraphicsExtensions{.pdf, .png, .jpg, .gif, .bmp}
+\usepackage{verbatim}				% Allows the use of the comment environment
+\usepackage{paralist}				% Allows the use of inparaenum
+\usepackage{algorithm2e}			% Allows the use of the algorithm environment
+\usepackage[amssymb]{SIunits}			% Allows to use the symbols for SI units
+\usepackage{numprint}				% Allows to use advanced formatting for numbers
+\usepackage{amsthm}				% Allows the use of the defn environment
+\usepackage{amsmath}				% Introduces advanced mathematical notations
+\usepackage{amssymb}				% Introduces various math symbols
+%\usepackage{wasysym}				% Introduces the WASY symbols
+\usepackage{bibentry}				% BibTeX
+
+\usepackage{fancyhdr}				% Introduces the Fancy style
+\usepackage[pdftex,plainpages=false,pdfpagelabels,colorlinks,linkcolor=black,citecolor=black,filecolor=black,urlcolor=black]{hyperref}
+% Introduces the hypertextual references on the document. THIS SHOULD BE THE LAST INSERTED PACKAGE!
+
+\setlength{\headheight}{15pt}			% Sets the height of the header
+\setlength{\parindent}{5mm}			% Sets the indentation of new paragraphs
+\linespread{1.2}				% Sets the line height
+\makeindex					% Starts the collection of the words between \index{} to create the Index
+
+\begin{document}
+
+\hypersetup{pdfauthor={Fabio Arlati, Antonio Miele},pdftitle={ReSP User Manual}}
+\hypersetup{bookmarksopen}			% Sets author, title, and options in the PDF properties
+\pagestyle{empty}				% Sets the style 'empty' for the title page
+
+\begingroup
+  \renewcommand{\thepage}{title}		% Used to have a single #1 page (hyperref rises a warning)
+  \title{\Huge \textit{\textsc{ReSP User Manual}\thanks{Special thanks to Giovanni Beltrame and Luca Fossati for developing the core of this tool}}}
+  \author{	Fabio Arlati - \href{mailto:arlati.fabio@gmail.com}{arlati.fabio@gmail.com} \and
+		Antonio Miele - \href{mailto:miele@elet.polimi.it}{miele@elet.polimi.it} \and
+		Francesco Bruschi - \href{mailto:bruschi@elet.polimi.it}{bruschi@elet.polimi.it} }
+  \date{June 2010}
+  \maketitle					% This and the commands above are used to make the original LaTeX title
+\endgroup
+
+\frontmatter					% Used only by book documents
+\pagenumbering{Roman}				% Uppercase letters for page numbers
+\pagestyle{plain}				% Sets the style 'plain' for the indexes
+
+\tableofcontents
+%\listoffigures
+
+\mainmatter					% Used only by book documents
+\pagenumbering{arabic}				% Numeric page numbers
+\fancyhead{}
+\fancyfoot{}
+\fancyhead[OR]{\slshape \leftmark}
+\fancyhead[OL]{}
+\fancyfoot[OC]{\thepage}
+\pagestyle{fancy}				% (above and this) Sets the style 'fancy' for the text
+\renewcommand{\chaptermark}[1]{\markboth{\MakeUppercase{\chaptername}\ \thechapter.\ #1}{}}
+% \renewcommand{\sectionmark}[1]{\markboth{\thesection.\ #1}{}}
+% Sets the header to '#. Name' for \leftmark
+
+\chapter*{Disclaimer}
+\paragraph\indent This version of the ReSP tool is almost final; however, there are some issues which must still be solved and, probably, by using this tool you will find many more of which we are not aware yet. The released tool is still under intensive testing with some particular test cases; furthermore, new features are under development and maybe added in the next few months. We suggest to frequently update your tool following the versions released on the SVN server. Even this manual will be updated according to the future adjustments of the tool; check the \emph{doc} folder of the SVN repository for the last version of the manual.
+
+\chapter{Introduction}
+\label{intro}
+\input{intro}
+
+\chapter{Installing the tool}
+\label{install}
+\input{install}
+
+\chapter{General Usage}
+\label{general}
+\input{general}
+
+\chapter{Reconfigurable Hardware}
+\label{reconfigurable}
+\input{reconfigurable}
+
+\chapter{Fault Injector}
+\label{fault}
+\input{fault}
+
+\chapter{Describing new Components}
+\label{describe}
+\input{describe}
+
+%\chapter{Known Issues}
+%\label{issues}
+%\input{issues}
+
+\appendix					% Used only by book documents
+\renewcommand{\chaptermark}[1]{\markboth{\MakeUppercase{\appendixname}\ \thechapter.\ #1}{}}
+% Sets the header to 'APPENDIX #. Name' for \leftmark
+
+\backmatter					% Used only by book documents
+\addcontentsline{toc}{chapter}{\bibname}
+
+\small
+\bibliographystyle{acm}
+\bibliography{biblio}
+
+
+\end{document} 

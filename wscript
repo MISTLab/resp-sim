@@ -121,13 +121,13 @@ def configure(conf):
     # Set and Check for special and optimization gcc flags
     ########################################################
     if not conf.env['CXXFLAGS'] and not conf.env['CCFLAGS']:
-        testFlags = ['-O2', '-march=native', '-pipe', '-finline-functions', '-ftracer', '-fomit-frame-pointer']
+        testFlags = ['-O2', '-Wno-deprecated', '-march=native', '-pipe', '-finline-functions', '-ftracer', '-fomit-frame-pointer']
         if conf.check_cxx(cxxflags=testFlags, msg='Checking for g++ optimization flags') and conf.check_cc(cflags=testFlags, msg='Checking for gcc optimization flags'):
             conf.env.append_unique('CXXFLAGS', testFlags)
             conf.env.append_unique('CCFLAGS', testFlags)
             conf.env.append_unique('CPPFLAGS', '-DNDEBUG')
         else:
-            testFlags = ['-O2', '-pipe', '-finline-functions', '-fomit-frame-pointer']
+            testFlags = ['-O2', '-Wno-deprecated', '-pipe', '-finline-functions', '-fomit-frame-pointer']
             if conf.check_cxx(cxxflags=testFlags, msg='Checking for g++ optimization flags') and conf.check_cc(cflags=testFlags, msg='Checking for gcc optimization flags'):
                 conf.env.append_unique('CXXFLAGS', testFlags)
                 conf.env.append_unique('CCFLAGS', testFlags)

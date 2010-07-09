@@ -1,0 +1,188 @@
+\paragraph\indent This chapter describes how to use the capabilities of ReSP in order to perform the execution of fault injection experiments in the simulated architectures. The first part of the chapter presents the basic features enabling the injection and the monitoring of faults; then, the second part of the chapter provides a tutorial on the facilities automating the fault injection and monitoring activities.
+
+\section{Basic Injection Features}
+\paragraph\indent In a SystemC TLM specification, faults can be modeled by corrupting the elaborations of the system under analysis during its simulation. In particular, there are two main elements of an architecture specification that can be manipulated:
+\begin{itemize}
+\item the internal state of the instantiated components that is represented by the components' attributes;
+\item the information exchanged among the components during the transactions.
+\end{itemize}
+
+\indent Considering the scripting and reflection capabilities of Python, the injection in the component attributes is straightforward; in fact, the simulation console allows the possibility to access, read and modify the components' attributes as shown in the following example. Let's consider the test architecture used in Chapter \ref{general}; it is possible to simulate a corruption of the counter of the exchanged payload as shown in the following examples:
+
+\scriptsize
+\begin{verbatim}
+  load_architecture('architectures/test/test_arch.py)
+  run_simulation(10)
+  instMaster.count = instMaster.count - 2
+  run_simulation()
+\end{verbatim}
+\normalsize
+
+\indent Do note that the corruption of the components' attributes can be performed at the end of a delta cycle; in fact, the simulation of a delta cycle is performed atomically with respect to the simulation console; thus, it is not possible to access the attributes in the meanwhile.
+
+\indent Unfortunately, the simulation console capabilities cannot be used to perform the injection on the transmitted data since the transactions are implemented by means of function calls among components. For this reason, the injection on the intercommunication is enabled by means of saboteur components. A saboteur is a component that is connected between two other components, thus allowing the monitoring and the modification of the transmitted payload. The example below shows the use of a basic saboteur defined in the ReSP component repository in order to perform the corruption of the payload exchanged between two test master and slave components. In particular, an injection is programmed at time 10 ns: it changes to value 100 (i.e., character ``x'') the value of the transmitted data during the next transaction. It is worth noting that it is possible to corrupt also the address of the payload and it is possible to use also other corruption functions such as the bit flip. For further details it is possible to query the saboteur object.
+
+\scriptsize
+\begin{verbatim}
+  instMaster = testMaster_wrapper.testMaster('master')
+  instSlave = testSlave_wrapper.testSlave('slave')
+  instSabouteur = SaboteurLT32.Saboteur('saboteur')
+
+  connectPorts(instMaster, instMaster.initSocket, instSabouteur, instSabouteur.targetSocket)
+  connectPorts(instSabouteur, instSabouteur.initiatorSocket, instSlave, instSlave.targetSocket)
+
+  run_simulation(10)
+  instSabouteur.setMask(SaboteurLT32.Saboteur.VALUE_CHANGE, 120, SaboteurLT32.Saboteur.DATA)
+  run_simulation()
+\end{verbatim}
+\normalsize
+
+\indent Some considerations have to be drawn about the fault injection features. First of all, ReSP supports the possibility to inject fault in terms of corruption of the system state or transmitted data; however, it does not provide any semantic to the performed corruption. Thus, the user has to identify a set of corruptions that he considers meaningful for his experiments. Moreover, in some situations, the corruption of the state of the components may lead to critical error in the simulation activities. For instance, it may cause a segmentation fault in case the corruption indirectly affect the usage of memory pointer; in such a situation, the simulation console would exit immediately with a crash. Another critical situation is related to components throwing exceptions in case they detect an incorrect behavior; in such a situation, as previously described, the simulation is stopped and cannot be resumed. In order to deal with this problem, the designer should implement component specification with all expedients to avoid the occurrence of segmentation faults; for instance, the pointers' value would be checked before their usage. Moreover, the specification of possible standard misbehaviors would be preferred to the exception thrown in component descriptions. For instance, in a bus model, a dummy ``000...000'' value may be returned to the master when requiring data from an unbound address, instead of throwing an exception.
+
+\section{Automated Fault Injection and Analysis}
+\paragraph\indent ReSP provides a set of facilities automating the several activities discussed in the previous section (as the instantiation of the saboteurs or the generation and the execution of the fault injection campaigns); their implementation is contained in the \texttt{src/fi} folder. The usage of these features will be described in this section also by means of an example proposed in the \texttt{architectures/test/test\_fi.py} architecture file. The case study performs an evaluation of the capabilities of software redundant techniques in detecting faults affecting microprocessors: the system under test is an ARM processor running a software-hardened application and connected through a bus to the memory (containing data and instructions) and a special component receiving the final data and the error flag computed by the hardened application.
+
+\indent In order to enable fault injection facilities, it is necessary to issue the \texttt{enable\_fault\_injection()} command. Mainly, it instantiates an enhanced \texttt{manager} that substitutes the standard one described in Chapter \ref{general}. First of all, this manager offers the possibility to automatically instantiate saboteurs while interconnecting ports; indeed, after the components are instantiated, if the \texttt{connectPorts} command is issued as described in Chapter~\ref{general}, the two ports are connected though a saboteur; then, the instantiated saboteur is returned by the command. By default, the command instantiates the standard saboteur defined in the \texttt{components/reliability} folder; however, it is possible to specify to instantiate other user-defined probes by passing the new probe class as a parameter:
+
+\scriptsize
+\begin{verbatim}
+  connectPorts(instMaster, instMaster.initSocket, instSlave, instSlave.targetSocket, \
+    CustomProbeLT.CustomProbeLT)
+\end{verbatim}
+\normalsize
+
+\indent Finally, if \texttt{None} is passed as parameter in place of the probe class, the two ports are connected directly without any probe.
+
+\indent Another feature offered by the enhanced manager is the automatic identification of the possible injection locations of the instantiated components. The enhanced manager has a list of descriptors of the possible fault locations for the component classes that have been characterized by the user: this information is stored in the \texttt{src/fi/faultlocations.txt}. Each entry of this file describes a possible location of a component in terms of: 
+\begin{itemize}
+\item name of the component class;
+\item name of the attribute representing the fault locations;
+\item number of lines of the location (it may be a number or a function to be called);
+\item number of bits composing each line of the location (it may be a number or a function to be called).
+\end{itemize}
+For instance, the register bank of the ARM7 processor is described with the following descriptor:
+
+\scriptsize
+\begin{verbatim}
+  arm7tdmi_funcLT_wrapper.Processor_arm7tdmi_funclt,RB,trapRegisterBankWrapper,RB.__len__,32
+\end{verbatim}
+\normalsize
+
+\indent Thus, in order to identify all the fault location of an instantiated component, it is possible to issue the command \texttt{registerComponent()}, passing the reference of the component instance and, optionally, the list of the attribute to register (if it is desired to register only a subset of them). For instance, in the considered architecture, in order to register all the registers of the ARM7 processor in the fault locations list, the following command is issues:
+
+\scriptsize
+\begin{verbatim}
+  registerComponent(processor)
+\end{verbatim}
+\normalsize
+
+\indent This operation needs to be repeated for all the components (also the saboteurs) that have to be corrupt during the fault injection campaign. It is worth noting that the enhanced manager provides also other functions for the management of the probes; for further details it is possible to directly query the manager object.
+
+\indent Once the architecture is instantiated and the list of fault locations obtained, it is possible to proceed with the generation and the execution of the fault injection campaign. The fault injector can be retrieved by the manager with the following command:
+
+\scriptsize
+\begin{verbatim}
+  fi = manager.getFaultInjector()
+\end{verbatim}
+\normalsize
+
+\indent The fault injector provides different functions for generating and managing the fault injection list, and for executing the fault injection campaign. Inside the fault injector, the fault list is managed as a Python list where each entry represent a single experiment. The single experiment is represented by means of a descriptor modeled by means of Python dictionaries and lists as shown in the following example:
+
+\scriptsize
+\begin{verbatim}
+  { \
+    21330: 
+    [ \
+      {
+        'component': 'processor_0', 
+        'attribute': 'RB', 
+        'line': 16, 
+        'bit': 18L,
+        'mask_function': 'bit_flip', 
+        'mask': 262144, 
+        'wrapper': 'trapRegisterBankWrapper',
+        'fault_model': 'uniformLocationsDistribution' 
+      } \
+    ]
+  350000: {}, \
+}
+\end{verbatim}
+\normalsize
+
+\indent The proposed descriptor specifies two different execution steps; the first one ends at 21330 \nano\second~and the second one at 350000 \nano\second. Moreover, after the first step a fault is injected in the register bank \texttt{RB} of the component \texttt{processor\_0} (it is the name assigned to the component when the constructor is called; it can be retrieved by using the \texttt{name()} method defined in each SystemC component). More precisely, the 18th bit of the 16th register is corrupted by performing a bit flip according to the specified mask. The descriptor contains also a field specifying the wrapper to be used to access the component attribute. These wrappers are used to offer to the fault injector engine a standard interface to get and set the value of the component attribute; the current list of wrappers for the several types of components' attributes is provided in the \texttt{src/fi/attributeWrappers.py} file; it can be extended according to the necessities of the user. Finally, the last field of the descriptor specifies the generator of the fault model; currently only an uniform distribution of bit flips among all the bits of the registered locations is specified. However, it is possible to specify other functions using other kind of mutation functions such as \texttt{bit\_flip0} or the \texttt{value\_change}; refer to the \texttt{src/fi/faultDistribution.py} file.
+
+\indent Thus, the fault injector offers the following functionalities:
+\begin{itemize}
+\item \texttt{generateFaultList(simulationDuration, numberOfSims, number- OfTimeIntervals=1)} - generate a random fault injection campaign composed of a number of simulations \texttt{numberOfSims}, each one with a maximum duration \texttt{simulationDuration} and with a number of faults to be injected \texttt{numberOfTimeIntervals}. 
+\item \texttt{printFaultList()} - print the current fault list.
+\item \texttt{saveFaultList(filename)} - store the current fault list into a file.
+\item \texttt{loadtFaultList(filename)} - load a fault list from a file.
+\item \texttt{addFaultExperiment(experiment)} - add a new experiment described according the representation specified above.
+\item \texttt{deleteFaultExperiment(number)} - delete an experiment given its position in the current list.
+\item \texttt{numberOfExperiments()} - returns the number of experiments in the current fault list.
+\end{itemize}
+
+\indent The last aspect to be considered for a fault injection experiment is the activities of system monitoring and the result classification. Unfortunately, these activities are specific for each case study and it is quite difficult to be generalized for a common use. Thus, the user has to specify them for each experimental session according to the characteristics he wants to monitor and the analysis he wants to perform at the end of the simulation; in the same way, golden execution data used for the result classification have to be precompited. ReSP offers a set of mechanisms that can be exploited to achieve this goal easily. First of all, it is possible to implement a classification function by means of the \texttt{statsPrinter()} function; moreover, the monitoring activities can be implemented by means of the \texttt{DeltaCallback}. As discussed in Chapter \ref{general}, it is discouraged the implementation of monitoring activities by means of Python code since it would slow down the simulation speed dramatically. Finally, it is possible to perform automatically the final collection of the results after the execution of all experiments by defining a \texttt{campaignReportPrinter()} function. It is worth noting that, as it will be discussed later, the several simulations are executed in a different process; thus, the results of the monitoring and classification activities need to be logged on a storage unit (files and databases can be supported) so that they can be later retrieved during the final result collection. For instance, in the considered case study, the results of the experiments are classified in four different classes; then, the final result collection produces a final report summarizing the classifications carried out after each experiment.
+
+\scriptsize
+\begin{verbatim}
+  results = [28, 36, 44, 52, 60, 68, 76, 84]
+  output = 'results.txt'
+
+  def statsPrinter():
+    sw = buf.getStatus()
+    risOk = True
+    res = ''
+    for i in range(len(results)):
+      if results[i] != long(buf.getDatum(i)):
+        risOk = False
+        
+    if controller.error == True:
+      res = 'HW detected\n'
+    elif sw != 0:
+      res = 'SW detected\n'
+    elif risOk == True and sw == 0:
+      res = 'No effect\n'
+    else:
+      res = 'Not detected\n'
+      t='Expected Result: '
+      for i in range(len(results)):
+        t=t+' ' + str(results[i])
+      t=t+'\nObtained Result: '
+      for i in range(len(results)):
+        t=t+' ' + str(buf.getDatum(i))      
+      print t
+      print "Error: " +str(buf.getStatus())
+    fp=open(output,'a')
+    fp.write(res)
+    fp.close()
+    print res
+    return
+
+  def campaignReportPrinter():
+    no = 0
+    sw = 0
+    hw = 0
+    ok = 0
+    fp=open(output,'r')
+    for l in fp:
+      if l == 'HW detected\n':
+        hw = hw +1
+      elif l == 'SW detected\n':
+        sw = sw +1
+      elif l == 'Not detected\n':
+        no = no +1
+      else:
+        ok = ok +1 
+    fp.close()
+    import os
+    #os.system('rm results.txt')
+    print "\n\n------------------------------------------------" 
+    print "Statistics\nNo effect: " + str(ok) + \
+      "\nSW detected: " + str(sw) + "\nHW detected: " + \
+      str(hw) + "\nNot detected: " + str(no)   
+    print "----------------------------------------------------" 
+\end{verbatim}
+\normalsize
+
+\indent Once specified the architecture and the fault injection campaign, it is possible to run the experiments in batch by means of the \texttt{executeCampaign()} member of the fault injection object. Actually, the fault campaign is executed in a different process to be able to autonomously resume from possible situations causing a C++ exception. For this reasons, all the several specification steps discussed in this section have to be contained in a single architecture file; only the commands for the generation of the fault list can be executed directly in the ReSP console; finally, the \texttt{executeCampaign()} command has to be issued from the console.
