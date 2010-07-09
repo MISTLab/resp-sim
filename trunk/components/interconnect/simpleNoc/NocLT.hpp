@@ -397,7 +397,8 @@ public:
 	}
 
 	void addBinding(string name, sc_dt::uint64 startAddress, sc_dt::uint64 endAddress) {
-		if (startAddress > endAddress || (nextSlaveToBind-numMasters) > numSlaves) {cout << "Error!" << endl; return;}
+		if (startAddress > endAddress || (nextSlaveToBind-numMasters) > numSlaves)
+			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error while binding " << name << ": check the addresses and the number of slaves declared");
 		this->outMap[this->nextSlaveToBind].first = startAddress;
 		this->outMap[this->nextSlaveToBind].second = endAddress;
 		this->nameMap[this->nextSlaveToBind] = name;

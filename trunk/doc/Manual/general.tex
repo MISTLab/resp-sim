@@ -1,0 +1,463 @@
+\paragraph\indent This chapter describes the general use of the simulation tool. The first section will give a general introduction to the directory structure inside the tool source code, while the second part is going to give an hands-on description of the capabilities of ReSP.
+
+\section{Structure of Folders}
+\paragraph\indent In order to use ReSP  and to exploit its advanced features it is very important  to know how the source code of the simulator is organized. 
+Here the overall structure of the project folders is presented. Do note that there may be further folders not documented here; such folders contain not maintained code or additional features still under development.
+\label{general:folders}
+\begin{description}
+  \item[architectures] contains the template files which describe various architectures: these files use the components of the simulator (processors, memories, etc.) to create complete architectures. The only way of specifying architectures is through Python scripts which contain the commands that the user would manually run from console in order to create the same architecture. (\texttt{base} sub-folder contains not maintained code).
+  \item[components] contains the component models available to be used inside ReSP:
+  \begin{description}
+    \item[interconnect] contains various kinds of interconnection layers, such as buses and NOCs; so far we have an arbitrated bus (a modified version of the \texttt{pv\_router} in TLM 2.0 examples) and a simple NOC which, so far, is specified at transaction level only (no low-level packet inspection).
+    \item[memories] contains a simple slave memory without controllers and two versions of a cache memory: an incoherent one, which is not recommended for multi-core architectures, and a coherent one, which uses a directory component to assign unique privileges to concurrent cache systems.
+    \item[processors] contains the Instruction Set Simulators, obtained through the TRAP automatic generator. So far, only the functional loosely timed version of an ARM7TDMI, an ARM9TDMI and a LEON3 processor have been defined.
+    \item[reconfigurable] contains the various models defined for the simulation of dynamically reconfigurable architectures, as described in Chapter~\ref{reconfigurable}.
+    \item[reliability] contains various kinds of components used for the fault injection campaigns (further details are provided in Chapter~\ref{fault}).
+    \item[testComponents] contains some simple examples of SystemC modules working as master and slave. The content of this folder will be used as a basic guide in the next part of this chapter.
+  \end{description}
+  \item[dse] contains the source code for a design space exploration tool (still under development).
+  \item[ext] contains the patches required by binutils and SystemC on 64-bit systems.
+  \item[lib] contains some external libraries used by ReSP; in particular, a dynamic version of the binutils and SystemC libaries is rebuilt at compilation time using some specific code files.
+  \item[software] contains software which is executed and simulated inside the platform (cross-compilers are needed inside this folder):
+  \begin{description}
+    \item[apps] contains some sample application programs (such as \texttt{ffmpeg}).
+    \item[lib] contains the stub required to compile programs using OpenMP and pthreads.
+    \item[simple\_benchmarks] contains some real life applications used to test the general ReSP behavior.
+    \item[suites] contains collections of test applications, such as the one contained in the OpenMP Source Code Repository.
+    \item[test\_code] contains some specific chunks of code used to perform basic tests on the different ReSP functionalities.
+  \end{description}
+  \item[src] contains the simulator source files (i.e. the simulator core); these are all the files necessary for connecting the components, instantiate them, keeping track of the connections, starting and pausing simulation\ldots
+  \begin{description}
+    \item[bfdFrontend and \textasteriskcentered\_wrapper] contain the wrappers around SystemC which makes SystemC objects visible from Python.
+    \item[cm] contains the Configuration Manager used by the OS emulation layer to manage multi-threading and concurrency.
+    \item[controller] contains the files of the simulation controller, which allows to start, pause and stop the SystemC kernel.
+    \item[fi] contains the Fault Injector tool used in Chapter~\ref{fault}.
+    \item[hci] contains the user interfaces; the only used interface present here is the console, a command line user interface. A client-server version of the interface based on sockets is also available.
+    \item[loader] contains the tool responsible for loading an application in the system program memory.
+    \item[manager] contains the class that manages the components of ReSP and takes care of connecting them.
+    \item[power] contains a stub of a power analysis tool (still under development).
+    \item[utils] contains a series of utility functions used throughout the whole system.
+  \end{description}
+  \item[tools] contains the tools which may be useful to ReSP, but which are not necessary:
+  \begin{description}
+    \item[client] is a simple command line client used to remotely command the ReSP simulator (not maintained).
+    \item[waf] contains compilation related tools: this includes the wrapper generator (for automatically creating Python wrappers around C++ objects), the doxygen documentation extractor, etc.
+  \end{description}
+\end{description}
+
+\section{Using ReSP}
+\label{general:using}
+%\paragraph\indent How to use the ReSP simulator is presented here. First, the basic simulation commands are described. Then, the specification of a complex architecture using the most of the ReSP features is commented in details; the user can start from this specification to describe his custom architectures. Finally, the sevaral simulation modes that can be executed by speci
+
+%\subsection{Basic Simulation Commands}
+\paragraph\indent The simulator is started by executing the \texttt{./startSim.sh} command into the ReSP main folder. The simulator console that shows up is a slightly modified Python Shell; thus, it is possible to execute all the Python commands plus further specific commands defined in the simulator. For this reason, to be able to use ReSP, it is necessary to have a basic knowledge of the Python language. The console supports the command autocompletion by means of the \texttt{TAB} key, the browsing of the command history by means of the arrow keys and the search on the command history by means of the key combination \texttt{CTRL+R}.
+
+\indent In order to instantiate a SystemC component, it is necessary to call the specific constructor and to assign the returned object to a reference. For instance, the following two commands instantiate a \texttt{testMaster} component and a \texttt{testSlave} one:
+
+\scriptsize
+\begin{verbatim}
+  instMaster = testMaster_wrapper.testMaster('master')
+  instSlave = testSlave_wrapper.testSlave('slave')
+\end{verbatim}
+\normalsize
+
+Do note that each component class contained in the ReSP repository is included in a module during the generation of Python wrappers for the C++ code. For instance, the \texttt{testMaster} component class is included in the \texttt{testMaster\_wrapper} module. A full list of components and their wrappers can be obtained by pushing the Python \texttt{dir()} command, or by invoking the \texttt{listComponents()} command, or by browsing the \texttt{components} folder.
+
+\indent Since all the C++ stuff is fully integrated into the Python Shell, it can be completely managed as any other Python object. Thus, for instance, issuing the \texttt{dir(instMaster)} command returns the list of public attributes and methods contained in that specific object; in this way, it is possible to know that, for example, the component has an attribute \texttt{count} and an initiator TLM port named \texttt{initSocket}. In addition, it is also possible to access the attributes and launch the methods. The next lines, issued in the console, show how it is possible to read and to write the content of the \texttt{count} attribute:
+
+\scriptsize
+\begin{verbatim}
+  print str(instMaster.count)
+  instMaster.count = 4
+\end{verbatim}
+\normalsize
+
+\indent The instantiated components can be interconnected by means of the \linebreak \texttt{connectPorts} command: this command acts on the TLM ports declared inside the SystemC components. The parameters required by the command are: a reference of the master component, a reference to the TLM initiator port of the master component, a reference to the slave component and a reference to the TLM target port of the slave component. For example, to interconnect the two components previously instantiated, the following command needs to be executed:
+
+\scriptsize
+\begin{verbatim}
+  connectPorts(instMaster, instMaster.initSocket, instSlave, instSlave.targetSocket)
+\end{verbatim}
+\normalsize
+
+Please remember that the explicit call of the \texttt{bind} method exported by the TLM interface is deprecated, because it doesn't allow the simulator to keep track of the specified connections. After the connection, it is possible to show a graphical representation of the intantiated architecture by issuing the \texttt{showArchitecture()} command. It is worth noting that all the commands for the management of the architecture (\texttt{connectPorts}, \texttt{showArchitecture()} and many others) are defined as methods of the \texttt{manager} object always present in the ReSP console; refer to that \texttt{manager} for further features for the architecture management.
+
+\indent Now it is time to start the simulation; four main commands are used to control the SystemC simulation kernel:
+\begin{itemize}
+  \item \texttt{run\_simulation(n)}: it is used to start (or resume) simulation for \emph{n} nanoseconds. If \emph{n} is omitted the simulation runs until the end. Do note that the execution of the command is non-blocking: the command releases immediately the console prompt even if the simulation is still running. The simulation will halt after the execution of the specified time period or until the end of the simulation is reached (some component has called the SystemC \texttt{sc\_stop()} method). In the first case, a specific message (\texttt{Simulation Paused!}) is shown at the end of the simulated time period; in the latter, the final simulation statistics are displayed (see the last part of Section~\ref{general:arch}).
+  \item \texttt{pause\_simulation()}: pauses the simulation. It can be issued also with the \texttt{CTRL+C} key combination. It can then be resumed with the \texttt{run\_simulation(n)} command.
+  \item \texttt{stop\_simulation()}: stops the simulation (it actually calls the \texttt{sc\_stop} method). After this method is called, it is not possible to resume the current execution and a simulator reset is necessary to perform another simulation. Do note that it is not allowed to use \texttt{stop\_simulation()} command in an architecture file (it is allowed in case of batch simulation; refer to the next section).
+  \item \texttt{reset()}: stops the simulation, if running, and deletes all the stuff instantiated for the current simulation. After a reset, it is possible to instantiate a new architecture and to start a new simulation. 
+\end{itemize}
+
+\indent Do note, if an exception is thrown during the simulation by a SystemC component after a critical error, the simulator cannot be forced to continue or restarted any more; however, it is still possible to use the console, and thus, if necessary, to analyze the components' state in order to understand the causes of the error. In order to execute another simulation, ReSP needs to be quit.
+
+\indent The architecture to be simulated can also be described in a Python script file. In this case, the architecture can be loaded by issuing the \texttt{load\_architecture()} command, requiring as parameter the name (and the path) of the file to be loaded. For instance, the architecture previously instantiated is also specified in the \texttt{architectures/test/test\_arch.py} file, and can be loaded by issuing the following command:
+
+\scriptsize
+\begin{verbatim}
+  load_architecture('architectures/test/test_arch.py')
+\end{verbatim}
+\normalsize
+
+Since the \texttt{run\_simulation(n)} command is non-blocking, it is forbidden to specify any other command in the architecture file after the \texttt{run\_simulation(n)} command; such command would be executed immediately after the beginning of the simulation, resulting into an incorrect behavior. To reload the same architecture after a \texttt{reset()}, it is possible to use the \texttt{reload\_architecture()} command.
+
+\indent It is possible to obtain further information on the available commands by issuing \texttt{show\_commands()} or \texttt{dir()} on the console. At the end, the simulator can be quit by using the \texttt{exit()} command or the \texttt{CTRL+D} shortcut.
+
+\section{Specifying a Complex Architecture}
+\label{general:arch}
+\paragraph\indent This section analyzes an example specification for a complex multi-processor architecture. The entire example is contained in the \texttt{architectures/ test/test\_coherent\_caches.py} file.
+
+\indent The description starts with the assignment of the several parameters of the hardware components such as the processor frequency and type, the characteristics of the memory system, and the information about the interconnection layer. All these parameters will be used later during the components' instantiation and setup.
+
+\scriptsize
+\begin{verbatim}
+  ###### GENERAL PARAMETERS #####
+  PROCESSOR_FREQUENCY = 1000        # MHz
+  PROCESSOR_NUMBER  = 4             #
+  try:
+    PROCESSOR_NAMESPACE
+  except:
+    PROCESSOR_NAMESPACE = arm7tdmi_funcLT_wrapper.Processor_arm7tdmi_funclt
+
+  # Memory/bus
+  MEMORY_SIZE        = 32              # MBytes
+  MEM_LATENCY        = 10.0            # ns
+  BUS_ACTIVE         = True
+  BUS_LATENCY        = 10.0            # ns
+  DATA_CACHE_ACTIVE  = True
+  INSTR_CACHE_ACTIVE = True
+  CACHE_SIZE         = 8               # MBytes
+  CACHE_BLOCK_SIZE   = 32              # words
+  CACHE_WAYS         = 8
+  CACHE_REM_POLICY   = CacheLT32.LRU
+  CACHE_WR_POLICY    = CacheLT32.BACK
+  CACHE_READ_LAT     = 1.0             # ns
+  CACHE_WRITE_LAT    = 1.0             # ns
+  CACHE_LOAD_LAT     = 1.0             # ns
+  CACHE_STORE_LAT    = 1.0             # ns
+  CACHE_REMOVE_LAT   = 1.0             # ns
+\end{verbatim}
+\normalsize
+
+\indent Then, the application to be run inside the simulation and its input parameters are specified (this operation can be substituted by the \texttt{--custom-parameters} command line option described in section~\ref{general:modes}). The software executable is automatically retrieved if placed into the software build directory or into the ReSP main folder.
+
+\scriptsize
+\begin{verbatim}
+  # Software
+  try:
+    SOFTWARE
+  except:
+    SOFTWARE = 'c_pi'
+
+  if SOFTWARE:
+    try:
+      ARGS
+    except:
+      ARGS = []
+      ARGS.append('c_pi')
+
+  # Find the specified software in the _build_ directory if not an absolute path
+  if not SOFTWARE or not os.path.isfile(SOFTWARE):
+    SOFTWARE = findInFolder(SOFTWARE, 'software/build/arm/')
+    if not SOFTWARE:
+        raise Exception('Unable to find program')
+\end{verbatim}
+\normalsize
+
+\indent Now, the processors and the memory are instantiated and configured with the parameters specified above.
+
+\scriptsize
+\begin{verbatim}
+  ###### PROCESSOR INSTANTIATION #####
+  processors = []
+  latency = scwrapper.sc_time(float(1000)/float(PROCESSOR_FREQUENCY),  scwrapper.SC_NS)
+  for i in range(0, PROCESSOR_NUMBER):
+    processors.append(PROCESSOR_NAMESPACE('processor_' + str(i), latency))
+
+  ##### MEMORY INSTANTIATION #####
+  memorySize = 1024*1024*MEMORY_SIZE
+  latencyMem = scwrapper.sc_time(MEM_LATENCY, scwrapper.SC_NS)
+  mem = MemoryLT32.MemoryLT32('mem', memorySize, latencyMem)
+\end{verbatim}
+\normalsize
+
+\indent If required, the bus is instantiated too. Moreover, it is connected to the memory and the position of the main memory in the address space is bound to the first slot of the bus multi-initiator TLM socket. Keep in mind that the bus binding is completely positional: this first request binds a set of address to the first socket; the next one will bind another set to the second socket; \ldots; the \emph{n}-th request will bind a set of addresses to the \emph{n}-th slot of the multiple socket. So, remember to issue \texttt{addBinding} immediately after you connect a new slave component to the bus.
+
+\scriptsize
+\begin{verbatim}
+  if BUS_ACTIVE:
+    latencyBus = scwrapper.sc_time(BUS_LATENCY, scwrapper.SC_NS)
+    bus = BusLT32.BusLT32('bus',2*PROCESSOR_NUMBER,latencyBus)
+    connectPorts(bus, bus.initiatorSocket, mem, mem.targetSocket)
+    # Add memory mapping
+    bus.addBinding("mem",0x0,memorySize)
+  else:
+    raise Exception('Multi-core systems need to have an interconnection layer between\
+    processors and memory')
+\end{verbatim}
+\normalsize
+
+\indent If the caches are enabled, they need to be instantiated and interconnected to the other components. The model required for a multi-processor system is a distributed cache memory system with a shared directory devoted to the cache coherency management. Moreover, do note that according to the Harvard architecture, TRAP processors are provided with two ports: an instruction port and data port.
+
+\scriptsize
+\begin{verbatim}
+  if DATA_CACHE_ACTIVE or INSTR_CACHE_ACTIVE:
+    directory = DirectoryLT32.DirectoryLT32('dir',2*PROCESSOR_NUMBER)
+
+  ##### CACHE, BUS, AND MEMORY CONNECTIONS #####
+  dataCaches = []
+  instrCaches = []
+  for i in range(0, PROCESSOR_NUMBER):
+    if DATA_CACHE_ACTIVE:
+      dataCaches.append(CoherentCacheLT32.CoherentCacheLT32('dataCache_' + str(i), \
+        CACHE_SIZE*1024*1024, memorySize, CACHE_WAYS, CACHE_BLOCK_SIZE, \
+        CACHE_REM_POLICY, CACHE_WR_POLICY))
+      dataCaches[i].setReadLatency(scwrapper.sc_time(CACHE_READ_LAT,scwrapper.SC_NS))
+      dataCaches[i].setWriteLatency(scwrapper.sc_time(CACHE_WRITE_LAT,scwrapper.SC_NS))
+      dataCaches[i].setLoadLatency(scwrapper.sc_time(CACHE_LOAD_LAT,scwrapper.SC_NS))
+      dataCaches[i].setStoreLatency(scwrapper.sc_time(CACHE_STORE_LAT,scwrapper.SC_NS))
+      dataCaches[i].setRemoveLatency(scwrapper.sc_time(CACHE_REMOVE_LAT,scwrapper.SC_NS))
+      connectPorts(processors[i], processors[i].dataMem.initSocket, dataCaches[i], \
+        dataCaches[i].targetSocket)
+      connectPorts(dataCaches[i], dataCaches[i].dirInitSocket, directory, \
+        directory.targetSocket)
+      connectPorts(directory, directory.initSocket, dataCaches[i], \
+        dataCaches[i].dirTargetSocket)
+      connectPorts(dataCaches[i], dataCaches[i].initSocket, bus, bus.targetSocket)
+    else:
+      connectPorts(processors[i], processors[i].dataMem.initSocket, bus, \
+        bus.targetSocket)
+
+    if INSTR_CACHE_ACTIVE:
+      instrCaches.append(CoherentCacheLT32.CoherentCacheLT32('instrCache_' + str(i), \
+        CACHE_SIZE*1024*1024, memorySize, CACHE_WAYS, CACHE_BLOCK_SIZE, \
+        CACHE_REM_POLICY, CACHE_WR_POLICY))
+      instrCaches[i].setReadLatency(scwrapper.sc_time(CACHE_READ_LAT,scwrapper.SC_NS))
+      instrCaches[i].setWriteLatency(scwrapper.sc_time(CACHE_WRITE_LAT,scwrapper.SC_NS))
+      instrCaches[i].setLoadLatency(scwrapper.sc_time(CACHE_LOAD_LAT,scwrapper.SC_NS))
+      instrCaches[i].setStoreLatency(scwrapper.sc_time(CACHE_STORE_LAT,scwrapper.SC_NS))
+      instrCaches[i].setRemoveLatency(scwrapper.sc_time(CACHE_REMOVE_LAT,scwrapper.SC_NS))
+      connectPorts(processors[i], processors[i].instrMem.initSocket, instrCaches[i], \
+        instrCaches[i].targetSocket)
+      connectPorts(instrCaches[i], instrCaches[i].dirInitSocket, directory, \
+        directory.targetSocket)
+      connectPorts(directory, directory.initSocket, instrCaches[i], \
+        instrCaches[i].dirTargetSocket)
+      connectPorts(instrCaches[i], instrCaches[i].initSocket, bus, bus.targetSocket)
+    else:
+      connectPorts(processors[i], processors[i].instrMem.initSocket, bus, \
+        bus.targetSocket)
+\end{verbatim}
+\normalsize
+
+\indent After the instantiation of the overall architecture, the software executable is loaded in the memory and the processors' interfaces are accordingly set up.
+
+\scriptsize
+\begin{verbatim}
+  ##### LOAD SOFTWARE #####
+
+  import os
+  if not os.path.exists(SOFTWARE):
+    raise Exception('Error, ' + str(SOFTWARE) + ' does not exists')
+
+  loader = loader_wrapper.Loader(SOFTWARE)
+  #Initialization of the processors and loading in memory of the application program
+  print "Writing memory"
+  loader.loadProgInMemory(mem)
+
+  print "Setting up CPU registers"
+  for i in range(0, PROCESSOR_NUMBER):
+    processors[i].ENTRY_POINT = loader.getProgStart()
+    processors[i].PROGRAM_LIMIT = loader.getProgDim() + loader.getDataStart()
+    processors[i].PROGRAM_START = loader.getDataStart()
+    processors[i].resetOp();
+    # Set the processor ID
+    processors[i].MP_ID.immediateWrite(i)
+\end{verbatim}
+\normalsize
+
+\indent Thus, the operating system and POSIX thread concurrency emulation facilities are enabled. They are enabled by means of two tools provided in the TRAP library that need to be instantiated and registered in the processors' interfaces. A further description of these tools is given in section~\ref{general:advanced:tools}.
+
+\scriptsize
+\begin{verbatim}
+  OS_EMULATION = True     # True or False
+
+  # Now I initialize the OS emulator
+  print "Setting up OS Emulation"
+  tools = list()
+  if OS_EMULATION:
+    trapwrapper.OSEmulatorBase.set_program_args(ARGS)
+    for i in range(0, PROCESSOR_NUMBER):
+        curEmu = trapwrapper.OSEmulator32(processors[i].getInterface())
+        curEmu.initSysCalls(SOFTWARE)
+        processors[i].toolManager.addTool(curEmu)
+        ##### CONCURRENCY MANAGEMENT #####
+        concurrentEmu = cm_wrapper.ConcurrencyEmulator32(processors[i].getInterface(), \
+            memorySize)
+        concurrentEmu.initSysCalls(SOFTWARE,True)
+        processors[i].toolManager.addTool(concurrentEmu)
+        tools.append(curEmu)
+        tools.append(concurrentEmu)
+    # OpenMP Support
+    trapwrapper.OSEmulatorBase.set_environ('OMP_NUM_THREADS', str(PROCESSOR_NUMBER)) 
+\end{verbatim}
+\normalsize
+
+\indent The redefinition of the \texttt{statsPrinter()} function allows to customize the statistics printed at the end of the simulation:
+
+\scriptsize
+\begin{verbatim}
+  # Modified stats auto-printer
+  def statsPrinter():
+    print '\x1b[34m\x1b[1mReal Elapsed Time (seconds):\x1b[0m'
+    print '\x1b[31m' + str(controller.print_real_time()) + '\x1b[0m'
+    print '\x1b[34m\x1b[1mSimulated Elapsed Time (nano-seconds):\x1b[0m'
+    print '\x1b[31m' + str(controller.get_simulated_time()) + '\x1b[0m'
+\end{verbatim}
+\normalsize
+
+\indent Finally, the simulation is executed. Remember, it is forbidden to put any other command after the \texttt{run\_simulation()} into the architecture files. Further commands have to be issued directly into the ReSP console.
+
+\scriptsize
+\begin{verbatim}
+  # We can finally run the simulation
+  run_simulation()
+\end{verbatim}
+\normalsize
+
+\section{Command Line Options and Execution Modes}
+\label{general:modes}
+\paragraph\indent When launching ReSP, you can specify several command line options to be used; they offer different advanced simulation modes. Here is a list of the most relevant options supported by \texttt{startSim.sh}:
+\begin{itemize}
+  \item \texttt{--architecture ARCHITECTURE.py} or \texttt{-a ARCHITECTURE.py}: automatically loads the specified architecture inside the simulator (the relative path of the architecture file should be specified). For instance, to load architecture \texttt{architectures/test\_arch.py} you should issue the following command into your system shell:
+  \begin{verbatim}
+  ./startSim.sh -a architectures/test_arch.py
+  \end{verbatim}
+  \item \texttt{--silent}: executes the simulation in silent mode. This means that no interactive console is fired-up and the simulator exits as soon as the simulation is ended. In silent mode the \texttt{run\_simulation()} command is blocking and the \texttt{pause\_simulation()} and few other commands specified lated are disabled. This option can be specified only in conjunction with \texttt{-a} option. After loading the architecture the simulation is completely executed. If it is desired to issue specific commands, to inspect the components, or to somehow modify the execution flow, you should include the specific instructions inside the architecture file or in a batch file (refer to the next option), since the simulation process cannot be interrupted by any user interaction.
+  \item \texttt{--batch BATCH\_COMMANDS.py} or \texttt{-b BATCH\_COMMANDS.py}: executes a Python script containing some batch actions to be executed after the architecture file is loaded. This option can be specified only in conjunction with \texttt{-a} and \texttt{--silent} options.
+  \item \texttt{--custom-parameters COMMAND} or \texttt{-p COMMAND}: a Python instruction can be used to set up some custom parameters before the architecture file is loaded. The syntax of the command must be in the form \texttt{PAR1=VALUE1;PAR2=VALUE2} (i.e. without spaces). For instance it is possible to specify the name of the software to be loaded in the test architecture of the ARM7 processor by means of the following command:
+  \begin{verbatim}
+  ./startSim.sh -a architectures/test/test_arm7.py 
+    -p SOFTWARE='des';ARGS=[]
+  \end{verbatim}
+  Do note that it is necessary to specify the escape character \textbackslash before the character \texttt{'}. The options accepts also the name of a file containing the several custom parameters. Moreover, after a reset of the simulator, the custom parameters are automatically reloaded with the \texttt{reload\_architecture()} command. If not required, it is necessary to pass a \texttt{False} value as parameter to that command.
+  \item \texttt{--server SERVER\_PORT} or \texttt{-s SERVER\_PORT}: starts ReSP in server mode. The port on which the server listens for connection requests has to be specified. Currently a simple command line client is provided; it can be launched by running the \texttt{python src/hci/remote\_console.py} command (\texttt{--help} shows the available command line options).
+  \item \texttt{--help} or \texttt{-h}: shows all the supported command line parameters.
+\end{itemize}
+
+\section{Advanced Features}
+\label{general:advanced}
+\paragraph\indent Besides the basic aspects described in the previous sections of this chapter, ReSP provides advanced features offering the capability to implement additional tools for the simulation and analysis of complex multiprocessor systems. Some of these capabilities are quickly introduced in the following sections; for the users interested in a more detailed description of these advanced features, it is suggested an analysis of the commented code of the simulator.
+
+\subsection{SystemC Callbacks}
+\label{general:advanced:breakpoints}
+\paragraph\indent In ReSP, the basic SystemC simulation kernel has been enhanced by means of an advanced simulation controller that offers also the possibility to manage specific callback functions registered on some particular event. Thus, when the event is triggered, the registered callbacks are executed. The simulation controller supports four different types of callbacks:
+\begin{itemize}
+\item \texttt{EosCallback}: they are triggered at the end of the simulation, when the \texttt{sc\_stop()} function is called.
+\item \texttt{PauseCallback}: they are triggered when the simulation enters in the pause state. They are supported only in the interactive simulation mode.  
+\item \texttt{ErrorCallback}: they are triggered when a simulation error occurs and some component has thrown a C++ exception.
+\item \texttt{DeltaCallback}: they are triggered after each simulation delta cycle.
+\end{itemize}
+
+\indent Thus, it is possible to implement new specific analysis tools by using the SystemC callbacks. The desired callback is implemented by extending the corresponding basic callback class, defined in \texttt{src/controller/callback.hpp} file. In particular, each basic class contains the constructor and the destructor used to set-up and tear down the callback, and a functor that is called on the event occurrence. The new callback class can be implemented both in Python and in C++: in the first case it is enough to import the module containing the class in the ReSP console; in the second case, the C++ class needs to be hooked to the compilation process (refer to Chapter \ref{describe} for further details).
+
+\indent Let's consider an example for explaining how to define and use new callbacks. The \texttt{src/controller/breakpoints.py} file defines a dummy breakpoint mechanism offering the possibility to pause the simulation when a specified component attribute assumes a specified value. The mechanism implemented in that file makes use of a new callback \texttt{GenericBreakpoint} that is obtained as an extension of the \texttt{DeltaCallback}. In particular, the \texttt{GenericBreakpoint} class constructor requires the reference to the component object, the name of the attribute to be monitored and the object representing the condition to be evaluated; this last one is based on a set of comparator classes defined in the same file.
+
+\indent The file contains also the \texttt{register\_breakpoint()} function that instantiates the callback and registers it in the controller; it is performed by means of the following two instructions:
+
+\scriptsize
+\begin{verbatim}
+  gb = GenericBreakpoint( object, attribute, checker )
+  sc_controller_wrapper.registerDeltaCallback( gb )
+\end{verbatim}
+\normalsize
+
+\indent Do note that every callback instantiated in the Python console has always to be assigned to a Python reference; otherwise, the Python garbage collector will delete the object and it will cause a segmentation fault at the subsequent execution of the callback. For this reason, in the source file, all \texttt{GenericBreakpoint} objects are stored in the \texttt{breaks} list. 
+
+\indent An example of how to use the breakpoints is shown in the following set of instructions that should be issued directly in the ReSP console:
+
+\scriptsize
+\begin{verbatim}
+  load_architecture('architectures/test/test_arch.py')
+  import breakpoints
+  condition = breakpoints.equals(5)
+  breakpoints.register_breakpoint(instMaster,'count',condition)
+  run_simulation()
+\end{verbatim}
+\normalsize
+
+This example executes a simple system based on the two test master and slave components; a breakpoint is set to pause the simulation after the master has sent five characters.
+The example is also contained in the \texttt{architectures/test/test\_breakpoints.py} architecture file.
+
+\indent Another example of use of the callback is contained in the \texttt{src/print\_stats.py} file where the mechanism for printing final simulation statistics is defined by extending the \texttt{EosCallback} class. This special callback is automatically registered by the tool in the \texttt{src/respkernel.py} file.\\
+\indent You should always keep in mind that the implementation of \texttt{DeltaCallback} in Python causes a dramatic degradation of the performance since the execution of interpreted scripting code is considerably slower than C++ compiled one.
+
+\subsection{TRAP Tools}
+\label{general:advanced:tools}
+\paragraph\indent A callback mechanism similar to the one introduced in the last section is useful also for a different purpose: using the features introduced by the BFD tool, it is possible to analyze the code of the simulated application and to trigger the calls to the routines executed on the ISSs generated with TRAP. Whenever one of these executions is triggered, it is possible to issue a new kind of callback, named \texttt{SyscallCB}, which could completely replace the original routine executed on the processor model. This kind of callback mechanism is implemented through some components named \emph{TRAP tools}. A tool is a particular type of class which implements a standard interface used inside the Instruction Set Simulators generated by TRAP: the most important methods required by the interface are the following:
+\begin{description}
+  \item[register\_syscall] has the purpose to bind a \texttt{SyscallCB} to a specific function name.
+  \item[initSysCalls] requires a reference to the simulated software, where it searches and keeps trace of the position of all the routines registered through the previous method.
+  \item[newIssue] is a method called by the ISSs for every instruction simulated. It requires the current Program Counter as a parameter, and if it matches the position of a registered callback, the corresponding \texttt{SyscallCB} is issued instead of the regular processor instruction.
+\end{description}
+\indent Furthermore, the tool constructor requires as a parameter a reference to the interface of the processor executing the code. Thanks to this reference, the \texttt{SyscallCB} becomes able to access and manipulate different resources of a processor. This is a key functionality if we want to access the parameters of the internally simulated routines.\\
+\indent An example of how useful these tools can be is given by the Operating System Emulator instantiated in section~\ref{general:arch}: this emulator is able to intercept all the simulated routines belonging to the operating system level (such as open, read, write, chown, etc.), and to emulate them by issuing the corresponding routine on the host system instead of the simulator. For instance, if we want to open a file inside our simulation, the OS Emulator tool reassigns the job to the operating system layer of our Linux distribution, increasing the simulation speed for our application (there is no more need of loading a OS image inside the simulation platform). This kind of approach requires that every callback is declared with a rounded latency which is used to correctly model the time elapsed in the simulation. The following piece of code is an example of how a \texttt{SyscallCB} for emulating the \texttt{open} system call looks like:
+
+\scriptsize
+\begin{verbatim}
+  template<class wordSize> class openSysCall : public SyscallCB<wordSize>{
+    public:
+    openSysCall(ABIIf<wordSize> &processorInstance, sc_time latency = SC_ZERO_TIME):
+        SyscallCB<wordSize>(processorInstance, latency){}
+
+    bool operator()(){
+      this->processorInstance.preCall();
+      //Lets get the system call arguments
+      std::vector<wordSize> callArgs = this->processorInstance.readArgs():
+      //Lets read the name of the file to be opened
+      char pathname[256];
+      for(int i = 0; i < 256; i++){
+        pathname[i] = (char)this->processorInstance.readCharMem(callArgs[0] + i);
+        if(pathname[i] == '\x0') break;
+      }
+      int flags = callArgs[1];
+      OSEmulatorBase::correct_flags(flags);
+      int mode = callArgs[2];
+      #ifdef __GNUC__
+      int ret = ::open(pathname, flags, mode);
+      #else
+      int ret = ::_open(pathname, flags, mode);
+      #endif
+      this->processorInstance.setRetVal(ret);
+      this->processorInstance.returnFromCall();
+      this->processorInstance.postCall();
+
+      if(this->latency.to_double() > 0)
+        wait(this->latency);
+
+      return true;
+    }
+  };
+\end{verbatim}
+\normalsize
+The latency and the processor interface are passed to the callback constructor by the \texttt{initSysCalls} method offered by the TRAP tool interface.
+
+\indent Other examples of tools are the Concurrency Emulator, used to emulate multi-threaded applications, or the Reconfiguration Emulator introduced in~\ref{rec:regist}, used to emulate reconfigurable applications. The same routine could be intercepted by many different tools: the only condition required for this to happen is that the tool is registered inside the \texttt{toolManager} provided by every ISS. Thus, the standard sequence of commands necessary to instantiate a tool is the following:
+
+\scriptsize
+\begin{verbatim}
+  tools = list()
+  curEmu = myTool32(processors[i].getInterface())
+  curEmu.initSysCalls(SOFTWARE)
+  processors[i].toolManager.addTool(curEmu)
+  tools.append(curEmu)
+\end{verbatim}
+\normalsize
+Two important considerations should be made:
+\begin{inparaenum}
+  \item different processors require different instances of the same tool, and
+  \item an instantiated tool should be added to a list in order to keep it alive and to avoid its elimination by the Python garbage collector.
+\end{inparaenum}
+
+\indent If the user wants to build its own tool, the suggestion is to follow the general structure given in the OS Emulator.

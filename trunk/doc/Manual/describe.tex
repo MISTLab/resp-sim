@@ -1,0 +1,132 @@
+\paragraph\indent This chapter describes how to write new component models or new analysis tools suitable to be used with ReSP. Actually, no great restrictions are placed on SystemC/TLM components or analysis tools: this is possible thanks to \textit{reflective} capabilities of ReSP and to the wrapper generation tool-chain that automatically hook the new C++ classes into the ReSP environment.
+
+\section{Writing the Component or the Tool}
+\paragraph\indent A component in ReSP is a SystemC module with an interface based on the TLM library (TLM version 2.0 must be used). Any type of TLM bus width can be used in theory, but part of the components already in the repository, and in particular the TRAP processors, use a fixed 32-bit bus width.
+
+\indent As discussed in the previous chapters, several classes of tools can be used for analyzing the simulated architecture. Tools can be written either in Python and in C++. The first ones are automatically integrated in the ReSP environment, while the latter require to be hooked to the compilation process similarly to the components. Generally, there is no restriction in the implementation of the C++ tools.
+
+\section{Hook it into ReSP}
+\paragraph\indent The files containing the source code of the new component have to be placed in a new folder inside the \texttt{components} folder or in one of its sub-folders (tools can be placed also in other folders according to their functionality). Then, it is simply necessary to hook it to the compilation process: for this purpose, \textit{waf} uses files called \texttt{wscript} that are described in Python language. Let's suppose in the following discussion that the \texttt{BusLT} component implemented in the \texttt{BusLT.hpp} file and stored in the \texttt{simpleBus} folder has to be integrated in the ReSP environment.
+
+\indent First of all, the \texttt{wscript} file in the super-folder \texttt{component/interconnections} has to be modified by adding the name of the new folder \texttt{simpleBus} to the list of sub-directories belonging to the compilation process, as shown below. 
+
+\scriptsize
+\begin{verbatim}
+  #! /usr/bin/env python
+  def build(bld):
+    bld.add_subdirs('simpleBus simpleNoc simpleProbe')
+\end{verbatim}
+\normalsize
+
+\indent Second, it is necessary to trigger the compilation process of the new component by specifying a new \texttt{wscript} file in the \texttt{simpleBus} folder. Since the component is implemented only with \texttt{.hpp} files, the \texttt{wscript} will only specify how to generate the Python wrapper, and no compilation of C++ files is required. The \texttt{wscript} starts by specifying that the task to be performed is devoted to the wrapper generation around the \texttt{BusLT.hpp} file and the resulting shared library will be called \texttt{BusLT32}:
+
+\scriptsize
+\begin{verbatim}
+def build(bld):
+    obj = bld.new_task_gen('pypp')
+    obj.source ='''
+        BusLT.hpp
+    '''
+    obj.target='BusLT32';
+\end{verbatim}
+\normalsize
+
+\indent Then, the libraries (system-wide and local ones) and the headers required during the wrapper generation need to be specified:
+
+\scriptsize
+\begin{verbatim}
+  obj.uselib = 'BOOST BOOST_PYTHON TLM SYSTEMC_H'
+  obj.uselib_local = 'systemc utils'
+  obj.include = 'scwrapper tlmwrapper'
+\end{verbatim}
+\normalsize
+
+\indent The system-wide libraries and the headers are usually the ones listed above. The local libraries may change according to the specific requirement of the component to be wrapped; in particular, in this case the component requires the \texttt{utils} library which source code is stored in \texttt{src/utils} folder. Generally, the name of a required local library can be retrieved by the \texttt{wscript} file in the folder containing the source code of that library.
+
+\indent After this, it is necessary to specify what has to be wrapped. First, the name of the class to be wrapped is specified. Moreover, in case the class is a template, it is necessary to instantiate the template:
+
+\scriptsize
+\begin{verbatim}
+  obj.start_decls = 'BusLT'
+  obj.templates = ['BusLT<unsigned int>']
+\end{verbatim}
+\normalsize
+
+\indent Often the wrapping generation process is straightforward and does not create any problem; unfortunately, if the new component is particularly complicated, the wrapping generation process may fail and generate compilation errors, or successive run-time errors may occur when launching the simulator. Thus, in these situations it may be necessary to give some help to the wrapper creation tool by means of some special actions. In particular, sometimes it may be not necessary to make all of the class methods and attributes visible from Python; in fact, it is possible to exclude some of them. Vice-versa, it is possible to specify that all the content of a class must be excluded and, afterwards, select some specific method or attribute to be re-included. Do note that class private methods and attributes cannot be included in the wrapper. The following instructions show how, in the case of the \texttt{BusLT}, the \texttt{decode} and \texttt{setEndianess} are excluded while the inclusion of the \texttt{numAccesses} and \texttt{numWords} attributes is forced. Moreover, it is possible to note that the name of the \texttt{BusLT} class is changed in \texttt{BusLT32} by means of an alias to hide the instantiation of the template.
+
+\scriptsize
+\begin{verbatim}
+    obj.custom_code = """
+  cls = mb.global_ns.classes(lambda decl : decl.name.startswith('BusLT') )
+  cls.include()
+  for i in cls:
+    i.alias = 'BusLT32'
+    i.variable('numAccesses').include()
+    i.variable('numWords').include()
+    try:
+      i.member_function('decode').exclude()
+    except:
+      pass
+    try:
+      i.member_function('setEndianess').exclude()
+    except:
+      pass
+  """
+\end{verbatim}
+\normalsize
+
+\indent Another critical situation is related to the use of pointers and references in the function parameters and return values. In fact, Python does not support pointers; thus, it is necessary to specify how the wrappers have to deal with them. This is performed by specifying the call policies. Let's consider the wrapping policy of the ARM7 processor contained in the \texttt{components/\linebreak processors/arm7tdmi/funcLT} folder; the class interface contains a method \texttt{getInterface} returning a reference of the object; thus, the following actions need to be specified to tell the wrapper generation tools how to manage it as a return value:
+
+\scriptsize
+\begin{verbatim}
+    obj.custom_code = """
+  mb.global_ns.class_('Processor_arm7tdmi_funclt').member_function('getInterface').call_policies \
+      = call_policies.return_value_policy( call_policies.reference_existing_object )
+  """
+\end{verbatim}
+\normalsize
+
+\indent Finally, class attributes implemented by means of pointers have to be excluded by the wrapper since Python is not able to manage them. Do note that all the special actions have to be included in a single Python string and to be assigned to the \texttt{obj.custom code} variable. For more help you can look at the \texttt{wscript} files of the components already present in ReSP, and also at the \texttt{py++} and \texttt{Boost.Python} website.
+
+\paragraph\indent A component can be implemented also across a couple of \texttt{.hpp} and \texttt{.cpp} files. In this scenario, it is necessary to first compile the \texttt{.cpp} files, and, then, to generate the Python wrappers around the \texttt{.hpp}. Note that it is not possible to generate wrappers around template classes implemented with \texttt{.cpp} files: in this case, even if the compilation process ends successfully, a runtime error will occur when the simulator is started.
+
+\indent An example of a component implemented with a mix of \texttt{.hpp} and \texttt{.cpp} files is the \texttt{testSlave} stored in the \texttt{components/testComponents} folder. First the \texttt{.cpp} files are compiled as follows:
+
+\scriptsize
+\begin{verbatim}
+  #! /usr/bin/env python
+
+  def build(bld):
+    # Generation of the testSlave library
+    obj = bld.new_task_gen('cxx', 'cshlib')
+    obj.source ='''
+      testSlave.cpp
+    '''
+    obj.target = 'testSlave'
+    obj.uselib = 'SYSTEMC_H TLM BOOST'
+    obj.uselib_local = 'systemc'
+\end{verbatim}
+\normalsize
+Then, the wrapper is created as described above:
+
+\scriptsize
+\begin{verbatim}
+    # Generation of the testSlave wrapper extension
+    obj = bld.new_task_gen('pypp')
+    obj.source ='''
+      testSlave.hpp
+    '''
+    obj.target = 'testSlave_wrapper'
+    obj.uselib = 'SYSTEMC_H TLM BOOST BOOST_PYTHON'
+    obj.uselib_local = 'systemc testSlave'
+    obj.include = 'scwrapper tlmwrapper'
+    obj.start_decls = 'testSlave'
+    obj.custom_code = """
+  # Exclude protected members
+  cls = mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) , allow_empty=True )
+  if cls: cls.exclude()
+  """
+\end{verbatim}
+\normalsize
+
+\indent Do note, the \texttt{testSlave} shared library generated during the first step is included in the list of the required local library in the second step. Even in this case, you can look for more help at the \texttt{wscript} files of the components already present in ReSP, and also at the \texttt{py++} and \texttt{Boost.Python} website. 

@@ -1,0 +1,309 @@
+\paragraph\indent This chapter will describe how to use the capabilities of ReSP in order to describe a dynamic reconfigurable system. The first section will show how to set up the ReSP environment with the reconfiguration elements; the second section will outline the two methodologies for writing hardware-implemented functions, using Python or C++ language; then, the third section is going to describe how to register these functions in order to use the reconfigurable system. The content of this chapter is just a quick introduction to the use of these components; a detailed description of how the emulation mechanism works is given in~\cite{fossati_hlm}.
+
+\section{Setting up ReSP}
+\label{rec:setup}
+\paragraph\indent The elements used by the reconfiguration system are mainly two: a \textit{configuration engine}, and one (or more) \textit{eFPGAs}. The instantiation of these elements can be done directly in ReSP or, alternatively, in the architecture file, through these Python commands:
+
+\scriptsize
+\begin{verbatim}
+  ...
+  ##### RECONFIGURABLE COMPONENTS INSTANTIATION #####
+  cE = cE_wrapper.configEngine('cE',0x0,cE_wrapper.LRU)
+  cE.setRequestDelay(scwrapper.sc_time(3, scwrapper.SC_NS))
+  cE.setExecDelay(scwrapper.sc_time(3, scwrapper.SC_NS))
+  cE.setConfigDelay(scwrapper.sc_time(3, scwrapper.SC_NS))
+  cE.setRemoveDelay(scwrapper.sc_time(3, scwrapper.SC_NS))
+
+  #eFPGAs
+  eF = []
+  eF.append(eFPGA_wrapper.eFPGA('eF1',100,100,scwrapper.sc_time(1, scwrapper.SC_NS),1,1))
+  eF.append(eFPGA_wrapper.eFPGA('eF2',200,200,scwrapper.sc_time(2, scwrapper.SC_NS),2,2))
+  EFPGA_NUMBER = eF.__len__()
+  ...
+\end{verbatim}
+\normalsize
+A quick explanation of the characteristics of these elements:
+\begin{description}
+  \item[Configuration Engine] is the main element, which stores all the information of the reconfigurable system and takes care of the dynamic reconfiguration of the fabrics. It is defined by:
+  \begin{itemize}
+    \item a \textbf{name} ('cE' in the example);
+    \item the \textbf{address} of the first location where the bitstreams are stored (we're using only fake bitstreams, so any address from any memory is a valid parameter);
+    \item the \textbf{deletion algorithm} to be used when the fabrics are full (to be chosen between \textit{cE\_wrapper.FIFO}, \textit{cE\_wrapper.LRU}, and \textit{cE\_wrapper.RANDOM}).
+  \end{itemize}
+
+  \item[eFPGAs] are the reconfigurable fabrics, which are attached to (and managed by) the configuration engine. Each one of them stores information about the functions configured on it, in particular about the space occupation of these functions, in order to determine how much free space is available for new functions to be configured. They are defined by:
+  \begin{itemize}
+    \item a \textbf{name} ('eF\#' in the example);
+    \item a \textbf{width} and an \textbf{height}, expressed in terms of basic computation units (or cells);
+    \item the \textit{latency per word} \textbf{lw}, which is an \mbox{\textit{sc\_time}} parameter\footnote{Please note that the ReSP Python shell recognizes only nanoseconds as measuring unit of time, thus every value should be expressed through \textit{SC\_NS}.} indicating how much time is needed by this fabric to configure a single word;
+    \item the \textit{words per area} \textbf{wa}, which is an integer number defining this fabric's density of words in a single unit of area (chosen by the user, i.e. $mm^{2}$);
+    \item the \textit{cells per area} \textbf{ca}, which is an integer number defining this fabric's density of cells in a single unit of area (which should be the same used for wa, i.e. $mm^{2}$).
+  \end{itemize}
+\end{description}
+
+\indent Table~\ref{rec:efpgas} shows the original characteristics of 3 families of FPGAs, and the derived parameters to be used for the instantiation of 3 devices in our reconfigurable system, one for each considered family. In particular, our eFPGAs will have a single \emph{cell per unit of area} (in order to simplify the calculations), while timing (the \emph{latency per word}) and density (\emph{words per area}, where a word corresponds to 32 bits) are calculated using specific devices for each family (listed in the \texttt{Timing\slash Density} row of the table), using the following formulae:
+\begin{eqnarray*}
+  WordsPerArea = \dfrac{Full Bitstream Size \times 8}{32}/Capacity\\ \\
+  LatencyPerWord = \dfrac{Full Rec. Time}{Capacity}/WordsPerArea\\
+\end{eqnarray*}
+
+\indent The size parameters (\emph{Width} and \emph{Height}) are calculated in a simpler manner: given the capacity (i.e. number of basic cells) of a specific device of each family (listed in the \texttt{Space} row of the table), this number has been approximated and divided randomly into a horizontal and a vertical factor; multiplying together the horizontal factor (Width) and the vertical factor (Height) we can re-obtain the approximated number of basic cells in the device.
+
+\begin{table}[htbp]
+\caption{Some exaples of eFPGAs}
+\label{rec:efpgas}
+\begin{center}
+  \begin{tabular}{|p{0.25\textwidth}|p{0.25\textwidth}||p{0.25\textwidth}|p{0.25\textwidth}|}
+    \hline
+    %\multicolumn{1}{|c|}{} & \multicolumn{1}{|c|}{} & \multicolumn{1}{|c|}{} & \multicolumn{1}{|c|}{} \\
+    \small Family & \multicolumn{1}{|c|}{\large \textbf{Atmel}} &
+    \multicolumn{1}{|c|}{\large \textbf{Virtex}} & \multicolumn{1}{|c|}{\large \textbf{Altera}} \\
+    \hline
+    \small Basic Cell & \multicolumn{1}{|c|}{\small Cell} & \multicolumn{1}{|c|}{\small Logic Cell} & \multicolumn{1}{|c|}{\small Logic Element} \\
+    \small & \multicolumn{1}{|c|}{\small (4LUT-Based)} & \multicolumn{1}{|c|}{\small (4LUT-Based)} & \multicolumn{1}{|c|}{\small (4LUT-Based)} \\
+    \hline
+    \small Granularity & \multicolumn{1}{|c|}{\small Fine} & \multicolumn{1}{|c|}{\small Coarse} & \multicolumn{1}{|c|}{\small Coarse} \\
+    \hline
+    \small Timing\slash Density & \multicolumn{1}{|c|}{\textbf{AT40K05}} &
+    \multicolumn{1}{|c|}{\textbf{XCV300}} & \multicolumn{1}{|c|}{\textbf{E20K100}} \\
+    \hline
+    \small Full Bitstream Size & \multicolumn{1}{|c|}{\small \numprint{5263} byte} &
+    \multicolumn{1}{|c|}{\small \numprint{297860} byte} & \multicolumn{1}{|c|}{\small \numprint{125951} byte} \\
+    \hline
+    \small Full Rec. Time & \multicolumn{1}{|c|}{\small \numprint{5.263} \milli\second} &
+    \multicolumn{1}{|c|}{\small \numprint{4.37} \milli\second} & \multicolumn{1}{|c|}{\small \numprint{12.3} \milli\second} \\
+    \hline
+    \small Rec. Clock & \multicolumn{1}{|c|}{\small 1 \mega\hertz} &
+    \multicolumn{1}{|c|}{\small 50 \mega\hertz} & \multicolumn{1}{|c|}{\small 10 \mega\hertz} \\
+    \hline
+    \small Capacity & \multicolumn{1}{|c|}{\small \numprint{256}} &
+    \multicolumn{1}{|c|}{\small \numprint{6912}} & \multicolumn{1}{|c|}{\small \numprint{4160}} \\
+    \hline
+    \small \emph{CellsPerArea} & \multicolumn{1}{|c|}{\small 1} & \multicolumn{1}{|c|}{\small 1} & \multicolumn{1}{|c|}{\small 1} \\
+    \hline
+    \small \emph{WordsPerArea} & \multicolumn{1}{|c|}{\small 5} & \multicolumn{1}{|c|}{\small 11} & \multicolumn{1}{|c|}{\small \numprint{7.5}} \\
+    \hline
+    \small \emph{LatencyPerWord} & \multicolumn{1}{|c|}{\small 4 \micro\second} &
+    \multicolumn{1}{|c|}{\small 58 \nano\second} & \multicolumn{1}{|c|}{\small 400 \nano\second} \\
+    \hline
+    \small Space & \multicolumn{1}{|c|}{\textbf{AT40K40}} &
+    \multicolumn{1}{|c|}{\textbf{XCV812E}} & \multicolumn{1}{|c|}{\textbf{E20K1500E}} \\
+    \hline
+    \small Capacity & \multicolumn{1}{|c|}{\small \numprint{2304}} &
+    \multicolumn{1}{|c|}{\small \numprint{21168}} & \multicolumn{1}{|c|}{\small \numprint{51840}} \\
+    \hline
+    \small Approx. Capacity & \multicolumn{1}{|c|}{\small \numprint{2304}} &
+    \multicolumn{1}{|c|}{\small \numprint{21000}} & \multicolumn{1}{|c|}{\small \numprint{50000}} \\
+    \hline
+    \small \emph{Width}$\times$\emph{Height} & \multicolumn{1}{|c|}{\small 24$\times$96} &
+    \multicolumn{1}{|c|}{\small 150$\times$140} & \multicolumn{1}{|c|}{\small 250$\times$200} \\
+    \hline
+  \end{tabular}
+\end{center}
+\end{table}
+\normalsize
+\indent Once the components are instantiated, it is necessary to set up the connections among them; the following lines of a Python script are used for this purpose:
+
+\scriptsize
+\begin{verbatim}
+  ...
+  ##### RECONFIGURABLE COMPONENTS CONNECTIONS #####
+  connectPorts(cE, cE.ramSocket, bus, bus.targetSocket)
+  if CONFIGURE_THROUGH_ITC:
+    connectPorts(cE, cE.destSocket, bus, bus.targetSocket)
+
+  bSPosition = 1
+  for i in range(0, EFPGA_NUMBER):
+    connectPorts(cE, cE.initiatorSocket, eF[i], eF[i].targetSocket)
+    if CONFIGURE_THROUGH_ITC:
+      connectPorts(bus, bus.initiatorSocket, eF[i].bS, eF[i].bS.targetSocket)
+      bus.addBinding("bS"+str(bSPosition), memorySize1+memorySize2+bSPosition, \
+        memorySize1+memorySize2+bSPosition)
+    else:
+      connectPorts(cE, cE.destSocket, eF[i].bS, eF[i].bS.targetSocket)
+    cE.bindFPGA(memorySize1+memorySize2+bSPosition)
+    bSPosition = bSPosition+1
+  ...
+\end{verbatim}
+\normalsize
+
+\indent This whole script is based on a classic system where a simple bus and a simple memory are instantiated. The \texttt{ramSocket} on the configuration engine is a particular TLM port used to receive the bitstreams read from the memory thorugh the system bus; on the other hand, \texttt{destSocket} is another TLM port where the configuration engine forwards these bitstreams to the eFPGAs. Depending on the boolean parameter \texttt{CONFIGURE\_THROUGH\_ITC}, the user could decide if this second transfer is performed directly towards the eFPGAs, or if the bitstream has to be passed again through the system bus (or main interconnection). Then, for each eFPGA instantiated in the system, it should be drawn a direct connection between the \texttt{initiatorSocket} of the configuration engine and the \texttt{targetSocket} of the eFPGA. Furthermore, the bitstream sink of each eFPGA should be connected to the configuration engine \texttt{destSocket} or to the system main bus (still depending on the \texttt{CONFIGURE\_THROUGH\_ITC} parameter). In this last case, a special memory binding should be issued for the address assigned to the specific eFPGA bitstream sink. Finally, the same eFPGA address should be bound inside the configuration engine; please note that this binding is always required (even if the bitstream sink is directly connected to the configuration engine) and, furthermore, is completely positional: the order of the bindings should follow precisely the order in which the ports are connected (for a similar situation, see the bus connection performed in Section~\ref{general:arch}).
+
+\section{Declaring the Hardware Functions}
+\label{rec:decl}
+\paragraph\indent In order to obtain a reconfigurable system, it is necessary to describe the hardware functions used on the reconfigurable fabrics; these functions are based on a small variation of the callbacks introduced in Section~\ref{general:advanced:tools} for the emulation of the system calls issued on the ISSs. ReSP gives us two options for describing such callbacks: \textit{Python} and \textit{C++}. Table~\ref{rec:decl:tabcomp} makes a performance comparison between them.
+
+\definecolor{Green}{rgb}{0.2,0.8,0}
+\definecolor{Red}{rgb}{0.8,0.2,0}
+\definecolor{Orange}{rgb}{0.9,0.7,0}
+\begin{table}
+\caption{Python vs. C++ comparison}
+\label{rec:decl:tabcomp}
+\begin{center}
+  \begin{tabular}{|p{0.38\textwidth}|p{0.22\textwidth}|p{0.3\textwidth}|}
+    \hline
+    \multicolumn{1}{|c|}{\textbf{Characteristic}} & 
+    \multicolumn{1}{|c|}{\textbf{Python}} &
+    \multicolumn{1}{|c|}{\textbf{C++}} \\
+    \hline
+    \small Describing easy algorithms &
+    \small \textcolor{Green}{Ok} &
+    \small \textcolor{Green}{Ok} \\
+    \hline
+    \small Describing complex algorithms &
+    \small \textcolor{Red}{Not suitable} &
+    \small \textcolor{Green}{Ok} \\
+    \hline
+    \small Quickness of use &
+    \small \textcolor{Green}{High \linebreak (not compiled)} &
+    \small \textcolor{Orange}{Medium \linebreak (requires compilation)} \\
+    \hline
+    \small Ease of use &
+    \small \textcolor{Green}{High} &
+    \small \textcolor{Orange}{Medium} \\
+    \hline
+  \end{tabular}
+\end{center}
+\end{table}
+\normalsize
+
+\subsection{Python}
+\label{rec:decl:python}
+\paragraph\indent Describing a function in Python is pretty simple, since it is an easier language than C++; though, Python suffers of some limitations such as, for example, the lack of C++ pointers. The function should be declared directly in ReSP or in the architecture file, and has to follow this class structure:
+
+\scriptsize
+\begin{verbatim}
+  # Declare Python callbacks
+  class templateCall(recEmu_wrapper.reconfCB32):
+    def __init__(self, latency, w, h):
+      recEmu_wrapper.reconfCB32.__init__(self, latency, w , h)
+    def __call__(self, processorInstance):
+
+      cE.executeForce('functionName', self.latency, self.width, self.height)
+      cE.printSystemStatus()
+
+      processorInstance.preCall();
+
+      # Write here the core of the function, using the following syntax
+      callArgs = processorInstance.readArgs()
+      # Callback parameters can be accessed as shown in these instructions
+      param1 = callArgs.__getitem__(0)
+      param2 = callArgs.__getitem__(1)
+      retVal = param1 + param2
+      processorInstance.setRetVal(retVal);
+
+      processorInstance.returnFromCall();
+      processorInstance.postCall();
+      return True
+\end{verbatim}
+\normalsize
+The user can copy this code exactly as it is, changing only the \mbox{\textbf{functionName}} in the \mbox{\textit{confexec}} call (according to the overwritten software function), and, hopefully, the Python code in the core section.\\
+\indent Some in-depth observations about this declaration:
+\begin{itemize}
+  \item the Python class is defined as a \textit{callback}, which extends the C++ class \textit{recEmu\_wrapper.reconfCB32}. The parameters for its constructor are the \textbf{latency} of its execution, and its dimension on the reconfigurable fabric, expressed as number of \textbf{width} and \textbf{height} cells;
+  \item the \textit{executeForce} command issued to the configuration engine \textit{cE} is a signal to the component that a new reconfigurable routine is called. It will simulate the reconfiguration of the fabric (if needed) and the function invocation, by increasing the system execution time for the correct amount of units, and occupying the bus during the reconfiguration time. Alternatively, the separate \textit{configure} and \textit{execute} commands can be issued (check the \verb|configEngine.hpp| source file for further information);
+  \item the \textit{printSystemStatus} command issued to \textit{cE} is optional, and shows the status of the reconfigurable system after the function configuration.
+  \item instruction \textit{procInstance.return\_from\_syscall()} is responsible for suppressing the execution of the original function. If a user wants to execute in parallel both the functions (the software one on the processor and the hardware one on the eFPGA), this instruction should be removed, and the return value of the \textit{\_\_call\_\_} routine should be set to \textbf{False}; just remember that this way, both the latencies for the hardware and the software functions will be introduced.
+\end{itemize}
+
+\indent Finally, the callback should be instantiated using the following instruction, where the user should explicit the \textbf{latency}, \textbf{width} and \textbf{height} parameters:
+
+\scriptsize
+\begin{verbatim}
+  templateInstance = templateCall(scwrapper.sc_time(latency, scwrapper.SC_NS),width,height)
+\end{verbatim}
+\normalsize
+
+\subsection{C++}
+\label{rec:decl:c++}
+\paragraph\indent Using C++ allows the user to describe more complex functions, but requires to recompile the ReSP platform in order to have an executable code. The function should be declared in file \verb|reconfCallbacks.hpp| in the \verb|/components/reconfigurable/reconfEmulator/| directory, with the following structure:
+
+\scriptsize
+\begin{verbatim}
+  template<class issueWidth> class __EXAMPLE__Call : public reconfCB<issueWidth>{
+  private:
+    configEngine* cE;
+  public:
+    __EXAMPLE__Call(configEngine* mycE, sc_time latency = SC_ZERO_TIME, \
+        unsigned int width = 1, unsigned int height = 1):
+      reconfCB<issueWidth>(latency, width, height), cE(mycE)	{}
+    bool operator()(ABIIf<issueWidth> &processorInstance){
+
+      (this->cE)->executeForce("functionName", this->latency, this->width, this->height);
+      (this->cE)->printSystemStatus();
+
+      processorInstance.preCall();
+
+      // Write here the core of the function, using the following syntax
+      std::vector< issueWidth > callArgs = processorInstance.readArgs();
+      // Callback parameters can be accessed as shown in these instructions
+      int param1 = callArgs[0];
+      int param2 = callArgs[1];
+      int retVal = param1 + param2;
+      processorInstance.setRetVal(retVal);
+
+      processorInstance.returnFromCall();
+      processorInstance.postCall();
+      return true;
+    }
+ };
+\end{verbatim}
+\normalsize
+This is a standard class structure, the only interventions required for the user are to replace \textbf{template} as the name for the class (and obviously for the class constructor), the \mbox{\textbf{functionName}} in the \mbox{\textit{executeForce}} call (according to the overwritten software function) and hopefully the C++ code in the core section.\\
+\indent Some in-depth observations about this declaration (they are similar to those made for Python):
+\begin{itemize}
+  \item the class is defined as a \textit{callback}, which extends the C++ class \linebreak \mbox{\textit{reconfCB\textless issueWidth\textgreater}}. The parameters for its constructor are the \textbf{latency} of its execution, and its dimension on the reconfigurable fabric, expressed as number of \textbf{width} and \textbf{height} cells;
+  \item the \textit{confexec} command issued to the configuration engine pointed by \textit{this$\Rightarrow$cE} is a signal to the component that a new reconfigurable routine is called. It will simulate the reconfiguration of the fabric (if needed) and the function invocation, by increasing the system execution time for the correct amount of units, and occupying the bus during the reconfiguration time. Alternatively, the separate \textit{configure} and \textit{execute} commands can be issued (check the \verb|configEngine.hpp| source file for further information);
+  \item the \textit{printSystemStatus} command issued to \textit{cE} is optional, and shows the status of the reconfigurable system after the function configuration.
+  \item instruction \textit{procInstance.return\_from\_syscall()} is responsible for suppressing the execution of the original function. If a user wants to execute in parallel both the functions (the software one on the processor and the hardware one on the eFPGA), this instruction should be removed, and the return value of the \textit{operator()} routine should be set to \textbf{false}; just remember that this way, both the latencies for the hardware and the software functions will be introduced.
+\end{itemize}
+
+\indent Finally, a new registration branch should be added to the \textit{registerCppCall} routine at the end of \verb|reconfEmulator.hpp|:
+
+\scriptsize
+\begin{verbatim}
+  if (funName=="functionName") {
+    __EXAMPLE__Call<issueWidth> *rcb = NULL;
+    rcb = new __EXAMPLE__Call<issueWidth>(cE,latency,w,h);
+    if (!(this->register_call(funName, *rcb))) delete rcb;
+  }
+\end{verbatim}
+\normalsize
+
+Also these instructions are standard, the user should change only the \linebreak \mbox{\textbf{functionName}} and the instantiated \textbf{class name}. Perhaps, function parameters such as \textbf{latency}, \textbf{width} and \textbf{height} can be hardcoded during the definition of the new \textit{templateCall} class; please note that this action will overwrite every parameter defined in the system architecture (see Section \ref{rec:regist}).\\
+\indent In order to use the C++ defined functions, ReSP needs to be recompiled with the \verb|./waf| command in the root directory.
+
+\section{Registering the Functions}
+\label{rec:regist}
+\paragraph\indent Now that the callbacks are defined, they should be registered in order to be invoked every time the corresponding call is encountered during the execution. This behavior could be achieved by introducing a new tool to be attached to the ISS: this tool is known as \emph{Reconfiguration Emulator}. In multiprocessor systems, an emulator should be declared for each and every on of the ISSs; therefore, we have to cycle through all the processing elements in order to bind the emulators and, for each of them, we have to register the routines to be emulated through hardware using the \texttt{registerCppCall} and \texttt{registerPythonCall} functions offered by the reconfiguration emulator. The following Python script exemplifies this process:
+
+\scriptsize
+\begin{verbatim}
+  pytCalls = list()
+  # Now I initialize the Reconfiguration Emulator
+  for i in range(0, PROCESSOR_NUMBER):
+    recEmu = recEmu_wrapper.reconfEmulator32(processors[i].getInterface(),cE,SOFTWARE)
+    processors[i].toolManager.addTool(recEmu)
+    tools.append(recEmu)
+
+    # Registration of the callbacks
+    pythonCallInstance = pythonCall(scwrapper.sc_time(1, scwrapper.SC_NS),50,100)
+    recEmu.registerPythonCall('PythonDefinedFunctionName', pythonCallInstance);
+    pytCalls.append(pythonCallInstance)
+
+    recEmu.registerCppCall('C++DefinedFunctionName',scwrapper.sc_time(1,scwrapper.SC_NS),50,100)
+    recEmu.registerCppCall('C++DefinedFunctionName');
+
+    print 'Registered routine calls for processor ' + str(i) + ': '
+    recEmu.printRegisteredFunctions()
+\end{verbatim}
+\normalsize
+
+Some notes about this piece of code:
+\begin{description}
+  \item[Python vs. C++] Do note that latency and dimension parameters for Python are assigned during the instantiation, while for C++ they're assigned at registration time; if they're omitted (see the second \texttt{registerCppCall} call above), standard latency is going to be 0 seconds, and standard dimension is 1x1 cells. Furthermore, while the functions defined in C++ are automatically found in the \mbox{\textit{registerCppCall}} routine (as done in Section \ref{rec:decl:c++}), Python functions should be linked to the previously created instance.
+  \item[Mixing Languages] C++ and Python functions can be mixed in the same architecture, just be sure that the initialization of \textit{recEmu} is performed on the same configuration engine component used inside the Python functions.
+  \item[Multiple Python Callbacks] It doesn't matter if a given Python callback is instantiated one time and registered in different emulators, or if different instances are registered in different emulators. However, multiple callbacks should be saved into a list. This is required in order to avoid the elimination of the instance by the garbage collector whenever all the references are lost.
+  \item[Example] An example of a complete reconfigurable architecture can be found in the \verb|test_reconfig.py| file under \verb|/architectures/test|. Alternativley, a much complex example is contained in \verb|test_reconfig_multi.py| in the same directory.
+  \item[Parallel Reconfiguration] This second example introduces the concept of concurrent reconfigurations; all the components have been developed with the idea of supporting parallel elaborations, however we're still trying to perfect the execution of parallel Python threads. As a consequence, we're supporting the execution of parallel Python callbacks only if the simulation is ran using the \texttt{--silent} option described in Section~\ref{general:modes}. On the other hand, the classic interactive simulation could be launched without worries when all the parallel callbacks are  declared using C++.
+\end{description}
