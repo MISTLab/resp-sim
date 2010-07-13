@@ -16,7 +16,7 @@ BUS_FREQUENCY     = 50              # MHz
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'edgeDetectorARM'
+    SOFTWARE = 'c_pi'
 
 if SOFTWARE:
     try:
@@ -36,7 +36,7 @@ def statsPrinter():
     print ''
     for tool in tools:
         if isinstance(tool,functionProfiler.functionProfiler32):
-            tool.saveLog()
+#            tool.saveLog()
             tool.showLog()
             break
 
@@ -146,7 +146,7 @@ if OS_EMULATION:
     trapwrapper.OSEmulatorBase.set_program_args(ARGS)
     for i in range(0, PROCESSOR_NUMBER):
         ## FUNCTION PROFILER ##
-        FUNC_DESC = "architectures/scalopes_workshop_demo/functionsDescriptor.txt"
+        FUNC_DESC = "architectures/scalopes_workshop_demo/functionsDescriptor1.txt"
         PROFILER_OUTPUT_DIR = "architectures/scalopes_workshop_demo"
         funcProf = functionProfiler.functionProfiler32(processors[i].getInterface(), SOFTWARE, FUNC_DESC, PROFILER_OUTPUT_DIR)
         processors[i].toolManager.addTool(funcProf)

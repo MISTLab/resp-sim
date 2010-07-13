@@ -98,6 +98,7 @@ private:
 	std::vector<std::string> callTrace;
 	bool enableTrace;
 	std::string dataFolderName;
+	std::set<std::string> toBeLogged;
 
 public:
 	functionProfiler(ABIIf<issueWidth> &processorInstance, std::string exec, std::string functionDescriptor, std::string dataFolderName = "") : 
@@ -148,6 +149,9 @@ public:
 	///has to be skipped, false otherwise
 	bool newIssue(const issueWidth &curPC, const InstructionBase *curInstr) throw(){
     //analyze current instruction to identify: routine entry, routine exit and routine re-entering
+  	
+  	if(toBeLogged.size() > 0 && toBeLogged.count(this->bfdFE->functionAt(curPC))==0)
+  		return false;
   	
   	//routine entry
   	if(this->currFunc != this->bfdFE->functionAt(curPC) && this->bfdFE->isRoutineEntry(curPC)){
@@ -281,6 +285,10 @@ public:
     for(int i=0; i < callTrace.size(); i++)
       tracefile << callTrace[i] << std::endl;
     tracefile.close();
+	}
+	
+	void addFunctionToList(std::string funcName){
+		this->toBeLogged.insert(funcName);
 	}
 
 	~functionProfiler(){}
