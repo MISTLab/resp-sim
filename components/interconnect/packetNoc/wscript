@@ -2,6 +2,8 @@
 # encoding: utf-8
 
 def build(bld):
+    bld.add_subdirs('governor')
+
     obj = bld.new_task_gen('cxx', 'cshlib')
     obj.source="""
         Buffer.cpp

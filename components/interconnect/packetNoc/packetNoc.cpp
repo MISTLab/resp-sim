@@ -433,6 +433,85 @@ void packetNoc::addBinding(unsigned int spe, sc_dt::uint64 startAddress, sc_dt::
 	forwardMap[newBind] = spe;
 }
 
+void packetNoc::printBindings() {
+	forwardMap_t::iterator fwIter;
+	for (fwIter = forwardMap.begin(); fwIter != forwardMap.end(); fwIter++) {
+		cout << "Slave Processing Element #" << fwIter->second << " bound to addresses from ";
+		cout << fwIter->first.first << " to " << fwIter->first.second << endl;
+	}
+}
+
+void packetNoc::printGRT() {
+	vector<Switch*>::iterator switchIter;
+	for (switchIter = sw_list.begin(); switchIter != sw_list.end(); switchIter++) {
+		(*switchIter)->printLRT();
+	}
+}
+
+void packetNoc::printStats() {
+	cout << "The entire NOC had " << numAccesses << " accesses for a total of " << numWords << " words exchanged;" << endl;
+	vector<masterPE*>::iterator masterIter;
+	for (masterIter = ms_list.begin(); masterIter != ms_list.end(); masterIter++) {
+		(*masterIter)->printStats();
+	}
+	vector<slavePE*>::iterator slaveIter;
+	for (slaveIter = sl_list.begin(); slaveIter != sl_list.end(); slaveIter++) {
+		(*slaveIter)->printStats();
+	}
+	vector<Switch*>::iterator switchIter;
+	for (switchIter = sw_list.begin(); switchIter != sw_list.end(); switchIter++) {
+		(*switchIter)->printStats();
+	}
+}
+
+unsigned int packetNoc::getFlitsIn(unsigned int elId) {
+	masterPE* selMaster = getMasterWithId(elId);
+	if (selMaster != NULL) return selMaster->flitsIn;
+	slavePE* selSlave = getSlaveWithId(elId);
+	if (selSlave != NULL) return selSlave->flitsIn;
+	Switch* selSwitch = getSwitchWithId(elId);
+	if (selSwitch != NULL) return selSwitch->flitsIn;
+}
+
+unsigned int packetNoc::getFlitsOut(unsigned int elId) {
+	masterPE* selMaster = getMasterWithId(elId);
+	if (selMaster != NULL) return selMaster->flitsOut;
+	slavePE* selSlave = getSlaveWithId(elId);
+	if (selSlave != NULL) return selSlave->flitsOut;
+	Switch* selSwitch = getSwitchWithId(elId);
+	if (selSwitch != NULL) return selSwitch->flitsOut;
+}
+
+unsigned int packetNoc::getTimeouts(unsigned int masterId) {
+	masterPE* selMaster = getMasterWithId(masterId);
+	if (selMaster == NULL) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Master #" << masterId << " doesn't exists" << endl);
+	return selMaster->timedOutSessions;
+}
+
+unsigned int packetNoc::getAllTimeouts() {
+	unsigned int timeouts = 0;
+	vector<masterPE*>::iterator masterIter;
+	for (masterIter = ms_list.begin(); masterIter != ms_list.end(); masterIter++) {
+		timeouts += (*masterIter)->timedOutSessions;
+	}	
+	return timeouts;
+}
+
+unsigned int packetNoc::getDropped(unsigned int switchId) {
+	Switch* selSwitch = getSwitchWithId(switchId);
+	if (selSwitch == NULL) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Switch #" << switchId << " doesn't exists" << endl);
+	return selSwitch->dropped;
+}
+
+unsigned int packetNoc::getAllDropped() {
+	unsigned int dropped = 0;
+	vector<Switch*>::iterator switchIter;
+	for (switchIter = sw_list.begin(); switchIter != sw_list.end(); switchIter++) {
+		dropped += (*switchIter)->dropped;
+	}
+	return dropped;
+}
+
 void packetNoc::changeTimeout(unsigned int masterId, sc_time tO) {
 	masterPE* selMaster = getMasterWithId(masterId);
 	if (selMaster == NULL) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Master #" << masterId << " doesn't exists" << endl);
@@ -465,36 +544,5 @@ void packetNoc::changePath(unsigned int switchId, unsigned int destinationId, un
 	if (!selSwitch->modifyDestination(destinationId,nextHop))
 		THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Cannot use " << nextHop \
 			<< " as next hop for destination " << destinationId << " on switch " << switchId << "." << endl);
-}
-
-void packetNoc::printBindings() {
-	forwardMap_t::iterator fwIter;
-	for (fwIter = forwardMap.begin(); fwIter != forwardMap.end(); fwIter++) {
-		cout << "Slave Processing Element #" << fwIter->second << " bound to addresses from ";
-		cout << fwIter->first.first << " to " << fwIter->first.second << endl;
-	}
-}
-
-void packetNoc::printGRT() {
-	vector<Switch*>::iterator switchIter;
-	for (switchIter = sw_list.begin(); switchIter != sw_list.end(); switchIter++) {
-		(*switchIter)->printLRT();
-	}
-}
-
-void packetNoc::printStats() {
-	cout << "The entire NOC had " << numAccesses << " accesses for a total of " << numWords << " words exchanged;" << endl;
-	vector<masterPE*>::iterator masterIter;
-	for (masterIter = ms_list.begin(); masterIter != ms_list.end(); masterIter++) {
-		(*masterIter)->printStats();
-	}
-	vector<slavePE*>::iterator slaveIter;
-	for (slaveIter = sl_list.begin(); slaveIter != sl_list.end(); slaveIter++) {
-		(*slaveIter)->printStats();
-	}
-	vector<Switch*>::iterator switchIter;
-	for (switchIter = sw_list.begin(); switchIter != sw_list.end(); switchIter++) {
-		(*switchIter)->printStats();
-	}
 }
 
