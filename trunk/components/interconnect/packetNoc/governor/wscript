@@ -1,0 +1,25 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+def build(bld):
+    obj = bld.new_task_gen('cxx', 'cshlib')
+    obj.source="""
+        packetNocGovernor.cpp
+    """
+    obj.uselib = 'BOOST BOOST_PYTHON TLM SYSTEMC_H'
+    obj.uselib_local = 'systemc utils'
+    obj.includes = '.'
+    obj.target = 'packetNocGovernor_lib'
+
+    obj = bld.new_task_gen('pypp')
+    obj.source ='''
+        packetNocGovernor.hpp
+    '''
+    obj.target='packetNocGovernor';
+    obj.uselib = 'BOOST BOOST_PYTHON TLM SYSTEMC_H'
+    obj.uselib_local = 'systemc utils packetNocGovernor_lib'
+    obj.include = 'scwrapper tlmwrapper'
+    obj.start_decls = 'packetNocGovernor'
+    obj.custom_code = """
+mb.global_ns.class_('packetNocGovernor').include()
+"""

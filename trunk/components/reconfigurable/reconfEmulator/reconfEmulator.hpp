@@ -90,6 +90,7 @@
 #include "configEngine.hpp"
 
 #include "bfdWrapper.hpp"
+#include "utils.hpp"
 
 using namespace std;
 using namespace trap;
@@ -114,6 +115,23 @@ public:
 		latency(latency), width(w), height(h)	{}
 	virtual ~reconfCB(){}
 	virtual bool operator()(ABIIf<issueWidth> &processorInstance) = 0;
+	void get_buffer(ABIIf<issueWidth> &processorInstance, unsigned int argnum, unsigned char* destination, int size) {
+		int i = 0;
+		std::vector<issueWidth> callArgs = processorInstance.readArgs();
+		do{
+			destination[i] = processorInstance.readCharMem(callArgs[argnum]+i);
+			i++;
+		} while(i < size);
+	}
+
+	void set_buffer(ABIIf<issueWidth> &processorInstance, unsigned int argnum, unsigned char* source, int size) {
+		int i = 0;
+		std::vector<issueWidth> callArgs = processorInstance.readArgs();
+		do{
+			processorInstance.writeCharMem(callArgs[argnum]+i,source[i]);
+			i++;
+		} while(i < size);
+	}
 };
 
 template<typename issueWidth> class reconfEmulator: public ToolsIf<issueWidth>, reconfEmulatorBase {
