@@ -17,7 +17,7 @@ def build(bld):
     '''
     obj.target='packetNocGovernor';
     obj.uselib = 'BOOST BOOST_PYTHON TLM SYSTEMC_H'
-    obj.uselib_local = 'systemc utils packetNocGovernor_lib'
+    obj.uselib_local = 'systemc utils packetNoc_lib packetNocGovernor_lib'
     obj.include = 'scwrapper tlmwrapper'
     obj.start_decls = 'packetNocGovernor'
     obj.custom_code = """

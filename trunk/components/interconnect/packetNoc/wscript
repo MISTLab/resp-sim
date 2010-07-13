@@ -2,8 +2,6 @@
 # encoding: utf-8
 
 def build(bld):
-    bld.add_subdirs('governor')
-
     obj = bld.new_task_gen('cxx', 'cshlib')
     obj.source="""
         Buffer.cpp
@@ -36,3 +34,6 @@ mb.global_ns.class_('packetNoc').include()
 xmlcls = mb.global_ns.classes(lambda decl : decl.name.startswith('TiXml') )
 xmlcls.exclude()
 """
+
+    bld.add_subdirs('governor')
+
