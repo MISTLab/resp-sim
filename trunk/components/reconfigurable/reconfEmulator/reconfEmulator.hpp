@@ -116,8 +116,10 @@ public:
 	virtual ~reconfCB(){}
 	virtual bool operator()(ABIIf<issueWidth> &processorInstance) = 0;
 	void get_buffer(ABIIf<issueWidth> &processorInstance, unsigned int argnum, unsigned char* destination, int size) {
-		int i = 0;
+		int i, addArgs = argnum-3;
 		std::vector<issueWidth> callArgs = processorInstance.readArgs();
+		for (i=0; i<addArgs; i++) callArgs.push_back(processorInstance.readMem(processorInstance.readSP() + i*sizeof(issueWidth)));
+		i = 0;
 		do{
 			destination[i] = processorInstance.readCharMem(callArgs[argnum]+i);
 			i++;
@@ -125,8 +127,10 @@ public:
 	}
 
 	void set_buffer(ABIIf<issueWidth> &processorInstance, unsigned int argnum, unsigned char* source, int size) {
-		int i = 0;
+		int i, addArgs = argnum-3;
 		std::vector<issueWidth> callArgs = processorInstance.readArgs();
+		for (i=0; i<addArgs; i++) callArgs.push_back(processorInstance.readMem(processorInstance.readSP() + i*sizeof(issueWidth)));
+		i = 0;
 		do{
 			processorInstance.writeCharMem(callArgs[argnum]+i,source[i]);
 			i++;
