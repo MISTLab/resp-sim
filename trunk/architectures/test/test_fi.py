@@ -7,7 +7,7 @@ MEM_LATENCY       = 10.0            # ns
 BUS_ACTIVE        = True
 BUS_LATENCY       = 10.0            # ns
 
-SOFTWARE = 'red_fir'
+SOFTWARE = 'test_fi_fir'
 ARGS = [SOFTWARE]
 
 OS_EMULATION = True     # True or False
