@@ -96,3 +96,19 @@ if cls: cls.exclude()
 cls = mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) , allow_empty=True )
 if cls: cls.exclude()
 """
+
+    # Generation of the irqGenerators wrapper extension
+    obj = bld.new_task_gen('pypp')
+    obj.source ='''
+        irqGenerator.hpp
+    '''
+    obj.target = 'irqGenerator_wrapper'
+    obj.uselib = 'SYSTEMC_H TLM BOOST PYEXT BOOST_PYTHON'
+    obj.uselib_local = 'systemc'
+    obj.include = 'scwrapper tlmwrapper'
+    obj.start_decls = 'IrqGenerator'
+    obj.custom_code = """
+# Exclude protected members
+cls = mb.global_ns.calldefs( declarations.access_type_matcher_t( 'protected' ) , allow_empty=True )
+if cls: cls.exclude()
+"""
