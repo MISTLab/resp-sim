@@ -65,21 +65,29 @@ class faultInjector:
             
     def saveFaultList(self, filename):
         """"Saves in a file the current fault list"""
-        import server
-        fp=open(filename,'w')
-        fp.write(server.encode_compound(self.__currentFaultList))
-        fp.close()
+        import pickle
+        f = open(filename, 'w') 
+        pickle.dump(self.__currentFaultList,f)
+        f.close()
+        #import server
+        #fp=open(filename,'w')
+        #fp.write(server.encode_compound(self.__currentFaultList))
+        #fp.close()
         
     def loadFaultList(self, filename):
         """Loads a fault list from a file"""
-        import server
-        fp=open(filename,'r')
-        filecontent = ''
-        self.__currentFaultList = []
-        for l in fp:
-            filecontent = filecontent + l
-        fp.close()
-        self.__currentFaultList = server.decode_compound(filecontent)        
+        import pickle
+        f = open(filename, 'r') 
+        self.__currentFaultList = pickle.load(f)
+        f.close()
+        #import server
+        #fp=open(filename,'r')
+        #filecontent = ''
+        #self.__currentFaultList = []
+        #for l in fp:
+        #    filecontent = filecontent + l
+        #fp.close()
+        #self.__currentFaultList = server.decode_compound(filecontent)        
      
     def printFaultList(self):
         """Prints on the screen the current fault list """
