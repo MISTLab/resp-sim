@@ -31,6 +31,7 @@ OS_EMULATION = True     # True or False
 
 SHORTLOG = "architectures/scalopes_workshop_demo/summary_classification_results.txt"
 LOG = "architectures/scalopes_workshop_demo/classification_results.txt"
+LOG_REPORT = "architectures/scalopes_workshop_demo/classification_report.txt"
 
 def statsPrinter():
     print '\n\x1b[34m\x1b[1mRESULTS:\x1b[0m'
@@ -84,12 +85,18 @@ def campaignReportPrinter():
       no = no +1 
   fp.close()
   import os
-  os.system('rm ' + SHORTLOG)
-  print "\n\n-------------------------------------------------------------------------------------------------------" 
-  print "Statistics\nNo effect: " + str(no) + "\nControlflow error: " + str(contr) + "\nCorrupted Image: " + str(crit) \
+  #os.system('rm ' + SHORTLOG)
+  report = "\n\n--------------------------------------------------------------------------\n" 
+  report = report + "Fault list: " + manager.getFaultInjector().faultlist_file + '\n'
+  report = report + "Overall execution time: " + str(int(round(manager.getFaultInjector().overallExecutionTime/60.0))) + " minutes\n\n"
+  report = report + "Statistics\nNo effect: " + str(no) + "\nControlflow error: " + str(contr) + "\nCorrupted Image: " + str(crit) \
      + "\nNon-corrupted Image: " + str(notcrit) + "\nTimeout: " + str(to) + "\nException: " + str(exc)   
-  print "-------------------------------------------------------------------------------------------------------" 
-
+  report = report + "\n--------------------------------------------------------------------------" 
+  print report  
+  report_file = open(LOG_REPORT,'w')
+  report_file.write(report)
+  report_file.close()
+  
             
 ################################################
 ##### AUTO VARIABLE SETUP ######################

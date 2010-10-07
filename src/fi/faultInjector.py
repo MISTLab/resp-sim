@@ -13,6 +13,9 @@ class faultInjector:
         self.__timeDistribution = timeDistribution
         self.__currExpNum = 0
         self.timeout = False
+        self.faultlist_file = ""
+        self.overallExecutionTime = 0
+        self.__tmpFileSaving = False
            
     def generateFaultList(self, simulationDuration, numberOfSims, numberOfTimeIntervals =1, injectionTimeWindow = None):
         """Generates a fault injection list"""
@@ -37,6 +40,8 @@ class faultInjector:
         self.__timeDistribution.setNumberOfTimeIntervals(numberOfTimeIntervals)
         if injectionTimeWindow != None:
             self.__timeDistribution.setInjectionTimeWindow(injectionTimeWindow[0],injectionTimeWindow[1])
+        self.faultlist_file = ""
+        self.overallExecutionTime = 0
         #generate numberOfSims simulations
         for s in range(0,numberOfSims):
             #get time instants
@@ -69,6 +74,8 @@ class faultInjector:
         f = open(filename, 'w') 
         pickle.dump(self.__currentFaultList,f)
         f.close()
+        if not self.__tmpFileSaving:
+            self.faultlist_file = filename
         #import server
         #fp=open(filename,'w')
         #fp.write(server.encode_compound(self.__currentFaultList))
@@ -80,6 +87,7 @@ class faultInjector:
         f = open(filename, 'r') 
         self.__currentFaultList = pickle.load(f)
         f.close()
+        self.faultlist_file = filename
         #import server
         #fp=open(filename,'r')
         #filecontent = ''
@@ -103,6 +111,7 @@ class faultInjector:
 
     def addExperiment(self, experiment, index = None):
         #TODO check experiment
+        print "DEPRECATED: check on consistence of the added experiment have not been implement yet"
         if index == None:
             index = len(self.__currentFaultList)
         if type(index) != long and type(index) != int:
@@ -110,6 +119,8 @@ class faultInjector:
         if index >= 0 and index <= len(self.__currentFaultList):
             raise exceptions.Exception("the index must be included in the range [0;" + str(len(self.__currentFaultList)) + ")")
         self.__currentFaultList.insert(experiment, index)
+        self.faultlist_file = ""
+        self.overallExecutionTime = 0
     
     def deleteExperiment(self, index):
         if type(index) != long and type(index) != int:
@@ -117,7 +128,9 @@ class faultInjector:
         if index >= 0 and index < len(self.__currentFaultList):
             raise exceptions.Exception("the index must be included in the range [0;" + str(len(self.__currentFaultList)) + ")")
         self.__currentFaultList.pop(index)
-        
+        self.faultlist_file = ""
+        self.overallExecutionTime = 0
+       
     def numberOfExperiments(self):
         """Returns the number of experiments in the fault list"""
         return len(self.__currentFaultList)
@@ -126,17 +139,21 @@ class faultInjector:
         """Executes a fault injection campaign with the current fault list"""
         
         #save fault list. It will be loaded by the subprocess executing the campaign...
+        self.__tmpFileSaving = True
         self.saveFaultList('__temp_list')
+        self.__tmpFileSaving = False
         #import necessary modules     
         import os
         import subprocess
         import sys
         import respkernel
         import resp
+        from datetime import datetime
                             
         #set-up control stuff
         subproc = None #server subprocess reference
         num_of_errors = 0 #number of subprocesses that have crashed
+        start_time = datetime.now()
 
         #execute the fault campaign        
         currExperiment = 0
@@ -166,6 +183,9 @@ class faultInjector:
             if os.path.isfile('__currsim'):
                 os.remove('__currsim')
             raise e
+
+        end_time = datetime.now()
+        self.overallExecutionTime = (end_time - start_time).seconds
         
         if self.numberOfExperiments() > 0:
             try:
@@ -177,6 +197,10 @@ class faultInjector:
                 print "Statistics:"
                 print "Number of simulations: " + str(len(self.__currentFaultList))
                 print "Number of simulation terminated with an exception: " + str(num_of_errors)
+                print ""
+                print "Overall execution time: " + str(self.overallExecutionTime) + " sec."
+                if self.faultlist_file != "": 
+                  print "File containing fault list: " + self.faultlist_file + " sec."
                 print "-------------------------------------------------------------------------------------------------------" 
         else:
             print 'No experiment has been executed; fault list is empty'
