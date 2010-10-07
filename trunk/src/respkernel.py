@@ -440,10 +440,11 @@ class RespKernel:
             return
         self.reset()
         if reload_custom_parameters:
-            if os.path.exists(self.custom_parameters):
-                exec open(self.custom_parameters) in globals()
-            else :
-                exec self.custom_parameters in globals()
+            if self.custom_parameters != None:
+                if os.path.exists(self.custom_parameters):
+                    exec open(self.custom_parameters) in globals()
+                else :
+                    exec self.custom_parameters in globals()
         self.load_architecture(self.fileName)
        
     def get_architecture_filename(self):
@@ -575,9 +576,11 @@ class RespKernel:
         # Reset controller
         controller.reset_controller()
         
+        self.controller = None
         del globals()['controller']
         for script in self.scripting_commands:
             del globals()[script.__name__]
+        
                 
         #instantiate a new controller and setup scripting commands (for simplicity all commands are restored...)
         self.setup_controller(self.interactive)

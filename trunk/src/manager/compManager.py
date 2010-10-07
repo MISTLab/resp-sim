@@ -676,9 +676,12 @@ class ComponentManager:
         for c in self.getInstantiatedComponents():
             nodes = nodes + "\t"+str(c)+"[shape=box]\n"
             nodes = nodes + "\n"
-            for out in self.getTargets(c):
-#                if self.getInstantiatedComponents().count(out) != 0:
-                edges = edges + "\t" + str(c) + "->"+ str(out) +"\n"
+            try:
+              for out in self.getTargets(c):
+  #                if self.getInstantiatedComponents().count(out) != 0:
+                  edges = edges + "\t" + str(c) + "->"+ str(out) +"\n"
+            except:
+              pass
 
         code = "digraph simple_hierarchy {\n" + nodes + "\n" + edges + "\n}"
         f = open("__tmpGraph.dot",'w')
