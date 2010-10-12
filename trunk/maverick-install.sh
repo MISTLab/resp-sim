@@ -36,7 +36,7 @@
 # Install script for Ubuntu 10.10 Maverick
 
 # Prerequisite packages
-#   GCC 4.1
+#   GCC 4.2
 #   SVN
 #   gccxml
 #   binutils
@@ -45,11 +45,11 @@ sudo apt-get -y install libsigc++-2.0-dev subversion binutils-dev mpi-default-de
 mkdir External_tools
 cd External_tools
 
-# g++-4.1
+# g++-4.2
 #     download
-wget home.dei.polimi.it/miele/g++4.1_deb.tar.bz2
-tar xvjf g++-4.1_deb.tar.bz2
-cd g++4.1_deb.tar.bz2
+wget home.dei.polimi.it/miele/g++4.2_deb.tar.bz2
+tar xvjf g++-4.2_deb.tar.bz2
+cd g++4.2_deb.tar.bz2
 sudo dpkg -i *.deb
 cd ..
 
