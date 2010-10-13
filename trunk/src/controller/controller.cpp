@@ -91,6 +91,8 @@ void my_terminate_handler(){
 
     //set error flag to true 
     sc_controller::getController().error = true;
+    
+    sc_controller::getController().accumulatedTime += sc_controller::getController().timeTracker.elapsed();
 
     try{
         throw;
