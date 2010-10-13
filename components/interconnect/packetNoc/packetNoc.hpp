@@ -81,12 +81,15 @@ public:
 	unsigned int getTimeouts(unsigned int masterId);
 	unsigned int getAllTimeouts();
 	unsigned int getDropped(unsigned int switchId);
+	unsigned int getBufferSize(unsigned int switchId);
 	unsigned int getAllDropped();
 	void changeTimeout(unsigned int masterId, sc_time tO);
 	void changeAllTimeouts(sc_time tO);
 	void changeBufferSize(unsigned int switchId, unsigned int size);
 	void changeAllBufferSizes(unsigned int size);
 	void changePath(unsigned int switchId, unsigned int destinationId, unsigned int nextHop);
+	
+	std::vector<unsigned int> getSwitchIds();
 };
 
 #endif

@@ -164,6 +164,11 @@ void Switch::setBufferSize(unsigned int size) {
 	for (unsigned int i = 0; i < PORTS; i++) buffer[i].setMaxBufferSize(size);
 }
 
+unsigned int Switch::getBufferSize(){
+  return buffer[0].getMaxBufferSize();
+}
+
+
 void Switch::printLRT() {
 	destActiveMap_t::iterator destIter;
 	cout << "Switch #" << local_id << endl;

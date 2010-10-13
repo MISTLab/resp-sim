@@ -525,6 +525,12 @@ void packetNoc::changeAllTimeouts(sc_time tO) {
 	}	
 }
 
+unsigned int packetNoc::getBufferSize(unsigned int switchId){
+	Switch* selSwitch = getSwitchWithId(switchId);
+	if (selSwitch == NULL) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Switch #" << switchId << " doesn't exists" << endl);
+	return selSwitch->getBufferSize(); 
+}
+
 void packetNoc::changeBufferSize(unsigned int switchId, unsigned int size) {
 	Switch* selSwitch = getSwitchWithId(switchId);
 	if (selSwitch == NULL) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Switch #" << switchId << " doesn't exists" << endl);
@@ -546,3 +552,9 @@ void packetNoc::changePath(unsigned int switchId, unsigned int destinationId, un
 			<< " as next hop for destination " << destinationId << " on switch " << switchId << "." << endl);
 }
 
+std::vector<unsigned int> packetNoc::getSwitchIds() {
+  std::vector<unsigned int> ids;
+  for(int i = 0; i < sw_list.size(); i++)
+    ids.push_back(sw_list[i]->getId());
+  return ids;
+}
