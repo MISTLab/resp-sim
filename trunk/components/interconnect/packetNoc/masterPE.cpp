@@ -63,7 +63,8 @@ void masterPE::b_transport(tlm_generic_payload& trans, sc_time& delay) {
 	} while(timedOut[p.session_id]);
 	delete endTransm[p.session_id];
 	endTransm[p.session_id] = NULL;
-
+	endTransm.erase(p.session_id);
+	timedOut.erase(p.session_id);
 	#ifdef DEBUGMODE
 	cerr	<< sc_time_stamp().to_double()/1000 \
 		<< ": ME[" << local_id << "] \tFINISHED TLM" << " \t\t" \
@@ -77,7 +78,7 @@ void masterPE::setTimeout(sc_time tO) {
 
 void masterPE::timeout(unsigned int session_id) {
 	wait(timeoutVal);
-	if (endTransm[session_id] != NULL) {
+	if (endTransm.count(session_id)/*endTransm[session_id] != NULL*/) {
 		timedOut[session_id] = true;
 		timedOutSessions++;
 		#ifdef DEBUGMODE
@@ -137,7 +138,7 @@ void masterPE::rxProcess() {
 				<< ": ME[" << local_id << "] \tRECEIVED HEAD" << " \t\t" \
 				<< p << "." << endl;
 			#endif
-			if (openSessions[p.session_id] == NULL) openSessions[p.session_id] = new Session(p.size);
+			if (openSessions.count(p.session_id) == 0/*[p.session_id] == NULL*/) openSessions[p.session_id] = new Session(p.size);
 			openSessions[p.session_id]->newPacket(p.flit_left);
 			flitsIn++;
 			if (openSessions[p.session_id]->isComplete() && !timedOut[p.session_id]) {
@@ -156,6 +157,7 @@ void masterPE::rxProcess() {
 					THROW_EXCEPTION(__PRETTY_FUNCTION__ << "Received ACK for unknown session" << endl);
 				delete openSessions[p.session_id];
 				openSessions[p.session_id] = NULL;
+				openSessions.erase(p.session_id);
 				endTransm[p.session_id]->notify();
 			}
 			break;
@@ -165,7 +167,7 @@ void masterPE::rxProcess() {
 				<< ": ME[" << local_id << "] \tRECEIVED BODY" << " \t\t" \
 				<< p << "." << endl;
 			#endif
-			if (openSessions[p.session_id] == NULL) openSessions[p.session_id] = new Session(p.size);
+			if (openSessions.count(p.session_id) == 0/*[p.session_id] == NULL*/) openSessions[p.session_id] = new Session(p.size);
 			openSessions[p.session_id]->newPacket(p.flit_left);
 			flitsIn++;
 			if (openSessions[p.session_id]->isComplete() && !timedOut[p.session_id]) {
@@ -184,6 +186,7 @@ void masterPE::rxProcess() {
 					THROW_EXCEPTION(__PRETTY_FUNCTION__ << "Received ACK for unknown session" << endl);
 				delete openSessions[p.session_id];
 				openSessions[p.session_id] = NULL;
+				openSessions.erase(p.session_id);
 				endTransm[p.session_id]->notify();
 			}
 			break;
@@ -193,7 +196,7 @@ void masterPE::rxProcess() {
 				<< ": ME[" << local_id << "] \tRECEIVED TAIL" << " \t\t" \
 				<< p << "." << endl;
 			#endif
-			if (openSessions[p.session_id] == NULL) openSessions[p.session_id] = new Session(p.size);
+			if (openSessions.count(p.session_id) == 0/*[p.session_id] == NULL*/) openSessions[p.session_id] = new Session(p.size);
 			openSessions[p.session_id]->newPacket(p.flit_left);
 			flitsIn++;
 			if (openSessions[p.session_id]->isComplete() && !timedOut[p.session_id]) {
@@ -212,6 +215,7 @@ void masterPE::rxProcess() {
 					THROW_EXCEPTION(__PRETTY_FUNCTION__ << "Received ACK for unknown session" << endl);
 				delete openSessions[p.session_id];
 				openSessions[p.session_id] = NULL;
+				openSessions.erase(p.session_id);
 				endTransm[p.session_id]->notify();
 			}
 			break;

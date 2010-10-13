@@ -10,6 +10,8 @@ private:
 	sc_in_clk			clock;
 
 	void				activity();
+	
+	std::map<unsigned int, unsigned int> currDropped;
 
 public:
 					packetNocGovernor(sc_module_name module_name, packetNoc& pnObj, sc_time cycleLatency);

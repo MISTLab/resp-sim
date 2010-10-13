@@ -49,6 +49,7 @@ public:
 	bool				addDestination(unsigned int dst_id, unsigned int nextHop_id);
 	bool				modifyDestination(unsigned int dst_id, unsigned int nextHop_id);
 	void				setBufferSize(unsigned int size);
+	unsigned int	getBufferSize();
 	void				printLRT();
 	void				printStats();
 };
