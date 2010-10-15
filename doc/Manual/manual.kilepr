@@ -3,8 +3,8 @@ def_graphic_ext=
 img_extIsRegExp=false
 img_extensions=.eps .jpg .jpeg .png .pdf .ps .fig .gif
 kileprversion=2
-kileversion=2.0.85
-lastDocument=general.tex
+kileversion=2.1 beta2
+lastDocument=install.tex
 masterDocument=
 name=manual
 pkg_extIsRegExp=false
@@ -116,13 +116,13 @@ order=1
 
 [item:install.tex]
 archive=true
-column=451
+column=11
 encoding=UTF-8
 highlight=LaTeX
-line=4
+line=82
 mode=LaTeX
-open=false
-order=2
+open=true
+order=3
 
 [item:intro.tex]
 archive=true
