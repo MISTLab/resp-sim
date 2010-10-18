@@ -35,5 +35,5 @@ xmlcls = mb.global_ns.classes(lambda decl : decl.name.startswith('TiXml') )
 xmlcls.exclude()
 """
 
-    bld.add_subdirs('governor')
+    bld.add_subdirs('governor trafficGenerator dummyEnd')
 

@@ -1,0 +1,110 @@
+<?xml version="1.0" ?>
+<noc>
+	<mpe id="1">
+		<connect dst_id="14"/>
+	</mpe>
+	<mpe id="2">
+		<connect dst_id="15"/>
+	</mpe>
+	<mpe id="3">
+		<connect dst_id="17"/>
+	</mpe>
+	<mpe id="4">
+		<connect dst_id="18"/>
+	</mpe>
+	<mpe id="5">
+		<connect dst_id="20"/>
+	</mpe>
+	<mpe id="6">
+		<connect dst_id="22"/>
+	</mpe>
+	<mpe id="7">
+		<connect dst_id="23"/>
+	</mpe>
+	<spe id="8">
+		<connect dst_id="13"/>
+	</spe>
+	<spe id="9">
+		<connect dst_id="16"/>
+	</spe>
+	<spe id="10">
+		<connect dst_id="19"/>
+	</spe>
+	<spe id="11">
+		<connect dst_id="21"/>
+	</spe>
+	<spe id="12">
+		<connect dst_id="24"/>
+	</spe>
+	<switch id="13">
+		<connect dst_id="8"/>
+		<connect dst_id="14"/>
+		<connect dst_id="17"/>
+	</switch>
+	<switch id="14">
+		<connect dst_id="1"/>
+		<connect dst_id="13"/>
+		<connect dst_id="15"/>
+		<connect dst_id="18"/>
+	</switch>
+	<switch id="15">
+		<connect dst_id="2"/>
+		<connect dst_id="14"/>
+		<connect dst_id="16"/>
+		<connect dst_id="19"/>
+	</switch>
+	<switch id="16">
+		<connect dst_id="9"/>
+		<connect dst_id="15"/>
+		<connect dst_id="20"/>
+	</switch>
+	<switch id="17">
+		<connect dst_id="3"/>
+		<connect dst_id="13"/>
+		<connect dst_id="18"/>
+		<connect dst_id="21"/>
+	</switch>
+	<switch id="18">
+		<connect dst_id="4"/>
+		<connect dst_id="14"/>
+		<connect dst_id="17"/>
+		<connect dst_id="19"/>
+		<connect dst_id="22"/>
+	</switch>
+	<switch id="19">
+		<connect dst_id="10"/>
+		<connect dst_id="15"/>
+		<connect dst_id="18"/>
+		<connect dst_id="20"/>
+		<connect dst_id="23"/>
+	</switch>
+	<switch id="20">
+		<connect dst_id="5"/>
+		<connect dst_id="16"/>
+		<connect dst_id="19"/>
+		<connect dst_id="24"/>
+	</switch>
+	<switch id="21">
+		<connect dst_id="11"/>
+		<connect dst_id="17"/>
+		<connect dst_id="22"/>
+	</switch>
+	<switch id="22">
+		<connect dst_id="6"/>
+		<connect dst_id="18"/>
+		<connect dst_id="21"/>
+		<connect dst_id="23"/>
+	</switch>
+	<switch id="23">
+		<connect dst_id="7"/>
+		<connect dst_id="19"/>
+		<connect dst_id="22"/>
+		<connect dst_id="24"/>
+	</switch>
+	<switch id="24">
+		<connect dst_id="12"/>
+		<connect dst_id="20"/>
+		<connect dst_id="23"/>
+	</switch>
+</noc>
+

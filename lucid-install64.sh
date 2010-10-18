@@ -70,7 +70,7 @@ cd ..
 
 # libMOMH
 #     download
-wget http://www.jumpjoe.com/sysc/libmomh-1.91.3.tar.bz2
+wget http://resp-sim.googlecode.com/files/libmomh-1.91.3.tar.bz2
 tar xvjf libmomh-1.91.3.tar.bz2
 #     configure/install
 cd libmomh-1.91.3
@@ -80,7 +80,7 @@ sudo make install
 cd ..
 
 # SystemC 2.2
-wget http://www.jumpjoe.com/sysc/systemc-2.2.0_gcc4.tar.bz2
+wget http://resp-sim.googlecode.com/files/systemc-2.2.0_gcc4.tar.bz2
 tar xvjf systemc-2.2.0_gcc4.tar.bz2
 cd systemc-2.2.0
 sudo rm -r lib-linux
@@ -95,7 +95,7 @@ sudo make install
 cd ..
 
 # TLM
-wget http://www.jumpjoe.com/sysc/TLM2.tar.bz2
+wget http://resp-sim.googlecode.com/files/TLM2.tar.bz2
 tar xvjf TLM2.tar.bz2
 
 # TRAP
