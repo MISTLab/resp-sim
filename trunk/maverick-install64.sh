@@ -40,16 +40,16 @@
 #   SVN
 #   gccxml
 #   binutils
-sudo apt-get -y install libsigc++-2.0-dev subversion binutils-dev mpi-default-dev g++ g++-4.4 gccxml libgfortran3 libibverbs-dev libibverbs1 libicu-dev libnuma1 libopenmpi-dev libopenmpi1.3 libstdc++6-4.4-dev openmpi-common python-dev python2.6-dev ia32-libs patch automake libboost1.42-dev libboost-dbg libboost-thread1.42.0
+sudo apt-get -y install libsigc++-2.0-dev subversion binutils-dev mpi-default-dev g++ g++-4.4 gccxml libgfortran3 libibverbs-dev libibverbs1 libicu-dev libnuma1 libopenmpi-dev libopenmpi1.3 libstdc++6-4.4-dev openmpi-common python-dev python2.6-dev ia32-libs patch automake libboost1.42-dev libboost-dbg libboost-thread1.42.0 libboost-system1.42.0 libboost-regex1.42.0 libboost-program_options1.42.0 libboost-filesystem1.42.0
 
 mkdir External_tools
 cd External_tools
 
 # g++-4.2
 #     download
-wget home.dei.polimi.it/miele/g++4.2_deb.tar.bz2
-tar xvjf g++-4.2_deb.tar.bz2
-cd g++4.2_deb.tar.bz2
+wget home.dei.polimi.it/miele/gcc4.2.tar.bz2
+tar xvjf gcc4.2.tar.bz2
+cd gcc4.2
 sudo dpkg -i *.deb
 cd ..
 
@@ -69,7 +69,7 @@ cd ..
 
 # libMOMH
 #     download
-wget http://www.jumpjoe.com/sysc/libmomh-1.91.3.tar.bz2
+wget http://resp-sim.googlecode.com/files/libmomh-1.91.3.tar.bz2
 tar xvjf libmomh-1.91.3.tar.bz2
 #     configure/install
 cd libmomh-1.91.3
@@ -79,7 +79,7 @@ sudo make install
 cd ..
 
 # SystemC 2.2
-wget http://www.jumpjoe.com/sysc/systemc-2.2.0_gcc4.tar.bz2
+wget http://resp-sim.googlecode.com/files/systemc-2.2.0_gcc4.tar.bz2
 tar xvjf systemc-2.2.0_gcc4.tar.bz2
 cd systemc-2.2.0
 sudo rm -r lib-linux
@@ -94,7 +94,7 @@ sudo make install
 cd ..
 
 # TLM
-wget http://www.jumpjoe.com/sysc/TLM2.tar.bz2
+wget http://resp-sim.googlecode.com/files/TLM2.tar.bz2
 tar xvjf TLM2.tar.bz2
 
 # TRAP

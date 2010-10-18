@@ -337,6 +337,8 @@ void packetNoc::loadBindingsFromXml(TiXmlHandle rootH) {
 
 	networkGraph = Graph_t(edges, edges + numEdges, weights, masters+slaves+switches);
 	graphWeightMap = get(edge_weight, networkGraph);
+	free(edges);
+	free(weights);
 }
 
 void packetNoc::completeSCBindings() {
@@ -464,22 +466,38 @@ void packetNoc::printStats() {
 	}
 }
 
-unsigned int packetNoc::getFlitsIn(unsigned int elId) {
-	masterPE* selMaster = getMasterWithId(elId);
-	if (selMaster != NULL) return selMaster->flitsIn;
-	slavePE* selSlave = getSlaveWithId(elId);
-	if (selSlave != NULL) return selSlave->flitsIn;
-	Switch* selSwitch = getSwitchWithId(elId);
-	if (selSwitch != NULL) return selSwitch->flitsIn;
+unsigned int packetNoc::getBufferCurrentFreeSlots(unsigned int switchId, unsigned int portId){
+  Switch* sw = getSwitchWithId(switchId);
+  return sw->getBufferCurrentFreeSlots(portId);
 }
 
-unsigned int packetNoc::getFlitsOut(unsigned int elId) {
-	masterPE* selMaster = getMasterWithId(elId);
+std::vector<unsigned int> packetNoc::getActivePorts(unsigned int switchId){
+  std::vector<unsigned int> activePorts;
+  Switch* sw = getSwitchWithId(switchId);
+  for(unsigned int i = 0; i < PORTS; i++){
+    if(sw->isPortActive(i))
+      activePorts.push_back(i);
+  }
+  return activePorts;
+}
+
+
+unsigned int packetNoc::getFlitsIn(unsigned int switchId, unsigned int portId) {
+	masterPE* selMaster = getMasterWithId(switchId);
+	if (selMaster != NULL) return selMaster->flitsIn;
+	slavePE* selSlave = getSlaveWithId(switchId);
+	if (selSlave != NULL) return selSlave->flitsIn;
+	Switch* selSwitch = getSwitchWithId(switchId);
+	if (selSwitch != NULL) return selSwitch->getFlitsIn(portId);
+}
+
+unsigned int packetNoc::getFlitsOut(unsigned int switchId, unsigned int portId) {
+	masterPE* selMaster = getMasterWithId(switchId);
 	if (selMaster != NULL) return selMaster->flitsOut;
-	slavePE* selSlave = getSlaveWithId(elId);
+	slavePE* selSlave = getSlaveWithId(switchId);
 	if (selSlave != NULL) return selSlave->flitsOut;
-	Switch* selSwitch = getSwitchWithId(elId);
-	if (selSwitch != NULL) return selSwitch->flitsOut;
+	Switch* selSwitch = getSwitchWithId(switchId);
+	if (selSwitch != NULL) return selSwitch->getFlitsOut(portId);
 }
 
 unsigned int packetNoc::getTimeouts(unsigned int masterId) {
@@ -497,17 +515,18 @@ unsigned int packetNoc::getAllTimeouts() {
 	return timeouts;
 }
 
-unsigned int packetNoc::getDropped(unsigned int switchId) {
+unsigned int packetNoc::getDropped(unsigned int switchId, unsigned int portId) {
 	Switch* selSwitch = getSwitchWithId(switchId);
 	if (selSwitch == NULL) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Switch #" << switchId << " doesn't exists" << endl);
-	return selSwitch->dropped;
+	return selSwitch->getDropped(portId);
 }
 
 unsigned int packetNoc::getAllDropped() {
 	unsigned int dropped = 0;
 	vector<Switch*>::iterator switchIter;
 	for (switchIter = sw_list.begin(); switchIter != sw_list.end(); switchIter++) {
-		dropped += (*switchIter)->dropped;
+		for(unsigned int i  = 0; i < PORTS; i++)
+		  dropped += (*switchIter)->getDropped(i);
 	}
 	return dropped;
 }
@@ -525,22 +544,23 @@ void packetNoc::changeAllTimeouts(sc_time tO) {
 	}	
 }
 
-unsigned int packetNoc::getBufferSize(unsigned int switchId){
+unsigned int packetNoc::getBufferSize(unsigned int switchId, unsigned int portId){
 	Switch* selSwitch = getSwitchWithId(switchId);
 	if (selSwitch == NULL) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Switch #" << switchId << " doesn't exists" << endl);
-	return selSwitch->getBufferSize(); 
+	return selSwitch->getBufferSize(portId); 
 }
 
-void packetNoc::changeBufferSize(unsigned int switchId, unsigned int size) {
+void packetNoc::changeBufferSize(unsigned int switchId, unsigned int portId, unsigned int size) {
 	Switch* selSwitch = getSwitchWithId(switchId);
 	if (selSwitch == NULL) THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Switch #" << switchId << " doesn't exists" << endl);
-	selSwitch->setBufferSize(size);
+	selSwitch->setBufferSize(portId, size);
 }
 
 void packetNoc::changeAllBufferSizes(unsigned int size) {
 	vector<Switch*>::iterator switchIter;
 	for (switchIter = sw_list.begin(); switchIter != sw_list.end(); switchIter++) {
-		(*switchIter)->setBufferSize(size);
+		for (unsigned int i = 0; i < PORTS; i++)
+  		(*switchIter)->setBufferSize(i,size);
 	}
 }
 

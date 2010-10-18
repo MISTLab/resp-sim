@@ -223,6 +223,8 @@ noc.printGRT()
 noc.changeAllTimeouts(scwrapper.sc_time(1000, scwrapper.SC_NS))
 
 governor = packetNocGovernor.packetNocGovernor('governor',noc,scwrapper.sc_time(1000000, scwrapper.SC_NS))
+governor.enableGovernor(False);
+
 
 # We can finally run the simulation
 # run_simulation()

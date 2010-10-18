@@ -5,17 +5,32 @@
 
 class packetNocGovernor: public sc_module {
 private:
+  
+  typedef struct {
+    int activeBuffers;
+    unsigned int currDropped[PORTS];
+    unsigned int threshold[PORTS];
+  } switch_data_t;
+  
 	packetNoc*			noc;
 	sc_clock			intClock;
 	sc_in_clk			clock;
 
-	void				activity();
-	
-	std::map<unsigned int, unsigned int> currDropped;
+  std::map <unsigned int, switch_data_t*> noc_data;
 
+	void				activity();
+	bool enabled;
+	unsigned int init_threshold;
+	unsigned int max_threshold;
+	unsigned int min_threshold;
+	
 public:
 					packetNocGovernor(sc_module_name module_name, packetNoc& pnObj, sc_time cycleLatency);
 					~packetNocGovernor();
+					void enableGovernor(bool enabled);
+					bool isEnabled();
+					void printStatus();
+					void initialize(unsigned int bufferSize, unsigned int init_threshold, unsigned int max_threshold, unsigned int min_threshold);
 };
 
 #endif

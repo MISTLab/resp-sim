@@ -1,9 +1,11 @@
 #include "Switch.hpp"
 
 Switch::Switch(unsigned int id): sc_module(("sw_" + boost::lexical_cast<std::string>(id)).c_str()), local_id(id) {
-	flitsIn = 0;
-	flitsOut = 0;
-	dropped = 0;
+	for(unsigned int i = 0; i < PORTS; i++){
+	  flitsIn[i] = 0;
+	  flitsOut[i] = 0;
+	  dropped[i] = 0;
+	}
 	connectedOutgoingEdges = 0;
 	connectedIncomingEdges = 0;
 	for(unsigned int i = 0; i < PORTS; i++){sendNull[i]=true;}
@@ -32,14 +34,14 @@ void Switch::rxProcess(){
 				<< "RECEIVING on [" << i << "]" << " \t" \
 				<< p << "." << endl;
 			#endif
-			flitsIn++;
+			flitsIn[i]++;
 			if (!buffer[i].push(p)) {
 				#ifdef DEBUGMODE
 				cerr 	<< sc_time_stamp().to_double()/1000 \
 					<< ": SW[" << local_id << "] \tDROPPING" << " \t\t" \
 					<< p << "." << endl;
 				#endif
-				dropped++;
+				dropped[i]++;
 			}
 		}
 	}
@@ -82,9 +84,9 @@ void Switch::txProcess(){
 			}
 
 			if(out_port == (unsigned int)-1)
-				THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Error in SW[" << local_id \
+				THROW_EXCEPTION("Error in SW[" << local_id \
 					<< "]: out_port not initialized for packet with DST address " \
-					<< p.dst_addr << " and SRC address " << p.src_addr << endl);
+					<< p.dst_addr << " and SRC address " << p.src_addr);
 			if (!written[out_port]) {
 				#ifdef DEBUGMODE
 				cerr << sc_time_stamp().to_double()/1000 \
@@ -92,7 +94,7 @@ void Switch::txProcess(){
 					<< "FORWARDING on [" << out_port << "]" << " \t" \
 					<< p << "." << endl;
 				#endif
-				flitsOut++;
+				flitsOut[i]++;
 				pack_out[out_port].write(p);
 				written[out_port] = true;
 				buffer[i].pop();
@@ -126,6 +128,7 @@ bool Switch::bindOut(sc_signal<Packet>* sig, unsigned int dst_id){
 	if (connectedOutgoingEdges >= PORTS) return false;
 	pack_out[connectedOutgoingEdges](*sig);
 	portTo[dst_id] = connectedOutgoingEdges;
+	invPortTo[connectedOutgoingEdges] = dst_id;
 	destActive[dst_id] = true;
 	connectedOutgoingEdges++;
 	return true;
@@ -151,23 +154,63 @@ bool Switch::addDestination(unsigned int dst_id, unsigned int nextHop_id) {
 	if (destActive[dst_id] || !destActive[nextHop_id]) return false;
 	destActive[dst_id] = true;
 	portTo[dst_id] = portTo[nextHop_id];
+	invPortTo[nextHop_id] = dst_id;
 	return true;
 }
 
 bool Switch::modifyDestination(unsigned int dst_id, unsigned int nextHop_id) {
 	if (!destActive[dst_id] || !destActive[nextHop_id]) return false;
 	portTo[dst_id] = portTo[nextHop_id];
+	invPortTo[nextHop_id] = dst_id;
 	return true;
 }
 
-void Switch::setBufferSize(unsigned int size) {
-	for (unsigned int i = 0; i < PORTS; i++) buffer[i].setMaxBufferSize(size);
+bool Switch::isPortActive(unsigned int id){
+	if(!(id >=0 && id < PORTS))
+    THROW_EXCEPTION("Not valid port number");
+  if(invPortTo.find(id) != invPortTo.end())
+    return true;
+  return false;
 }
 
-unsigned int Switch::getBufferSize(){
-  return buffer[0].getMaxBufferSize();
+void Switch::setBufferSize(unsigned int id, unsigned int size) {
+	if(!(id >=0 && id < PORTS))
+    THROW_EXCEPTION("Not valid buffer number");
+	if(size < 0)
+    THROW_EXCEPTION("Not valid buffer size");
+  buffer[id].setMaxBufferSize(size);
 }
 
+unsigned int Switch::getBufferSize(unsigned int id){
+  if(id >=0 && id < PORTS)
+    return buffer[id].getMaxBufferSize();
+  THROW_EXCEPTION("Not valid buffer number");
+}
+
+unsigned int Switch::getBufferCurrentFreeSlots(unsigned int id){
+  if(id >=0 && id < PORTS)
+    return buffer[id].getCurrentFreeSlots();
+  THROW_EXCEPTION("Not valid buffer number");
+}
+
+
+unsigned int Switch::getDropped(unsigned int id){
+  if(id >=0 && id < PORTS)
+    return dropped[id];
+  THROW_EXCEPTION("Not valid buffer number");  
+}
+
+unsigned int Switch::getFlitsIn(unsigned int id){
+  if(id >=0 && id < PORTS)
+    return flitsIn[id];
+  THROW_EXCEPTION("Not valid buffer number");  
+}
+
+unsigned int Switch::getFlitsOut(unsigned int id){
+  if(id >=0 && id < PORTS)
+    return flitsOut[id];
+  THROW_EXCEPTION("Not valid buffer number");  
+}
 
 void Switch::printLRT() {
 	destActiveMap_t::iterator destIter;
@@ -178,9 +221,12 @@ void Switch::printLRT() {
 }
 
 void Switch::printStats() {
-	cout << "Switch #" << local_id << endl;
-	cout << "\tRECEIVED\t" << flitsIn << " flits" << endl;
-	cout << "\tSENT\t\t" << flitsOut << " flits" << endl;
-	cout << "\tDROPPED\t\t" << dropped << " flits" << endl;
+  cout << "Switch #" << local_id << endl;
+	for(unsigned int i = 0; i < PORTS; i++){
+	  if(invPortTo.find(i)!= invPortTo.end()){
+	    cout << "\tPort " << i << " (to dest. " << invPortTo[i] << " buff. dim. " << buffer[i].getMaxBufferSize() << ") RECEIVED: " << flitsIn[i] << " flits" << " SENT:" << flitsOut[i] 
+	        << " flits " << " DROPPED: " << dropped[i] << " flits" << endl;
+	  }
+	}
 }
 
