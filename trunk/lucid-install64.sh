@@ -40,17 +40,44 @@
 #   SVN
 #   gccxml
 #   binutils
-sudo apt-get -y install libsigc++-2.0-dev subversion binutils-dev mpi-default-dev g++ g++-4.4 g++-4.1 gccxml libgfortran3 libibverbs-dev libibverbs1 libicu-dev libnuma1 libopenmpi-dev libopenmpi1.3 libstdc++6-4.4-dev openmpi-common python-dev python2.6-dev ia32-libs patch automake
+sudo apt-get -y install libsigc++-2.0-dev subversion binutils-dev mpi-default-dev g++ g++-4.4 g++-4.1 gccxml libgfortran3 libibverbs-dev libibverbs1 libicu-dev libicu42 libnuma1 libopenmpi-dev libopenmpi1.3 libstdc++6-4.4-dev openmpi-common python-dev python2.6-dev ia32-libs patch automake
 
 mkdir External_tools
 cd External_tools
 
 # boost
 #     download
-wget home.dei.polimi.it/miele/boost_1_42_0_deb64.tar.bz2
-tar xvjf boost_1_42_0_deb64.tar.bz2
-cd boost_1_42_0_deb64
-sudo dpkg -i libicu*.deb
+mkdir boost_1_42_0
+cd boost_1_42_0
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost1.42-all-dev_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost1.42-dev_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-date-time1.42.0_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-date-time1.42-dev_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-filesystem1.42.0_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-filesystem1.42-dev_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-graph1.42-dev_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-iostreams1.42.0_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-iostreams1.42-dev_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-math1.42.0_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-math1.42-dev_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-program-options1.42.0_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-program-options1.42-dev_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-python1.42.0_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-python1.42-dev_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-regex1.42.0_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-regex1.42-dev_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-serialization1.42.0_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-serialization1.42-dev_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-signals1.42.0_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-signals1.42-dev_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-system1.42.0_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-system1.42-dev_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-test1.42.0_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-test1.42-dev_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-thread1.42.0_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-thread1.42-dev_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-wave1.42.0_1.42.0-3ubuntu1_i386.deb
+wget http://de.archive.ubuntu.com/ubuntu/pool/main/b/boost1.42/libboost-wave1.42-dev_1.42.0-3ubuntu1_i386.deb
 sudo dpkg -i libboost*.deb
 cd ..
 
@@ -110,9 +137,14 @@ cd ..
 
 # Cross-Compilers
 #     download
-wget home.dei.polimi.it/miele/cross-compilers.tar.bz2
-tar xvjf cross-compilers.tar.bz2
+mkdir cross-compilers
+cd cross-compilers
+wget http://resp-sim.googlecode.com/files/arm.tar.bz2
+tar xvjf arm.tar.bz2
+wget http://resp-sim.googlecode.com/files/sparc.tar.bz2
+tar xvjf sparc.tar.bz2
 cd ..
+
 
 # Configure software
 cd software
