@@ -27,19 +27,9 @@
    51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA.
 
 
-Required Libraries/Languages:
- SystemC >= 2.2
- TLM = 2.0
- Boost Libraries >= 1.35
- Python >= 2.4
- gccxml >= 0.9 (CVS version preferred)
- Py++ >= 1.5
- pygccxml >= 1.5
- TRAP (svn version, from http://code.google.com/p/trap-gen)
 
+##################################################################################
+You can find a complete guide on how to install and use ReSP in the doc folder.
+For further details refer to http://code.google.com/p/resp-sim
+##################################################################################
 
-In order to start the ReSP setup process, type
-./waf configure --with-systemc=YOUR_SYSTEMC_FOLDER --with-tlm=YOUR_TLM_FOLDER --with-trap=YOUR_TRAP_FOLDER
-
-For more details on ReSP and on the installation process refer to
-http://code.google.com/p/resp-sim/wiki/Setup

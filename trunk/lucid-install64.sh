@@ -143,7 +143,7 @@ wget http://resp-sim.googlecode.com/files/arm.tar.bz2
 tar xvjf arm.tar.bz2
 wget http://resp-sim.googlecode.com/files/sparc.tar.bz2
 tar xvjf sparc.tar.bz2
-cd ..
+cd ../..
 
 
 # Configure software

@@ -39,7 +39,7 @@
 \begin{itemize}
   \item \textbf{graphviz} - necessary to show the architecture graph. It is available in most of Linux distributions or it can be downloaded from \url{http://www.graphviz.org/}.
   \item \textbf{sigc++2.0} - available in the packet manager of your distribution (whichever you are using), it is necessary in case you also need to install the MOMH library.
-  \item \textbf{MOMH} - a library necessary to enable the framework for automatic design space exploration. Instructions on how to download it are available at \url{http://home.gna.org/momh/}.
+  \item \textbf{MOMH} - a library necessary to enable the framework for automatic design space exploration. Instructions on how to download it are available at \url{http://home.gna.org/momh/}. The library can be downloaded also from \url{http://code.google.com/p/resp-sim/downloads/list}
 \end{itemize}
 
 \subsection{Configuration and Compilation}
@@ -57,7 +57,7 @@
 Further details on the configuration and compilation options can be obtained by issuing \texttt{./waf --help}.
 
 \subsection{Cross-compiled Software}
-\paragraph\indent In order to run pieces of software on the Instruction Set Simulators (ISS), it is required to compile them using the cross-compilers specific for the used ISS. Do note that in order to enable all the Trap ISS features, and in particular the OS emulation, the standard crosscompilers have been patched; the crosscompilers for the ISS currently included in ReSP can be downloaded from the project SFTP server (see references in Section~\ref{install:VM}). Once the compilers are decompressed, the applications can be properly cross-compiled using the \texttt{[arch]-elf-[gcc/g++]} tool in the bin directory of the desired architecture. For the proper compilation of the applications making calls to operating system routines, the \texttt{-specs=osemu.specs} command line option has to be passed to the compiler. ReSP also provides a full set of example and benchmarks programs that are stored in the \texttt{software} subdirectory: the compilation of these applications can be automatically performed using the \texttt{waf} tool inside the \texttt{software} subdirectory. The configuration options which can be passed to the \texttt{./waf configure} command are:
+\paragraph\indent In order to run pieces of software on the Instruction Set Simulators (ISS), it is required to compile them using the cross-compilers specific for the used ISS. Do note that in order to enable all the Trap ISS features, and in particular the OS emulation, the standard crosscompilers have been patched; the crosscompilers for the ISS currently included in ReSP can be downloaded from \url{http://code.google.com/p/resp-sim/downloads/list}  or from the project SFTP server (see references in Section~\ref{install:VM}). Once the compilers are decompressed, the applications can be properly cross-compiled using the \texttt{[arch]-elf-[gcc/g++]} tool in the bin directory of the desired architecture. For the proper compilation of the applications making calls to operating system routines, the \texttt{-specs=osemu.specs} command line option has to be passed to the compiler. ReSP also provides a full set of example and benchmarks programs that are stored in the \texttt{software} subdirectory: the compilation of these applications can be automatically performed using the \texttt{waf} tool inside the \texttt{software} subdirectory. The configuration options which can be passed to the \texttt{./waf configure} command are:
 \begin{itemize}
   \item \textit{--arm-compiler=/PATH\_TO/cross-compilers/arm/} specifies the location of the ARM cross-compiler.
   \item \textit{--sparc-compiler=/PATH\_TO/cross-compilers/sparc/} specifies the location of the SPARC cross-compiler for the LEON ISSs.
@@ -84,6 +84,12 @@ Further details on the configuration and compilation options can be obtained by 
 \end{verbatim}
 In order to download the contents, you'll have to access the machine with a specific user; its credentials are:
 \begin{verbatim}
-  Username:  donwloader
+  Username:  downloader
   Password:  getVM
 \end{verbatim}
+The virtual machine runs an Ubuntu operating system; the credentails to login are:
+\begin{verbatim}
+  Username:  resp
+  Password:  resp
+\end{verbatim}
+ReSP is installed in the \texttt{home} directory.
