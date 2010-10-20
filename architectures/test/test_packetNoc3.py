@@ -229,7 +229,7 @@ m4 = trafficGenerator.trafficGenerator('master4', masterLatency1)
 addressSpace = memorySize1+memorySize2*4
 m1.setParameters(NUM_OF_TRANSMISSIONS, 0x0, addressSpace-1, 128, 32, memorySize1+memorySize2*4)
 m2.setParameters(NUM_OF_TRANSMISSIONS, 0x0, addressSpace-1, 1024, 32, memorySize1+memorySize2*4)
-m3.setParameters(NUM_OF_TRANSMISSIONS, 0x0, addressSpace-1, 512, 4096, memorySize1+memorySize2*4)
+m3.setParameters(NUM_OF_TRANSMISSIONS, 0x0, addressSpace-1, 512, 64, memorySize1+memorySize2*4)
 m4.setParameters(NUM_OF_TRANSMISSIONS, 0x0, addressSpace-1, 4096, 64, memorySize1+memorySize2*4)
 #m5.setParameters(NUM_OF_TRANSMISSIONS, 0x0, memorySize1+memorySize2*4-1, memorySize1/8, 16, memorySize1+memorySize2*4)
 #m6.setParameters(NUM_OF_TRANSMISSIONS, 0x0, memorySize1+memorySize2*4-1, memorySize1/64, 4, memorySize1+memorySize2*4)
