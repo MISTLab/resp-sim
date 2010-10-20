@@ -16,6 +16,14 @@ def build(bld):
         obj = bld.new_task_gen(features='cc cprogram')
         obj.env = bld.env_of_name(arch).copy()
         obj.source = """
+            edgeDetectorNocExample.c ReadWriteBitmaps.c 
+        """
+        obj.target = 'edgeDetectorNocExample'
+        obj.env.append_unique('LINKFLAGS', '-lm')
+
+        obj = bld.new_task_gen(features='cc cprogram')
+        obj.env = bld.env_of_name(arch).copy()
+        obj.source = """
             edgeDetectorParallel.c ReadWriteBitmaps.c 
         """
         obj.target = 'edgeDetectorParallel'
