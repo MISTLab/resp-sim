@@ -9,30 +9,30 @@
 	<mpe id="3">
 		<connect dst_id="17"/>
 	</mpe>
-	<mpe id="4">
+	<spe id="4">
 		<connect dst_id="18"/>
-	</mpe>
-	<mpe id="5">
+	</spe>
+	<spe id="5">
 		<connect dst_id="20"/>
-	</mpe>
-	<mpe id="6">
+	</spe>
+	<spe id="6">
 		<connect dst_id="22"/>
-	</mpe>
-	<mpe id="7">
+	</spe>
+	<spe id="7">
 		<connect dst_id="23"/>
-	</mpe>
+	</spe>
 	<spe id="8">
 		<connect dst_id="13"/>
 	</spe>
 	<spe id="9">
 		<connect dst_id="16"/>
 	</spe>
-	<spe id="10">
+	<mpe id="10">
 		<connect dst_id="19"/>
-	</spe>
-	<spe id="11">
+	</mpe>
+	<mpe id="11">
 		<connect dst_id="21"/>
-	</spe>
+	</mpe>
 	<mpe id="12">
 		<connect dst_id="24"/>
 	</mpe>

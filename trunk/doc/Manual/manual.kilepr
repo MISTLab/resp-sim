@@ -66,10 +66,10 @@ ReadWrite=true
 
 [item:ReSP - Manual.tex]
 archive=true
-column=21
+column=0
 encoding=UTF-8
 highlight=LaTeX
-line=39
+line=98
 mode=LaTeX
 open=true
 order=0
@@ -116,10 +116,10 @@ order=1
 
 [item:install.tex]
 archive=true
-column=20
+column=95
 encoding=UTF-8
 highlight=LaTeX
-line=76
+line=98
 mode=LaTeX
 open=true
 order=3

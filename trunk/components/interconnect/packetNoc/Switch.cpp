@@ -224,7 +224,7 @@ void Switch::printStats() {
   cout << "Switch #" << local_id << endl;
 	for(unsigned int i = 0; i < PORTS; i++){
 	  if(invPortTo.find(i)!= invPortTo.end()){
-	    cout << "\tPort " << i << " (to dest. " << invPortTo[i] << " buff. dim. " << buffer[i].getMaxBufferSize() << ") RECEIVED: " << flitsIn[i] << " flits" << " SENT:" << flitsOut[i] 
+	    cout << "\tPort " << i << " (to dest. " << invPortTo[i] << "; buff. dim. " << buffer[i].getMaxBufferSize() << ") RECEIVED: " << flitsIn[i] << " flits" << " SENT:" << flitsOut[i] 
 	        << " flits " << " DROPPED: " << dropped[i] << " flits" << endl;
 	  }
 	}

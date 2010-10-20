@@ -92,4 +92,11 @@ The virtual machine runs an Ubuntu operating system; the credentails to login ar
   Username:  resp
   Password:  resp
 \end{verbatim}
-ReSP is installed in the \texttt{home} directory.
+ReSP is installed in the \texttt{home} directory. 
+After the download of the machine it is suggested to check for any updates on the project repository and to recompile ReSP. To check for updates execute \texttt{svn up} from a console in the \texttt{resp-sim} folder. In case of updates, execute \texttt{./waf} command both in the \texttt{resp-sim} and \texttt{resp-sim/software} folders. Partial recompilation may fail in some particular scenarios causing compile-time or run-time errors; in this situations, it is necessary to execute the following commands in the main project folder:
+\begin{enumerate}
+ \item \texttt{./waf distclean}
+ \item \texttt{./waf configure --with-systemc=External\_tools/systemc-2.2.0 -with-tlm=External\_tools/TLM2}
+ \item \texttt{./waf}
+\end{enumerate}
+

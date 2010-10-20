@@ -5,7 +5,7 @@ import sys,os
 def build(bld):
     bld.add_subdirs('pthread nested')
 
-    fastBenchs = [ 'test_reconfig', 'test_reconfig_scanf', 'test_fi_fir']
+    fastBenchs = [ 'test_reconfig', 'test_reconfig_scanf', 'test_fi_fir', 'test_noc_gamma']
 
     files = os.listdir('test_code')
     files = filter( lambda x: x.endswith('.c') and os.path.splitext(os.path.basename(x))[0] in fastBenchs, files )
