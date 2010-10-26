@@ -1,0 +1,53 @@
+digraph packetNoc {
+  rankdir=TB;
+  node [shape=ellipse fontsize=14 fontname="Courier" style=bold]; mpe_1 mpe_2 mpe_3 mpe_4 spe_5 spe_6;
+  node [shape=box     fontsize=14 fontname="Courier" style=bold]; tlm_a tlm_b tlm_c tlm_d tlm_e tlm_f;
+  node [shape=diamond fontsize=14 fontname="Courier" style=bold]; swi_7 swi_8 swi_9;
+
+  "tlm_a" [label="Processor1\nData Port" color=blue];
+  "tlm_b" [label="Processor1\nInstr. Port" color=blue];
+  "tlm_c" [label="Processor1\nData Port" color=blue];
+  "tlm_d" [label="Processor1\nInstr. Port" color=blue];
+  "tlm_e" [label="mem1" color=blue];
+  "tlm_f" [label="mem2" color=blue];
+
+subgraph cluster_0 {
+  fontsize=14 fontname="Courier" style=bold
+  rankdir=TB;
+  color=blue
+  label = "NOC";
+    
+
+  "mpe_1" [label="MPE 1" color=red];
+  "mpe_2" [label="MPE 2" color=red];
+  "mpe_3" [label="MPE 3" color=red];
+  "mpe_4" [label="MPE 4" color=red];
+  "spe_5" [label="SPE 5" color=orange];
+  "spe_6" [label="SPE 6" color=orange];
+
+
+
+  "swi_7" [label="Switch 7" color=green];
+  "swi_8" [label="Switch 8" color=green];
+  "swi_9" [label="Switch 9" color=green];
+
+  "mpe_1" -> "swi_7" [dir=both]
+  "mpe_2" -> "swi_7" [dir=both]
+  "mpe_3" -> "swi_8" [dir=both]
+  "mpe_4" -> "swi_8" [dir=both]
+  "swi_7" -> "swi_9" [dir=both]
+  "swi_8" -> "swi_9" [dir=both]
+  "swi_9" -> "spe_5" [dir=both]
+  "swi_9" -> "spe_6" [dir=both]
+
+
+	}
+
+
+  "tlm_a" -> "mpe_1"//  [color=yellow label="TLM1" fontname="Courier" fontsize=8 arrowhead=crow];
+  "tlm_b" -> "mpe_2"
+  "tlm_c" -> "mpe_3"
+  "tlm_d" -> "mpe_4"
+  "spe_5" -> "tlm_e"
+  "spe_6" -> "tlm_f"
+}
