@@ -23,6 +23,9 @@ private:
 	unsigned int init_threshold;
 	unsigned int max_threshold;
 	unsigned int min_threshold;
+	unsigned int mult_factor;
+	unsigned int red_factor;
+	
 	
 public:
 					packetNocGovernor(sc_module_name module_name, packetNoc& pnObj, sc_time cycleLatency);
@@ -30,7 +33,8 @@ public:
 					void enableGovernor(bool enabled);
 					bool isEnabled();
 					void printStatus();
-					void initialize(unsigned int bufferSize, unsigned int init_threshold, unsigned int max_threshold, unsigned int min_threshold);
+					void initialize(unsigned int bufferSize, unsigned int init_threshold, unsigned int max_threshold, 
+					                unsigned int min_threshold, unsigned int mult_factor, unsigned int red_factor);
 };
 
 #endif

@@ -309,12 +309,14 @@ noc.changeAllTimeouts(scwrapper.sc_time(1000, scwrapper.SC_NS))
 BUFFER_SIZE = 2
 INIT_THRESHOLD = 50
 MIN_THRESHOLD = 40
-MAX_THRESHOLD = 110
+MAX_THRESHOLD = 1000
+MULT_FACTOR = 5
+RED_FACTOR = 1
 ENABLE = False
 clockGNoc = scwrapper.sc_time(float(1000)/float(NOC_FREQUENCY), scwrapper.SC_NS)
 governor = packetNocGovernor.packetNocGovernor('governor',noc,clockGNoc)
 governor.enableGovernor(ENABLE)
-governor.initialize(BUFFER_SIZE, INIT_THRESHOLD, MAX_THRESHOLD, MIN_THRESHOLD)
+governor.initialize(BUFFER_SIZE, INIT_THRESHOLD, MAX_THRESHOLD, MIN_THRESHOLD, MULT_FACTOR, RED_FACTOR)
 
 # We can finally run the simulation
 # run_simulation()

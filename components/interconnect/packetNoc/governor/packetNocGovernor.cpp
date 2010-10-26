@@ -4,6 +4,13 @@
 packetNocGovernor::packetNocGovernor(sc_module_name module_name, packetNoc& pnObj, sc_time cycleLatency):
 		sc_module(module_name), intClock("clock", cycleLatency), clock(intClock), enabled(false) {
 	noc = &pnObj;
+	
+	init_threshold = 0;
+	max_threshold = 0;
+	min_threshold = 0;
+	mult_factor = 0;
+	red_factor = 0;
+	
 	SC_HAS_PROCESS(packetNocGovernor);
 	SC_METHOD(activity);
 	sensitive << clock.pos();
@@ -28,7 +35,8 @@ bool packetNocGovernor::isEnabled() {
   return enabled;
 }
 
-void packetNocGovernor::initialize(unsigned int bufferSize, unsigned int init_threshold, unsigned int max_threshold, unsigned int min_threshold){
+void packetNocGovernor::initialize(unsigned int bufferSize, unsigned int init_threshold, unsigned int max_threshold, 
+                                   unsigned int min_threshold, unsigned int mult_factor, unsigned int red_factor){
   for(std::map<unsigned int, switch_data_t*>::iterator mapIt = this->noc_data.begin(); mapIt != this->noc_data.end(); mapIt++){
     switch_data_t* tmp = mapIt->second;
     mapIt->second = NULL;
@@ -41,6 +49,8 @@ void packetNocGovernor::initialize(unsigned int bufferSize, unsigned int init_th
   this->min_threshold = min_threshold;
   if (min_threshold >= max_threshold)
     THROW_EXCEPTION("max threshold must be greater than min threshold");
+  this->mult_factor = mult_factor;
+  this->red_factor = red_factor;
 
   std::vector<unsigned int> ids = noc->getSwitchIds();
   for(std::vector<unsigned int>::iterator it = ids.begin(); it!= ids.end(); it++){
@@ -70,7 +80,7 @@ void packetNocGovernor::activity() {
 	      if(currDropped > currSw->currDropped[i]){
 	        unsigned int delta = currDropped - currSw->currDropped[i];
 	        currSw->currDropped[i] = currDropped;
-	        currSw->threshold[i] = currSw->threshold[i] * pow(2,delta);
+	        currSw->threshold[i] = currSw->threshold[i] * pow(this->mult_factor,delta);
 //	        std::cout << " change th " << i << " " << currSw->threshold[i] << " ";
 	        if(currSw->threshold[i] >= this->max_threshold || noc->getBufferSize(mapIt->first,i) == 0){
 	          toIncrease.push_back(i);	        
@@ -79,7 +89,7 @@ void packetNocGovernor::activity() {
 	      }
 	      else{
 	        if(noc->getBufferCurrentFreeSlots(mapIt->first,i) > 0){ //decrease if there is any free slot otherwise it would generate a drop
-	          currSw->threshold[i]--;
+	          currSw->threshold[i]-=this->red_factor;
 	          if(currSw->threshold[i] <= this->min_threshold){
 	            currSw->threshold[i] = this->min_threshold; //useless with <= condition!
 	            if (noc->getBufferSize(mapIt->first,i) > 0)

@@ -95,11 +95,13 @@ BUFFER_SIZE = 2
 INIT_THRESHOLD = 50
 MIN_THRESHOLD = 40
 MAX_THRESHOLD = 160
+MULT_FACTOR = 2
+RED_FACTOR = 1
 ENABLE = True
 clockGNoc = scwrapper.sc_time(float(1000)/float(NOC_FREQUENCY), scwrapper.SC_NS)
 governor = packetNocGovernor.packetNocGovernor('governor',noc,clockGNoc)
 governor.enableGovernor(ENABLE)
-governor.initialize(BUFFER_SIZE, INIT_THRESHOLD, MAX_THRESHOLD, MIN_THRESHOLD)
+governor.initialize(BUFFER_SIZE, INIT_THRESHOLD, MAX_THRESHOLD, MIN_THRESHOLD, MULT_FACTOR, RED_FACTOR)
 
 # Printing some useful statistics before the simulation begins
 noc.printBindings()
