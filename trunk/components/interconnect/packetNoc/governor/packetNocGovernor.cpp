@@ -80,7 +80,7 @@ void packetNocGovernor::activity() {
 	      if(currDropped > currSw->currDropped[i]){
 	        unsigned int delta = currDropped - currSw->currDropped[i];
 	        currSw->currDropped[i] = currDropped;
-	        currSw->threshold[i] = currSw->threshold[i] * pow(this->mult_factor,delta);
+	        currSw->threshold[i] = currSw->threshold[i] * pow((double)this->mult_factor,(double)delta);
 //	        std::cout << " change th " << i << " " << currSw->threshold[i] << " ";
 	        if(currSw->threshold[i] >= this->max_threshold || noc->getBufferSize(mapIt->first,i) == 0){
 	          toIncrease.push_back(i);	        
