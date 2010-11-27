@@ -101,7 +101,7 @@ tar xvjf TLM2.tar.bz2
 svn checkout http://trap-gen.googlecode.com/svn/trunk/ trap-gen
 #     configure/install
 cd trap-gen
-./waf configure --with-systemc=../systemc-2.2.0
+./waf configure --with-systemc=../systemc-2.2.0 --license=gpl
 ./waf
 sudo ./waf install
 cd ..
