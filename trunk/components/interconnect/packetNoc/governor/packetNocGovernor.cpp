@@ -71,116 +71,94 @@ void packetNocGovernor::activity() {
 	  for(std::map<unsigned int, switch_data_t*>::iterator mapIt = this->noc_data.begin(); mapIt != this->noc_data.end(); mapIt++){
 //  	  std::cout << " switch " << mapIt->first << " -> ";
 	    switch_data_t* currSw = mapIt->second;
-	    std::vector<unsigned int> toIncrease;
-	    std::vector<unsigned int> toDecrease;
-	    std::vector<unsigned int> canBeDecreased;
-	    bool noChange = true;
+	    std::set<unsigned int> toIncrease;
+	    std::set<unsigned int> toDecrease;
+	    std::set<unsigned int> canBeDecreased;
 	    for(int i = 0; i < currSw->activeBuffers; i++){
 	      unsigned int currDropped = noc->getDropped(mapIt->first,i);
 	      if(currDropped > currSw->currDropped[i]){
 	        unsigned int delta = currDropped - currSw->currDropped[i];
 	        currSw->currDropped[i] = currDropped;
-	        currSw->threshold[i] = currSw->threshold[i] * pow((double)this->mult_factor,(double)delta);
+	        currSw->threshold[i] = currSw->threshold[i] * pow(this->mult_factor,delta);
 //	        std::cout << " change th " << i << " " << currSw->threshold[i] << " ";
-	        if(currSw->threshold[i] >= this->max_threshold || noc->getBufferSize(mapIt->first,i) == 0){
-	          toIncrease.push_back(i);	        
-	        }
-	        noChange = false;
+	        if(currSw->threshold[i] >= this->max_threshold || noc->getBufferSize(mapIt->first,i) == 0)
+	          toIncrease.insert(i);
 	      }
 	      else{
-	        if(noc->getBufferCurrentFreeSlots(mapIt->first,i) > 0){ //decrease if there is any free slot otherwise it would generate a drop
-	          currSw->threshold[i]-=this->red_factor;
-	          if(currSw->threshold[i] <= this->min_threshold){
-	            currSw->threshold[i] = this->min_threshold; //useless with <= condition!
-	            if (noc->getBufferSize(mapIt->first,i) > 0)
-	              toDecrease.push_back(i);
-	          } else{
-	            if (noc->getBufferSize(mapIt->first,i) > 0)
-	              canBeDecreased.push_back(i);
-	          }
+	        currSw->threshold[i]-=this->red_factor;
+	        if(currSw->threshold[i] < this->min_threshold){
+	          currSw->threshold[i] = this->init_threshold;
+	          if (noc->getBufferCurrentFreeSlots(mapIt->first,i) > 0 && noc->getBufferSize(mapIt->first,i) > 0)
+	            toDecrease.insert(i);
+	        } else{
+	          if (noc->getBufferCurrentFreeSlots(mapIt->first,i) > 0 && noc->getBufferSize(mapIt->first,i) > 0)
+	            canBeDecreased.insert(i);
 	        }
 //	        std::cout << " change th " << i << " " << currSw->threshold[i] << " ";
 	      }
 	    }
 //	    std::cout << std::endl;
+   
       
-      //order according to priority the toIncrease and canBeDecreased vectors 
-      //(it is useless to order the other one since all thresholds are equal)
-      int vetLength = (int) toIncrease.size();
-      for(int k=0; k < vetLength; k++)
-        for(int j=k; j < vetLength; j++)
-          if((currSw->threshold[toIncrease.at(k)]) < (currSw->threshold[toIncrease.at(j)])){
-            unsigned int temp = toIncrease.at(j);
-            toIncrease[j] = toIncrease.at(k);
-            toIncrease[k] = temp;
-          }
-          
-      vetLength = (int) canBeDecreased.size();
-      for(int k=0; k < vetLength; k++)
-        for(int j=k; j < vetLength; j++)
-          if((currSw->threshold[canBeDecreased.at(k)]) > (currSw->threshold[canBeDecreased.at(j)])){
-            unsigned int temp = canBeDecreased.at(j);
-            canBeDecreased[j] = canBeDecreased.at(k);
-            canBeDecreased[k] = temp;
-          }
-
-	    //TODO improvement: if nothing is changed scale thresholds. usefull when init_threshold >> min_threshold
-
 	    bool changed = true;
 	    std::set<unsigned int> justchanged;
-	    for(std::vector<unsigned int>::iterator vetIt = toIncrease.begin(); vetIt!=toIncrease.end() && changed;vetIt++){
+	    //TODO toIncrease, canBeDecreased and toDecrease should be ordered according to threshold value
+	    for(std::set<unsigned int>::iterator setIt = toIncrease.begin(); setIt!=toIncrease.end() && changed;setIt++){
 	      changed = false;
 	      if(toDecrease.begin() != toDecrease.end()){
 	        unsigned int currDecreased = *(toDecrease.begin());
-	        unsigned int currBufferSize1 = noc->getBufferSize(mapIt->first, *vetIt);
-	        noc->changeBufferSize(mapIt->first, *vetIt, currBufferSize1 + 1);
+	        unsigned int currBufferSize1 = noc->getBufferSize(mapIt->first, *setIt);
+	        noc->changeBufferSize(mapIt->first, *setIt, currBufferSize1 + 1);
 	        unsigned int currBufferSize2 = noc->getBufferSize(mapIt->first, currDecreased);
 	        noc->changeBufferSize(mapIt->first, currDecreased, currBufferSize2 -1);
-	        currSw->threshold[*vetIt] = this->init_threshold;
+	        currSw->threshold[*setIt] = this->init_threshold;
 	        currSw->threshold[currDecreased] = this->init_threshold;
 	        toDecrease.erase(toDecrease.begin());
-	        justchanged.insert(*vetIt);
+	        justchanged.insert(*setIt);
 	        justchanged.insert(currDecreased);	        
 	        changed = true;
-//	        std::cout << " switch" << mapIt->first << ": increase " << (*vetIt) << "(" << currBufferSize1 << "->" << (currBufferSize1+1) 
+//	        std::cout << " switch" << mapIt->first << ": increase " << (*setIt) << "(" << currBufferSize1 << "->" << (currBufferSize1+1) 
 //	                  << ") decrease " <<  currDecreased << "(" << currBufferSize2 << "->" << (currBufferSize2-1) << ")" << std::endl;
 	      } else if(canBeDecreased.begin() != canBeDecreased.end()){
 	        unsigned int currDecreased = *(canBeDecreased.begin());
-	        unsigned int currBufferSize1 = noc->getBufferSize(mapIt->first, *vetIt);
-	        noc->changeBufferSize(mapIt->first, *vetIt, currBufferSize1 + 1);
+	        unsigned int currBufferSize1 = noc->getBufferSize(mapIt->first, *setIt);
+	        noc->changeBufferSize(mapIt->first, *setIt, currBufferSize1 + 1);
 	        unsigned int currBufferSize2 = noc->getBufferSize(mapIt->first, currDecreased);
 	        noc->changeBufferSize(mapIt->first, currDecreased, currBufferSize2 - 1);
-	        currSw->threshold[*vetIt] = this->init_threshold;
+	        currSw->threshold[*setIt] = this->init_threshold;
 	        currSw->threshold[currDecreased] = this->init_threshold;
 	        canBeDecreased.erase(canBeDecreased.begin());
-	        justchanged.insert(*vetIt);
+	        justchanged.insert(*setIt);
 	        justchanged.insert(currDecreased);	        
 	        changed = true;
-//	        std::cout << " switch" << mapIt->first << ": increase " << (*vetIt) << "(" << currBufferSize1 << "->" << (currBufferSize1+1) 
+//	        std::cout << " switch" << mapIt->first << ": increase " << (*setIt) << "(" << currBufferSize1 << "->" << (currBufferSize1+1) 
 //	                  << ") decrease " <<  currDecreased << "(" << currBufferSize2 << "->" << (currBufferSize2-1) << ")" << std::endl;
 	      }
 	    }
 	    	    
 	    changed = true;
-	    for(std::vector<unsigned int>::iterator vetIt = toDecrease.begin(); vetIt!=toDecrease.end() && changed;vetIt++){
+	    //TODO toIncrease, canBeDecreased and toDecrease should be ordered according to threshold value
+	    for(std::set<unsigned int>::iterator setIt = toDecrease.begin(); setIt!=toDecrease.end() && changed;setIt++){
 	      changed = false;
 	      bool found = false;
-	      unsigned int selected;
-	      for(int j = 0; j < currSw->activeBuffers && !found; j++){ //select a buffer with the minimum size
-          if(noc->getBufferSize(mapIt->first, j) == 0 && justchanged.find(j)==justchanged.end()){
-            selected = j;
-            found = true;
-          }
+	      unsigned int selected, selectedTH;
+	      selectedTH = this->max_threshold;
+	      for(int j = 0; j < currSw->activeBuffers && !found; j++){
+	        if(noc->getBufferSize(mapIt->first, j) == 0 && justchanged.find(j)==justchanged.end() && selectedTH > currSw->threshold[j]){
+	          selectedTH = currSw->threshold[j];
+	          selected = j;
+	          found = true;
+	        }
 	      }
 	      if(found){
-	        unsigned int currBufferSize1 = noc->getBufferSize(mapIt->first, *vetIt);
-	        noc->changeBufferSize(mapIt->first, *vetIt, currBufferSize1 - 1);
+	        unsigned int currBufferSize1 = noc->getBufferSize(mapIt->first, *setIt);
+	        noc->changeBufferSize(mapIt->first, *setIt, currBufferSize1 - 1);
 	        unsigned int currBufferSize2 = noc->getBufferSize(mapIt->first, selected);
 	        noc->changeBufferSize(mapIt->first, selected, currBufferSize2 + 1);	        
-	        currSw->threshold[*vetIt] = this->init_threshold;
+	        currSw->threshold[*setIt] = this->init_threshold;
 	        currSw->threshold[selected] = this->init_threshold;
 	        justchanged.insert(selected);
-	        justchanged.insert(*vetIt);
+	        justchanged.insert(*setIt);
 	        changed = true;
 	      } 
 	    }
