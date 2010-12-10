@@ -48,6 +48,8 @@
 
 #include "trafficGenerator.hpp"
 
+#define MAX_SIZE 128
+
 trafficGenerator::trafficGenerator(sc_module_name name, sc_time latency = SC_ZERO_TIME) : 
       sc_module(name), initSocket((boost::lexical_cast<std::string>(name) + "_port").c_str()), latency(latency), completed(false),
       maxAddress(0), minAddress(0), step(1), size(8), numOfTransissions(1), endMessageAddress(0) { 
@@ -57,15 +59,14 @@ trafficGenerator::trafficGenerator(sc_module_name name, sc_time latency = SC_ZER
 
 void trafficGenerator::action(){
     unsigned int currAddress = minAddress;
-    unsigned char *datum = new unsigned char[size];
-    //unsigned char datum[1024];
+    unsigned char datum[MAX_SIZE];
     
     if( minAddress + step >= maxAddress)
         THROW_EXCEPTION("The specified parameters are not valid");
         
     bool infiniteLoop = this->numOfTransissions==0?true:false;
     sent = 0;
-        
+    
     for(unsigned int i = 0; i < this->numOfTransissions || infiniteLoop; i++){
         tlm::tlm_generic_payload trans;
         sc_time delay;
@@ -78,11 +79,13 @@ void trafficGenerator::action(){
         this->initSocket->b_transport(trans, delay);
 
         currAddress += step;
-        if(currAddress >= maxAddress) currAddress = minAddress;
+        if(currAddress + step >= maxAddress) currAddress = minAddress;
         sent++;
         wait(latency);
     }
-        
+    
+    //std::cout << name() << " completed!" << std::endl; 
+    
     //send end message
     tlm::tlm_generic_payload trans;
     sc_time delay;
@@ -96,8 +99,7 @@ void trafficGenerator::action(){
     this->completed = true;
     
     std::cout << name() << " completed!" << std::endl; 
-    
-    delete [] datum;
+
 }
 
 bool trafficGenerator::isTransmissionCompleted(){
@@ -106,7 +108,7 @@ bool trafficGenerator::isTransmissionCompleted(){
 
 void trafficGenerator::setParameters(unsigned int numOfTransissions, unsigned int min, unsigned int max, unsigned int step, 
         unsigned int size, unsigned int endMessageAddress){
-    //if(size > MAX_SIZE) THROW_EXCEPTION("Max size is equal to " << MAX_SIZE);
+    if(size > MAX_SIZE) THROW_EXCEPTION("Max size is equal to " << MAX_SIZE);
     this->numOfTransissions = numOfTransissions;
     this->maxAddress = max;
     this->minAddress = min;

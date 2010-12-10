@@ -33,9 +33,9 @@
 	<spe id="11">
 		<connect dst_id="21"/>
 	</spe>
-	<mpe id="12">
+	<spe id="12">
 		<connect dst_id="24"/>
-	</mpe>
+	</spe>
 	<switch id="13">
 		<connect dst_id="8"/>
 		<connect dst_id="14"/>
