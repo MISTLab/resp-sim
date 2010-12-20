@@ -26,13 +26,13 @@
 \begin{verbatim}
   instMaster = testMaster_wrapper.testMaster('master')
   instSlave = testSlave_wrapper.testSlave('slave')
-  instSabouteur = SaboteurLT32.Saboteur('saboteur')
-
+  instSabouteur = SaboteurLT32.SaboteurLT32('saboteur')
+  
   connectPorts(instMaster, instMaster.initSocket, instSabouteur, instSabouteur.targetSocket)
   connectPorts(instSabouteur, instSabouteur.initiatorSocket, instSlave, instSlave.targetSocket)
-
+  
   run_simulation(10)
-  instSabouteur.setMask(SaboteurLT32.Saboteur.VALUE_CHANGE, 120, SaboteurLT32.Saboteur.DATA)
+  instSabouteur.setMask(SaboteurLT32.SaboteurLT32.VALUE_CHANGE, 120, SaboteurLT32.SaboteurLT32.DATA)
   run_simulation()
 \end{verbatim}
 \normalsize

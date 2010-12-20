@@ -104,12 +104,12 @@ private:
   //this type represents a descriptor for a single injection
   struct corruption_type{
     maskFunctionType maskFunction; //type of mask function
-    unsigned int mask; //mask value
+    unsigned char mask; //mask value
     unsigned int line; //line to be corrupted
     lineType linetype; //type of line (DATA or ADDRESS)
     
     //constructor
-    corruption_type (maskFunctionType maskFunction, unsigned int mask, unsigned int line, lineType linetype)
+    corruption_type (maskFunctionType maskFunction, unsigned char mask, unsigned int line, lineType linetype)
     {
       this->maskFunction = maskFunction;
       this->mask = mask;
@@ -122,9 +122,10 @@ private:
   std::vector<corruption_type> corruptions;
 
   //returns a corrupted value given a mask function and a mask value
-  unsigned int corrupt(unsigned int value, unsigned int mask, maskFunctionType maskFunction)
+  unsigned char corrupt(unsigned char value, unsigned char mask, maskFunctionType maskFunction)
   {
-    unsigned int result;
+    unsigned char result;
+    std::cout << "prima " << value << std::endl;
     if(maskFunction == BIT_FLIP)
     result = value^mask;
     else if (maskFunction == BIT_FLIP0)
@@ -135,17 +136,18 @@ private:
       result = mask;
     else
       THROW_EXCEPTION("Sabouter received an unknown mask function ID");
+    std::cout << "dopo " << result << std::endl;
     return result;       
   }
 
 public:
 
   //add a mask to the list of masks used for the injection during the next transaction (not debug ones)
-  void setMask(maskFunctionType maskFunction, unsigned int mask, unsigned int line, lineType linetype)
+  void setMask(maskFunctionType maskFunction, unsigned char mask, unsigned int line, lineType linetype)
   {
     if(maskFunction!=BIT_FLIP && maskFunction!=BIT_FLIP0 && maskFunction!=BIT_FLIP1 && maskFunction!=VALUE_CHANGE)
       THROW_EXCEPTION("Sabouter received an unknown mask function ID");
-    if(line != ADDRESS && line != DATA)
+    if(linetype != ADDRESS && linetype != DATA)
       THROW_EXCEPTION("Sabouters received an invalid line for the injection");
     
     this->corruptions.push_back(corruption_type(maskFunction, mask, line, linetype));
@@ -162,62 +164,31 @@ public:
       } else if(corruptions[i].linetype == DATA && trans.is_write() == true){
         //corrupt the data. do note: we corrupt the data pointed by the payload. thus, we modify also the master data. 
         //indeed we assume that the master has copied the data in a temporary location referenced by the payload
-        unsigned int numWords = trans.get_data_length()/sizeof(unsigned int);
+        unsigned int numWords = trans.get_data_length();
         unsigned char* dataPtr = trans.get_data_ptr();
-        if(numWords < corruptions[i].line){
-          unsigned int datum;
-          unsigned int currDatumLenght = 0;
-          currDatumLenght = sizeof(unsigned int);
-          memcpy(&datum, &dataPtr[corruptions[i].line * sizeof(unsigned int)], currDatumLenght);
+        if(numWords > corruptions[i].line){
+          unsigned char datum;
+          memcpy(&datum, &dataPtr[corruptions[i].line * sizeof(BUSWIDTH)], sizeof(unsigned char));
           datum = this->corrupt(datum, this->corruptions[i].mask, this->corruptions[i].maskFunction);
-          memcpy(&dataPtr[corruptions[i].line * sizeof(unsigned int)], &datum, currDatumLenght);
-        }else if(numWords == corruptions[i].line) {
-          unsigned int currDatumLenght = 0;
-          currDatumLenght = trans.get_data_length() - numWords * sizeof(unsigned int);
-          if(currDatumLenght == 1){
-            unsigned char datum;
-            memcpy(&datum, &dataPtr[corruptions[i].line * sizeof(unsigned int)], currDatumLenght);
-            datum = this->corrupt(datum, this->corruptions[i].mask, this->corruptions[i].maskFunction);
-            memcpy(&dataPtr[corruptions[i].line * sizeof(unsigned int)], &datum, currDatumLenght);          
-          } else if(currDatumLenght == 2){
-            unsigned short int datum;
-            memcpy(&datum, &dataPtr[corruptions[i].line * sizeof(unsigned int)], currDatumLenght);
-            datum = this->corrupt(datum, this->corruptions[i].mask, this->corruptions[i].maskFunction);
-            memcpy(&dataPtr[corruptions[i].line * sizeof(unsigned int)], &datum, currDatumLenght);          
-          }
+          memcpy(&dataPtr[corruptions[i].line * sizeof(BUSWIDTH)], &datum, sizeof(unsigned char));
         } else THROW_EXCEPTION("The index of line to be corrupted is not valid");
       }
     } 
+    
     initiatorSocket->b_transport(trans, delay);
 
     for(int i = 0; i < corruptions.size(); i++){
       if(corruptions[i].linetype == DATA && trans.is_read() == true){
         //corrupt the data. do note: we corrupt the data pointed by the payload. thus, we modify also the master data. 
         //indeed we assume that the master has copied the data in a temporary location referenced by the payload
-        unsigned int numWords = trans.get_data_length()/sizeof(unsigned int);
+        unsigned int numWords = trans.get_data_length();
         unsigned char* dataPtr = trans.get_data_ptr();
         if(numWords < corruptions[i].line){
-          unsigned int datum;
-          unsigned int currDatumLenght = 0;
-          currDatumLenght = sizeof(unsigned int);
-          memcpy(&datum, &dataPtr[corruptions[i].line * sizeof(unsigned int)], currDatumLenght);
+          unsigned char datum;
+          memcpy(&datum, &dataPtr[corruptions[i].line * sizeof(BUSWIDTH)], sizeof(unsigned char));
           datum = this->corrupt(datum, this->corruptions[i].mask, this->corruptions[i].maskFunction);
-          memcpy(&dataPtr[corruptions[i].line * sizeof(unsigned int)], &datum, currDatumLenght);
-        }else if(numWords == corruptions[i].line) {
-          unsigned int currDatumLenght = 0;
-          currDatumLenght = trans.get_data_length() - numWords * sizeof(unsigned int);
-          if(currDatumLenght == 1){
-            unsigned char datum;
-            memcpy(&datum, &dataPtr[corruptions[i].line * sizeof(unsigned int)], currDatumLenght);
-            datum = this->corrupt(datum, this->corruptions[i].mask, this->corruptions[i].maskFunction);
-            memcpy(&dataPtr[corruptions[i].line * sizeof(unsigned int)], &datum, currDatumLenght);          
-          } else if(currDatumLenght == 2){
-            unsigned short int datum;
-            memcpy(&datum, &dataPtr[corruptions[i].line * sizeof(unsigned int)], currDatumLenght);
-            datum = this->corrupt(datum, this->corruptions[i].mask, this->corruptions[i].maskFunction);
-            memcpy(&dataPtr[corruptions[i].line * sizeof(unsigned int)], &datum, currDatumLenght);          
-          }
-        }
+          memcpy(&dataPtr[corruptions[i].line * sizeof(BUSWIDTH)], &datum, sizeof(unsigned char));
+        } else THROW_EXCEPTION("The index of line to be corrupted is not valid");
       }
     }
     
