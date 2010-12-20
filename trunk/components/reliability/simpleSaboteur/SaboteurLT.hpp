@@ -125,7 +125,6 @@ private:
   unsigned char corrupt(unsigned char value, unsigned char mask, maskFunctionType maskFunction)
   {
     unsigned char result;
-    std::cout << "prima " << value << std::endl;
     if(maskFunction == BIT_FLIP)
     result = value^mask;
     else if (maskFunction == BIT_FLIP0)
@@ -136,7 +135,6 @@ private:
       result = mask;
     else
       THROW_EXCEPTION("Sabouter received an unknown mask function ID");
-    std::cout << "dopo " << result << std::endl;
     return result;       
   }
 
