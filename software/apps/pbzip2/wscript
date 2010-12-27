@@ -1,0 +1,35 @@
+#!/usr/bin/env python
+
+import sys,os
+
+def build(bld):
+
+    for arch in bld.lst_variants:
+        obj = bld.new_task_gen('cc','staticlib')
+        obj.env = bld.env_of_name(arch).copy()
+        obj.source = """
+            blocksort.c
+            huffman.c
+            crctable.c
+            randtable.c
+            compress.c
+            decompress.c
+            bzlib.c
+        """
+        obj.target = 'bz2'
+        obj.env.append_unique('CPPFLAGS', '-D_FILE_OFFSET_BITS=64')
+        #obj.env.append_unique('CPPFLAGS', '-DPBZIP_DEBUG')
+
+        obj = bld.new_task_gen('cxx','program')
+        obj.env = bld.env_of_name(arch).copy()
+        obj.source = """
+            pbzip2.cpp
+        """
+        obj.includes = '.'
+        obj.target = 'pbzip2'
+        obj.uselib_local = 'bz2 '
+	if not arch == 'default':
+            obj.uselib_local += 'pthread_stub_'+arch
+        obj.env.append_unique('CPPFLAGS', ['-D_FILE_OFFSET_BITS=64', '-D_LARGEFILE64_SOURCE', '-DPBZIP_NO_LOADAVG'] )
+        if arch == 'default': obj.env.append_unique('LINKFLAGS', '-pthread')
+        #obj.env.append_unique('CPPFLAGS', '-DPBZIP_DEBUG')
