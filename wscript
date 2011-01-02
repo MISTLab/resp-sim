@@ -181,9 +181,8 @@ def configure(conf):
     conf.check_python_version((2,4))
     if float(conf.env['PYTHON_VERSION']) == 2.6:
         if sys.version_info[2] == 3:
+	    print sys.version_info
             conf.fatal('There is a problem of compatibility with boost libraries and Python version = 2.6.3. Please upgrade or downgrade Python version')
-    if float(conf.env['PYTHON_VERSION']) > 2.6:
-        conf.fatal('There is a problem of compatibility with boost libraries and Python version >= 2.6.3. Please downgrade Python version')
     conf.check_python_headers()
     if float(conf.env['PYTHON_VERSION']) < 2.5:
         conf.env.append_unique('CPPFLAGS', '-DPy_ssize_t=long' )

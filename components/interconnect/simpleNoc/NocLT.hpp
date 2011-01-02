@@ -194,7 +194,6 @@ private:
 			// Adding final edge to the internal graph
 			edges[numEdges-1] = Edge_desc(numEdges,1);
 			weights[numEdges-1] = 1;
-			numEdges++;
 			break;
 		case EXPSTAR:
 			allocSwitch = new SwitchLT<BUSWIDTH>(centralTag,this->switchLatency,locking,maxSwitchQueue);
@@ -250,6 +249,7 @@ private:
 		default:
 			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": The given topology is unknown, NOC cannot be created");
 		}
+		std::cerr << numMasters+numSlaves+extraSwitches << " " << numEdges << std::endl;
 		networkGraph = Graph_t(edges, edges + numEdges, weights, numMasters+numSlaves+extraSwitches);
 		graphWeightMap = get(edge_weight, networkGraph);
 
