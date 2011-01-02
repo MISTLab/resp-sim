@@ -24,7 +24,7 @@ class GenericBreakpoint( sc_controller_wrapper.DeltaCallback ):
 #
 # Commodity checker classes
 #
-class equals():
+class equals:
     def __init__(self,y):
         self.y = y
 
@@ -34,7 +34,7 @@ class equals():
         else:
             return x == self.y
 
-class lesser():
+class lesser:
     def __init__(self,y):
         self.y = y
 
@@ -44,7 +44,7 @@ class lesser():
         else:
             return x < self.y
 
-class greater():
+class greater:
     def __init__(self,y):
         self.y = y
 
