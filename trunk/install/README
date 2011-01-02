@@ -1,0 +1,8 @@
+These are scripts for easier installation of ReSP dependent software on
+some popular Linux distributions, namely Ubuntu and CentOS.
+
+To install, run the scripts in ReSP's root directory (i.e. one up from
+where this file is located).
+Please note that all scripts require root access to your machine, and
+in particular the Ubuntu scripts via sudo, and the CentOS one via the
+user who is running the script.
