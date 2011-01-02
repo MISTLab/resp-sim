@@ -310,7 +310,11 @@ namespace resp{
 
             boost::python::handle<> obj_hdl(boost::python::borrowed(obj_ptr));
             PyObject *key, *value;
-            Py_ssize_t pos = 0;
+#if PY_MINOR_VERSION > 4
+	    Py_ssize_t pos = 0;
+#else
+	    int pos = 0;
+#endif
             while (PyDict_Next(obj_hdl.get(), &pos, &key, &value)) {
                 boost::python::handle<> py_key_hdl(boost::python::borrowed(key));
                 boost::python::object py_key_obj(py_key_hdl);
@@ -346,7 +350,11 @@ namespace resp{
 
             boost::python::handle<> obj_hdl(boost::python::borrowed(obj_ptr));
             PyObject *key, *value;
-            Py_ssize_t pos = 0;
+#if PY_MINOR_VERSION > 4
+	    Py_ssize_t pos = 0;
+#else
+	    int pos = 0;
+#endif
             while (PyDict_Next(obj_ptr, &pos, &key, &value)) {
                 boost::python::handle<> py_key_hdl(boost::python::borrowed(key));
                 boost::python::object py_key_obj(py_key_hdl);
