@@ -249,7 +249,6 @@ private:
 		default:
 			THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": The given topology is unknown, NOC cannot be created");
 		}
-		std::cerr << numMasters+numSlaves+extraSwitches << " " << numEdges << std::endl;
 		networkGraph = Graph_t(edges, edges + numEdges, weights, numMasters+numSlaves+extraSwitches);
 		graphWeightMap = get(edge_weight, networkGraph);
 
