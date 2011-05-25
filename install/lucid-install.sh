@@ -138,16 +138,16 @@ wget http://resp-sim.googlecode.com/files/arm.tar.bz2
 tar xvjf arm.tar.bz2
 wget http://resp-sim.googlecode.com/files/sparc.tar.bz2
 tar xvjf sparc.tar.bz2
-cd ../..
+cd ../../..
 
 # Configure software
 cd software
-./waf configure --arm-compiler=../External_tools/cross-compilers/arm --sparc-compiler=../External_tools/cross-compilers/sparc
+./waf configure --arm-compiler=../install/External_tools/cross-compilers/arm --sparc-compiler=../install/External_tools/cross-compilers/sparc
 ./waf
 cd ..
 
 # Configure resp
-./waf configure --with-systemc=External_tools/systemc-2.2.0 --with-tlm=External_tools/TLM2 --with-momh-header=/usr/local/include/libmomh
+./waf configure --with-systemc=../install/External_tools/systemc-2.2.0 --with-tlm=../install/External_tools/TLM2 --with-momh-header=/usr/local/include/libmomh
 ./waf
 
 ./waf -C
