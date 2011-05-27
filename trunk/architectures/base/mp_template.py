@@ -41,7 +41,7 @@
 
 ###### GENERAL PARAMETERS #####
 PROCESSOR_FREQUENCY = 500         # MHz
-PROCESSOR_NUMBER    = 4           #
+PROCESSOR_NUMBER    = 10          #
 try:
     PROCESSOR_NAMESPACE
 except:
@@ -56,7 +56,7 @@ MEM_LATENCY       = 10.0           # ns
 try:
     SOFTWARE
 except:
-    SOFTWARE = 'ffmpeg'
+    SOFTWARE = 'test'
 
 if SOFTWARE:
     try:
@@ -136,9 +136,9 @@ for i in range(0, PROCESSOR_NUMBER):
     processors[i].PROGRAM_LIMIT = loader.getProgDim() + loader.getDataStart()
     processors[i].PROGRAM_START = loader.getDataStart()
     # Set the processor ID
-    processors[i].MP_ID.immediateWrite(i)
     #processors[i].MPROC_ID = (i << 28)
     processors[i].resetOp()
+    processors[i].MP_ID.immediateWrite(i)
 
 print "Setting up OS Emulation"
 
