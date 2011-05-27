@@ -52,18 +52,8 @@
 #include <externalPorts.hpp>
 #include <decoder.hpp>
 #ifdef __GNUC__
-#ifdef __GNUC_MINOR__
-#if (__GNUC__ >= 4 && __GNUC_MINOR__ >= 3)
-#include <tr1/unordered_map>
-#define template_map std::tr1::unordered_map
-#else
 #include <ext/hash_map>
 #define  template_map __gnu_cxx::hash_map
-#endif
-#else
-#include <ext/hash_map>
-#define  template_map __gnu_cxx::hash_map
-#endif
 #else
 #ifdef _WIN32
 #include <hash_map>

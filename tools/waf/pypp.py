@@ -386,17 +386,17 @@ def detect(conf):
     if not conf.env['CC_VERSION']:
         conf.fatal('Error in determining gcc version')
 
-    if int(conf.env['CC_VERSION'][1]) >= 3:
-        for i in ['.2', '.1', '.0']:
-            for j in ['.4', '.3', '.2', '.1', '.0', '']:
-                if conf.find_program('g++-4' + i + j):
-                    conf.env['CXX_OLD_VERSION'] = ['g++-4' + i + j]
-                    break
-            if conf.env['CXX_OLD_VERSION']:
-                break
-        if not conf.env['CXX_OLD_VERSION']:
-            conf.fatal('Unable to find a g++ version older than 4.3: gccxxml does not work with g++ >= 4.3. Please install an old gcc version along with the current one')
-
+    #if int(conf.env['CC_VERSION'][1]) >= 3:
+        #for i in ['.2', '.1', '.0']:
+            #for j in ['.4', '.3', '.2', '.1', '.0', '']:
+                #if conf.find_program('g++-4' + i + j):
+                    #conf.env['CXX_OLD_VERSION'] = ['g++-4' + i + j]
+                    #break
+            #if conf.env['CXX_OLD_VERSION']:
+                #break
+        #if not conf.env['CXX_OLD_VERSION']:
+            #conf.fatal('Unable to find a g++ version older than 4.3: gccxxml does not work with g++ >= 4.3. Please install an old gcc version along with the current one')
+    #conf.env['CXX_OLD_VERSION'] = ['']
     ##################################################
     # Check for pygccxml
     ##################################################
@@ -516,10 +516,10 @@ def dopypp(task):
     global_includes += [os.path.abspath(os.path.join(task.bldpath, i.srcpath(task.env))) for i in task.path_lst]
 
     try:
-        if int(task.env['CC_VERSION'][1]) >= 3:
-            compilerExec = task.env['CXX_OLD_VERSION'][0]
-        else:
-            compilerExec = task.env['CXX'][0]
+        #if int(task.env['CC_VERSION'][1]) >= 3:
+            #compilerExec = task.env['CXX_OLD_VERSION'][0]
+        #else:
+        compilerExec = task.env['CXX'][0]
 
         # No cache can be used on mac-osx systems, otherwise pygccxml segfaults
         if sys.platform != 'darwin':
