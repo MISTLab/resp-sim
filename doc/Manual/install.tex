@@ -67,11 +67,11 @@ Further details on the configuration and compilation options can be obtained by 
 \subsection{Platform Testing}
 \paragraph\indent To check the correct compilation of the entire platform, the command \texttt{./waf -C} can be issued in ReSP main directory. This command will launch the simulation of some architectures using some application contained into the software folder, thus even the software should be cross-compiled before launching the test.
 
-\section{Simplified installation for Ubuntu OS}
+\section{Simplified installation for Ubuntu and CentOS OS}
 \label{install:ubuntu}
-\paragraph\indent The latest two releases of Ubuntu (9.10 Karmic Koala and 10.04 Lucid Lynx) have all the proper versions of dependent software in their package repository. We provide a single script to automatically collect all the dependent software and perform its installation. Prerequisites:
+\paragraph\indent The latest releases of Ubuntu (from 9.10 Karmic Koala) and CentOS have all the proper versions of dependent software in their package repository. We provide a single script to automatically collect all the dependent software and perform its installation. Prerequisites:
 \begin{itemize}
   \item You need to have administrator rights to perform the automatic installation. The script uses the standard \texttt{sudo} command, and will most likely require the input of your password only once.
   \item You must have an active Internet connection to download the required packages.
 \end{itemize}
-\paragraph\indent The installation is started by simply running the script \texttt{lucid-install.sh} from the root of the ReSP tree: \texttt{sudo sh ./lucid-install.sh}. Choose the 32 or 64 bit installer according to the base architecture of your OS (you can obtain it by issuing the command \texttt{uname -m} in a teminal).
+\paragraph\indent The installation is started by simply running the script contained in install folder \underline{from the root of the ReSP tree}. For instance, in order to install on Ubuntu 10.04 Lucid, it is necessary to execute from the root of the ReSP tree: \texttt{sudo sh ./install/lucid-install.sh}. Choose the 32 or 64 bit installer according to the base architecture of your OS (you can obtain it by issuing the command \texttt{uname -m} in a teminal).
