@@ -11,7 +11,7 @@
   \item[OS Emulation]: ReSP has the possibility of completely emulating a multi-threaded multi-processor posix-compilant Operating System. This means that every call to Operating System routines performed by your program (the one running on the ISS) will be forwarded to the host OS (the one running on your PC) instead of being simulated. Thanks to the cross-compilation of the \texttt{libgomp} library it is also possible to emulate OpenMP based programs.
   \item[Binutils Wrapper]: instantiated around the \texttt{binutils} libraries (in particular around BFD) in order to be able to access, parse and, in case, modify executable files. This wrapper is currently used for the OS emulation; furthermore, it can be used also for deugging purposes.
   \item[Cross-Compilers]: are furnished in order to compile the applications running on the Instruction Set Simulators. They are based on \texttt{newlib} and fully support our OS emulation mechanism.
-  \item[TCP interface]: in order to be able to control ReSP through a socket interface. This interface can be used by an external program (for example a GUI) to communicate with ReSP.
+%  \item[TCP interface]: in order to be able to control ReSP through a socket interface. This interface can be used by an external program (for example a GUI) to communicate with ReSP.
 \end{description}
 
 \section{Problems of current simulators}

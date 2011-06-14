@@ -40,7 +40,7 @@
 #   SVN
 #   gccxml
 #   binutils
-sudo apt-get -y install libsigc++-2.0-dev subversion binutils-dev mpi-default-dev g++ g++-4.4 gcc-multilib g++-multilib gccxml libgfortran3 libibverbs-dev libibverbs1 libicu-dev libicu42 libnuma1 libopenmpi-dev libopenmpi1.3 libstdc++6-4.4-dev openmpi-common python-dev python2.6-dev libboost1.42-dev libboost1.42-all-dev libboost-dbg libboost-thread1.42.0 libboost-system1.42.0 libboost-regex1.42.0 libboost-program-options1.42.0 libboost-filesystem1.42.0
+sudo apt-get -y install libsigc++-2.0-dev subversion binutils-dev mpi-default-dev g++ gcc-multilib g++-multilib gccxml libgfortran3 libibverbs-dev libibverbs1 libicu-dev libicu42 libnuma1 libopenmpi-dev libopenmpi1.3 libstdc++6-4.4-dev openmpi-common python-dev ia32-libs patch automake libboost1.42-dev libboost1.42-all-dev libboost-dbg libboost-thread1.42.0 libboost-system1.42.0 libboost-regex1.42.0 libboost-program-options1.42.0 libboost-filesystem1.42.0
 
 mkdir External_tools
 cd External_tools
@@ -87,6 +87,11 @@ wget http://resp-sim.googlecode.com/files/systemc-2.2.0_gcc4.tar.bz2
 tar xvjf systemc-2.2.0_gcc4.tar.bz2
 cd systemc-2.2.0
 sudo rm -r lib-linux
+cp ../../ext/systemc/configure.in.patch ./
+patch -p0 -i configure.in.patch
+aclocal
+automake --add-missing --copy
+autoconf
 ./configure
 make -j 2
 sudo make install
@@ -101,7 +106,7 @@ tar xvjf TLM2.tar.bz2
 svn checkout http://trap-gen.googlecode.com/svn/trunk/ trap-gen
 #     configure/install
 cd trap-gen
-./waf configure --with-systemc=../systemc-2.2.0 --license=gpl
+./waf configure --with-systemc=../systemc-2.2.0  --license=gpl
 ./waf
 sudo ./waf install
 cd ..
