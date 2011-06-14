@@ -75,28 +75,3 @@ Further details on the configuration and compilation options can be obtained by 
   \item You must have an active Internet connection to download the required packages.
 \end{itemize}
 \paragraph\indent The installation is started by simply running the script \texttt{lucid-install.sh} from the root of the ReSP tree: \texttt{sudo sh ./lucid-install.sh}. Choose the 32 or 64 bit installer according to the base architecture of your OS (you can obtain it by issuing the command \texttt{uname -m} in a teminal).
-
-\section{Virtual Machine}
-\label{install:VM}
-\paragraph\indent A Virtual Machine running with VirtualBox v3.0 is distributed on the project SFTP server with a version of ReSP already configured and compiled. The user can simply download it and directly start to use the tool. The project SFTP server is available at the following address:
-\begin{verbatim}
-  pc121-202.elet.polimi.it:22
-\end{verbatim}
-In order to download the contents, you'll have to access the machine with a specific user; its credentials are:
-\begin{verbatim}
-  Username:  downloader
-  Password:  getVM
-\end{verbatim}
-The virtual machine runs an Ubuntu operating system; the credentails to login are:
-\begin{verbatim}
-  Username:  resp
-  Password:  resp
-\end{verbatim}
-ReSP is installed in the \texttt{home} directory. 
-After the download of the machine it is suggested to check for any updates on the project repository and to recompile ReSP. To check for updates execute \texttt{svn up} from a console in the \texttt{resp-sim} folder. In case of updates, execute \texttt{./waf} command both in the \texttt{resp-sim} and \texttt{resp-sim/software} folders. Partial recompilation may fail in some particular scenarios causing compile-time or run-time errors; in this situations, it is necessary to execute the following commands in the main project folder:
-\begin{enumerate}
- \item \texttt{./waf distclean}
- \item \texttt{./waf configure --with-systemc=External\_tools/systemc-2.2.0 -with-tlm=External\_tools/TLM2}
- \item \texttt{./waf}
-\end{enumerate}
-
