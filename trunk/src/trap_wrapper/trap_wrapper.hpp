@@ -45,6 +45,7 @@
 #ifndef TRAP_WRAPPER_HPP
 #define TRAP_WRAPPER_HPP
 
+#undef __GNUC_MINOR__
 #include <ToolsIf.hpp>
 #include <osEmulator.hpp>
 #include <profiler.hpp>

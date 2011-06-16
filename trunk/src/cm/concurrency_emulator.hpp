@@ -59,6 +59,7 @@
 #endif
 #endif
 
+#undef __GNUC_MINOR__
 #include <ABIIf.hpp>
 #include <ToolsIf.hpp>
 #include <syscCallB.hpp>
