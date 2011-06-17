@@ -33,29 +33,13 @@
 #
 ################################################################################
 
-# Install script for Ubuntu 10.10 Maverick
+# Install script for Ubuntu 11.04 Natty
 
 # Prerequisite packages
-#   GCC 4.2
-#   SVN
-#   gccxml
-#   binutils
 sudo apt-get -y install libsigc++-2.0-dev subversion binutils-dev mpi-default-dev g++ gcc-multilib g++-multilib gccxml libgfortran3 libibverbs-dev libibverbs1 libicu-dev libicu42 libnuma1 libopenmpi-dev libopenmpi1.3 libstdc++6-4.4-dev openmpi-common python-dev libboost1.42-dev libboost1.42-all-dev libboost-dbg libboost-thread1.42.0 libboost-system1.42.0 libboost-regex1.42.0 libboost-program-options1.42.0 libboost-filesystem1.42.0
 
 mkdir External_tools
 cd External_tools
-
-# g++-4.2
-#     download
-mkdir gcc-4.2
-cd gcc-4.2
-wget http://de.archive.ubuntu.com/ubuntu/pool/universe/g/gcc-4.2/cpp-4.2_4.2.4-5ubuntu1_i386.deb
-wget http://de.archive.ubuntu.com/ubuntu/pool/universe/g/gcc-4.2/libstdc++6-4.2-dev_4.2.4-5ubuntu1_i386.deb
-wget http://de.archive.ubuntu.com/ubuntu/pool/universe/g/gcc-4.2/gcc-4.2-base_4.2.4-5ubuntu1_i386.deb
-wget http://de.archive.ubuntu.com/ubuntu/pool/universe/g/gcc-4.2/gcc-4.2_4.2.4-5ubuntu1_i386.deb
-wget http://de.archive.ubuntu.com/ubuntu/pool/universe/g/gcc-4.2/g++-4.2_4.2.4-5ubuntu1_i386.deb
-sudo dpkg -i *.deb
-cd ..
 
 # Pyplusplus
 #     pygccxml
