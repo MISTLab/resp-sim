@@ -163,8 +163,8 @@ print "Setting up OS Emulation"
 if OS_EMULATION:
     for i in range(0, PROCESSOR_NUMBER):
         curEmu = trapwrapper.OSEmulator32(processors[i].getInterface())
-        #curEmu.set_program_args(ARGS)
         curEmu.initSysCalls(SOFTWARE)
+        curEmu.set_program_args(ARGS)
         processors[i].toolManager.addTool(curEmu)
 
 # We can finally run the simulation

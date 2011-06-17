@@ -316,10 +316,13 @@ for i in range(0, PROCESSOR_NUMBER):
 print "Setting up OS Emulation"
 tools = list()
 if OS_EMULATION:
-    trapwrapper.OSEmulatorBase.set_program_args(ARGS)
     for i in range(0, PROCESSOR_NUMBER):
         curEmu = trapwrapper.OSEmulator32(processors[i].getInterface())
         curEmu.initSysCalls(SOFTWARE)
+        curEmu.set_program_args(ARGS)
+        # OpenMP Support
+        curEmu.set_environ('OMP_NUM_THREADS', str(PROCESSOR_NUMBER)) 
+
         processors[i].toolManager.addTool(curEmu)
         ##### CONCURRENCY MANAGEMENT #####
         concurrentEmu = cm_wrapper.ConcurrencyEmulator32(processors[i].getInterface(),memorySize1+memorySize2)
@@ -327,8 +330,6 @@ if OS_EMULATION:
         processors[i].toolManager.addTool(concurrentEmu)
         tools.append(curEmu)
         tools.append(concurrentEmu)
-    # OpenMP Support
-    trapwrapper.OSEmulatorBase.set_environ('OMP_NUM_THREADS', str(PROCESSOR_NUMBER)) 
 
 pytCalls = list()
 # Now I initialize the reconfiguration emulator

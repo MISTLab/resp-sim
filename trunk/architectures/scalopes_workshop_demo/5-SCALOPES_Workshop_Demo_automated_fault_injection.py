@@ -203,7 +203,6 @@ for i in range(0, PROCESSOR_NUMBER):
 tools = list()
 print "Setting up OS Emulation"
 if OS_EMULATION:
-    trapwrapper.OSEmulatorBase.set_program_args(ARGS)
     for i in range(0, PROCESSOR_NUMBER):
         ## CHECKER ##
         FUNC_DESC = "architectures/scalopes_workshop_demo/functionsDescriptor.txt"
@@ -216,6 +215,7 @@ if OS_EMULATION:
 
         curEmu = trapwrapper.OSEmulator32(processors[i].getInterface())
         curEmu.initSysCalls(SOFTWARE)
+        curEmu.set_program_args(ARGS)
         processors[i].toolManager.addTool(curEmu)
 
 # Now I initialize the reconfiguration emulator
