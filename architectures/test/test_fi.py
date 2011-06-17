@@ -138,9 +138,9 @@ processor.resetOp();
 
 # Now I initialize the OS emulator
 if OS_EMULATION:
-    trapwrapper.OSEmulatorBase.set_program_args(ARGS)
     curEmu = trapwrapper.OSEmulator32(processor.getInterface())
     curEmu.initSysCalls(SOFTWARE)
+    curEmu.set_program_args(ARGS)
     processor.toolManager.addTool(curEmu)
 
 # We can finally run the simulation

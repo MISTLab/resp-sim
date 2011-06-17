@@ -62,7 +62,7 @@ if SOFTWARE:
     try:
         ARGS
     except:
-        ARGS = None
+        ARGS = []
 
 OS_EMULATION = True     # True or False
 
@@ -148,6 +148,10 @@ if OS_EMULATION:
     for i in range(0, PROCESSOR_NUMBER):
         curEmu = trapwrapper.OSEmulator32(processors[i].getInterface())
         curEmu.initSysCalls(SOFTWARE)
+        curEmu.set_program_args(ARGS)
+
+        # OpenMP Support
+        curEmu.set_environ('OMP_NUM_THREADS', str(PROCESSOR_NUMBER)) 
         
         ##### CONCURRENCY MANAGEMENT #####
         concurrentEmu = cm_wrapper.ConcurrencyEmulator32(processors[i].getInterface(),memorySize)
@@ -158,9 +162,6 @@ if OS_EMULATION:
         tools.append(curEmu)
         tools.append(concurrentEmu)
     
-    # OpenMP Support
-    trapwrapper.OSEmulatorBase.set_environ('OMP_NUM_THREADS', str(PROCESSOR_NUMBER)) 
 
     # Command line
-    #ARGUMENTS = ("ffmpeg.exe", "-idct", "simplearm", "-y", "-threads", "1", "-i", "/home/beltrame/Projects/resp-old/software/application/sheep.mpg", "/home/beltrame/minimal.avi")
-    #trapwrapper.OSEmulatorBase.set_program_args(ARGUMENTS)
+    #ARGS = ("ffmpeg.exe", "-idct", "simplearm", "-y", "-threads", "1", "-i", "/home/beltrame/Projects/resp-old/software/application/sheep.mpg", "/home/beltrame/minimal.avi")

@@ -210,10 +210,10 @@ for i in range(0, PROCESSOR_NUMBER):
 print "Setting up OS Emulation"
 tools = list()
 if OS_EMULATION:
-    trapwrapper.OSEmulatorBase.set_program_args(ARGS)
     for i in range(0, PROCESSOR_NUMBER):
         curEmu = trapwrapper.OSEmulator32(processors[i].getInterface())
         curEmu.initSysCalls(SOFTWARE)
+        curEmu.set_program_args(ARGS)
         processors[i].toolManager.addTool(curEmu)
         tools.append(curEmu)
 
