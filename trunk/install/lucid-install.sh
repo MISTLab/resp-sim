@@ -36,11 +36,7 @@
 # Install script for Ubuntu 10.04 Lucid Lynx and Ubuntu 9.10 Karmic Koala
 
 # Prerequisite packages
-#   GCC 4.1
-#   SVN
-#   gccxml
-#   binutils
-sudo apt-get -y install libsigc++-2.0-dev subversion binutils-dev mpi-default-dev g++ g++-4.4 g++-4.1 gcc-multilib g++-multilib gccxml libgfortran3 libibverbs-dev libibverbs1 libicu-dev libicu42 libnuma1 libopenmpi-dev libopenmpi1.3 libstdc++6-4.4-dev openmpi-common python-dev python2.6-dev
+sudo apt-get -y install libsigc++-2.0-dev subversion binutils-dev mpi-default-dev g++ gcc-multilib g++-multilib gccxml libgfortran3 libibverbs-dev libibverbs1 libicu-dev libicu42 libnuma1 libopenmpi-dev libopenmpi1.3 libstdc++6-4.4-dev openmpi-common python-dev
 
 mkdir External_tools
 cd External_tools
@@ -125,7 +121,7 @@ tar xvjf TLM2.tar.bz2
 svn checkout http://trap-gen.googlecode.com/svn/trunk/ trap-gen
 #     configure/install
 cd trap-gen
-./waf configure --with-systemc=../systemc-2.2.0  --license=gpl
+./waf configure --with-systemc=../systemc-2.2.0 --license=gpl
 ./waf
 sudo ./waf install
 cd ..
@@ -147,7 +143,7 @@ cd software
 cd ..
 
 # Configure resp
-./waf configure --with-systemc=../External_tools/systemc-2.2.0 --with-tlm=../External_tools/TLM2 --with-momh-header=/usr/local/include/libmomh
+./waf configure --with-systemc=External_tools/systemc-2.2.0 --with-tlm=External_tools/TLM2 --with-momh-header=/usr/local/include/libmomh
 ./waf
 
 ./waf -C
