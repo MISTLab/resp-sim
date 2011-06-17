@@ -36,11 +36,7 @@
 # Install script for Ubuntu 10.04 Lucid Lynx and Ubuntu 9.10 Karmic Koala
 
 # Prerequisite packages
-#   GCC 4.1
-#   SVN
-#   gccxml
-#   binutils
-sudo apt-get -y install libsigc++-2.0-dev subversion binutils-dev mpi-default-dev g++ g++-4.4 g++-4.1 gcc-multilib g++-multilib gccxml libgfortran3 libibverbs-dev libibverbs1 libicu-dev libicu42 libnuma1 libopenmpi-dev libopenmpi1.3 libstdc++6-4.4-dev openmpi-common python-dev python2.6-dev ia32-libs patch automake
+sudo apt-get -y install libsigc++-2.0-dev subversion binutils-dev mpi-default-dev g++ gcc-multilib g++-multilib gccxml libgfortran3 libibverbs-dev libibverbs1 libicu-dev libicu42 libnuma1 libopenmpi-dev libopenmpi1.3 libstdc++6-4.4-dev openmpi-common python-dev ia32-libs patch automake
 
 mkdir External_tools
 cd External_tools
@@ -144,7 +140,6 @@ tar xvjf arm.tar.bz2
 wget http://resp-sim.googlecode.com/files/sparc.tar.bz2
 tar xvjf sparc.tar.bz2
 cd ../..
-
 
 # Configure software
 cd software
