@@ -21,13 +21,14 @@ using namespace std;
 using namespace tlm;
 using namespace tlm_utils;
 
-#define DEFAULT_BUFFER_SIZE	1
+#define DEFAULT_BUFFER_SIZE	2
 #define PORTS			5
-#define BYTESPERPACKET		4
-#define TIMEOUT			100
+#define BYTESPERPACKET	1
+#define TIMEOUT			1000
 #define SESSION_ID_OFFSET	1000
 
 //#define DEBUGMODE
+//#define DEBUGM
 #define PRINTNULLGEN
 
 // Routing tables entry

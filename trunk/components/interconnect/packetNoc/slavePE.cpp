@@ -56,7 +56,7 @@ void slavePE::txProcess() {
 	sendNull = newSendNull;
 }
 
-void slavePE::rxProcess() {
+void slavePE::rxProcess() { //TODO in case of retransmission, the request is reissued to the slave. It should not be reissued, only the aswer should be sent back. to do this, a completedSessions map should be used
 	Packet p = pack_in.read();
 	if(p != -1){					// null packet
 		switch(p.type) {
@@ -75,7 +75,7 @@ void slavePE::rxProcess() {
 				<< ": SE[" << local_id << "] \tRECEIVED HEAD" << " \t\t" \
 				<< p << "." << endl;
 			#endif
-			if (openSessions[p.session_id] == NULL) openSessions[p.session_id] = new Session(p.size);
+			if (openSessions[p.session_id] == NULL) openSessions[p.session_id] = new Session(p.size); //TODO: accoding to the below TODO, this test should be changed in openSessions.count(p.session_id)==0
 			openSessions[p.session_id]->newPacket(p.flit_left);
 			flitsIn++;
 			if (openSessions[p.session_id]->isComplete()) {
@@ -84,7 +84,7 @@ void slavePE::rxProcess() {
 				Packet *persistant = new Packet(p);
 				sc_spawn(sc_bind(&slavePE::launchTLMWrite,this,sc_ref(*persistant)));
 				delete openSessions[p.session_id];
-				openSessions[p.session_id] = NULL;
+				openSessions[p.session_id] = NULL; //TODO: when a session is closed, it should be removed from openSessions
 			}
 			break;
 		case BODY:				// BODY management
@@ -93,7 +93,7 @@ void slavePE::rxProcess() {
 				<< ": SE[" << local_id << "] \tRECEIVED BODY" << " \t\t" \
 				<< p << "." << endl;
 			#endif
-			if (openSessions[p.session_id] == NULL) openSessions[p.session_id] = new Session(p.size);
+			if (openSessions[p.session_id] == NULL) openSessions[p.session_id] = new Session(p.size); //TODO: accoding to the below TODO, this test should be changed in openSessions.count(p.session_id)==0
 			openSessions[p.session_id]->newPacket(p.flit_left);
 			flitsIn++;
 			if (openSessions[p.session_id]->isComplete()) {
@@ -102,7 +102,7 @@ void slavePE::rxProcess() {
 				Packet *persistant = new Packet(p);
 				sc_spawn(sc_bind(&slavePE::launchTLMWrite,this,sc_ref(*persistant)));
 				delete openSessions[p.session_id];
-				openSessions[p.session_id] = NULL;
+				openSessions[p.session_id] = NULL; //TODO: when a session is closed, it should be removed from openSessions
 			}
 			break;
 		case TAIL:				// TAIL management
@@ -112,7 +112,7 @@ void slavePE::rxProcess() {
 				<< p << "." << endl;
 			#endif
 			p.session_id = p.session_id;
-			if (openSessions[p.session_id] == NULL) openSessions[p.session_id] = new Session(p.size);
+			if (openSessions[p.session_id] == NULL) openSessions[p.session_id] = new Session(p.size); //TODO: accoding to the below TODO, this test should be changed in openSessions.count(p.session_id)==0
 			openSessions[p.session_id]->newPacket(p.flit_left);
 			flitsIn++;
 			if (openSessions[p.session_id]->isComplete()) {
@@ -121,7 +121,7 @@ void slavePE::rxProcess() {
 				Packet *persistant = new Packet(p);
 				sc_spawn(sc_bind(&slavePE::launchTLMWrite,this,sc_ref(*persistant)));
 				delete openSessions[p.session_id];
-				openSessions[p.session_id] = NULL;
+				openSessions[p.session_id] = NULL; //TODO: when a session is closed, it should be removed from openSessions
 			}
 			break;
 		default:				// Other packets management such as DATA_PACKET
@@ -158,6 +158,7 @@ void slavePE::launchTLMRead(Packet &p) {
 	// send all packets to source PE
 	Packet a = genResponsePacket(p);
 	packet_queue.push(a);
+	
 	#ifdef DEBUGMODE
 	cerr 	<< sc_time_stamp().to_double()/1000 \
 		<< ": SE[" << local_id << "] \tGENERATED" << " \t\t" \
@@ -175,6 +176,7 @@ void slavePE::launchTLMWrite(Packet &p) {
 	// send ack to source PE
 	Packet a = genAck(p);
 	packet_queue.push(a);
+	
 	#ifdef DEBUGMODE
 	cerr 	<< sc_time_stamp().to_double()/1000 \
 		<< ": SE[" << local_id << "] \tENQUEUED ACK" << " \t\t" \
