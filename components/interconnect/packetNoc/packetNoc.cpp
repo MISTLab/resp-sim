@@ -54,7 +54,7 @@ void packetNoc::b_t1(int tag, tlm_generic_payload& trans, sc_time& delay){
 	if (len%sizeof(unsigned int) != 0) words++;
 	this->numAccesses++;
 	this->numWords+=words;
-
+	
 	intInitSocket[tag]->b_transport(trans, delay);
 	trans.set_dmi_allowed(false);			// Disables DMI in order to insert the NOC latency for each transaction
 	#ifdef DEBUGMODE
@@ -64,6 +64,7 @@ void packetNoc::b_t1(int tag, tlm_generic_payload& trans, sc_time& delay){
 
 void packetNoc::b_t2(int tag, tlm_generic_payload& trans, sc_time& delay){
 	sc_dt::uint64 addr = trans.get_address();
+	sc_dt::uint64 addr_old = trans.get_address();
 	forwardMap_t::iterator fwIter;
 	for (fwIter = forwardMap.begin(); fwIter != forwardMap.end(); fwIter++) {
 		if ( fwIter->first.first <= addr && addr <= fwIter->first.second ) {
@@ -73,6 +74,7 @@ void packetNoc::b_t2(int tag, tlm_generic_payload& trans, sc_time& delay){
 	}
 	trans.set_address(addr);
 	initiatorSocket[tag]->b_transport(trans, delay);
+	trans.set_address(addr_old); //DO NOTE: it is necessary to restore original address otherwise in case of timeout the retransmission of the request will contain a wrong address
 }
 
 bool packetNoc::get_direct_mem_ptr(int tag, tlm_generic_payload& trans, tlm_dmi& dmi_data){

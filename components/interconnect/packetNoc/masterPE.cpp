@@ -49,6 +49,7 @@ void masterPE::b_transport(tlm_generic_payload& trans, sc_time& delay) {
 	Packet p;
 	do {
 		p = genPacket(tlmPacket);
+		
 		#ifdef DEBUGMODE
 		cerr	<< sc_time_stamp().to_double()/1000 \
 			<< ": ME[" << local_id << "] \tGENERATED" << " \t\t" \
@@ -70,7 +71,7 @@ void masterPE::b_transport(tlm_generic_payload& trans, sc_time& delay) {
 		<< ": ME[" << local_id << "] \tFINISHED TLM" << " \t\t" \
 		<< tlmPacket->get_command() << " to " << tlmPacket->get_address() << "." << endl;
 	#endif
-}
+	}
 
 void masterPE::setTimeout(sc_time tO) {
 	timeoutVal = tO;
@@ -279,7 +280,7 @@ Packet masterPE::genPacket(tlm_generic_payload* tlmPacket){
 		p.type = DATA_PACKET;		// data packet
 	}
 
-	p.session_id = (++last_session_id + SESSION_ID_OFFSET*local_id);
+	p.session_id = (++last_session_id + SESSION_ID_OFFSET*local_id); //TODO does it works when session_id overcomes (SESSION_ID_OFFSET*(local_id+1)). maybe yes since we remove closed sessions
 	p.gen_time = sc_time_stamp().to_double();
 	p.src_addr = local_id;
 	p.dst_addr = destId;
