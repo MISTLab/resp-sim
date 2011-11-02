@@ -41,7 +41,7 @@
 
 ###### GENERAL PARAMETERS #####
 PROCESSOR_FREQUENCY = 500         # MHz
-PROCESSOR_NUMBER    = 10          #
+PROCESSOR_NUMBER    = 4           #
 try:
     PROCESSOR_NAMESPACE
 except:
@@ -49,7 +49,7 @@ except:
 
 # Memory/bus
 MEMORY_SIZE       = 32             # MBytes
-MEM_LATENCY       = 10.0           # ns
+MEM_LATENCY       = 0.0            # ns
 
 
 # Software
@@ -90,7 +90,9 @@ for i in range(0, PROCESSOR_NUMBER):
 
 ##### MEMORY INSTANTIATION #####
 memorySize = 1024*1024*MEMORY_SIZE
-latencyMem = scwrapper.sc_time(MEM_LATENCY, scwrapper.SC_NS)
+latencyMem = 0.0;
+if MEM_LATENCY : latencyMem = scwrapper.sc_time(MEM_LATENCY, scwrapper.SC_NS)
+else : latencyMem = scwrapper.SC_ZERO_TIME
 mem = MemoryLT32.MemoryLT32( 'mem', memorySize, latencyMem)
 
 ################################################
