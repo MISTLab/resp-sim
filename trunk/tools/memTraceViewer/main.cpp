@@ -97,7 +97,7 @@ int main(int argc, char *argv[]){
                 std::cerr << desc << std::endl;
                 return -1;
             }
-            boost::filesystem::path outFilePath = boost::filesystem::system_complete(boost::filesystem::path(vm["outFile"].as<std::string>(), boost::filesystem::native));
+            boost::filesystem::path outFilePath = boost::filesystem::system_complete(boost::filesystem::path(vm["outFile"].as<std::string>()).native()); //, boost::filesystem::native));
             if(vm.count("startTime") == 0){
                 analyzer.createMemImage(outFilePath);
             }
@@ -124,7 +124,7 @@ int main(int argc, char *argv[]){
             if(vm.count("endTime") > 0){
                 endTime = vm["endTime"].as<double>();
             }
-            boost::filesystem::path outFilePath = boost::filesystem::system_complete(boost::filesystem::path(vm["outFile"].as<std::string>(), boost::filesystem::native));
+            boost::filesystem::path outFilePath = boost::filesystem::system_complete(boost::filesystem::path(vm["outFile"].as<std::string>()).native());//, boost::filesystem::native));
             analyzer.getAllModifications(vm["address"].as<std::string>(), outFilePath, startTime, endTime);
         break;}
         case 3:{

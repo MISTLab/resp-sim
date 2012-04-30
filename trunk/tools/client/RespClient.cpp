@@ -253,7 +253,7 @@ bool RespClient::load_application(const std::string & application){
 ///this file can contain any valid python directive
 ///returns the response
 bool RespClient::load_architecture(const std::string & archFile){
-    boost::filesystem::path fullPath = boost::filesystem::system_complete(boost::filesystem::path(archFile, boost::filesystem::native));
+    boost::filesystem::path fullPath = boost::filesystem::system_complete(boost::filesystem::path(archFile).native()); //, boost::filesystem::native));
     if ( !boost::filesystem::exists( fullPath ) )
         THROW_EXCEPTION("Path " << fullPath.string() << " does not exists");
     std::string message = this->encodeMessage("LOADARCH-S" + archFile + ')');
@@ -432,7 +432,7 @@ unsigned int RespClient::getPid(){
 
 unsigned long RespClient::getUsedMemory(){
     unsigned int respPythonPID = this->getPid();
-    boost::filesystem::path fullPath = boost::filesystem::system_complete(boost::filesystem::path("/proc/" + boost::lexical_cast<std::string>(respPythonPID) + "/stat", boost::filesystem::native));
+    boost::filesystem::path fullPath = boost::filesystem::system_complete(boost::filesystem::path("/proc/" + boost::lexical_cast<std::string>(respPythonPID) + "/stat").native()); //, boost::filesystem::native));
     if ( !boost::filesystem::exists( fullPath ) )
         THROW_EXCEPTION("Error in detrmining ReSP memory usage: /proc/" << respPythonPID << "/stat not found");
     std::ifstream infile(fullPath.string().c_str());
@@ -452,7 +452,7 @@ void RespClient::connect(){
     //std::cerr << "Reconnecting to ReSP" << std::endl;
     if(this->respPath != ""){
         //First of all I have to start ReSP; lets check it respPath is a valid path
-        boost::filesystem::path fullPath = boost::filesystem::system_complete(boost::filesystem::path(this->respPath, boost::filesystem::native));
+        boost::filesystem::path fullPath = boost::filesystem::system_complete(boost::filesystem::path(this->respPath).native());//, boost::filesystem::native));
         if ( !boost::filesystem::exists( fullPath ) )
             THROW_EXCEPTION("Path " << fullPath.string() << " does not exists");
         if (!boost::filesystem::is_directory(fullPath))
