@@ -168,6 +168,9 @@ def configure(conf):
     if int(conf.env['BOOST_VERSION'].split('_')[1]) == 36:
         conf.fatal('boost libraries version 1.36 not supported, please use version 1.35 or >= 1.37')
 
+    #this flag is defined in order to make last versions of boost compile with systemc and TLM
+    conf.env.append_unique('CPPFLAGS','-DBOOST_NUMERIC_CONVERSION_RELAX_BUILT_IN_CAST_TRAITS')
+
     ########################################
     # Now I permanently save some compilation options specified at configure time
     ########################################
@@ -403,7 +406,7 @@ def configure(conf):
     # First I set the clafgs needed by TLM 2.0 for including systemc dynamic process
     # creation
     conf.env.append_unique('CPPFLAGS','-DSC_INCLUDE_DYNAMIC_PROCESSES')
-
+    
     syscpath = None
     if Options.options.systemcdir:
         syscpath = ([os.path.abspath(os.path.expanduser(os.path.expandvars(os.path.join(Options.options.systemcdir, 'include'))))])

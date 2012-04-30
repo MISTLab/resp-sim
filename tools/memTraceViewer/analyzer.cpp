@@ -92,7 +92,7 @@ unsigned int MemAnalyzer::toIntNum(const std::string &numStr){
 
 MemAnalyzer::MemAnalyzer(std::string fileName, std::string memSize){
     this->memSize = this->toIntNum(memSize);
-    boost::filesystem::path memDumpPath = boost::filesystem::system_complete(boost::filesystem::path(fileName, boost::filesystem::native));
+    boost::filesystem::path memDumpPath = boost::filesystem::system_complete(boost::filesystem::path(fileName).native()); //, boost::filesystem::native));
     if ( !boost::filesystem::exists( memDumpPath ) ){
         THROW_EXCEPTION("Path " << fileName << " specified for the memory dump does not exists");
     }
@@ -132,7 +132,7 @@ void MemAnalyzer::createMemImage(boost::filesystem::path &outFile, double simTim
     this->dumpFile.seekg(std::ifstream::beg);
 
     //Now I print on the output file the memory image
-    std::ofstream memImageFile(outFile.native_file_string().c_str());
+    std::ofstream memImageFile(outFile.native().c_str()); //.native_file_string().c_str());
     for(int i = 0; i < maxAddress; i+=sizeof(int)){
         memImageFile << "MEM[" << std::hex << std::showbase << i << "] = " << ((int *)tempMemImage)[i/sizeof(int)] << std::endl;
     }
@@ -189,7 +189,7 @@ MemAccessType MemAnalyzer::getLastMod(std::string addr){
 void MemAnalyzer::getAllModifications(std::string addr, boost::filesystem::path &outFile, double initSimTime, double endSimTime){
     MemAccessType readVal;
     unsigned int address = this->toIntNum(addr);
-    std::ofstream memImageFile(outFile.native_file_string().c_str());
+    std::ofstream memImageFile(outFile.native().c_str());
 
     while(this->dumpFile.good()){
         this->dumpFile.read((char *)&readVal, sizeof(MemAccessType));

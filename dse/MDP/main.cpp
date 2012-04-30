@@ -153,19 +153,20 @@ int main(int argc, char * argv[]){
     }
 
     // loading the plugins
-    boost::filesystem::path fullPluginPath = boost::filesystem::system_complete(boost::filesystem::path(config.pluginFolder, boost::filesystem::native));
+    boost::filesystem::path fullPluginPath = boost::filesystem::system_complete(boost::filesystem::path(config.pluginFolder).native()); //, boost::filesystem::native));
     if ( !boost::filesystem::exists( fullPluginPath ) )
         THROW_EXCEPTION("Plugin folder " << fullPluginPath.string() << " does not exists");
     if (!boost::filesystem::is_directory(fullPluginPath))
         THROW_EXCEPTION("Path " << fullPluginPath.string() << " specified for the plugin folder is not a directory");
-    boost::filesystem::directory_iterator end_itr;
+    
+    boost::filesystem::directory_iterator end_itr; //initialized to end
     for(boost::filesystem::directory_iterator itr( fullPluginPath ); itr != end_itr; itr++ ){
         // I load all the shared libraries that I find in this folder; note
         // that this is highly unportable
         if(boost::filesystem::extension(itr->path()) == ".so"){
-            void *hndl = dlopen(itr->path().native_file_string().c_str(), RTLD_NOW);
+            void *hndl = dlopen(itr->path().native().c_str(), RTLD_NOW);
             if(hndl == NULL){
-               std::cerr << "Error while opening shared library " << itr->leaf() << " --> " << dlerror() << std::endl;
+               std::cerr << "Error while opening shared library " << itr->path().leaf() << " --> " << dlerror() << std::endl;
                return 1;
             }
         }
