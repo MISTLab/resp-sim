@@ -324,7 +324,8 @@ class RespKernel:
         global connect, connectPorts, connectPortsByPathName, listComponents, printComponents, getCompInstance, \
                 areConnected, getInstantiatedComponents, getAttrInstance,  instantiateComponent, run_simulation, \
                 pause_simulation, stop_simulation,  get_simulated_time, get_real_time, run_up_to, reload_architecture, \
-                enable_fault_injection, showArchitecture, reset, load_architecture, reload_architecture, get_architecture_filename, register_breakpoint
+                enable_fault_injection, showArchitecture, reset, load_architecture, reload_architecture, get_architecture_filename, \
+                register_breakpoint, set_custom_parameters, get_custom_parameters
 
         # Assign scripting commands to manager, helper and controller methods
         reload_architecture = self.reload_architecture
@@ -356,6 +357,8 @@ class RespKernel:
         load_architecture = self.load_architecture
         reload_architecture = self.reload_architecture
         get_architecture_filename = self.get_architecture_filename
+        set_custom_parameters = self.set_custom_parameters
+        get_custom_parameters = self.get_custom_parameters
 
         enable_fault_injection  = self.enable_fault_injection
 
@@ -363,8 +366,8 @@ class RespKernel:
         self.scripting_commands = [connect, connectPorts, connectPortsByPathName, listComponents,  printComponents, \
                                    getCompInstance, areConnected, getInstantiatedComponents, \
                                    getAttrInstance,  instantiateComponent, run_simulation, pause_simulation, \
-                                   stop_simulation, get_simulated_time, get_real_time, run_up_to, enable_fault_injection, showArchitecture, reset, \
-                                   load_architecture, reload_architecture, get_architecture_filename, register_breakpoint]
+                                   stop_simulation, get_simulated_time, get_real_time, run_up_to, enable_fault_injection, showArchitecture, \
+                                   set_custom_parameters, get_custom_parameters, reset, load_architecture, reload_architecture, get_architecture_filename, register_breakpoint]
 
         
     def load_components(self, componentListFile):
@@ -446,6 +449,14 @@ class RespKernel:
                 else :
                     exec self.custom_parameters in globals()
         self.load_architecture(self.fileName)
+    
+    def set_custom_parameters(self, params=''):
+        """Sets new custom parameters that will be reused at the next reload"""
+        self.custom_parameters = params
+
+    def get_custom_parameters(self):
+        """Returns custom parameters"""
+        return self.custom_parameters
        
     def get_architecture_filename(self):
         '''Return the name of the file containing the loaded architecture'''
