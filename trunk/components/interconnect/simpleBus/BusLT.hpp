@@ -135,6 +135,8 @@ private:
 	bool locking;
 	map<unsigned int, sc_event* > events;
 	queue<unsigned int> requests;
+	
+	std::map<std::pair<int,int>,int> accesses;
 
 	/*----------------------------------------------------------------------------------
 	 * If the given address matches one address map, returns a reference on the address
@@ -174,7 +176,7 @@ private:
 		if( !requests.empty() ) {
 			unsigned int front = this->requests.front();
 			#ifdef DEBUGMODE
-			cerr << name() << ": Waking up a queued request" << endl;
+			cerr << " " << name() << ": Waking up a queued request" << endl;
 			#endif
 			this->requests.pop();
 			(this->events[front])->notify();
@@ -282,10 +284,12 @@ public:
 	 * Prints out the number of bus accesses
 	 *---------------------------------------*/
 	void printAccesses() {
-		for (unsigned int i = 0; i < numMasters; i++) {
+		/*for (unsigned int i = 0; i < numMasters; i++) {
 			cout << "Accesses with tag " << i << ":\t" << accessCounter[i] << " for a total of " << wordsCounter[i] << " words " << endl;
 		}
-		cout << "Total Accesses:\t\t" << numAccesses << " for a total of " << numWords << " words " << endl;
+		cout << "Total Accesses:\t\t" << numAccesses << " for a total of " << numWords << " words " << endl;*/
+		for(std::map<std::pair<int,int>,int>::iterator mapit = accesses.begin(); mapit!=accesses.end(); mapit++)
+		   std::cout << "M_" << mapit->first.first << " -> S_" << mapit->first.second << " : " << mapit->second << std::endl;
 	}
 
 	unsigned int getAccesses(unsigned int pos) {
@@ -353,6 +357,8 @@ public:
 		#ifdef FILEOUTPUT
 		cerr.rdbuf(orig);
 		#endif
+		
+		accesses[std::pair<int,int>(tag,portId)]+=trans.get_data_length();
 	}
 
 	bool get_direct_mem_ptr(int tag, tlm_generic_payload& trans, tlm_dmi& dmi_data){

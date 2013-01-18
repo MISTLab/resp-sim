@@ -37,7 +37,7 @@ private:
 	list< sc_signal<Packet>* >	dummy_signals;
 	// Pointer to a shared map assigning a destination slave element given a TLM address
 	forwardMap_t			*forwardMap;
-
+	
 public:
 	// I/O Ports
 	sc_in_clk			clock;
@@ -53,6 +53,9 @@ public:
 	unsigned int			packetsIn;
 	unsigned int			packetsOut;
 	unsigned int			timedOutSessions;
+	std::map<unsigned int,unsigned int> flitsOutPerDest;
+	std::map<unsigned int,unsigned int> packetsOutPerDest;
+	std::map<unsigned int,unsigned int> slavesDist;
 
 	// Functions
 					masterPE(unsigned int id, forwardMap_t *fM);

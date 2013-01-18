@@ -51,6 +51,9 @@ public:
 	unsigned int			flitsOut;
 	unsigned int			packetsIn;
 	unsigned int			packetsOut;
+	std::map<unsigned int,unsigned int> flitsOutPerDest;
+	std::map<unsigned int,unsigned int> packetsOutPerDest;
+	std::map<unsigned int,unsigned int> mastersDist;
 
 	// Functions
 					slavePE(unsigned int id);

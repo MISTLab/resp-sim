@@ -95,14 +95,17 @@ void masterPE::txProcess() {
 	bool newSendNull = false;
 	if(!packet_queue.empty()){	// consumes the first packet in queue (more than one flit means more packets to send)
 		Packet flit = nextFlit();
+		
 		// send the packet
 		#ifdef DEBUGMODE
 		cerr 	<< sc_time_stamp().to_double()/1000 \
 			<< ": ME[" << local_id << "] \tSENDING" << " \t\t" \
 			<< flit << "." << endl;
 		#endif
+		
 		pack_out.write(flit);
 		flitsOut++;
+		flitsOutPerDest[flit.dst_addr]++;
 		newSendNull = true;
 	}
 	else if (sendNull) {		// writes a "NULL" packet to clear the signal of the old packets
@@ -250,7 +253,6 @@ Packet masterPE::genPacket(tlm_generic_payload* tlmPacket){
 	tlm_command cmd = tlmPacket->get_command();
 	sc_dt::uint64 adr = tlmPacket->get_address();
 	unsigned int len = tlmPacket->get_data_length();
-
 	unsigned int numFlits;
 	if (cmd == TLM_READ_COMMAND) numFlits = 1;
 	else if (cmd == TLM_WRITE_COMMAND) {
@@ -287,6 +289,7 @@ Packet masterPE::genPacket(tlm_generic_payload* tlmPacket){
 	p.payload = tlmPacket;
 
 	packetsOut++;
+	packetsOutPerDest[p.dst_addr]++;
 
 	//	p.next_hop.push_back(2); // sw0 -> sw2
 	// 	p.next_hop.push_back(1); // sw2 -> sw3
@@ -308,7 +311,8 @@ Packet masterPE::genAck(Packet &p_in){
 	p.gen_time = sc_time_stamp().to_double();
 
 	packetsOut++;
-
+	packetsOutPerDest[p.dst_addr]++;
+	
 	//	p.next_hop.push_back(1); // sw5 -> sw4
 	//	p.next_hop.push_back(2); // sw4 -> sw2
 	//	p.next_hop.push_back(2); // sw2 -> sw0
@@ -389,5 +393,14 @@ void masterPE::printStats(){
 	cout << "\tRECEIVED\t" << flitsIn << " flits for a total of " << packetsIn << " packets" << endl;
 	cout << "\tSENT\t\t" << flitsOut << " flits for a total of " << packetsOut << " packets" << endl;
 	cout << "\tTIMED OUT\t" << timedOutSessions << " times" << endl;
+	
+	unsigned int f_num = 0, f_den = 0, p_num = 0, p_den = 0;
+	for(std::map<unsigned int,unsigned int>::iterator mapIt = slavesDist.begin(); mapIt != slavesDist.end(); mapIt++){
+	  f_num += (flitsOutPerDest[mapIt->first]*mapIt->second);
+	  f_den += flitsOutPerDest[mapIt->first];
+	  p_num += (packetsOutPerDest[mapIt->first]*mapIt->second);
+	  p_den += packetsOutPerDest[mapIt->first];
+	}
+	cout << "\tAVERAGE HOPS per packet \t" << (p_den!=0?(double)p_num/p_den:0) << " per packet, " << (f_den!=0?(double)f_num/f_den:0) << " per flit " << endl;
 }
 

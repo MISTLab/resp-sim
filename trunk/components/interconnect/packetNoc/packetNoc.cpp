@@ -49,8 +49,8 @@ void packetNoc::b_t1(int tag, tlm_generic_payload& trans, sc_time& delay){
 	cerr << "Request entering NOC" << endl;
 	#endif
 
-	unsigned int len = trans.get_data_length();
-	unsigned int words = len / sizeof(unsigned int);
+	unsigned int len = trans.get_data_length();	
+	unsigned int words = len / sizeof(unsigned int); //TODO are we interested in estimating the number of words or the number of flits?
 	if (len%sizeof(unsigned int) != 0) words++;
 	this->numAccesses++;
 	this->numWords+=words;
@@ -368,6 +368,10 @@ void packetNoc::makeLRTs() {
 	Vertex_it vi, vend;
 	Vertex_t s;
 	
+	std::map<unsigned int,unsigned int> tmpNodeToSwitchBinding;
+	std::map<std::pair<unsigned int,unsigned int>,unsigned int> tmpDist;
+	std::vector<unsigned int> masterIds, slaveIds;
+	
 	for (masterIter = ms_list.begin(); masterIter != ms_list.end(); masterIter++) {
 		dst_id = (*masterIter)->getId();
 		s = vertex(dst_id, networkGraph);
@@ -388,11 +392,20 @@ void packetNoc::makeLRTs() {
 			cerr << "\tDistance(" << *vi << ") = " << d[*vi] << ", ";
 			cerr << "\tParent(" << *vi << ") = " << p[*vi] << endl;
 			#endif
+			
+			tmpDist[std::pair<int,int>(dst_id,*vi)]=d[*vi];
+			
 			if (d[*vi]>1)
 				if ( !switchPtr->addDestination(dst_id,p[*vi]) ) 
 					THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Cannot add destination " << dst_id \
 						<< " through " << p[*vi] << " to switch " << switchPtr->getId() << endl);
+			if(d[*vi]==1){
+			  if(tmpNodeToSwitchBinding.count(dst_id))
+					THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": A master (or slave) can be connected to only a switch"<< endl);
+			  tmpNodeToSwitchBinding[dst_id]=*vi;			  
+			}
 		}
+		masterIds.push_back(dst_id);
 	}
 	for (slaveIter = sl_list.begin(); slaveIter != sl_list.end(); slaveIter++) {
 		dst_id = (*slaveIter)->getId();
@@ -414,11 +427,48 @@ void packetNoc::makeLRTs() {
 			cerr << "\tDistance(" << *vi << ") = " << d[*vi] << ", ";
 			cerr << "\tParent(" << *vi << ") = " << p[*vi] << endl;
 			#endif
+			
+			tmpDist[std::pair<int,int>(dst_id,*vi)]=d[*vi];
+			
 			if (d[*vi]>1)
 				if ( !switchPtr->addDestination(dst_id,p[*vi]) )
 					THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": Cannot add destination " << dst_id \
 						<< " through " << p[*vi] << " to switch " << switchPtr->getId() << endl);
+			if(d[*vi]==1){
+			  if(tmpNodeToSwitchBinding.count(dst_id))
+					THROW_EXCEPTION(__PRETTY_FUNCTION__ << ": A master (or slave) can be connected to only a switch"<< endl);
+			  tmpNodeToSwitchBinding[dst_id]=*vi;			  
+			}
 		}
+		slaveIds.push_back(dst_id);
+	}
+	
+	for(int i=0;i<masterIds.size();i++){
+    masterPE* m = getMasterWithId(masterIds[i]);
+	  for(int j=0;j<slaveIds.size();j++){
+	    if(tmpNodeToSwitchBinding.count(slaveIds[j])>0){
+	      int switchid = tmpNodeToSwitchBinding[slaveIds[j]];
+	      if(tmpDist.count(std::pair<int,int>(masterIds[i],switchid))){
+	        unsigned int dist = tmpDist[std::pair<int,int>(masterIds[i],switchid)];
+  	      this->distanceMap[std::pair<int,int>(masterIds[i],slaveIds[j])] = dist;
+  	      m->slavesDist[slaveIds[j]] = dist;
+  	    }
+	    }
+	  }
+	}
+	
+	for(int i=0;i<slaveIds.size();i++){
+    slavePE* s = getSlaveWithId(slaveIds[i]);
+	  for(int j=0;j<masterIds.size();j++){
+	    if(tmpNodeToSwitchBinding.count(masterIds[j])>0){
+	      int switchid = tmpNodeToSwitchBinding[masterIds[j]];
+	      if(tmpDist.count(std::pair<int,int>(slaveIds[i],switchid))){
+  	      unsigned int dist = tmpDist[std::pair<int,int>(slaveIds[i],switchid)];
+  	      this->distanceMap[std::pair<int,int>(slaveIds[i],masterIds[j])] = dist;
+  	      s->mastersDist[masterIds[j]] = dist;
+	      }
+	    }
+	  }
 	}
 }
 
@@ -466,6 +516,38 @@ void packetNoc::printStats() {
 	for (switchIter = sw_list.begin(); switchIter != sw_list.end(); switchIter++) {
 		(*switchIter)->printStats();
 	}
+	
+	unsigned int totFlits = 0, totPackets = 0, totTimeouts = 0, totFlitsDrops = 0, totHopFlits_num = 0, totHopFlits_den = 0, totHopPackets_num = 0, totHopPackets_den = 0;
+	for (masterIter = ms_list.begin(); masterIter != ms_list.end(); masterIter++) {
+		totFlits += (*masterIter)->flitsOut;
+		totPackets += (*masterIter)->packetsOut;
+		totTimeouts += (*masterIter)->timedOutSessions;
+		for(std::map<unsigned int,unsigned int>::iterator mapIt = (*masterIter)->slavesDist.begin(); mapIt != (*masterIter)->slavesDist.end(); mapIt++){
+	    totHopFlits_num += ((*masterIter)->flitsOutPerDest[mapIt->first]*mapIt->second);
+	    totHopFlits_den += (*masterIter)->flitsOutPerDest[mapIt->first];
+	    totHopPackets_num += ((*masterIter)->packetsOutPerDest[mapIt->first]*mapIt->second);
+	    totHopPackets_den += (*masterIter)->packetsOutPerDest[mapIt->first];
+	  }
+	}
+	for (slaveIter = sl_list.begin(); slaveIter != sl_list.end(); slaveIter++) {
+		totFlits += (*slaveIter)->flitsOut;
+		totPackets += (*slaveIter)->packetsOut;
+	  for(std::map<unsigned int,unsigned int>::iterator mapIt = (*slaveIter)->mastersDist.begin(); mapIt != (*slaveIter)->mastersDist.end(); mapIt++){
+	    totHopFlits_num += ((*slaveIter)->flitsOutPerDest[mapIt->first]*mapIt->second);
+	    totHopFlits_den += (*slaveIter)->flitsOutPerDest[mapIt->first];
+	    totHopPackets_num += ((*slaveIter)->packetsOutPerDest[mapIt->first]*mapIt->second);
+	    totHopPackets_den += (*slaveIter)->packetsOutPerDest[mapIt->first];
+	  }		
+	}
+	for (switchIter = sw_list.begin(); switchIter != sw_list.end(); switchIter++) {
+		for(int j=0;j<PORTS;j++)
+		  totFlitsDrops+=(*switchIter)->getDropped(j);
+	}
+  cout << endl << "Summarized stats:" << endl;
+  cout << "- Transmitted packets: " << totPackets << " in " << totFlits << " flits" << endl;
+  cout << "- Timed out sessions: " << totTimeouts << endl;
+  cout << "- Dropped flits: " << totFlitsDrops << endl;
+  cout << "- Average hops: " << (totHopPackets_den!=0?(double)totHopPackets_num/totHopPackets_den:0) << " per packet, " << (totHopFlits_den!=0?(double)totHopFlits_num/totHopFlits_den:0) <<  " per flit" << endl;
 }
 
 unsigned int packetNoc::getBufferCurrentFreeSlots(unsigned int switchId, unsigned int portId){
