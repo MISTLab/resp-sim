@@ -40,6 +40,7 @@ private:
 
 	Graph_t networkGraph;
 	property_map<Graph_t, edge_weight_t>::type graphWeightMap;
+  std::map<std::pair<unsigned int, unsigned int>, unsigned int> distanceMap;
 
 	// Utility function for NOC construction
 	masterPE* getMasterWithId(unsigned int dst_id);

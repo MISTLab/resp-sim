@@ -42,6 +42,7 @@ void slavePE::txProcess() {
 		#endif
 		pack_out.write(flit);
 		flitsOut++;
+		flitsOutPerDest[flit.dst_addr]++;
 		newSendNull = true;
 	}
 	else if (sendNull) {		// writes a "NULL" packet to clear the signal of the old packets
@@ -187,7 +188,8 @@ void slavePE::launchTLMWrite(Packet &p) {
 	delete &p;
 }
 
-Packet slavePE::genResponsePacket(Packet &p_in) {
+Packet slavePE::genResponsePacket(Packet &p_in) { 
+  //DO NOTE: this function is used only to generate the response packet for read requests
 	unsigned int adr = p_in.src_addr;
 	unsigned int len = (p_in.payload)->get_data_length();
 
@@ -213,6 +215,7 @@ Packet slavePE::genResponsePacket(Packet &p_in) {
 	p.payload = NULL;
 
 	packetsOut++;
+	packetsOutPerDest[p.dst_addr]++;
 
 	return p;
 }
@@ -229,6 +232,7 @@ Packet slavePE::genAck(Packet &p_in){
 	p.gen_time = sc_time_stamp().to_double();
 
 	packetsOut++;
+	packetsOutPerDest[p.dst_addr]++;
 
 	//	p.next_hop.push_back(1); // sw5 -> sw4
 	//	p.next_hop.push_back(2); // sw4 -> sw2
@@ -339,5 +343,14 @@ void slavePE::printStats() {
 	cout << "Slave Processing Element #" << local_id << endl;
 	cout << "\tRECEIVED\t" << flitsIn << " flits for a total of " << packetsIn << " packets" << endl;
 	cout << "\tSENT\t\t" << flitsOut << " flits for a total of " << packetsOut << " packets" << endl;
+	unsigned int f_num = 0, f_den = 0, p_num = 0, p_den = 0;
+	for(std::map<unsigned int,unsigned int>::iterator mapIt = mastersDist.begin(); mapIt != mastersDist.end(); mapIt++){
+	  f_num += (flitsOutPerDest[mapIt->first]*mapIt->second);
+	  f_den += flitsOutPerDest[mapIt->first];
+	  p_num += (packetsOutPerDest[mapIt->first]*mapIt->second);
+	  p_den += packetsOutPerDest[mapIt->first];
+	}
+	cout << "\tAVERAGE HOPS per packet \t" << (p_den!=0?(double)p_num/p_den:0) << " per packet, " << (f_den!=0?(double)f_num/f_den:0) << " per flit " << endl;
+
 }
 
